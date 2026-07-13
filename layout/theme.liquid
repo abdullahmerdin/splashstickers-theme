@@ -141,6 +141,8 @@
       {% render 'quick-add-modal' %}
     {% endif %}
 
+    <div id="sticker-urls" style="display:none;" data-cherry="{{ 'cherry.svg' | asset_url }}" data-bear="{{ 'bear.svg' | asset_url }}" data-deer="{{ 'deer.svg' | asset_url }}"></div>
+
     <script>
     (function() {
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -149,14 +151,9 @@
       var items = [];
 
       emojis.forEach(function(e, i) {
-        var el = document.createElement('div');
-        el.innerHTML = SVG_DATA[i];
-        var svgEl = el.querySelector('svg');
-        if (svgEl) {
-          svgEl.style.width = '100px';
-          svgEl.style.height = '100px';
-          svgEl.style.display = 'block';
-        }
+        var el = document.createElement('img');
+        el.src = SVG_URLS[i];
+        el.draggable = false;
         el.style.cssText = 'position:fixed;width:100px;height:100px;cursor:grab;z-index:9999;user-select:none;touch-action:none;pointer-events:auto;';
 
         var rx = Math.random() * (window.innerWidth - 60);
