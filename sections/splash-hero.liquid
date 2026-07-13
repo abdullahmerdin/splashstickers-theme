@@ -58,6 +58,7 @@
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
+  <canvas id="ink-canvas-{{ section.id }}"></canvas>
   <div class="splash-hero-content">
     {% if heading != blank %}<h1 class="splash-hero-heading">{{ heading }}</h1>{% endif %}
     {% if subtext != blank %}<p class="splash-hero-subtext">{{ subtext }}</p>{% endif %}
@@ -71,142 +72,145 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
 <script>
 (function() {
   var id = '{{ section.id }}';
   var hero = document.getElementById('splash-hero-' + id);
-  if (!hero) return;
+  var canvas = document.getElementById('ink-canvas-' + id);
+  if (!canvas || !hero) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  var app = new PIXI.Application({
-    resizeTo: hero,
-    transparent: true,
-    antialias: true,
-    resolution: window.devicePixelRatio || 1,
-    backgroundColor: 0x1A1A2E
-  });
-  hero.prepend(app.view);
-  app.view.style.position = 'absolute';
-  app.view.style.inset = '0';
-  app.view.style.pointerEvents = 'none';
-  app.view.style.width = '100%';
-  app.view.style.height = '100%';
+  var ctx = canvas.getContext('2d');
+  var W, H, dpr = window.devicePixelRatio || 1;
 
-  // Gooey container - blurred version for edge merging
-  var blurContainer = new PIXI.Container();
-  app.stage.addChild(blurContainer);
+  function resize() {
+    var r = hero.getBoundingClientRect();
+    W = r.width; H = r.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+  }
+  resize();
+  window.addEventListener('resize', resize);
 
-  var blurFilter = new PIXI.BlurFilter();
-  blurFilter.blur = 4;
-  blurFilter.quality = 3;
-
-  var colorMatrix = new PIXI.ColorMatrixFilter();
-  colorMatrix.contrast(6, false);
-
-  blurContainer.filters = [blurFilter, colorMatrix];
-
-  // Sharp container - crisp ink drawn on top
-  var sharpContainer = new PIXI.Container();
-  app.stage.addChild(sharpContainer);
-
-  var COLORS = [0xFF4381, 0xFF6B35, 0x00E5A0, 0x4D7CFF, 0xA855F7, 0xFFD700];
+  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
   function pick() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
   function rand(a,b) { return Math.random() * (b - a) + a; }
 
-  var lastX = null, lastY = null;
-  var items = [];
+  // ─── Particle physics ───
+  var particles = [];
+  var GRAVITY = 0.15;
+  var DAMPING = 0.98;
+  var FRICTION = 0.92;
 
-  // ─── Draw a segment ───
-  function drawSegment(x1, y1, x2, y2, speed) {
-    var color = pick();
-    var width = Math.min(Math.max(10, 45 - speed * 1.5), 55);
-
-    // Feather (soft spread) - only in blur container for merging
-    var f1 = new PIXI.Graphics();
-    f1.beginFill(color, 0.12);
-    f1.drawCircle(x1, y1, width * 0.8);
-    f1.drawCircle(x2, y2, width * 0.6);
-    f1.endFill();
-    blurContainer.addChild(f1);
-    items.push(f1);
-
-    // Main ink body - sharp line (in sharp container)
-    var g = new PIXI.Graphics();
-    g.lineStyle(width, color, 0.92);
-    g.moveTo(x1, y1);
-    g.lineTo(x2, y2);
-    sharpContainer.addChild(g);
-    items.push(g);
-
-    // Blurred copy of main line for gooey edge merging
-    var bg = new PIXI.Graphics();
-    bg.lineStyle(width + 6, color, 0.15);
-    bg.moveTo(x1, y1);
-    bg.lineTo(x2, y2);
-    blurContainer.addChild(bg);
-    items.push(bg);
-
-    // Splatter - add to both
-    if (speed > 5 && Math.random() > 0.7) {
-      var num = Math.floor(Math.min(speed * 0.5, 3));
-      for (var i = 0; i < num; i++) {
-        var a = Math.random() * Math.PI * 2;
-        var d = rand(8, 15 + speed);
-        var s = rand(2, 4);
-        var dot = new PIXI.Graphics();
-        dot.beginFill(color, 0.3);
-        dot.drawCircle(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, s);
-        dot.endFill();
-        sharpContainer.addChild(dot);
-        items.push(dot);
-        var bdot = new PIXI.Graphics();
-        bdot.beginFill(color, 0.1);
-        bdot.drawCircle(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, s + 3);
-        bdot.endFill();
-        blurContainer.addChild(bdot);
-        items.push(bdot);
-      }
+  function spawnParticles(x, y, count, color, speed) {
+    for (var i = 0; i < count; i++) {
+      var angle = (Math.random() - 0.5) * Math.PI;
+      var vel = rand(1, 3 + speed * 0.3);
+      particles.push({
+        x: x + rand(-3, 3),
+        y: y + rand(-3, 3),
+        vx: Math.cos(angle) * vel,
+        vy: Math.sin(angle) * vel - 1,
+        r: rand(4, 10 + speed * 0.15),
+        color: color || pick(),
+        life: 1
+      });
     }
   }
 
-  // ─── Release splash ───
-  function releaseSplash(x, y, speed) {
-    var color = pick();
-    speed = speed || 10;
-    var num = Math.floor(Math.min(8 + speed, 20));
-    for (var i = 0; i < num; i++) {
-      var a = (Math.random() - 0.5) * 1.8 + 0.3;
-      var d = rand(10, 25 + speed);
-      var sz = rand(3, 7);
-      var dot = new PIXI.Graphics();
-      dot.beginFill(color, 0.5);
-      dot.drawCircle(x + Math.cos(a) * d, y + Math.sin(a) * d, sz);
-      dot.endFill();
-      sharpContainer.addChild(dot);
-      items.push(dot);
-      var bdot = new PIXI.Graphics();
-      bdot.beginFill(color, 0.15);
-      bdot.drawCircle(x + Math.cos(a) * d, y + Math.sin(a) * d, sz + 2);
-      bdot.endFill();
-      blurContainer.addChild(bdot);
-      items.push(bdot);
+  function physicsStep() {
+    ctx.clearRect(0, 0, W, H);
+    for (var i = particles.length - 1; i >= 0; i--) {
+      var p = particles[i];
+
+      // Gravity
+      p.vy += GRAVITY;
+
+      // Damping
+      p.vx *= DAMPING;
+      p.vy *= DAMPING;
+
+      // Position
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Bounce off walls
+      if (p.x - p.r < 0) { p.x = p.r; p.vx *= -FRICTION; }
+      if (p.x + p.r > W) { p.x = W - p.r; p.vx *= -FRICTION; }
+      if (p.y - p.r < 0) { p.y = p.r; p.vy *= -FRICTION; }
+      if (p.y + p.r > H) { p.y = H - p.r; p.vy *= -FRICTION; }
+
+      // Slow life decay
+      p.life -= 0.001;
+
+      // Remove if too small or off screen
+      if (p.life <= 0 || p.r < 0.5) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      // Draw particle with gradient for 3D look
+      var g = ctx.createRadialGradient(p.x - p.r*0.2, p.y - p.r*0.2, 0, p.x, p.y, p.r);
+      g.addColorStop(0, 'rgba(255,255,255,' + (0.3 * p.life) + ')');
+      g.addColorStop(0.3, p.color);
+      g.addColorStop(1, 'rgba(0,0,0,' + (0.15 * p.life) + ')');
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, p.life * 1.5);
+      ctx.fillStyle = g;
+      ctx.shadowColor = 'rgba(255,255,255,0.05)';
+      ctx.shadowBlur = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
-    var burst = new PIXI.Graphics();
-    burst.beginFill(color, 0.25);
-    burst.drawCircle(x, y, 18);
-    burst.endFill();
-    sharpContainer.addChild(burst);
-    items.push(burst);
-    var bburst = new PIXI.Graphics();
-    bburst.beginFill(color, 0.08);
-    bburst.drawCircle(x, y, 24);
-    bburst.endFill();
-    blurContainer.addChild(bburst);
-    items.push(bburst);
+
+    // Merge nearby particles
+    for (var i = 0; i < particles.length; i++) {
+      for (var j = i + 1; j < particles.length; j++) {
+        var a = particles[i], b = particles[j];
+        var dx = a.x - b.x, dy = a.y - b.y;
+        var dist = Math.sqrt(dx*dx + dy*dy);
+        var minDist = (a.r + b.r) * 0.5;
+
+        if (dist < minDist && dist > 0) {
+          // Merge: larger absorbs smaller
+          if (a.r > b.r) {
+            a.r = Math.sqrt(a.r*a.r + b.r*b.r);
+            a.x = (a.x * a.r + b.x * b.r) / (a.r + b.r);
+            a.y = (a.y * a.r + b.y * b.r) / (a.r + b.r);
+            a.vx = (a.vx + b.vx) * 0.5;
+            a.vy = (a.vy + b.vy) * 0.5;
+            particles.splice(j, 1);
+            j--;
+          } else {
+            b.r = Math.sqrt(a.r*a.r + b.r*b.r);
+            b.x = (a.x * a.r + b.x * b.r) / (a.r + b.r);
+            b.y = (a.y * a.r + b.y * b.r) / (a.r + b.r);
+            b.vx = (a.vx + b.vx) * 0.5;
+            b.vy = (a.vy + b.vy) * 0.5;
+            particles.splice(i, 1);
+            i--; break;
+          }
+        }
+      }
+    }
+
+    // Cap particles
+    if (particles.length > 300) {
+      particles.splice(0, particles.length - 300);
+    }
+
+    requestAnimationFrame(physicsStep);
   }
 
   // ─── Mouse ───
+  var lastX = null, lastY = null;
+
   function getPos(e) {
     var r = hero.getBoundingClientRect();
     if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
@@ -220,8 +224,15 @@
     if (lastX !== null) {
       var dx = x - lastX, dy = y - lastY;
       var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > 2) {
-        drawSegment(lastX, lastY, x, y, dist);
+      if (dist > 3) {
+        var count = Math.min(Math.floor(dist * 0.8), 8);
+        var speed = dist;
+        var color = pick();
+        spawnParticles(x, y, count, color, speed);
+        // Extra splash droplets on fast moves
+        if (speed > 8) {
+          spawnParticles(x + rand(-5,5), y + rand(-5,5), Math.floor(speed * 0.3), color, speed);
+        }
       }
     }
     lastX = x; lastY = y;
@@ -229,51 +240,39 @@
 
   hero.addEventListener('mousemove', onMove);
   hero.addEventListener('touchmove', onMove);
-  hero.addEventListener('mouseleave', function() { if (lastX !== null) { releaseSplash(lastX, lastY); lastX = null; } });
-  hero.addEventListener('mouseup', function() { if (lastX !== null) { releaseSplash(lastX, lastY); lastX = null; } });
+  hero.addEventListener('mouseleave', function() { lastX = null; });
+  hero.addEventListener('mouseup', function() { lastX = null; });
   hero.addEventListener('touchstart', function(e) { var p = getPos(e); lastX = p.x; lastY = p.y; });
-  hero.addEventListener('touchend', function() { if (lastX !== null) { releaseSplash(lastX, lastY); lastX = null; } });
+  hero.addEventListener('touchend', function() { lastX = null; });
 
   // ─── Welcome ───
-  function welcomeSplat() {
-    var cx = app.screen.width / 2, cy = app.screen.height / 2;
-    for (var i = 0; i < 12; i++) {
-      var a = (i / 12) * Math.PI * 2;
-      var d = 25 + (i % 3) * 18;
-      var color = pick();
-      var feather = new PIXI.Graphics();
-      feather.beginFill(color, 0.06);
-      feather.drawCircle(cx + Math.cos(a) * d * 0.4, cy + Math.sin(a) * d * 0.4, 25);
-      feather.endFill();
-      gooContainer.addChild(feather);
-      items.push(feather);
-      var line = new PIXI.Graphics();
-      line.lineStyle(rand(12, 22), color, 0.9);
-      line.moveTo(cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3);
-      line.lineTo(cx + Math.cos(a) * d, cy + Math.sin(a) * d);
-      gooContainer.addChild(line);
-      items.push(line);
+  function welcome() {
+    var cx = W/2, cy = H/2;
+    for (var i = 0; i < 20; i++) {
+      var a = (i / 20) * Math.PI * 2;
+      var d = 30 + (i % 4) * 15;
+      spawnParticles(cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3, 3, pick(), 8);
     }
+    spawnParticles(cx, cy, 10, pick(), 5);
   }
-  setTimeout(welcomeSplat, 100);
 
-  // ─── Fade after 4s ───
+  // ─── Start ───
+  physicsStep();
+  setTimeout(welcome, 100);
+
+  // ─── Fade after 5s ───
   setTimeout(function() {
-    var ticker = new PIXI.Ticker();
-    ticker.add(function() {
+    var fade = setInterval(function() {
       var alive = false;
-      for (var i = items.length - 1; i >= 0; i--) {
-        if (items[i].alpha > 0) {
-          items[i].alpha -= 0.005;
-          alive = true;
-        } else if (items[i].parent) {
-          items[i].parent.removeChild(items[i]);
+      for (var i = 0; i < particles.length; i++) {
+        if (particles[i].r > 0.5) {
+          particles[i].r *= 0.98;
+          if (particles[i].r > 0.5) alive = true;
         }
       }
-      if (!alive) ticker.stop();
-    });
-    ticker.start();
-  }, 4000);
+      if (!alive) { clearInterval(fade); particles = []; }
+    }, 50);
+  }, 5000);
 })();
 </script>
 
@@ -284,7 +283,7 @@
   "class": "splash-hero",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Splash Your Style" },
-    { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Move your mouse to paint" },
+    { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Draw with liquid ink" },
     { "type": "color", "id": "background_color", "label": "Background", "default": "#1A1A2E" },
     { "type": "range", "id": "section_height", "min": 300, "max": 800, "step": 50, "default": 550, "label": "Height" },
     { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding top" },
