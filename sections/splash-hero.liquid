@@ -102,21 +102,17 @@
   var lastX = null, lastY = null, lastColor = null;
   var segments = [];
   var START_FADE_AFTER = 4000;
-  var BASE_FADE_DURATION = 3000;
+  var FADE_DURATION = 3000;
 
   function paintStroke(x1, y1, x2, y2, speed) {
     var color = lastColor || pick();
     var nextColor = pick();
     var width = Math.min(Math.max(12, 50 - speed * 1.5), 60);
 
-    // Fade duration: fast stroke = fast fade (short), slow stroke = slow fade (long)
-    var fadeDur = Math.max(400, BASE_FADE_DURATION - speed * 50);
-
     var seg = {
       x1: x1, y1: y1, x2: x2, y2: y2, w: width,
       colorFrom: color,
       colorTo: nextColor,
-      fadeDur: fadeDur,
       ts: Date.now()
     };
     segments.push(seg);
@@ -134,7 +130,6 @@
           y: y2 + Math.sin(a) * d,
           r: rand(2, 4 + speed * 0.04),
           color: nextColor,
-          fadeDur: fadeDur,
           ts: Date.now()
         };
         segments.push(dot);
@@ -217,13 +212,11 @@
     if (fadeStarted && segments.length > 0) {
       var keep = [];
       for (var i = 0; i < segments.length; i++) {
-        var seg = segments[i];
-        var segAge = now - seg.ts - START_FADE_AFTER;
+        var segAge = now - segments[i].ts - START_FADE_AFTER;
         if (segAge < 0) segAge = 0;
-        var fadeDur = seg.fadeDur || 3000;
-        var alpha = 1 - (segAge / fadeDur);
+        var alpha = 1 - (segAge / FADE_DURATION);
         if (alpha > 0) {
-          keep.push(seg);
+          keep.push(segments[i]);
         }
       }
 
@@ -233,9 +226,7 @@
         for (var i = 0; i < segments.length; i++) {
           var seg = segments[i];
           var segAge = now - seg.ts - START_FADE_AFTER;
-          if (segAge < 0) segAge = 0;
-          var fadeDur = seg.fadeDur || 3000;
-          var alpha = Math.max(0, 1 - (segAge / fadeDur));
+          var alpha = Math.max(0, 1 - (segAge / FADE_DURATION));
           if (seg.r !== undefined) drawDot(seg, alpha);
           else drawSegment(seg, alpha);
         }
