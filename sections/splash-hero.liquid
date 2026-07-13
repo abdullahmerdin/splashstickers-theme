@@ -121,15 +121,16 @@
 
     lastColor = nextColor;
 
-    // Splatter dots (stored with color = midpoint)
-    if (speed > 6 && Math.random() > 0.65) {
-      var num = Math.floor(Math.min(speed * 0.4, 4));
+    // Splatter dots - more & farther on fast moves
+    if (speed > 5 && Math.random() > 0.55) {
+      var num = Math.floor(Math.min(speed * 0.6, 10));
       for (var i = 0; i < num; i++) {
         var a = Math.random() * Math.PI * 2;
+        var d = rand(10, 25 + speed * 1.5);
         var dot = {
-          x: x2 + Math.cos(a) * rand(8, 18 + speed),
-          y: y2 + Math.sin(a) * rand(8, 18 + speed),
-          r: rand(3, 6),
+          x: x2 + Math.cos(a) * d,
+          y: y2 + Math.sin(a) * d,
+          r: rand(3, 5 + speed * 0.08),
           color: nextColor,
           ts: Date.now()
         };
