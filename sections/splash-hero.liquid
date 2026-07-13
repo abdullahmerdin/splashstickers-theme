@@ -28,7 +28,6 @@
     height: 100%;
     pointer-events: none;
     z-index: 1;
-    filter: url('#goo-{{ section.id }}');
   }
   .splash-hero-{{ section.id }} .splash-hero-content {
     position: relative;
@@ -65,30 +64,10 @@
     position: relative;
     z-index: 25;
   }
-  .splash-hero-{{ section.id }} .ink-count {
-    position: absolute;
-    bottom: 16px;
-    right: 20px;
-    z-index: 30;
-    color: {{ text_color }};
-    opacity: 0.3;
-    font-size: 0.75rem;
-    font-family: monospace;
-    pointer-events: none;
-  }
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
-  <svg style="position:absolute;width:0;height:0;pointer-events:none;">
-    <defs>
-      <filter id="goo-{{ section.id }}">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
-        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -9" result="goo"/>
-        <feBlend in="SourceGraphic" in2="goo" mode="normal"/>
-      </filter>
-    </defs>
-  </svg>
-  <canvas id="ink-canvas-{{ section.id }}"></canvas>
+  <canvas id="ink-canvas-{{ section.id }}" resize></canvas>
   <div class="splash-hero-content">
     {% if heading != blank %}
       <h1 class="splash-hero-heading">{{ heading }}</h1>
@@ -104,10 +83,9 @@
       {% endfor %}
     </div>
   </div>
-  <div class="ink-count" id="ink-count-{{ section.id }}"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-full.min.js"></script>
 <script>
 (function() {
   'use strict';
@@ -116,297 +94,145 @@
   var canvas = document.getElementById('ink-canvas-' + id);
   if (!canvas || !hero) return;
 
-  var ctx = canvas.getContext('2d');
-  var offscreen = document.createElement('canvas');
-  var offCtx = offscreen.getContext('2d');
-  var W, H, points = [];
-  var fadeTimer = null, fading = false, firstPaint = false;
-  var releaseTimer = null;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
-  // Saturated Splatoon colors for ink
-  var INK_BRIGHT = ['rgba(255,67,129,0.95)','rgba(255,107,53,0.95)','rgba(0,229,160,0.95)','rgba(77,124,255,0.95)','rgba(168,85,247,0.95)','rgba(255,215,0,0.95)'];
-
-  function resize() {
-    var r = hero.getBoundingClientRect();
-    var dpr = window.devicePixelRatio || 1;
-    W = canvas.width = r.width * dpr;
-    H = canvas.height = r.height * dpr;
-    canvas.style.width = r.width + 'px';
-    canvas.style.height = r.height + 'px';
-    offscreen.width = canvas.width;
-    offscreen.height = canvas.height;
-    ctx.scale(dpr, dpr);
-    offCtx.scale(dpr, dpr);
-  }
-
-  function rand(a, b) { return Math.random() * (b - a) + a; }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function rand(a, b) { return Math.random() * (b - a) + a; }
 
-  // ─── RENDER: offscreen → visible canvas ───
-  function render() {
-    ctx.clearRect(0, 0, W / (window.devicePixelRatio || 1), H / (window.devicePixelRatio || 1));
-    ctx.drawImage(offscreen, 0, 0);
-  }
+  var scope = new paper.PaperScope();
+  scope.setup(canvas);
 
-  // ─── INK FADE: start fading after 3s ───
-  function startFade() {
-    if (fading) return;
-    fading = true;
-    (function fadeLoop() {
-      offCtx.save();
-      offCtx.globalAlpha = 0.03;
-      offCtx.fillStyle = '#1A1A2E';
-      offCtx.fillRect(0, 0, offscreen.width, offscreen.height);
-      offCtx.restore();
-      render();
-      // Check if fully faded
-      fadeTimer = requestAnimationFrame(fadeLoop);
-    })();
-  }
+  var path = null;
+  var lastPt = null;
 
-  // ─── TAPERED BRUSH STROKE (seamless!) ───
-  var brushPoints = [];
-  var lastX = null, lastY = null;
+  function onMouseMove(event) {
+    if (!path) {
+      // Start a new path
+      path = new scope.Path();
+      path.strokeColor = pick(COLORS);
+      path.strokeWidth = 0;
+      path.strokeCap = 'round';
+      path.strokeJoin = 'round';
+      path.add(event.point);
+      return;
+    }
 
-  function brushStroke(x, y, speed) {
-    var color = pick(COLORS);
-    var w = Math.min(Math.max(10, 45 - speed * 1.5), 55) / 2;
-    brushPoints.push({ x: x, y: y, w: w, color: color });
-    if (brushPoints.length < 2) { lastX = x; lastY = y; return; }
+    // Add point to path
+    path.add(event.point);
 
-    var p1 = brushPoints[brushPoints.length - 2];
-    // Compute perpendicular
-    var dx = x - p1.x, dy = y - p1.y;
-    var d = Math.sqrt(dx*dx + dy*dy);
-    if (d < 1) return;
-    var nx = -dy / d, ny = dx / d;
+    // Smooth the path
+    path.smooth({ type: 'continuous' });
 
-    // Left and right edges for this segment only
-    var lx1 = p1.x + nx * p1.w, ly1 = p1.y + ny * p1.w;
-    var rx1 = p1.x - nx * p1.w, ry1 = p1.y - ny * p1.w;
-    var lx2 = x + nx * w, ly2 = y + ny * w;
-    var rx2 = x - nx * w, ry2 = y - ny * w;
+    // Vary stroke width by speed
+    var speed = event.delta.length;
+    var width = Math.min(Math.max(12, 45 - speed * 1.5), 55);
+    path.strokeWidth = width;
 
-    // Feather
-    offCtx.save();
-    offCtx.fillStyle = color;
-    offCtx.globalAlpha = 0.08;
-    offCtx.beginPath();
-    offCtx.arc(p1.x, p1.y, p1.w * 1.6, 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.beginPath();
-    offCtx.arc(x, y, w * 1.3, 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.restore();
+    // Random color per segment change
+    if (Math.random() > 0.3) {
+      path.strokeColor = pick(COLORS);
+    }
 
-    // Main body
-    offCtx.save();
-    offCtx.shadowColor = 'rgba(0,0,0,0.05)';
-    offCtx.shadowBlur = 3;
-    offCtx.fillStyle = color;
-    offCtx.globalAlpha = 0.92;
-    offCtx.beginPath();
-    offCtx.moveTo(lx1, ly1);
-    offCtx.lineTo(rx1, ry1);
-    offCtx.lineTo(rx2, ry2);
-    offCtx.lineTo(lx2, ly2);
-    offCtx.closePath();
-    offCtx.fill();
-    offCtx.restore();
-
-    // Splatter
-    if (speed > 6 && Math.random() > 0.7) {
-      var num = Math.floor(Math.min(speed * 0.6, 3));
+    if (speed > 5 && Math.random() > 0.6) {
+      var num = Math.floor(Math.min(speed * 0.5, 3));
       for (var i = 0; i < num; i++) {
         var a = Math.random() * Math.PI * 2;
-        offCtx.save();
-        offCtx.globalAlpha = 0.3;
-        offCtx.fillStyle = color;
-        offCtx.beginPath();
-        offCtx.arc(x + Math.cos(a) * rand(10, 18 + speed), y + Math.sin(a) * rand(10, 18 + speed), rand(2, 4), 0, Math.PI * 2);
-        offCtx.fill();
-        offCtx.restore();
+        var d = rand(10, 18 + speed);
+        var dot = new scope.Path.Circle({
+          center: [event.point.x + Math.cos(a) * d, event.point.y + Math.sin(a) * d],
+          radius: rand(2, 4),
+          fillColor: path.strokeColor,
+          opacity: 0.3
+        });
+        scope.project.activeLayer.addChild(dot);
       }
     }
-    render();
+
+    scope.view.draw();
   }
 
-  // ─── TAPERED DOT (for beginning/ending) ───
-  function taperedDot(x, y) {
-    var color = pick(COLORS);
-    offCtx.save();
-    var g = offCtx.createRadialGradient(x, y, 0, x, y, 18);
-    g.addColorStop(0, color);
-    g.addColorStop(0.3, color);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    offCtx.fillStyle = g;
-    offCtx.shadowColor = 'rgba(255,255,255,0.08)';
-    offCtx.shadowBlur = 8;
-    offCtx.beginPath();
-    offCtx.arc(x, y, 18, 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.restore();
-    offCtx.save();
-    var g2 = offCtx.createRadialGradient(x-2, y-2, 0, x, y, 8);
-    g2.addColorStop(0, 'rgba(255,255,255,0.2)');
-    g2.addColorStop(1, 'rgba(0,0,0,0)');
-    offCtx.fillStyle = g2;
-    offCtx.beginPath();
-    offCtx.arc(x, y, 8, 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.restore();
-    render();
-    if (!firstPaint) { firstPaint = true; setTimeout(startFade, 3000); }
-  }
-
-  // ─── RELEASE SPLASH ───
-  function releaseSplash(x, y) {
-    var dirX = 0, dirY = -1, speed = 5;
-    if (brushPoints.length >= 2) {
-      var p1 = brushPoints[brushPoints.length - 2];
-      var p2 = brushPoints[brushPoints.length - 1];
-      dirX = p2.x - p1.x;
-      dirY = p2.y - p1.y;
-      var mag = Math.sqrt(dirX*dirX + dirY*dirY);
-      if (mag > 1) { dirX /= mag; dirY /= mag; speed = Math.min(mag, 25); }
-    }
-    var color = pick(COLORS);
-    // Forward-flying splatter (biased in movement direction)
-    var num = Math.floor(Math.min(8 + speed, 22));
-    for (var i = 0; i < num; i++) {
-      // Angle biased forward ± 60 degrees
-      var spread = (Math.random() - 0.5) * 1.2;
-      var a = Math.atan2(dirY, dirX) + spread;
-      var d = rand(5, 8 + speed * 1.2);
-      var sz = rand(2, 5 + speed * 0.08);
-      offCtx.save();
-      offCtx.globalAlpha = rand(0.3, 0.6);
-      offCtx.fillStyle = color;
-      offCtx.shadowColor = color;
-      offCtx.shadowBlur = sz * 1.2;
-      // Stretched droplet (elliptical in movement direction)
-      offCtx.beginPath();
-      offCtx.ellipse(
-        x + Math.cos(a) * d, y + Math.sin(a) * d,
-        sz * 1.2, sz * 0.5,
-        a + Math.PI/2, 0, Math.PI * 2
-      );
-      offCtx.fill();
-      offCtx.restore();
-    }
-    // Central burst blob
-    offCtx.save();
-    var burstSize = 10 + speed * 0.5;
-    var g = offCtx.createRadialGradient(x - dirX*3, y - dirY*3, 0, x, y, burstSize);
-    g.addColorStop(0, 'rgba(255,255,255,0.35)');
-    g.addColorStop(0.4, color);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    offCtx.fillStyle = g;
-    offCtx.shadowColor = color;
-    offCtx.shadowBlur = 8 + speed * 0.4;
-    offCtx.beginPath();
-    offCtx.ellipse(x + dirX * 3, y + dirY * 3, burstSize * 1.3, burstSize * 0.9, Math.atan2(dirY, dirX), 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.restore();
-    render();
-  }
-
-  // ─── MOUSE ───
-  function getPos(e) {
-    var r = hero.getBoundingClientRect();
-    if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  }
-
-  function onMove(e) {
-    var pos = getPos(e);
-    var x = pos.x, y = pos.y;
-
-    // Clear release timer (user is still drawing)
-    if (releaseTimer) { clearTimeout(releaseTimer); releaseTimer = null; }
-
-    if (points.length > 0) {
-      var last = points[points.length - 1];
-      var dx = x - last.x, dy = y - last.y;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-
-      if (dist > 2) {
-        var speed = dist;
-        brushStroke(x, y, speed);
-        if (!firstPaint) { firstPaint = true; setTimeout(startFade, 3000); }
+  function endStroke() {
+    if (path) {
+      // Release splash at end point
+      if (path.segments.length > 1) {
+        var last = path.lastSegment.point;
+        var color = path.strokeColor;
+        var num = Math.floor(rand(8, 16));
+        for (var i = 0; i < num; i++) {
+          var a = Math.random() * Math.PI * 2;
+          var d = rand(10, 30);
+          var sz = rand(3, 7);
+          var dot = new scope.Path.Circle({
+            center: [last.x + Math.cos(a) * d, last.y + Math.sin(a) * d],
+            radius: sz,
+            fillColor: color,
+            opacity: 0.4
+          });
+          scope.project.activeLayer.addChild(dot);
+        }
+        // Central burst
+        var burst = new scope.Path.Circle({
+          center: last,
+          radius: 16,
+          fillColor: color,
+          opacity: 0.25
+        });
+        scope.project.activeLayer.addChild(burst);
+        scope.view.draw();
       }
-    } else {
-      taperedDot(x, y);
-      points.push({ x: x, y: y });
+      path = null;
     }
-
-    // Set release timer - if no movement for 120ms, fire release splash
-    var cx = x, cy = y;
-    releaseTimer = setTimeout(function() {
-      if (brushPoints.length > 0) {
-        releaseSplash(cx, cy);
-        brushPoints = []; brushColor = null;
-      }
-      releaseTimer = null;
-    }, 120);
   }
 
-  hero.addEventListener('mousemove', onMove);
-  hero.addEventListener('touchmove', onMove);
-  hero.addEventListener('mouseleave', function(e) {
-    if (brushPoints.length > 0) {
-      var last = brushPoints[brushPoints.length - 1];
-      releaseSplash(last.x, last.y);
-    }
-    brushPoints = []; brushColor = null; points = [];
-    if (releaseTimer) { clearTimeout(releaseTimer); releaseTimer = null; }
-  });
-  hero.addEventListener('mouseup', function(e) {
-    if (brushPoints.length > 0) {
-      var last = brushPoints[brushPoints.length - 1];
-      releaseSplash(last.x, last.y);
-    }
-    brushPoints = []; brushColor = null;
-  });
-  hero.addEventListener('touchstart', function(e) {
-    var pos = getPos(e);
-    brushPoints = []; brushColor = null; points = [];
-    taperedDot(pos.x, pos.y);
-  });
-  hero.addEventListener('touchend', function(e) {
-    if (brushPoints.length > 0) {
-      var last = brushPoints[brushPoints.length - 1];
-      releaseSplash(last.x, last.y);
-    }
-    brushPoints = []; brushColor = null; points = [];
-  });
+  // Paper.js tool for mouse handling
+  var tool = new scope.Tool();
+  tool.onMouseMove = onMouseMove;
 
-  // ─── WELCOME ───
+  // Native DOM events for start/end
+  canvas.addEventListener('mouseenter', function() { canvas.style.pointerEvents = 'auto'; });
+  hero.addEventListener('mouseleave', endStroke);
+  hero.addEventListener('mouseup', endStroke);
+  hero.addEventListener('touchend', endStroke);
+
+  // Welcome splat
   function welcomeSplat() {
-    var r = hero.getBoundingClientRect();
-    var cx = r.width / 2, cy = r.height / 2;
-    // Starburst pattern
+    var cx = scope.view.center.x;
+    var cy = scope.view.center.y;
     for (var i = 0; i < 12; i++) {
       var a = (i / 12) * Math.PI * 2;
       var d = 20 + (i % 3) * 15;
-      var fromX = cx + Math.cos(a) * d * 0.3;
-      var fromY = cy + Math.sin(a) * d * 0.3;
-      var toX = cx + Math.cos(a) * d;
-      var toY = cy + Math.sin(a) * d;
-      inkStroke(fromX, fromY, toX, toY, 8);
+      var color = pick(COLORS);
+      var line = new scope.Path();
+      line.add([cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3]);
+      line.add([cx + Math.cos(a) * d, cy + Math.sin(a) * d]);
+      line.strokeColor = color;
+      line.strokeWidth = rand(10, 20);
+      line.strokeCap = 'round';
+      line.opacity = 0.6;
+      scope.project.activeLayer.addChild(line);
     }
-    taperedDot(cx, cy);
+    scope.view.draw();
   }
 
-  function init() {
-    resize();
-    welcomeSplat();
-    window.addEventListener('resize', resize);
-  }
+  scope.view.onResize = function() {
+    // Redraw on resize
+  };
 
-  if (document.readyState === 'complete') init();
-  else window.addEventListener('load', init);
+  welcomeSplat();
+
+  // Start fade after 5s
+  setTimeout(function() {
+    var fadeInterval = setInterval(function() {
+      var items = scope.project.activeLayer.children;
+      if (items.length === 0) { clearInterval(fadeInterval); return; }
+      for (var i = items.length - 1; i >= 0; i--) {
+        items[i].opacity -= 0.005;
+        if (items[i].opacity <= 0) items[i].remove();
+      }
+      scope.view.draw();
+    }, 100);
+  }, 5000);
 })();
 </script>
 
