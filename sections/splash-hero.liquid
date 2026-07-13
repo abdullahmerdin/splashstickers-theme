@@ -1,409 +1,418 @@
-{%- liquid
-  assign heading = section.settings.heading
-  assign subtext = section.settings.subtext
-  assign bg_color = section.settings.background_color
-  assign section_height = section.settings.section_height
-  assign padding_top = section.settings.padding_top
-  assign padding_bottom = section.settings.padding_bottom
--%}
-
-{% style %}
-  .splash-hero-{{ section.id }} {
-    position: relative;
-    overflow: hidden;
-    background: {{ bg_color }};
-    min-height: {{ section_height }}px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
-    cursor: crosshair;
-  }
-  .splash-hero-{{ section.id }} canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .splash-hero-{{ section.id }} .splash-hero-content {
-    position: relative;
-    z-index: 20;
-    text-align: center;
-    max-width: 640px;
-  }
-  .splash-hero-{{ section.id }} .splash-hero-heading {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 900;
-    color: #FFFFFF;
-    line-height: 1.1;
-    margin: 0 0 16px;
-    mix-blend-mode: difference;
-  }
-  .splash-hero-{{ section.id }} .splash-hero-subtext {
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    color: #FFFFFF;
-    margin: 0 0 32px;
-    line-height: 1.5;
-    opacity: 0.9;
-    mix-blend-mode: difference;
-  }
-  .splash-hero-{{ section.id }} .splash-hero-buttons {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-{% endstyle %}
-
-<div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
-  <canvas id="ink-canvas-{{ section.id }}"></canvas>
-  <div class="splash-hero-content">
-    {% if heading != blank %}<h1 class="splash-hero-heading">{{ heading }}</h1>{% endif %}
-    {% if subtext != blank %}<p class="splash-hero-subtext">{{ subtext }}</p>{% endif %}
-    <div class="splash-hero-buttons">
-      {% for block in section.blocks %}
-        {% if block.settings.button_label != blank and block.settings.button_link != blank %}
-          <a href="{{ block.settings.button_link }}" style="display:inline-block;padding:14px 36px;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;background:{{ block.settings.button_bg }};color:{{ block.settings.button_text }};border:{% if block.settings.button_style == 'outline' %}2px solid {{ block.settings.button_bg }}{% else %}none{% endif %};transition:transform 0.3s ease,box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">{{ block.settings.button_label }}</a>
-        {% endif %}
-      {% endfor %}
-    </div>
-  </div>
-</div>
-
-<script>
-(function() {
-  var id = '{{ section.id }}';
-  var hero = document.getElementById('splash-hero-' + id);
-  var canvas = document.getElementById('ink-canvas-' + id);
-  if (!canvas || !hero) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  var ctx = canvas.getContext('2d');
-  var W, H, dpr = window.devicePixelRatio || 1;
-
-  function resize() {
-    var r = hero.getBoundingClientRect();
-    W = r.width; H = r.height;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.scale(dpr, dpr);
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
-  function pick() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
-  function rand(a,b) { return Math.random() * (b - a) + a; }
-
-  var lastX = null, lastY = null, lastColor = null;
-  var segments = [];
-  var START_FADE_AFTER = 5000;
-  var FADE_DURATION = 1200;
-
-  function paintStroke(x1, y1, x2, y2, speed) {
-    var color = lastColor || pick();
-    var nextColor = pick();
-    var width = Math.min(Math.max(8, 35 - speed * 1.2), 40);
-
-    var seg = {
-      x1: x1, y1: y1, x2: x2, y2: y2, w: width,
-      colorFrom: color,
-      colorTo: nextColor,
-      ts: Date.now()
-    };
-    segments.push(seg);
-    drawSegment(seg, 1);
-    lastColor = nextColor;
-
-    // Splatter dots
-    if (speed > 8 && Math.random() > 0.75) {
-      var num = Math.floor(Math.min(speed * 0.45, 7));
-      for (var i = 0; i < num; i++) {
-        var a = Math.random() * Math.PI * 2;
-        var d = rand(10, 20 + speed * 1.2);
-        var dot = {
-          sx: x2, sy: y2,            // source (where it spawns)
-          ex: x2 + Math.cos(a) * d,   // end (where it lands)
-          ey: y2 + Math.sin(a) * d,
-          x: x2, y: y2,               // current position
-          r: rand(2, 3 + speed * 0.03),
-          color: nextColor,
-          ts: Date.now(),
-          progress: 0,                 // 0→1 animation
-          delay: Math.random() * 100,
-          speed: rand(0.02, 0.05)     // animation speed
-        };
-        segments.push(dot);
-        drawDot(dot, 1);
-      }
-    }
-  }
-
-  function drawDot(dot, alpha) {
-    ctx.save();
-    ctx.fillStyle = dot.color;
-    ctx.globalAlpha = 0.35 * alpha;
-    ctx.beginPath();
-    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // ─── Animate dot splatter ───
-  function animateDots() {
-    var needsRedraw = false;
-    var now = Date.now();
-    for (var i = 0; i < segments.length; i++) {
-      var seg = segments[i];
-      if (seg.r !== undefined && seg.progress !== undefined && seg.progress < 1) {
-        // Delay before starting
-        if (now - seg.ts > seg.delay) {
-          seg.progress = Math.min(1, seg.progress + seg.speed);
-          // Ease out cubic
-          var t = 1 - Math.pow(1 - seg.progress, 3);
-          seg.x = seg.sx + (seg.ex - seg.sx) * t;
-          seg.y = seg.sy + (seg.ey - seg.sy) * t;
-          needsRedraw = true;
-        }
-      }
-    }
-    if (needsRedraw) {
-      redrawAll();
-    }
-    requestAnimationFrame(animateDots);
-  }
-
-  function drawSegment(seg, alpha) {
-    // Gradient covers 50% of segment
-    var dx = seg.x2 - seg.x1, dy = seg.y2 - seg.y1;
-    var dist = Math.sqrt(dx*dx + dy*dy) || 1;
-    var span = 0.5;
-    var mx = (seg.x1 + seg.x2) / 2;
-    var my = (seg.y1 + seg.y2) / 2;
-    var nx = dx / dist, ny = dy / dist;
-    var grad = ctx.createLinearGradient(mx - nx * dist * span/2, my - ny * dist * span/2, mx + nx * dist * span/2, my + ny * dist * span/2);
-    grad.addColorStop(0, seg.colorFrom);
-    grad.addColorStop(1, seg.colorTo);
-
-    // Layer 1: bleed
-    ctx.save();
-    ctx.globalAlpha = 0.12 * alpha;
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = seg.w + 10;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(seg.x1, seg.y1);
-    ctx.lineTo(seg.x2, seg.y2);
-    ctx.stroke();
-    ctx.restore();
-
-    // Layer 2: main body
-    ctx.save();
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = seg.w;
-    ctx.lineCap = 'round';
-    ctx.globalAlpha = 0.95 * alpha;
-    ctx.beginPath();
-    ctx.moveTo(seg.x1, seg.y1);
-    ctx.lineTo(seg.x2, seg.y2);
-    ctx.stroke();
-    ctx.restore();
-
-    // Layer 3: highlight (white on top, no gradient)
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = Math.max(3, seg.w * 0.25);
-    ctx.lineCap = 'round';
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.moveTo(seg.x1, seg.y1);
-    ctx.lineTo(seg.x2, seg.y2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawDot(dot, alpha) {
-    ctx.save();
-    ctx.fillStyle = dot.color;
-    ctx.globalAlpha = 0.35 * alpha;
-    ctx.beginPath();
-    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // ─── Redraw all visible segments ───
-  function redrawAll() {
-    ctx.clearRect(0, 0, W, H);
-    for (var i = 0; i < segments.length; i++) {
-      var seg = segments[i];
-      if (seg.r !== undefined) drawDot(seg, 1);
-      else drawSegment(seg, 1);
-    }
-  }
-
-  // ─── Fade loop ───
-  var fadeStarted = false;
-
-  function fadeLoop() {
-    var now = Date.now();
-    var oldest = segments.length > 0 ? segments[0].ts : now;
-    var age = now - oldest;
-
-    if (!fadeStarted && segments.length > 0 && age > START_FADE_AFTER) {
-      fadeStarted = true;
-    }
-
-    if (fadeStarted && segments.length > 0) {
-      var keep = [];
-      for (var i = 0; i < segments.length; i++) {
-        var segAge = now - segments[i].ts - START_FADE_AFTER;
-        if (segAge < 0) segAge = 0;
-        var alpha = 1 - (segAge / FADE_DURATION);
-        if (alpha > 0) {
-          keep.push(segments[i]);
-        }
-      }
-
-      if (keep.length < segments.length) {
-        segments = keep;
-        ctx.clearRect(0, 0, W, H);
-        for (var i = 0; i < segments.length; i++) {
-          var seg = segments[i];
-          var segAge = now - seg.ts - START_FADE_AFTER;
-          var alpha = Math.max(0, 1 - (segAge / FADE_DURATION));
-          if (seg.r !== undefined) drawDot(seg, alpha);
-          else drawSegment(seg, alpha);
-        }
-      }
-    }
-
-    if (segments.length > 0) {
-      requestAnimationFrame(fadeLoop);
-    }
-  }
-
-  // ─── Release splat ───
-  function releaseSplat(x, y, speed) {
-    speed = speed || 8;
-    var color = lastColor || pick();
-    lastColor = pick();
-    var num = Math.floor(rand(6, 12 + speed * 0.3));
-    for (var i = 0; i < num; i++) {
-      var a = Math.random() * Math.PI * 2;
-      var d = rand(8, 20 + speed);
-      var dot = {
-        x: x + Math.cos(a) * d,
-        y: y + Math.sin(a) * d,
-        r: rand(3, 7),
-        color: color,
-        ts: Date.now()
-      };
-      segments.push(dot);
-      drawDot(dot, 1);
-    }
-    // Central burst
-    ctx.save();
-    var g = ctx.createRadialGradient(x-3, y-3, 0, x, y, 18);
-    g.addColorStop(0, 'rgba(255,255,255,0.2)');
-    g.addColorStop(0.5, color);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath();
-    ctx.arc(x, y, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // ─── Mouse ───
-  function getPos(e) {
-    var r = hero.getBoundingClientRect();
-    if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  }
-
-  hero.addEventListener('mousemove', function(e) {
-    var pos = getPos(e);
-    var x = pos.x, y = pos.y;
-    if (lastX !== null) {
-      var dx = x - lastX, dy = y - lastY;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
-    }
-    lastX = x; lastY = y;
-    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
-  });
-  hero.addEventListener('touchmove', function(e) {
-    var pos = getPos(e);
-    var x = pos.x, y = pos.y;
-    if (lastX !== null) {
-      var dx = x - lastX, dy = y - lastY;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
-    }
-    lastX = x; lastY = y;
-    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
-  });
-  hero.addEventListener('mouseleave', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
-  hero.addEventListener('mouseup', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
-  hero.addEventListener('touchstart', function(e) { var p = getPos(e); lastX = p.x; lastY = p.y; });
-  hero.addEventListener('touchend', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
-
-  // ─── Welcome ───
-  function welcome() {
-    var cx = W/2, cy = H/2;
-    for (var i = 0; i < 12; i++) {
-      var a = (i / 12) * Math.PI * 2;
-      var d = 20 + (i % 3) * 15;
-      paintStroke(cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3, cx + Math.cos(a) * d, cy + Math.sin(a) * d, 6);
-    }
-    releaseSplat(cx, cy, 6);
-  }
-  setTimeout(welcome, 200);
-
-  // Start dot animation loop
-  animateDots();
-})();
-</script>
-
-{% schema %}
-{
-  "name": "Splash Hero",
-  "tag": "section",
-  "class": "splash-hero",
-  "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Splash Your Style" },
-    { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Draw with liquid ink" },
-    { "type": "color", "id": "background_color", "label": "Background", "default": "#1A1A2E" },
-    { "type": "range", "id": "section_height", "min": 300, "max": 800, "step": 50, "default": 550, "label": "Height" },
-    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding top" },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding bottom" }
-  ],
-  "blocks": [
-    {
-      "type": "button", "name": "Button", "limit": 3,
-      "settings": [
-        { "type": "text", "id": "button_label", "label": "Label", "default": "Shop Stickers" },
-        { "type": "url", "id": "button_link", "label": "Link" },
-        { "type": "select", "id": "button_style", "label": "Style", "options": [{ "value": "solid", "label": "Solid" }, { "value": "outline", "label": "Outline" }], "default": "solid" },
-        { "type": "color", "id": "button_bg", "label": "Button color", "default": "#FFFFFF" },
-        { "type": "color", "id": "button_text", "label": "Text color", "default": "#1A1A2E" }
-      ]
-    }
-  ],
-  "presets": [
-    {
-      "name": "Splash Hero",
-      "category": "Custom",
-      "blocks": [
-        { "type": "button", "settings": { "button_label": "Shop Stickers", "button_style": "solid", "button_bg": "#FFFFFF", "button_text": "#1A1A2E" } }
-      ]
-    }
-  ]
-}
-{% endschema %}
+     1|{%- liquid
+     2|  assign heading = section.settings.heading
+     3|  assign subtext = section.settings.subtext
+     4|  assign bg_color = section.settings.background_color
+     5|  assign section_height = section.settings.section_height
+     6|  assign padding_top = section.settings.padding_top
+     7|  assign padding_bottom = section.settings.padding_bottom
+     8|-%}
+     9|
+    10|{% style %}
+    11|  .splash-hero-{{ section.id }} {
+    12|    position: relative;
+    13|    overflow: hidden;
+    14|    background: {{ bg_color }};
+    15|    min-height: {{ section_height }}px;
+    16|    display: flex;
+    17|    align-items: center;
+    18|    justify-content: center;
+    19|    padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
+    20|    cursor: crosshair;
+    21|  }
+    22|  .splash-hero-{{ section.id }} canvas {
+    23|    position: absolute;
+    24|    inset: 0;
+    25|    width: 100%;
+    26|    height: 100%;
+    27|    pointer-events: none;
+    28|    z-index: 1;
+    29|  }
+    30|  .splash-hero-{{ section.id }} .splash-hero-content {
+    31|    position: relative;
+    32|    z-index: 20;
+    33|    text-align: center;
+    34|    max-width: 640px;
+    35|  }
+    36|  .splash-hero-{{ section.id }} .splash-hero-heading {
+    37|    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    38|    font-weight: 900;
+    39|    color: #FFFFFF;
+    40|    line-height: 1.1;
+    41|    margin: 0 0 16px;
+    42|    mix-blend-mode: difference;
+    43|  }
+    44|  .splash-hero-{{ section.id }} .splash-hero-subtext {
+    45|    font-size: clamp(1rem, 2vw, 1.2rem);
+    46|    color: #FFFFFF;
+    47|    margin: 0 0 32px;
+    48|    line-height: 1.5;
+    49|    opacity: 0.9;
+    50|    mix-blend-mode: difference;
+    51|  }
+    52|  .splash-hero-{{ section.id }} .splash-hero-buttons {
+    53|    display: flex;
+    54|    gap: 16px;
+    55|    justify-content: center;
+    56|    flex-wrap: wrap;
+    57|  }
+    58|{% endstyle %}
+    59|
+    60|<div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
+    61|  <canvas id="ink-canvas-{{ section.id }}"></canvas>
+    62|  <div class="splash-hero-content">
+    63|    {% if heading != blank %}<h1 class="splash-hero-heading">{{ heading }}</h1>{% endif %}
+    64|    {% if subtext != blank %}<p class="splash-hero-subtext">{{ subtext }}</p>{% endif %}
+    65|    <div class="splash-hero-buttons">
+    66|      {% for block in section.blocks %}
+    67|        {% if block.settings.button_label != blank and block.settings.button_link != blank %}
+    68|          <a href="{{ block.settings.button_link }}" style="display:inline-block;padding:14px 36px;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;background:{{ block.settings.button_bg }};color:{{ block.settings.button_text }};border:{% if block.settings.button_style == 'outline' %}2px solid {{ block.settings.button_bg }}{% else %}none{% endif %};transition:transform 0.3s ease,box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">{{ block.settings.button_label }}</a>
+    69|        {% endif %}
+    70|      {% endfor %}
+    71|    </div>
+    72|  </div>
+    73|</div>
+    74|
+    75|<script>
+    76|(function() {
+    77|  var id = '{{ section.id }}';
+    78|  var hero = document.getElementById('splash-hero-' + id);
+    79|  var canvas = document.getElementById('ink-canvas-' + id);
+    80|  if (!canvas || !hero) return;
+    81|  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    82|  var drawCanvas = document.createElement('canvas');
+    83|  var ctx = drawCanvas.getContext('2d');
+    84|  // Second canvas for animated dots only
+    85|  var dotCanvas = document.createElement('canvas');
+    86|  var dotCtx = dotCanvas.getContext('2d');
+    87|  var W, H, dpr = window.devicePixelRatio || 1;
+    88|
+    89|  function resizeDraw() {
+    90|    var r = hero.getBoundingClientRect();
+    91|    W = r.width; H = r.height;
+    92|    drawCanvas.width = W * dpr;
+    93|    drawCanvas.height = H * dpr;
+    94|    drawCanvas.style.width = W + 'px';
+    95|    drawCanvas.style.height = H + 'px';
+    96|    dotCanvas.width = W * dpr;
+    97|    dotCanvas.height = H * dpr;
+    98|    dotCanvas.style.width = W + 'px';
+    99|    dotCanvas.style.height = H + 'px';
+   100|    ctx.scale(dpr, dpr);
+   101|    dotCtx.scale(dpr, dpr);
+   102|  }
+   103|  resize();
+   104|  window.addEventListener('resize', resize);
+   105|
+   106|  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
+   107|  function pick() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
+   108|  function rand(a,b) { return Math.random() * (b - a) + a; }
+   109|
+   110|  var lastX = null, lastY = null, lastColor = null;
+   111|  var segments = [];
+   112|  var START_FADE_AFTER = 5000;
+   113|  var FADE_DURATION = 1200;
+   114|
+   115|  function paintStroke(x1, y1, x2, y2, speed) {
+   116|    var color = lastColor || pick();
+   117|    var nextColor = pick();
+   118|    var width = Math.min(Math.max(8, 35 - speed * 1.2), 40);
+   119|
+   120|    var seg = {
+   121|      x1: x1, y1: y1, x2: x2, y2: y2, w: width,
+   122|      colorFrom: color,
+   123|      colorTo: nextColor,
+   124|      ts: Date.now()
+   125|    };
+   126|    segments.push(seg);
+   127|    drawSegment(seg, 1);
+   128|    lastColor = nextColor;
+   129|
+   130|    // Splatter dots
+   131|    if (speed > 8 && Math.random() > 0.75) {
+   132|      var num = Math.floor(Math.min(speed * 0.45, 7));
+   133|      for (var i = 0; i < num; i++) {
+   134|        var a = Math.random() * Math.PI * 2;
+   135|        var d = rand(10, 20 + speed * 1.2);
+   136|        var dot = {
+   137|          sx: x2, sy: y2,            // source (where it spawns)
+   138|          ex: x2 + Math.cos(a) * d,   // end (where it lands)
+   139|          ey: y2 + Math.sin(a) * d,
+   140|          x: x2, y: y2,               // current position
+   141|          r: rand(2, 3 + speed * 0.03),
+   142|          color: nextColor,
+   143|          ts: Date.now(),
+   144|          progress: 0,                 // 0→1 animation
+   145|          delay: Math.random() * 100,
+   146|          speed: rand(0.02, 0.05)     // animation speed
+   147|        };
+   148|        segments.push(dot);
+   149|        drawDot(dot, 1);
+   150|      }
+   151|    }
+   152|  }
+   153|
+   154|  function drawDot(dot, alpha) {
+   155|    ctx.save();
+   156|    ctx.fillStyle = dot.color;
+   157|    ctx.globalAlpha = 0.35 * alpha;
+   158|    ctx.beginPath();
+   159|    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
+   160|    ctx.fill();
+   161|    ctx.restore();
+   162|  }
+   163|
+   164|  // ─── Animate dot splatter ───
+   165|  function animateDots() {
+   166|    var needsRedraw = false;
+   167|    var now = Date.now();
+   168|    for (var i = 0; i < segments.length; i++) {
+   169|      var seg = segments[i];
+   170|      if (seg.r !== undefined && seg.progress !== undefined && seg.progress < 1) {
+   171|        // Delay before starting
+   172|        if (now - seg.ts > seg.delay) {
+   173|          seg.progress = Math.min(1, seg.progress + seg.speed);
+   174|          // Ease out cubic
+   175|          var t = 1 - Math.pow(1 - seg.progress, 3);
+   176|          seg.x = seg.sx + (seg.ex - seg.sx) * t;
+   177|          seg.y = seg.sy + (seg.ey - seg.sy) * t;
+   178|          needsRedraw = true;
+   179|        }
+   180|      }
+   181|    }
+   182|    if (needsRedraw) {
+   183|      redrawAll();
+   184|    }
+   185|    requestAnimationFrame(animateDots);
+   186|  }
+   187|
+   188|  function drawSegment(seg, alpha) {
+   189|    // Gradient covers 50% of segment
+   190|    var dx = seg.x2 - seg.x1, dy = seg.y2 - seg.y1;
+   191|    var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+   192|    var span = 0.5;
+   193|    var mx = (seg.x1 + seg.x2) / 2;
+   194|    var my = (seg.y1 + seg.y2) / 2;
+   195|    var nx = dx / dist, ny = dy / dist;
+   196|    var grad = ctx.createLinearGradient(mx - nx * dist * span/2, my - ny * dist * span/2, mx + nx * dist * span/2, my + ny * dist * span/2);
+   197|    grad.addColorStop(0, seg.colorFrom);
+   198|    grad.addColorStop(1, seg.colorTo);
+   199|
+   200|    // Layer 1: bleed
+   201|    ctx.save();
+   202|    ctx.globalAlpha = 0.12 * alpha;
+   203|    ctx.strokeStyle = grad;
+   204|    ctx.lineWidth = seg.w + 10;
+   205|    ctx.lineCap = 'round';
+   206|    ctx.beginPath();
+   207|    ctx.moveTo(seg.x1, seg.y1);
+   208|    ctx.lineTo(seg.x2, seg.y2);
+   209|    ctx.stroke();
+   210|    ctx.restore();
+   211|
+   212|    // Layer 2: main body
+   213|    ctx.save();
+   214|    ctx.strokeStyle = grad;
+   215|    ctx.lineWidth = seg.w;
+   216|    ctx.lineCap = 'round';
+   217|    ctx.globalAlpha = 0.95 * alpha;
+   218|    ctx.beginPath();
+   219|    ctx.moveTo(seg.x1, seg.y1);
+   220|    ctx.lineTo(seg.x2, seg.y2);
+   221|    ctx.stroke();
+   222|    ctx.restore();
+   223|
+   224|    // Layer 3: highlight (white on top, no gradient)
+   225|    ctx.save();
+   226|    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+   227|    ctx.lineWidth = Math.max(3, seg.w * 0.25);
+   228|    ctx.lineCap = 'round';
+   229|    ctx.globalAlpha = alpha;
+   230|    ctx.beginPath();
+   231|    ctx.moveTo(seg.x1, seg.y1);
+   232|    ctx.lineTo(seg.x2, seg.y2);
+   233|    ctx.stroke();
+   234|    ctx.restore();
+   235|  }
+   236|
+   237|  function drawDot(dot, alpha) {
+   238|    ctx.save();
+   239|    ctx.fillStyle = dot.color;
+   240|    ctx.globalAlpha = 0.35 * alpha;
+   241|    ctx.beginPath();
+   242|    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
+   243|    ctx.fill();
+   244|    ctx.restore();
+   245|  }
+   246|
+   247|  // ─── Redraw all visible segments ───
+   248|  function redrawAll() {
+   249|    ctx.clearRect(0, 0, W, H);
+   250|    for (var i = 0; i < segments.length; i++) {
+   251|      var seg = segments[i];
+   252|      if (seg.r !== undefined) drawDot(seg, 1);
+   253|      else drawSegment(seg, 1);
+   254|    }
+   255|  }
+   256|
+   257|  // ─── Fade loop ───
+   258|  var fadeStarted = false;
+   259|
+   260|  function fadeLoop() {
+   261|    var now = Date.now();
+   262|    var oldest = segments.length > 0 ? segments[0].ts : now;
+   263|    var age = now - oldest;
+   264|
+   265|    if (!fadeStarted && segments.length > 0 && age > START_FADE_AFTER) {
+   266|      fadeStarted = true;
+   267|    }
+   268|
+   269|    if (fadeStarted && segments.length > 0) {
+   270|      var keep = [];
+   271|      for (var i = 0; i < segments.length; i++) {
+   272|        var segAge = now - segments[i].ts - START_FADE_AFTER;
+   273|        if (segAge < 0) segAge = 0;
+   274|        var alpha = 1 - (segAge / FADE_DURATION);
+   275|        if (alpha > 0) {
+   276|          keep.push(segments[i]);
+   277|        }
+   278|      }
+   279|
+   280|      if (keep.length < segments.length) {
+   281|        segments = keep;
+   282|        ctx.clearRect(0, 0, W, H);
+   283|        for (var i = 0; i < segments.length; i++) {
+   284|          var seg = segments[i];
+   285|          var segAge = now - seg.ts - START_FADE_AFTER;
+   286|          var alpha = Math.max(0, 1 - (segAge / FADE_DURATION));
+   287|          if (seg.r !== undefined) drawDot(seg, alpha);
+   288|          else drawSegment(seg, alpha);
+   289|        }
+   290|      }
+   291|    }
+   292|
+   293|    if (segments.length > 0) {
+   294|      requestAnimationFrame(fadeLoop);
+   295|    }
+   296|  }
+   297|
+   298|  // ─── Release splat ───
+   299|  function releaseSplat(x, y, speed) {
+   300|    speed = speed || 8;
+   301|    var color = lastColor || pick();
+   302|    lastColor = pick();
+   303|    var num = Math.floor(rand(6, 12 + speed * 0.3));
+   304|    for (var i = 0; i < num; i++) {
+   305|      var a = Math.random() * Math.PI * 2;
+   306|      var d = rand(8, 20 + speed);
+   307|      var dot = {
+   308|        x: x + Math.cos(a) * d,
+   309|        y: y + Math.sin(a) * d,
+   310|        r: rand(3, 7),
+   311|        color: color,
+   312|        ts: Date.now()
+   313|      };
+   314|      segments.push(dot);
+   315|      drawDot(dot, 1);
+   316|    }
+   317|    // Central burst
+   318|    ctx.save();
+   319|    var g = ctx.createRadialGradient(x-3, y-3, 0, x, y, 18);
+   320|    g.addColorStop(0, 'rgba(255,255,255,0.2)');
+   321|    g.addColorStop(0.5, color);
+   322|    g.addColorStop(1, 'rgba(0,0,0,0)');
+   323|    ctx.fillStyle = g;
+   324|    ctx.globalAlpha = 0.5;
+   325|    ctx.beginPath();
+   326|    ctx.arc(x, y, 18, 0, Math.PI * 2);
+   327|    ctx.fill();
+   328|    ctx.restore();
+   329|  }
+   330|
+   331|  // ─── Mouse ───
+   332|  function getPos(e) {
+   333|    var r = hero.getBoundingClientRect();
+   334|    if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+   335|    return { x: e.clientX - r.left, y: e.clientY - r.top };
+   336|  }
+   337|
+   338|  hero.addEventListener('mousemove', function(e) {
+   339|    var pos = getPos(e);
+   340|    var x = pos.x, y = pos.y;
+   341|    if (lastX !== null) {
+   342|      var dx = x - lastX, dy = y - lastY;
+   343|      var dist = Math.sqrt(dx*dx + dy*dy);
+   344|      if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
+   345|    }
+   346|    lastX = x; lastY = y;
+   347|    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
+   348|  });
+   349|  hero.addEventListener('touchmove', function(e) {
+   350|    var pos = getPos(e);
+   351|    var x = pos.x, y = pos.y;
+   352|    if (lastX !== null) {
+   353|      var dx = x - lastX, dy = y - lastY;
+   354|      var dist = Math.sqrt(dx*dx + dy*dy);
+   355|      if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
+   356|    }
+   357|    lastX = x; lastY = y;
+   358|    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
+   359|  });
+   360|  hero.addEventListener('mouseleave', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
+   361|  hero.addEventListener('mouseup', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
+   362|  hero.addEventListener('touchstart', function(e) { var p = getPos(e); lastX = p.x; lastY = p.y; });
+   363|  hero.addEventListener('touchend', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
+   364|
+   365|  // ─── Welcome ───
+   366|  function welcome() {
+   367|    var cx = W/2, cy = H/2;
+   368|    for (var i = 0; i < 12; i++) {
+   369|      var a = (i / 12) * Math.PI * 2;
+   370|      var d = 20 + (i % 3) * 15;
+   371|      paintStroke(cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3, cx + Math.cos(a) * d, cy + Math.sin(a) * d, 6);
+   372|    }
+   373|    releaseSplat(cx, cy, 6);
+   374|  }
+   375|  setTimeout(welcome, 200);
+   376|
+   377|  // Start dot animation loop
+   378|  animateDots();
+   379|})();
+   380|</script>
+   381|
+   382|{% schema %}
+   383|{
+   384|  "name": "Splash Hero",
+   385|  "tag": "section",
+   386|  "class": "splash-hero",
+   387|  "settings": [
+   388|    { "type": "text", "id": "heading", "label": "Heading", "default": "Splash Your Style" },
+   389|    { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Draw with liquid ink" },
+   390|    { "type": "color", "id": "background_color", "label": "Background", "default": "#1A1A2E" },
+   391|    { "type": "range", "id": "section_height", "min": 300, "max": 800, "step": 50, "default": 550, "label": "Height" },
+   392|    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding top" },
+   393|    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding bottom" }
+   394|  ],
+   395|  "blocks": [
+   396|    {
+   397|      "type": "button", "name": "Button", "limit": 3,
+   398|      "settings": [
+   399|        { "type": "text", "id": "button_label", "label": "Label", "default": "Shop Stickers" },
+   400|        { "type": "url", "id": "button_link", "label": "Link" },
+   401|        { "type": "select", "id": "button_style", "label": "Style", "options": [{ "value": "solid", "label": "Solid" }, { "value": "outline", "label": "Outline" }], "default": "solid" },
+   402|        { "type": "color", "id": "button_bg", "label": "Button color", "default": "#FFFFFF" },
+   403|        { "type": "color", "id": "button_text", "label": "Text color", "default": "#1A1A2E" }
+   404|      ]
+   405|    }
+   406|  ],
+   407|  "presets": [
+   408|    {
+   409|      "name": "Splash Hero",
+   410|      "category": "Custom",
+   411|      "blocks": [
+   412|        { "type": "button", "settings": { "button_label": "Shop Stickers", "button_style": "solid", "button_bg": "#FFFFFF", "button_text": "#1A1A2E" } }
+   413|      ]
+   414|    }
+   415|  ]
+   416|}
+   417|{% endschema %}
+   418|
