@@ -140,8 +140,14 @@
   }
 
   function drawSegment(seg, alpha) {
-    // Create gradient from colorFrom to colorTo
-    var grad = ctx.createLinearGradient(seg.x1, seg.y1, seg.x2, seg.y2);
+    // Gradient covers 50% of segment (tighter transition)
+    var dx = seg.x2 - seg.x1, dy = seg.y2 - seg.y1;
+    var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    var span = 0.5;
+    var mx = (seg.x1 + seg.x2) / 2;
+    var my = (seg.y1 + seg.y2) / 2;
+    var nx = dx / dist, ny = dy / dist;
+    var grad = ctx.createLinearGradient(mx - nx * dist * span/2, my - ny * dist * span/2, mx + nx * dist * span/2, my + ny * dist * span/2);
     grad.addColorStop(0, seg.colorFrom);
     grad.addColorStop(1, seg.colorTo);
 
