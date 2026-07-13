@@ -4,7 +4,6 @@
   assign bg_color = section.settings.background_color
   assign heading_color = section.settings.heading_color
   assign text_color = section.settings.text_color
-  assign show_animation = section.settings.show_animation
   assign section_height = section.settings.section_height
   assign padding_top = section.settings.padding_top
   assign padding_bottom = section.settings.padding_bottom
@@ -20,8 +19,9 @@
     align-items: center;
     justify-content: center;
     padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
+    cursor: crosshair;
   }
-  .splash-hero-{{ section.id }} svg.splash-svg {
+  .splash-hero-{{ section.id }} canvas {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -29,32 +29,11 @@
     pointer-events: none;
     z-index: 1;
   }
-  .splash-hero-{{ section.id }} .sticker-el {
-    position: absolute;
-    z-index: 2;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    border: 2.5px dashed rgba(255,255,255,0.5);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    font-weight: 700;
-    color: rgba(255,255,255,0.9);
-    will-change: transform, opacity;
-  }
-  .splash-hero-{{ section.id }} .sticker-el::after {
-    content: ''; position: absolute;
-    top: -5px; right: -5px;
-    width: 14px; height: 14px;
-    background: rgba(255,255,255,0.3); border-radius: 50%;
-  }
   .splash-hero-{{ section.id }} .splash-hero-content {
     position: relative;
     z-index: 20;
     text-align: center;
     max-width: 640px;
-    opacity: 0;
   }
   .splash-hero-{{ section.id }} .splash-hero-heading {
     font-size: clamp(2.5rem, 6vw, 4.5rem);
@@ -63,6 +42,8 @@
     line-height: 1.1;
     letter-spacing: -0.02em;
     margin: 0 0 16px;
+    position: relative;
+    z-index: 25;
   }
   .splash-hero-{{ section.id }} .splash-hero-subtext {
     font-size: clamp(1rem, 2vw, 1.2rem);
@@ -70,23 +51,33 @@
     margin: 0 0 32px;
     line-height: 1.5;
     opacity: 0.9;
+    position: relative;
+    z-index: 25;
   }
   .splash-hero-{{ section.id }} .splash-hero-buttons {
     display: flex;
     gap: 16px;
     justify-content: center;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 25;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .splash-hero-{{ section.id }} svg.splash-svg { display: none; }
-    .splash-hero-{{ section.id }} .sticker-el { display: none; }
-    .splash-hero-{{ section.id }} .splash-hero-content { opacity: 1; }
+  .splash-hero-{{ section.id }} .ink-count {
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    z-index: 30;
+    color: {{ text_color }};
+    opacity: 0.3;
+    font-size: 0.75rem;
+    font-family: monospace;
+    pointer-events: none;
   }
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
-  <svg class="splash-svg" id="splash-svg-{{ section.id }}" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="splash-hero-content" id="splash-content-{{ section.id }}">
+  <canvas id="ink-canvas-{{ section.id }}"></canvas>
+  <div class="splash-hero-content">
     {% if heading != blank %}
       <h1 class="splash-hero-heading">{{ heading }}</h1>
     {% endif %}
@@ -101,316 +92,218 @@
       {% endfor %}
     </div>
   </div>
+  <div class="ink-count" id="ink-count-{{ section.id }}"></div>
 </div>
 
-{% if show_animation %}
-<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
 <script>
 (function() {
   'use strict';
   var id = '{{ section.id }}';
   var hero = document.getElementById('splash-hero-' + id);
-  var svg = document.getElementById('splash-svg-' + id);
-  var content = document.getElementById('splash-content-' + id);
-  if (!svg || !hero) return;
+  var canvas = document.getElementById('ink-canvas-' + id);
+  if (!canvas || !hero) return;
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    if (content) content.style.opacity = '1';
-    return;
+  var ctx = canvas.getContext('2d');
+  var W, H, trails = [], pastX, pastY, inkCount = 0;
+
+  // Splatoon neon palette
+  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700',
+                '#FF7EB3','#FF9B6B','#4CF0B8','#7FA3FF','#C084FC','#FFE44D'];
+
+  function resize() {
+    var r = hero.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    W = canvas.width = r.width * dpr;
+    H = canvas.height = r.height * dpr;
+    canvas.style.width = r.width + 'px';
+    canvas.style.height = r.height + 'px';
+    ctx.scale(dpr, dpr);
+    // Redraw existing trails on resize
+    redrawAll();
   }
 
-  var ns = 'http://www.w3.org/2000/svg';
-  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
-  var LIGHT = ['#FF7EB3','#FF9B6B','#4CF0B8','#7FA3FF','#C084FC','#FFE44D'];
-  var SYMBOLS = ['✦','♥','◆','♡','★','♪','✧'];
+  function rand(a, b) { return Math.random() * (b - a) + a; }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  // ─── ORGANIC SPLASH PATH ───
-  // Generates a blob with organic tentacles/droplets
-  function organicPath(cx, cy, r, numLobes) {
-    numLobes = numLobes || Math.floor(Math.random() * 4) + 5;
-    var pts = [];
-    for (var i = 0; i < numLobes; i++) {
-      var a = (i / numLobes) * Math.PI * 2 - Math.PI / 2;
-      var len = r * (0.7 + Math.random() * 0.6);
-      pts.push({ x: cx + Math.cos(a) * len, y: cy + Math.sin(a) * len });
-      
-      // Control points for organic irregularity
-      var a2 = ((i + 0.5) / numLobes) * Math.PI * 2 - Math.PI / 2;
-      var len2 = r * (0.5 + Math.random() * 0.4);
-      var cw = { x: cx + Math.cos(a) * r * 0.4, y: cy + Math.sin(a) * r * 0.4 };
-      var cw2 = { x: cx + Math.cos(a2) * r * 0.4, y: cy + Math.sin(a2) * r * 0.4 };
-      if (i === 0) {
-        pts[pts.length - 1].c1x = cw.x; pts[pts.length - 1].c1y = cw.y;
-        pts[pts.length - 1].c2x = cw2.x; pts[pts.length - 1].c2y = cw2.y;
-      } else {
-        pts[pts.length - 2].c2x = cw2.x; pts[pts.length - 2].c2y = cw2.y;
-        pts[pts.length - 1].c1x = cw.x; pts[pts.length - 1].c1y = cw.y;
+  // ─── SPLATTER AT CURSOR ───
+  function splatter(x, y) {
+    var color = pick(COLORS);
+    var numDots = Math.floor(rand(6, 16));
+    inkCount += numDots;
+
+    for (var i = 0; i < numDots; i++) {
+      var angle = rand(0, Math.PI * 2);
+      var dist = rand(3, 30);
+      var size = rand(4, 16);
+      var speed = rand(2, 6);
+
+      trails.push({
+        x: x + Math.cos(angle) * dist * 0.3,
+        y: y + Math.sin(angle) * dist * 0.3,
+        targetX: x + Math.cos(angle) * dist,
+        targetY: y + Math.sin(angle) * dist,
+        size: size,
+        origSize: size,
+        color: color,
+        life: 1,
+        speed: speed,
+        progress: 0,
+        type: Math.random() > 0.5 ? 'splat' : 'drip'
+      });
+    }
+
+    // Main splash blob (larger central drop)
+    trails.push({
+      x: x - rand(5, 15), y: y + rand(-5, 5),
+      targetX: x, targetY: y,
+      size: rand(18, 35),
+      origSize: rand(18, 35),
+      color: color,
+      life: 1,
+      speed: 3,
+      progress: 0,
+      type: 'blob'
+    });
+  }
+
+  // ─── DRAW ───
+  function drawTrail(t) {
+    ctx.save();
+    ctx.globalAlpha = t.life * 0.85;
+
+    if (t.type === 'blob') {
+      // Large central blob with 3D gradient
+      var g = ctx.createRadialGradient(t.x - t.size*0.15, t.y - t.size*0.15, 2, t.x, t.y, t.size/2);
+      g.addColorStop(0, '#FFFFFF');
+      g.addColorStop(0.3, t.color);
+      g.addColorStop(1, 'rgba(0,0,0,0.1)');
+      ctx.fillStyle = g;
+      ctx.shadowColor = 'rgba(0,0,0,0.15)';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.size/2 * t.progress, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (t.type === 'drip') {
+      // Teardrop/drip shape
+      ctx.fillStyle = t.color;
+      ctx.shadowColor = 'rgba(0,0,0,0.08)';
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.moveTo(t.x, t.y - t.size * 0.5 * t.progress);
+      ctx.quadraticCurveTo(t.x + t.size*0.4, t.y + t.size*0.1, t.x, t.y + t.size*0.6 * t.progress);
+      ctx.quadraticCurveTo(t.x - t.size*0.4, t.y + t.size*0.1, t.x, t.y - t.size*0.5 * t.progress);
+      ctx.fill();
+    } else {
+      // Circular splat dot
+      ctx.fillStyle = t.color;
+      ctx.shadowColor = 'rgba(0,0,0,0.06)';
+      ctx.shadowBlur = 3;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.size/2 * t.progress, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function redrawAll() {
+    ctx.clearRect(0, 0, W / (window.devicePixelRatio || 1), H / (window.devicePixelRatio || 1));
+    for (var i = 0; i < trails.length; i++) {
+      drawTrail(trails[i]);
+    }
+  }
+
+  // ─── ANIMATE TRAILS ───
+  function animate() {
+    for (var i = trails.length - 1; i >= 0; i--) {
+      var t = trails[i];
+
+      // Animate to target position
+      t.progress = Math.min(t.progress + 0.08 * t.speed, 1);
+      t.x += (t.targetX - t.x) * 0.08 * t.speed;
+      t.y += (t.targetY - t.y) * 0.08 * t.speed;
+
+      // Slow decay
+      t.life -= 0.0002;
+
+      if (t.life <= 0 || t.progress >= 1 && t.life < 0.5) {
+        // Keep the dot but stop animating when fully splatted
+        continue;
       }
     }
-    // Close the loop
-    pts[pts.length - 1].c2x = pts[0].c1x;
-    pts[pts.length - 1].c2y = pts[0].c1y;
-    
-    var d = 'M ' + pts[0].x + ',' + pts[0].y + ' ';
-    for (var i = 0; i < pts.length; i++) {
-      var p = pts[i];
-      var next = pts[(i + 1) % pts.length];
-      d += 'C ' + p.c2x + ',' + p.c2y + ' ' + next.c1x + ',' + next.c1y + ' ' + next.x + ',' + next.y + ' ';
+
+    // Limit trails to prevent memory issues
+    if (trails.length > 2000) {
+      trails.splice(0, trails.length - 2000);
     }
-    return d;
+
+    // Redraw
+    redrawAll();
+
+    // Update counter
+    var counter = document.getElementById('ink-count-' + id);
+    if (counter) counter.textContent = '🖌️ ' + inkCount + ' splats';
+
+    requestAnimationFrame(animate);
   }
 
-  // ─── SPLASH SPLATTER ───
-  function splatterPath(cx, cy) {
-    var d = '';
-    // Central irregular blob
-    d += organicPath(cx, cy, Math.random() * 20 + 15, 8);
-    // Tentacles/droplets
-    var numTentacles = Math.floor(Math.random() * 4) + 3;
-    for (var i = 0; i < numTentacles; i++) {
-      var a = Math.random() * Math.PI * 2;
-      var dist = Math.random() * 30 + 15;
-      var tx = cx + Math.cos(a) * dist;
-      var ty = cy + Math.sin(a) * dist;
-      var ts = Math.random() * 8 + 4;
-      d += ' M ' + tx + ',' + (ty - ts) + ' C ' + (tx + ts * 0.5) + ',' + (ty - ts * 0.3) + ' ' + (tx + ts * 0.3) + ',' + (ty + ts * 0.5) + ' ' + tx + ',' + (ty + ts) + ' C ' + (tx - ts * 0.3) + ',' + (ty + ts * 0.5) + ' ' + (tx - ts * 0.5) + ',' + (ty - ts * 0.3) + ' ' + tx + ',' + (ty - ts) + ' Z';
+  // ─── MOUSE / TOUCH EVENTS ───
+  function getPos(e) {
+    var r = hero.getBoundingClientRect();
+    if (e.touches) {
+      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
     }
-    return d;
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
 
-  // ─── CREATE SPLASH ELEMENT ───
-  function createSplashEl(colorIdx, startX, startY, endX, endY, size) {
-    var g = document.createElementNS(ns, 'g');
-    var defs = document.createElementNS(ns, 'defs');
-    var filter = document.createElementNS(ns, 'filter');
-    filter.setAttribute('id', 'goo-' + id + '-' + colorIdx + '-' + Math.random().toString(36).slice(2));
-    // Gooey filter for fluid effect
-    var feGaussianBlur = document.createElementNS(ns, 'feGaussianBlur');
-    feGaussianBlur.setAttribute('in', 'SourceGraphic');
-    feGaussianBlur.setAttribute('stdDeviation', '6');
-    filter.appendChild(feGaussianBlur);
-    var feColorMatrix = document.createElementNS(ns, 'feColorMatrix');
-    feColorMatrix.setAttribute('mode', 'matrix');
-    feColorMatrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
-    filter.appendChild(feColorMatrix);
-    defs.appendChild(filter);
-    g.appendChild(defs);
+  function onMove(e) {
+    var pos = getPos(e);
+    var x = pos.x, y = pos.y;
 
-    var path = document.createElementNS(ns, 'path');
-    var initialPath = organicPath(startX, startY, 10, 5);
-    path.setAttribute('d', initialPath);
-    path.setAttribute('fill', COLORS[colorIdx]);
-    path.setAttribute('filter', 'url(#' + filter.getAttribute('id') + ')');
-    path.style.opacity = '0';
-    g.appendChild(path);
-
-    var targetPath = organicPath(endX, endY, size || Math.random() * 25 + 20, Math.floor(Math.random() * 4) + 6);
-    
-    svg.appendChild(g);
-
-    // Animate in
-    anime({
-      targets: path,
-      opacity: [0, 0.9],
-      duration: 400,
-      easing: 'easeOutQuad',
-      begin: function() {
-        // Morph path to target
-        anime({
-          targets: path,
-          d: [{ value: targetPath, duration: 1200 }],
-          easing: 'easeOutElastic(1, 0.4)',
-          delay: 200
-        });
-      }
-    });
-
-    return { g: g, path: path, filter: filter, targetPath: targetPath };
-  }
-
-  // ─── SPLAT ON COLLISION ───
-  function createSplat(x, y, colorIdx) {
-    var g = document.createElementNS(ns, 'g');
-    var d = splatterPath(x, y);
-    var path = document.createElementNS(ns, 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('fill', COLORS[colorIdx]);
-    path.style.opacity = '0';
-    g.appendChild(path);
-    svg.appendChild(g);
-
-    anime({
-      targets: path,
-      opacity: [0, 0.7, 0],
-      scale: [0.5, 1, 1.2],
-      duration: 1500,
-      easing: 'easeOutQuad',
-      complete: function() { g.remove(); }
-    });
-  }
-
-  // ─── STICKER ───
-  function spawnSticker(x, y) {
-    var el = document.createElement('div');
-    el.className = 'sticker-el';
-    var s = Math.random() * 16 + 24;
-    var ci = Math.floor(Math.random() * COLORS.length);
-    el.style.width = s + 'px';
-    el.style.height = s + 'px';
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.style.background = 'radial-gradient(circle at 35% 35%, #FFF, ' + COLORS[ci] + ' 80%)';
-    el.style.fontSize = (s * 0.4) + 'px';
-    el.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-    hero.appendChild(el);
-
-    var angle = Math.random() * Math.PI * 2;
-    var dist = Math.random() * 120 + 40;
-
-    anime({
-      targets: el,
-      translateX: Math.cos(angle) * dist,
-      translateY: Math.sin(angle) * dist - 30,
-      scale: [0, 1.15, 1],
-      rotate: [Math.random() * 90 - 45, Math.random() * 30 - 15],
-      opacity: [0, 1, 0.85],
-      duration: Math.random() * 800 + 1000,
-      easing: 'easeOutCubic',
-      complete: function() {
-        setTimeout(function() {
-          anime({ targets: el, opacity: 0, duration: 500, complete: function() { el.remove(); } });
-        }, Math.random() * 2000 + 1000);
-      }
-    });
-  }
-
-  // ─── CONFETTI ───
-  function burstConfetti(x, y) {
-    var normX = x / window.innerWidth;
-    var normY = y / window.innerHeight;
-    confetti({
-      particleCount: 30,
-      spread: 150,
-      origin: { x: normX, y: normY },
-      colors: COLORS,
-      ticks: 100,
-      gravity: 0.5,
-      scalar: 0.8,
-      startVelocity: 18
-    });
-  }
-
-  // ─── COLLISION ───
-  var splashes = [];
-  var collisionCount = 0;
-  var TOTAL_NEEDED = 4;
-  var finaleDone = false;
-
-  function checkCollisions() {
-    for (var i = 0; i < splashes.length; i++) {
-      var a = splashes[i];
-      if (a._done) continue;
-      for (var j = i + 1; j < splashes.length; j++) {
-        var b = splashes[j];
-        if (b._done) continue;
-
-        // Get current positions from anime
-        var rect = svg.getBoundingClientRect();
-        var ax = parseFloat(svg.getAttribute('viewBox').split(' ')[2]) * (a._x || 500) / rect.width;
-        // Simplified collision — check if blobs are close based on center proximity
-
-        var aX = parseFloat(a.path.getAttribute('d').match(/M\s+([\d.]+)/)?.[1]) || 500;
-        var bX = parseFloat(b.path.getAttribute('d').match(/M\s+([\d.]+)/)?.[1]) || 500;
-
-        // We use percentage-based proximity
-        var aEls = a.path.getAttribute('d').match(/[\d.]+/g);
-        var bEls = b.path.getAttribute('d').match(/[\d.]+/g);
-        if (!aEls || !bEls || aEls.length < 2 || bEls.length < 2) continue;
-
-        var ax2 = parseFloat(aEls[0]), ay2 = parseFloat(aEls[1]);
-        var bx2 = parseFloat(bEls[0]), by2 = parseFloat(bEls[1]);
-        var dx = bx2 - ax2, dy = by2 - ay2;
-        var dist = Math.sqrt(dx*dx + dy*dy);
-
-        if (dist < 80) {
-          a._done = true; b._done = true;
-          collisionCount++;
-          var midX = (ax2 + bx2) / 2 / 1000 * window.innerWidth;
-          var midY = (ay2 + by2) / 2 / 600 * window.innerHeight;
-
-          createSplat(midX, midY, parseInt(a.path.getAttribute('fill').startsWith('#') ? COLORS.indexOf(a.path.getAttribute('fill')) : 0));
-          burstConfetti(midX, midY);
-
-          var numStickers = Math.floor(Math.random() * 3) + 2;
-          for (var s = 0; s < numStickers; s++) {
-            spawnSticker(midX + Math.random() * 40 - 20, midY + Math.random() * 40 - 20);
-          }
-
-          if (collisionCount >= TOTAL_NEEDED) finale();
+    // Only splatter if moved enough
+    if (pastX !== undefined) {
+      var dx = x - pastX, dy = y - pastY;
+      var dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > 5) {
+        // Splatter at current position
+        splatter(x, y);
+        // If moving fast, bigger splatter
+        if (dist > 15) {
+          splatter(x + rand(-5,5), y + rand(-5,5));
         }
+        pastX = x; pastY = y;
       }
+    } else {
+      pastX = x; pastY = y;
+      // Initial splatter on first move
+      splatter(x, y);
     }
-    if (!finaleDone) requestAnimationFrame(checkCollisions);
   }
 
-  function finale() {
-    if (finaleDone) return;
-    finaleDone = true;
-
-    confetti({
-      particleCount: 120,
-      spread: 200,
-      origin: { x: 0.5, y: 0.5 },
-      colors: COLORS,
-      ticks: 250,
-      gravity: 0.3,
-      scalar: 1.4,
-      startVelocity: 40
-    });
-
-    for (var i = 0; i < 10; i++) {
-      setTimeout(function() { spawnSticker(window.innerWidth/2 + Math.random()*100-50, window.innerHeight/2 + Math.random()*100-50); }, i * 80);
-    }
-
-    setTimeout(function() {
-      anime({ targets: content, opacity: [0, 1], translateY: [20, 0], duration: 600, easing: 'easeOutQuad' });
-    }, 500);
-  }
+  hero.addEventListener('mousemove', onMove);
+  hero.addEventListener('touchmove', onMove);
+  hero.addEventListener('touchstart', onMove);
 
   // ─── INIT ───
   function init() {
-    var W = hero.offsetWidth, H = hero.offsetHeight;
-    var cx = W / 2, cy = H / 2;
+    resize();
+    animate();
 
-    // Create organic splash blobs from 4 sides
-    var entries = [
-      { sx: -50, sy: H * 0.3, ex: cx - 50, ey: cy - 40 },
-      { sx: W + 50, sy: H * 0.6, ex: cx + 50, ey: cy + 30 },
-      { sx: W * 0.25, sy: -50, ex: cx - 30, ey: cy - 60 },
-      { sx: W * 0.75, sy: H + 50, ex: cx + 40, ey: cy + 50 },
-      { sx: -40, sy: H * 0.7, ex: cx - 60, ey: cy + 20 },
-      { sx: W * 0.5, sy: H + 40, ex: cx + 10, ey: cy - 20 },
-    ];
+    // Initial welcome splatter in center
+    setTimeout(function() {
+      var r = hero.getBoundingClientRect();
+      for (var i = 0; i < 3; i++) {
+        setTimeout(function() { splatter(r.width/2 + rand(-30,30), r.height/2 + rand(-30,30)); }, i * 100);
+      }
+    }, 500);
 
-    for (var i = 0; i < entries.length; i++) {
-      var e = entries[i];
-      var ci = i % COLORS.length;
-      var splash = createSplashEl(ci, e.sx, e.sy, e.ex, e.cy, Math.random() * 20 + 20);
-      splash._x = e.ex;
-      splash._y = e.cy;
-      splashes.push(splash);
-    }
-
-    setTimeout(checkCollisions, 1500);
-    setTimeout(function() { if (!finaleDone) finale(); }, 8000);
+    window.addEventListener('resize', resize);
   }
 
   if (document.readyState === 'complete') init();
   else window.addEventListener('load', init);
 })();
 </script>
-{% endif %}
 
 {% schema %}
 {
@@ -419,14 +312,13 @@
   "class": "splash-hero",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Splash Your Style" },
-    { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Premium custom stickers \u2014 Vibrant colors \u2014 Worldwide shipping" },
+    { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Move your mouse to paint" },
     { "type": "color", "id": "background_color", "label": "Background", "default": "#1A1A2E" },
     { "type": "color", "id": "heading_color", "label": "Heading color", "default": "#FFFFFF" },
     { "type": "color", "id": "text_color", "label": "Subtext color", "default": "rgba(255,255,255,0.8)" },
     { "type": "range", "id": "section_height", "min": 300, "max": 800, "step": 50, "default": 550, "label": "Height" },
     { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding top" },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding bottom" },
-    { "type": "checkbox", "id": "show_animation", "label": "Show animation", "default": true }
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding bottom" }
   ],
   "blocks": [
     {
