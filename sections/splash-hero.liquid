@@ -174,16 +174,16 @@
 
     // ── Ink splatter droplets (only on fast moves) ──
     if (speed > 4 && Math.random() > 0.5) {
-      var num = Math.floor(Math.min(speed * 1.5, 12));
+      var num = Math.floor(Math.min(speed * 1.2, 8));
       for (var i = 0; i < num; i++) {
         var a = rand(0, Math.PI * 2);
-        var d = rand(3, 10 + speed * 1.5);
-        var sz = rand(3, 9);
+        var d = rand(5, 12 + speed * 1.5);
+        var sz = rand(3, 7);
         ctx.save();
-        ctx.globalAlpha = 0.55;
+        ctx.globalAlpha = 0.45;
         ctx.fillStyle = color;
         ctx.shadowColor = color;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 4;
         ctx.beginPath();
         ctx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
         ctx.fill();
@@ -193,20 +193,20 @@
 
     // ── Anime.js ink bleed: organic expansion effect ──
     if (window.anime) {
-      var bleedCount = Math.floor(rand(2, 5));
+      var bleedCount = Math.floor(rand(1, 3));
       for (var iB = 0; iB < bleedCount; iB++) {
         var bAngle = rand(0, Math.PI * 2);
-        var bDist = rand(8, 25);
-        var bSize = rand(5, 12);
+        var bDist = rand(6, 18);
+        var bSize = rand(4, 9);
         var bleedEl = document.createElement('div');
-        bleedEl.style.cssText = 'position:absolute;left:' + (x2 - bSize/2) + 'px;top:' + (y2 - bSize/2) + 'px;width:' + bSize + 'px;height:' + bSize + 'px;border-radius:50%;background:' + color + ';pointer-events:none;z-index:5;opacity:0.7;box-shadow:0 0 6px ' + color + ';';
+        bleedEl.style.cssText = 'position:absolute;left:' + (x2 - bSize/2) + 'px;top:' + (y2 - bSize/2) + 'px;width:' + bSize + 'px;height:' + bSize + 'px;border-radius:50%;background:' + color + ';pointer-events:none;z-index:5;opacity:0.6;';
         hero.appendChild(bleedEl);
         anime({
           targets: bleedEl,
           translateX: Math.cos(bAngle) * bDist,
           translateY: Math.sin(bAngle) * bDist,
-          scale: [{ value: 2.5, duration: 300 }, { value: 0.4, duration: 700 }],
-          opacity: [{ value: 0.8, duration: 200 }, { value: 0, duration: 1000 }],
+          scale: [{ value: 2, duration: 400 }, { value: 0.3, duration: 800 }],
+          opacity: [{ value: 0.7, duration: 300 }, { value: 0, duration: 900 }],
           duration: 1200,
           easing: 'easeOutCubic',
           complete: function() { bleedEl.remove(); }
