@@ -21,7 +21,7 @@
     justify-content: center;
     padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
   }
-  .splash-hero-{{ section.id }} canvas#blob-canvas-{{ section.id }} {
+  .splash-hero-{{ section.id }} canvas#ink-canvas-{{ section.id }} {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -57,40 +57,14 @@
     justify-content: center;
     flex-wrap: wrap;
   }
-  /* Sticker popup elements */
-  .splash-hero-{{ section.id }} .sticker-pop {
-    position: absolute;
-    z-index: 15;
-    pointer-events: none;
-    opacity: 0;
-  }
-  .splash-hero-{{ section.id }} .sticker-pop-inner {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.6rem; font-weight: 700;
-    color: rgba(255,255,255,0.92);
-    border-radius: 50%;
-    border: 2.5px dashed rgba(255,255,255,0.5);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    position: relative;
-    overflow: hidden;
-  }
-  .splash-hero-{{ section.id }} .sticker-pop-inner::after {
-    content: ''; position: absolute; top: -5px; right: -5px;
-    width: 14px; height: 14px;
-    background: rgba(255,255,255,0.3); border-radius: 50%;
-  }
   @media (prefers-reduced-motion: reduce) {
-    .splash-hero-{{ section.id }} canvas#blob-canvas-{{ section.id }} { display: none; }
+    .splash-hero-{{ section.id }} canvas#ink-canvas-{{ section.id }} { display: none; }
     .splash-hero-{{ section.id }} .splash-hero-content { opacity: 1; }
   }
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
-  {% if show_animation %}
-    <canvas id="blob-canvas-{{ section.id }}"></canvas>
-  {% endif %}
-
+  <canvas id="ink-canvas-{{ section.id }}"></canvas>
   <div class="splash-hero-content" id="splash-content-{{ section.id }}">
     {% if heading != blank %}
       <h1 class="splash-hero-heading">{{ heading }}</h1>
@@ -109,13 +83,12 @@
 </div>
 
 {% if show_animation %}
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
 <script>
 (function() {
   'use strict';
   var id = '{{ section.id }}';
   var hero = document.getElementById('splash-hero-' + id);
-  var canvas = document.getElementById('blob-canvas-' + id);
+  var canvas = document.getElementById('ink-canvas-' + id);
   var content = document.getElementById('splash-content-' + id);
   if (!canvas || !hero) return;
 
@@ -125,15 +98,15 @@
   }
 
   var ctx = canvas.getContext('2d');
-  var W, H, blobs = [], stickers = [], animId;
-  var STICKER_SYMBOLS = ['✦','♥','◆','♡','★','♪','✧','○','◇','☆','⊛','✶'];
-  var PASTEL_BLOBS = [
-    { color: '#FFB5C2', highlight: '#FFD1DC' },
-    { color: '#C3AED6', highlight: '#E6E6FA' },
-    { color: '#B5EAD7', highlight: '#D4F5E2' },
-    { color: '#FFDAB9', highlight: '#FFE8D6' },
-    { color: '#B5D8EB', highlight: '#D4EAF5' },
-    { color: '#FFF5BA', highlight: '#FFFDE0' },
+  var W, H, shots = [], splats = [], stickers = [], animId;
+
+  var INK_COLORS = [
+    { main: '#FF4381', light: '#FF7EB3' },  // Neon Pink
+    { main: '#FF6B35', light: '#FF9B6B' },  // Neon Orange
+    { main: '#FFD700', light: '#FFE44D' },  // Gold/Yellow
+    { main: '#00E5A0', light: '#4CF0B8' },  // Neon Green
+    { main: '#4D7CFF', light: '#7FA3FF' },  // Neon Blue
+    { main: '#A855F7', light: '#C084FC' },  // Neon Purple
   ];
 
   function resize() {
@@ -144,152 +117,146 @@
     canvas.style.width = r.width + 'px';
     canvas.style.height = r.height + 'px';
     ctx.scale(dpr, dpr);
-    return { w: r.width, h: r.height };
+    return r;
   }
 
   function rand(a, b) { return Math.random() * (b - a) + a; }
 
-  function createBlob(palette, fromSide) {
-    var r = { w: hero.getBoundingClientRect().width, h: hero.getBoundingClientRect().height };
-    var size = rand(35, 70);
-    var x, y;
-    switch(fromSide) {
-      case 0: x = -size; y = rand(0, r.h); break; // left
-      case 1: x = r.w + size; y = rand(0, r.h); break; // right
-      case 2: x = rand(0, r.w); y = -size; break; // top
-      case 3: x = rand(0, r.w); y = r.h + size; break; // bottom
-      default: x = -size; y = rand(0, r.h);
-    }
-    var angle = Math.atan2(r.h/2 - y, r.w/2 - x);
-    var speed = rand(3, 8);
+  // ─── SPLATOON INK SHOT ───
+  function createInkShot(fromX, fromY, toX, toY, palette) {
+    var dx = toX - fromX, dy = toY - fromY;
+    var dist = Math.sqrt(dx*dx + dy*dy);
+    var speed = rand(6, 14);
     return {
-      x: x, y: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      size: size,
-      color: palette.color,
-      highlight: palette.highlight,
-      rotation: rand(0, Math.PI * 2),
-      rotSpeed: rand(-0.02, 0.02),
-      entered: false,
-      collided: false
+      x: fromX, y: fromY,
+      vx: (dx/dist) * speed + rand(-0.5, 0.5),
+      vy: (dy/dist) * speed + rand(-0.5, 0.5),
+      size: rand(8, 18),
+      color: palette.main,
+      light: palette.light,
+      trail: [],
+      life: 1,
+      decay: rand(0.003, 0.008),
+      gravity: rand(0.02, 0.06),
+      wobble: rand(0, Math.PI * 2),
+      wobbleSpeed: rand(0.05, 0.15)
     };
   }
 
-  function spawnStickers(cx, cy, count) {
+  // ─── INK SPLAT (on impact) ───
+  function createInkSplat(x, y, color, light, size) {
+    var points = [];
+    var numPoints = Math.floor(rand(8, 16));
+    for (var i = 0; i < numPoints; i++) {
+      var angle = (i / numPoints) * Math.PI * 2 + rand(-0.2, 0.2);
+      var r = size * rand(0.5, 1.5);
+      points.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+    }
+    return {
+      x: x, y: y,
+      points: points,
+      color: color,
+      light: light,
+      size: size,
+      life: 1,
+      decay: rand(0.005, 0.012),
+      rotation: rand(0, Math.PI * 2)
+    };
+  }
+
+  // ─── SPAWN SPLAT + STICKERS ───
+  function splatImpact(x, y, color, light) {
+    var splatSize = rand(20, 50);
+    // Central splat
+    splats.push(createInkSplat(x, y, color, light, splatSize));
+    // Secondary splatter
+    for (var i = 0; i < rand(2, 4); i++) {
+      var a = rand(0, Math.PI * 2);
+      var d = rand(15, 35);
+      splats.push(createInkSplat(
+        x + Math.cos(a) * d, y + Math.sin(a) * d,
+        color, light, rand(8, 20)
+      ));
+    }
+    // Tiny droplets
+    for (var i = 0; i < rand(5, 10); i++) {
+      var a = rand(0, Math.PI * 2);
+      var d = rand(5, 25);
+      splats.push(createInkSplat(
+        x + Math.cos(a) * d, y + Math.sin(a) * d,
+        color, light, rand(3, 7)
+      ));
+    }
+  }
+
+  // ─── STICKERS ───
+  function spawnStickers(x, y, color, count) {
     for (var i = 0; i < count; i++) {
-      var angle = rand(0, Math.PI * 2);
-      var speed = rand(3, 10);
-      var size = rand(20, 35);
-      var p = PASTEL_BLOBS[Math.floor(Math.random() * PASTEL_BLOBS.length)];
+      var a = rand(0, Math.PI * 2);
+      var sp = rand(3, 10);
+      var sz = rand(22, 38);
       stickers.push({
-        x: cx, y: cy,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - rand(1, 3),
-        size: size,
-        color: p.color,
-        symbol: STICKER_SYMBOLS[Math.floor(Math.random() * STICKER_SYMBOLS.length)],
-        life: 1,
-        decay: rand(0.003, 0.008),
-        gravity: rand(0.04, 0.08),
-        rotation: rand(-0.3, 0.3),
-        rotSpeed: rand(-0.03, 0.03)
+        x: x, y: y,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - rand(1, 4),
+        size: sz, color: color,
+        life: 1, decay: rand(0.003, 0.007),
+        gravity: rand(0.03, 0.07),
+        rotation: rand(-0.3, 0.3), rotSpeed: rand(-0.03, 0.03)
       });
     }
   }
 
-  function checkCollisions() {
-    for (var i = 0; i < blobs.length; i++) {
-      for (var j = i + 1; j < blobs.length; j++) {
-        var a = blobs[i], b = blobs[j];
-        var dx = b.x - a.x, dy = b.y - a.y;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        var minDist = a.size / 2 + b.size / 2;
-        if (dist < minDist && dist > 0 && !a.collided && !b.collided) {
-          a.collided = true;
-          b.collided = true;
-
-          // Explosion confetti at collision point
-          var cx = (a.x + b.x) / 2;
-          var cy = (a.y + b.y) / 2;
-          var normCx = cx / (hero.getBoundingClientRect().width || 1);
-          var normCy = cy / (hero.getBoundingClientRect().height || 1);
-
-          confetti({
-            particleCount: 50,
-            spread: 200,
-            origin: { x: normCx, y: normCy },
-            colors: [a.color, b.color, '#FFB5C2', '#C3AED6', '#B5EAD7'],
-            ticks: 150,
-            gravity: 0.6,
-            scalar: 0.9,
-            startVelocity: 25
-          });
-
-          // Spawn DOM stickers
-          spawnStickers(cx, cy, Math.floor(rand(3, 6)));
-
-          // Push blobs apart
-          var overlap = minDist - dist;
-          var nx = dx / dist, ny = dy / dist;
-          a.x -= nx * overlap / 2;
-          a.y -= ny * overlap / 2;
-          b.x += nx * overlap / 2;
-          b.y += ny * overlap / 2;
-          a.vx = -a.vx * 0.5;
-          a.vy = -a.vy * 0.5;
-          b.vx = -b.vx * 0.5;
-          b.vy = -b.vy * 0.5;
-        }
-      }
-    }
-  }
-
-  function drawBlob(b) {
+  // ─── DRAW SPLATOON INK SPLAT ───
+  function drawSplat(s) {
     ctx.save();
-    ctx.translate(b.x, b.y);
-    ctx.rotate(b.rotation);
-    // 3D-like gradient
-    var grad = ctx.createRadialGradient(-b.size*0.15, -b.size*0.15, b.size*0.1, 0, 0, b.size/2);
-    grad.addColorStop(0, b.highlight);
-    grad.addColorStop(0.6, b.color);
-    grad.addColorStop(1, 'rgba(0,0,0,0.08)');
-    ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(0,0,0,0.12)';
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetY = 4;
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.rotation);
+    ctx.globalAlpha = s.life * 0.85;
+    ctx.shadowColor = 'rgba(0,0,0,0.1)';
+    ctx.shadowBlur = 10;
+    // Organic ink shape using bezier
     ctx.beginPath();
-    ctx.arc(0, 0, b.size/2, 0, Math.PI * 2);
+    var pts = s.points;
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (var i = 1; i < pts.length; i += 2) {
+      var next = pts[(i + 1) % pts.length];
+      ctx.bezierCurveTo(pts[i].x, pts[i].y, next.x, next.y, next.x, next.y);
+    }
+    ctx.closePath();
+    // Ink gradient
+    var g = ctx.createRadialGradient(0, 0, 0, 0, 0, s.size);
+    g.addColorStop(0, s.light);
+    g.addColorStop(0.6, s.color);
+    g.addColorStop(1, 'rgba(0,0,0,0.1)');
+    ctx.fillStyle = g;
     ctx.fill();
-    // Specular highlight
+    // Glossy highlight
     ctx.shadowColor = 'transparent';
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.globalAlpha = s.life * 0.2;
+    ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.ellipse(-b.size*0.15, -b.size*0.2, b.size*0.2, b.size*0.12, -0.5, 0, Math.PI * 2);
+    ctx.ellipse(-s.size*0.15, -s.size*0.2, s.size*0.25, s.size*0.12, -0.3, 0, Math.PI*2);
     ctx.fill();
     ctx.restore();
   }
 
+  // ─── DRAW STICKER ───
   function drawSticker(s) {
     ctx.save();
     ctx.translate(s.x, s.y);
     ctx.rotate(s.rotation);
     ctx.globalAlpha = s.life;
-    // Shadow
-    ctx.shadowColor = 'rgba(0,0,0,0.08)';
+    ctx.shadowColor = 'rgba(0,0,0,0.1)';
     ctx.shadowBlur = 12;
     ctx.shadowOffsetY = 3;
-    // Body
-    var grad = ctx.createRadialGradient(-s.size*0.1, -s.size*0.1, 2, 0, 0, s.size/2);
-    grad.addColorStop(0, '#FFFFFF');
-    grad.addColorStop(1, s.color);
-    ctx.fillStyle = grad;
+    var g = ctx.createRadialGradient(-3, -3, 2, 0, 0, s.size/2);
+    g.addColorStop(0, '#FFFFFF');
+    g.addColorStop(0.5, s.color);
+    g.addColorStop(1, 'rgba(0,0,0,0.08)');
+    ctx.fillStyle = g;
     var r = s.size / 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
     ctx.shadowColor = 'transparent';
-    // Dashed border
     ctx.setLineDash([3, 3]);
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 2;
@@ -297,95 +264,129 @@
     ctx.setLineDash([]);
     // Peel
     ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.beginPath();
-    ctx.arc(r - 5, -r + 5, 7, 0, Math.PI * 2);
-    ctx.fill();
-    // Symbol
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = 'bold ' + (r * 0.7) + 'px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(s.symbol, 0, 1);
+    ctx.beginPath(); ctx.arc(r-5, -r+5, 7, 0, Math.PI*2); ctx.fill();
+    // Splat logo
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = 'bold ' + (r*0.6) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('✦', 0, 1);
     ctx.restore();
   }
 
-  function updateBlob(b, r) {
-    b.x += b.vx;
-    b.y += b.vy;
-    b.rotation += b.rotSpeed;
-    // Bounce off walls
-    if (b.x - b.size/2 < 0) { b.x = b.size/2; b.vx *= -0.5; }
-    if (b.x + b.size/2 > r.w) { b.x = r.w - b.size/2; b.vx *= -0.5; }
-    if (b.y - b.size/2 < 0) { b.y = b.size/2; b.vy *= -0.5; }
-    if (b.y + b.size/2 > r.h) { b.y = r.h - b.size/2; b.vy *= -0.5; }
+  // ─── DRAW INK SHOT ───
+  function drawShot(s) {
+    // Trail
+    var wasG = ctx.globalAlpha;
+    var wasC = ctx.shadowColor;
+    for (var i = 0; i < s.trail.length; i++) {
+      var t = s.trail[i];
+      var alpha = (i / s.trail.length) * 0.6 * s.life;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, s.size * (i / s.trail.length) * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = s.life;
+    ctx.shadowColor = 'rgba(255,255,255,0.3)';
+    ctx.shadowBlur = 8;
+
+    // Main ink ball with wobble
+    var wobX = Math.sin(s.wobble) * 2;
+    var wobY = Math.cos(s.wobble) * 2;
+    var g = ctx.createRadialGradient(wobX - 3, wobY - 3, 2, wobX, wobY, s.size/2);
+    g.addColorStop(0, s.light);
+    g.addColorStop(0.7, s.color);
+    g.addColorStop(1, 'rgba(0,0,0,0.15)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(s.x + wobX, s.y + wobY, s.size/2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    // Gloss
+    ctx.globalAlpha = s.life * 0.35;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(s.x + wobX - s.size*0.15, s.y + wobY - s.size*0.2, s.size*0.18, s.size*0.1, -0.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = wasG;
+    ctx.shadowColor = wasC;
+  }
+
+  // ─── ANIMATION ───
+  var shotsFinished = false;
+  var splatsDone = false;
+  var finaleFired = false;
+
+  function updateShot(s) {
+    s.trail.push({ x: s.x, y: s.y });
+    if (s.trail.length > 8) s.trail.shift();
+    s.x += s.vx; s.y += s.vy;
+    s.vy += s.gravity;
+    s.wobble += s.wobbleSpeed;
+    s.life -= s.decay;
+    // Splat on wall impact
+    var r = hero.getBoundingClientRect();
+    if (s.x < 5 || s.x > r.w - 5 || s.y < 5 || s.y > r.h - 5 || s.life <= 0) {
+      if (s.life > 0.3) splatImpact(s.x, s.y, s.color, s.light);
+      return false; // remove
+    }
+    return true;
+  }
+
+  function updateSplat(s) {
+    s.life -= s.decay;
+    return s.life > 0;
   }
 
   function updateSticker(s) {
-    s.x += s.vx;
-    s.y += s.vy;
-    s.vy += s.gravity;
-    s.vx *= 0.97;
+    s.x += s.vx; s.y += s.vy;
+    s.vy += s.gravity; s.vx *= 0.97;
     s.rotation += s.rotSpeed;
     s.life -= s.decay;
+    return s.life > 0;
   }
 
-  var allCollided = false;
-  var allDoneFired = false;
-
   function loop() {
-    var r = { w: hero.getBoundingClientRect().width, h: hero.getBoundingClientRect().height };
+    var r = hero.getBoundingClientRect();
     ctx.clearRect(0, 0, r.w, r.h);
 
-    // Check if all blobs have entered the frame
-    var allEntered = true;
-    for (var i = 0; i < blobs.length; i++) {
-      var b = blobs[i];
-      if (b.x >= 0 && b.x <= r.w && b.y >= 0 && b.y <= r.h) b.entered = true;
-      if (!b.entered) allEntered = false;
+    // Update shots
+    for (var i = shots.length - 1; i >= 0; i--) {
+      if (!updateShot(shots[i])) {
+        var s = shots[i];
+        spawnStickers(s.x, s.y, s.color, Math.floor(rand(2, 4)));
+        shots.splice(i, 1);
+      }
     }
 
-    // Collision detection
-    checkCollisions();
+    // Draw shots
+    for (var i = 0; i < shots.length; i++) drawShot(shots[i]);
 
-    // Update and draw blobs
-    for (var i = blobs.length - 1; i >= 0; i--) {
-      updateBlob(blobs[i], r);
-      drawBlob(blobs[i]);
+    // Update & draw splats
+    for (var i = splats.length - 1; i >= 0; i--) {
+      if (!updateSplat(splats[i])) { splats.splice(i, 1); continue; }
+      drawSplat(splats[i]);
     }
 
-    // Update and draw stickers
+    // Update & draw stickers
     for (var i = stickers.length - 1; i >= 0; i--) {
-      updateSticker(stickers[i]);
-      if (stickers[i].life <= 0) { stickers.splice(i, 1); continue; }
+      if (!updateSticker(stickers[i])) { stickers.splice(i, 1); continue; }
       drawSticker(stickers[i]);
     }
 
-    // Check if all collision events done
-    allCollided = true;
-    for (var i = 0; i < blobs.length; i++) {
-      if (!blobs[i].collided) { allCollided = false; break; }
+    // Check if done
+    if (shots.length === 0 && !shotsFinished) {
+      shotsFinished = true;
     }
 
-    if (allEntered && allCollided && !allDoneFired) {
-      allDoneFired = true;
-      // Final big confetti burst
-      confetti({
-        particleCount: 80,
-        spread: 180,
-        origin: { x: 0.5, y: 0.5 },
-        colors: ['#FFB5C2','#C3AED6','#B5EAD7','#FFDAB9','#B5D8EB','#FFF5BA'],
-        ticks: 200,
-        gravity: 0.5,
-        scalar: 1.2,
-        startVelocity: 30
-      });
-      // Fade in content
+    if (shotsFinished && splats.length === 0 && stickers.length === 0 && !finaleFired) {
+      finaleFired = true;
+      // Final content fade
       setTimeout(function() {
-        content.style.transition = 'opacity 0.6s ease-out';
+        content.style.transition = 'opacity 0.5s ease-out';
         content.style.opacity = '1';
-      }, 200);
-      // Stop animation loop after stickers fade
-      setTimeout(function() { if (animId) cancelAnimationFrame(animId); }, 4000);
+      }, 300);
       return;
     }
 
@@ -394,10 +395,26 @@
 
   function init() {
     var r = resize();
-    // Create blobs entering from different sides
-    for (var i = 0; i < 6; i++) {
-      blobs.push(createBlob(PASTEL_BLOBS[i % PASTEL_BLOBS.length], i % 4));
+    // Fire ink shots from random directions
+    var palette;
+    var cx = r.w / 2, cy = r.h / 2;
+
+    // Shot volley 1: from left and right
+    for (var wave = 0; wave < 3; wave++) {
+      setTimeout(function() {
+        for (var i = 0; i < 4; i++) {
+          palette = INK_COLORS[Math.floor(Math.random() * INK_COLORS.length)];
+          var side = Math.floor(Math.random() * 4);
+          var fx, fy;
+          if (side === 0) { fx = -20; fy = rand(50, r.h-50); } // left
+          else if (side === 1) { fx = r.w + 20; fy = rand(50, r.h-50); } // right
+          else if (side === 2) { fx = rand(50, r.w-50); fy = -20; } // top
+          else { fx = rand(50, r.w-50); fy = r.h + 20; } // bottom
+          shots.push(createInkShot(fx, fy, cx + rand(-100,100), cy + rand(-100,100), palette));
+        }
+      }, wave * 300);
     }
+
     loop();
     window.addEventListener('resize', resize);
   }
@@ -416,9 +433,9 @@
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Splash Your Style" },
     { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Premium custom stickers \u2014 Vibrant colors \u2014 Worldwide shipping" },
-    { "type": "color", "id": "background_color", "label": "Background", "default": "#F0E6FF" },
-    { "type": "color", "id": "heading_color", "label": "Heading color", "default": "#5B4B6A" },
-    { "type": "color", "id": "text_color", "label": "Subtext color", "default": "#7A6B8A" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#1A1A2E" },
+    { "type": "color", "id": "heading_color", "label": "Heading color", "default": "#FFFFFF" },
+    { "type": "color", "id": "text_color", "label": "Subtext color", "default": "rgba(255,255,255,0.8)" },
     { "type": "range", "id": "section_height", "min": 300, "max": 800, "step": 50, "default": 550, "label": "Height" },
     { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding top" },
     { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding bottom" },
@@ -432,7 +449,7 @@
         { "type": "url", "id": "button_link", "label": "Link" },
         { "type": "select", "id": "button_style", "label": "Style", "options": [{ "value": "solid", "label": "Solid" }, { "value": "outline", "label": "Outline" }], "default": "solid" },
         { "type": "color", "id": "button_bg", "label": "Button color", "default": "#FFFFFF" },
-        { "type": "color", "id": "button_text", "label": "Text color", "default": "#7A6B8A" }
+        { "type": "color", "id": "button_text", "label": "Text color", "default": "#1A1A2E" }
       ]
     }
   ],
@@ -441,8 +458,8 @@
       "name": "Splash Hero",
       "category": "Custom",
       "blocks": [
-        { "type": "button", "settings": { "button_label": "Shop Stickers", "button_style": "solid", "button_bg": "#FFFFFF", "button_text": "#7A6B8A" } },
-        { "type": "button", "settings": { "button_label": "Design Your Own", "button_style": "outline", "button_bg": "#7A6B8A", "button_text": "#7A6B8A" } }
+        { "type": "button", "settings": { "button_label": "Shop Stickers", "button_style": "solid", "button_bg": "#FFFFFF", "button_text": "#1A1A2E" } },
+        { "type": "button", "settings": { "button_label": "Design Your Own", "button_style": "outline", "button_bg": "#FFFFFF", "button_text": "#FFFFFF" } }
       ]
     }
   ]

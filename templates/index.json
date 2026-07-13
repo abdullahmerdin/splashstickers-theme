@@ -10,7 +10,7 @@
             "button_link": "shopify://collections/all",
             "button_style": "solid",
             "button_bg": "#FFFFFF",
-            "button_text": "#7A6B8A"
+            "button_text": "#1A1A2E"
           }
         },
         "btn_custom": {
@@ -19,8 +19,8 @@
             "button_label": "Design Your Own",
             "button_link": "",
             "button_style": "outline",
-            "button_bg": "#7A6B8A",
-            "button_text": "#FFFFFF"
+            "button_bg": "#FFFFFF",
+            "button_text": "#1A1A2E"
           }
         }
       },
@@ -31,9 +31,9 @@
       "settings": {
         "heading": "Splash Your Style",
         "subtext": "Premium custom stickers \u2014 Vibrant colors \u2014 Worldwide shipping",
-        "background_color": "#F0E6FF",
-        "heading_color": "#5B4B6A",
-        "text_color": "#7A6B8A",
+        "background_color": "#1A1A2E",
+        "heading_color": "#FFFFFF",
+        "text_color": "rgba(255,255,255,0.8)",
         "section_height": 550,
         "padding_top": 80,
         "padding_bottom": 80,
