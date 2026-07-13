@@ -108,6 +108,8 @@
   var W, H, points = [];
 
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
+  // Saturated Splatoon colors for ink
+  var INK_BRIGHT = ['rgba(255,67,129,0.95)','rgba(255,107,53,0.95)','rgba(0,229,160,0.95)','rgba(77,124,255,0.95)','rgba(168,85,247,0.95)','rgba(255,215,0,0.95)'];
 
   function resize() {
     var r = hero.getBoundingClientRect();
@@ -154,7 +156,7 @@
     ctx.lineWidth = width;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.globalAlpha = 0.85;
+    ctx.globalAlpha = 0.95;
     ctx.stroke();
     ctx.restore();
 
@@ -163,8 +165,8 @@
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = Math.max(4, width * 0.25);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = Math.max(4, width * 0.3);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -172,14 +174,16 @@
 
     // ── Ink splatter droplets (only on fast moves) ──
     if (speed > 4 && Math.random() > 0.5) {
-      var num = Math.floor(Math.min(speed, 6));
+      var num = Math.floor(Math.min(speed * 1.5, 12));
       for (var i = 0; i < num; i++) {
         var a = rand(0, Math.PI * 2);
-        var d = rand(5, 15 + speed * 2);
-        var sz = rand(2, 6);
+        var d = rand(3, 10 + speed * 1.5);
+        var sz = rand(3, 9);
         ctx.save();
-        ctx.globalAlpha = 0.3;
+        ctx.globalAlpha = 0.55;
         ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
         ctx.fill();
@@ -189,20 +193,20 @@
 
     // ── Anime.js ink bleed: organic expansion effect ──
     if (window.anime) {
-      var bleedCount = Math.floor(rand(1, 3));
+      var bleedCount = Math.floor(rand(2, 5));
       for (var iB = 0; iB < bleedCount; iB++) {
         var bAngle = rand(0, Math.PI * 2);
-        var bDist = rand(5, 15);
-        var bSize = rand(3, 8);
+        var bDist = rand(8, 25);
+        var bSize = rand(5, 12);
         var bleedEl = document.createElement('div');
-        bleedEl.style.cssText = 'position:absolute;left:' + (x2 - bSize/2) + 'px;top:' + (y2 - bSize/2) + 'px;width:' + bSize + 'px;height:' + bSize + 'px;border-radius:50%;background:' + color + ';pointer-events:none;z-index:5;opacity:0.5;';
+        bleedEl.style.cssText = 'position:absolute;left:' + (x2 - bSize/2) + 'px;top:' + (y2 - bSize/2) + 'px;width:' + bSize + 'px;height:' + bSize + 'px;border-radius:50%;background:' + color + ';pointer-events:none;z-index:5;opacity:0.7;box-shadow:0 0 6px ' + color + ';';
         hero.appendChild(bleedEl);
         anime({
           targets: bleedEl,
           translateX: Math.cos(bAngle) * bDist,
           translateY: Math.sin(bAngle) * bDist,
-          scale: [{ value: 2, duration: 400 }, { value: 0.3, duration: 800 }],
-          opacity: [{ value: 0.6, duration: 300 }, { value: 0, duration: 900 }],
+          scale: [{ value: 2.5, duration: 300 }, { value: 0.4, duration: 700 }],
+          opacity: [{ value: 0.8, duration: 200 }, { value: 0, duration: 1000 }],
           duration: 1200,
           easing: 'easeOutCubic',
           complete: function() { bleedEl.remove(); }
