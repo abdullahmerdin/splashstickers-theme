@@ -252,6 +252,7 @@
     }
     .splash-hero-{{ section.id }} .splash-strip { opacity: 0.5; }
   }
+  {% endif %}
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}">
@@ -360,7 +361,7 @@
       "type": "color",
       "id": "text_color",
       "label": "Subtext color",
-      "default": "rgba(255,255,255,0.85)"
+      "default": "#FFFFFF"
     },
     {
       "type": "range",
