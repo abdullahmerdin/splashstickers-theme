@@ -419,8 +419,16 @@
     window.addEventListener('resize', resize);
   }
 
-  if (document.readyState === 'complete') init();
-  else window.addEventListener('load', init);
+  if (document.readyState === 'complete') tryInit();
+  else window.addEventListener('load', tryInit);
+
+  function tryInit() {
+    try { init(); }
+    catch(e) {
+      console.warn('Splash init error:', e);
+      if (content) { content.style.transition = 'opacity 0.5s ease-out'; content.style.opacity = '1'; }
+    }
+  }
 })();
 </script>
 {% endif %}
