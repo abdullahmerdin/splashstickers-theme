@@ -167,8 +167,10 @@
 
   // ─── TAPERED BRUSH STROKE (seamless!) ───
   var brushPoints = []; // Accumulate points for current stroke
+  var brushColor = null; // Pick once per stroke
 
   function brushStroke(x, y, speed) {
+    if (brushPoints.length === 0) brushColor = pick(COLORS);
     brushPoints.push({ x: x, y: y, w: Math.min(Math.max(10, 45 - speed * 1.5), 55) / 2 });
     if (brushPoints.length < 2) return;
 
@@ -193,11 +195,9 @@
     }
 
     // Draw smooth envelope as a single filled path
-    var color = pick(COLORS);
-
     // ── Soft spread (feathered base) ──
     offCtx.save();
-    offCtx.fillStyle = color;
+    offCtx.fillStyle = brushColor;
     offCtx.globalAlpha = 0.1;
     offCtx.beginPath();
     offCtx.moveTo(lefts[0].x, lefts[0].y);
@@ -225,7 +225,7 @@
     offCtx.save();
     offCtx.shadowColor = 'rgba(0,0,0,0.06)';
     offCtx.shadowBlur = 4;
-    offCtx.fillStyle = color;
+    offCtx.fillStyle = brushColor;
     offCtx.globalAlpha = 0.95;
     offCtx.beginPath();
     offCtx.moveTo(lefts[0].x, lefts[0].y);
@@ -252,7 +252,7 @@
         var d = rand(10, 20 + speed);
         offCtx.save();
         offCtx.globalAlpha = 0.3;
-        offCtx.fillStyle = color;
+        offCtx.fillStyle = brushColor;
         offCtx.beginPath();
         offCtx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(2, 4), 0, Math.PI * 2);
         offCtx.fill();
@@ -306,7 +306,7 @@
       var mag = Math.sqrt(dirX*dirX + dirY*dirY);
       if (mag > 1) { dirX /= mag; dirY /= mag; speed = Math.min(mag, 25); }
     }
-    var color = pick(COLORS);
+    var color = brushColor || pick(COLORS);
     // Forward-flying splatter (biased in movement direction)
     var num = Math.floor(Math.min(8 + speed, 22));
     for (var i = 0; i < num; i++) {
@@ -379,7 +379,10 @@
     // Set release timer - if no movement for 120ms, fire release splash
     var cx = x, cy = y;
     releaseTimer = setTimeout(function() {
-      releaseSplash(cx, cy);
+      if (brushPoints.length > 0) {
+        releaseSplash(cx, cy);
+        brushPoints = []; brushColor = null;
+      }
       releaseTimer = null;
     }, 120);
   }
@@ -391,7 +394,7 @@
       var last = brushPoints[brushPoints.length - 1];
       releaseSplash(last.x, last.y);
     }
-    brushPoints = []; points = [];
+    brushPoints = []; brushColor = null; points = [];
     if (releaseTimer) { clearTimeout(releaseTimer); releaseTimer = null; }
   });
   hero.addEventListener('mouseup', function(e) {
@@ -399,11 +402,11 @@
       var last = brushPoints[brushPoints.length - 1];
       releaseSplash(last.x, last.y);
     }
-    brushPoints = [];
+    brushPoints = []; brushColor = null;
   });
   hero.addEventListener('touchstart', function(e) {
     var pos = getPos(e);
-    brushPoints = []; points = [];
+    brushPoints = []; brushColor = null; points = [];
     taperedDot(pos.x, pos.y);
   });
   hero.addEventListener('touchend', function(e) {
@@ -411,7 +414,7 @@
       var last = brushPoints[brushPoints.length - 1];
       releaseSplash(last.x, last.y);
     }
-    brushPoints = []; points = [];
+    brushPoints = []; brushColor = null; points = [];
   });
 
   // ─── WELCOME ───
