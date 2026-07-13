@@ -345,24 +345,76 @@
       }
     },
     "custom_cta": {
-      "type": "custom-liquid",
+      "type": "splash-cta",
       "settings": {
-        "custom_liquid": "<div style=\"background: linear-gradient(135deg, #00CEC9, #6C5CE7); padding: 80px 20px; text-align: center;\">\n  <div class=\"page-width\">\n    <h2 style=\"font-size: 2.5rem; color: #FFFFFF; margin: 0 0 12px;\">Create Your Own Sticker</h2>\n    <p style=\"font-size: 1.1rem; color: rgba(255,255,255,0.85); margin: 0 0 32px; max-width: 500px; margin-left: auto; margin-right: auto;\">Upload any design and we'll turn it into a premium, die-cut sticker. Free proof included!</p>\n    <a href=\"#\" class=\"btn-cta-gradient\" style=\"display: inline-block; padding: 16px 40px; background: #FFFFFF; color: #00CEC9; border-radius: 50px; font-weight: 700; font-size: 1.1rem; text-decoration: none;\">Start Designing</a>\n  </div>\n</div>",
-        "padding-block-start": 0,
-        "padding-block-end": 0
+        "heading": "Create Your Own Sticker",
+        "subtext": "Upload any design and we'll turn it into a premium, die-cut sticker. Free proof included!",
+        "button_label": "Start Designing",
+        "button_link": "",
+        "button_style": "solid",
+        "gradient_start": "#00CEC9",
+        "gradient_end": "#6C5CE7",
+        "heading_color": "#FFFFFF",
+        "text_color": "rgba(255,255,255,0.85)",
+        "padding_top": 80,
+        "padding_bottom": 80
       },
       "blocks": {},
       "block_order": []
     },
     "trust_section": {
-      "type": "custom-liquid",
-      "settings": {
-        "custom_liquid": "<div class=\"page-width\" style=\"padding: 60px 20px;\">\n  <h2 style=\"text-align: center;\">Why SplashStickers</h2>\n  <div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;\">\n    <div class=\"trust-badge\">\n      <div class=\"trust-badge-icon teal\">🎨</div>\n      <div class=\"trust-badge-title\">Premium Quality</div>\n      <div class=\"trust-badge-desc\">Vibrant colors, durable vinyl, weatherproof finish</div>\n    </div>\n    <div class=\"trust-badge\">\n      <div class=\"trust-badge-icon pink\">⚡</div>\n      <div class=\"trust-badge-title\">Fast Turnaround</div>\n      <div class=\"trust-badge-desc\">Printed and shipped within 2-3 business days</div>\n    </div>\n    <div class=\"trust-badge\">\n      <div class=\"trust-badge-icon purple\">✂️</div>\n      <div class=\"trust-badge-title\">Custom Shapes</div>\n      <div class=\"trust-badge-desc\">Die-cut to your exact design, any size</div>\n    </div>\n    <div class=\"trust-badge\">\n      <div class=\"trust-badge-icon gold\">🌍</div>\n      <div class=\"trust-badge-title\">Worldwide Shipping</div>\n      <div class=\"trust-badge-desc\">We deliver to over 50 countries</div>\n    </div>\n  </div>\n</div>",
-        "padding-block-start": 0,
-        "padding-block-end": 0
+      "type": "trust-badges",
+      "blocks": {
+        "badge_quality": {
+          "type": "badge",
+          "settings": {
+            "icon": "🎨",
+            "title": "Premium Quality",
+            "description": "Vibrant colors, durable vinyl, weatherproof finish",
+            "color_style": "teal"
+          }
+        },
+        "badge_turnaround": {
+          "type": "badge",
+          "settings": {
+            "icon": "⚡",
+            "title": "Fast Turnaround",
+            "description": "Printed and shipped within 2-3 business days",
+            "color_style": "pink"
+          }
+        },
+        "badge_shapes": {
+          "type": "badge",
+          "settings": {
+            "icon": "✂️",
+            "title": "Custom Shapes",
+            "description": "Die-cut to your exact design, any size",
+            "color_style": "purple"
+          }
+        },
+        "badge_shipping": {
+          "type": "badge",
+          "settings": {
+            "icon": "🌍",
+            "title": "Worldwide Shipping",
+            "description": "We deliver to over 50 countries",
+            "color_style": "gold"
+          }
+        }
       },
-      "blocks": {},
-      "block_order": []
+      "block_order": [
+        "badge_quality",
+        "badge_turnaround",
+        "badge_shapes",
+        "badge_shipping"
+      ],
+      "settings": {
+        "heading": "Why SplashStickers",
+        "columns_desktop": "4",
+        "background_color": "#FFFFFF",
+        "padding_top": 60,
+        "padding_bottom": 60
+      }
     }
   },
   "order": [
