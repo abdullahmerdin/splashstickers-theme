@@ -339,14 +339,26 @@
 
     // Path points for "A <3 A"
     var paths = {
-      a1: [{x:-8*s,y:2*s},{x:-6*s,y:-2*s},{x:-4*s,y:2*s}],
-      a2: [{x:-7*s,y:0},{x:-5*s,y:0}],
-      lt: [{x:-2.5*s,y:-1.2*s},{x:-1*s,y:0},{x:-2.5*s,y:1.2*s}],
-      h1: [{x:1.5*s,y:-1.5*s},{x:0.5*s,y:-1*s},{x:0.5*s,y:0},{x:1.5*s,y:1.5*s},{x:2.5*s,y:0},{x:2.5*s,y:-1*s},{x:1.5*s,y:-1.5*s}],
-      a3: [{x:5*s,y:2*s},{x:7*s,y:-2*s},{x:9*s,y:2*s}],
-      a4: [{x:6*s,y:0},{x:8*s,y:0}]
+      a1: [{x:-8*s,y:2*s},{x:-6*s,y:-2.2*s},{x:-4*s,y:2*s}],
+      a2: [{x:-7*s,y:0.5},{x:-5*s,y:0}],
+      // Real heart shape using parametric points
+      heart: [],
+      a3: [{x:5*s,y:2*s},{x:7*s,y:-2.2*s},{x:9*s,y:2*s}],
+      a4: [{x:6*s,y:0},{x:8*s,y:0.5}]
     };
-    var order = ['a1','a2','lt','h1','a3','a4'];
+
+    // Generate heart path
+    (function() {
+      var pts = [];
+      for (var t = 0; t <= Math.PI; t += Math.PI / 16) {
+        var x = 16 * Math.pow(Math.sin(t), 3);
+        var y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        pts.push({x: x * s * 0.2, y: -y * s * 0.2});
+      }
+      paths.heart = pts;
+    })();
+
+    var order = ['a1','a2','heart','a3','a4'];
 
     var pathIdx = 0;
     var ptIdx = 0;
