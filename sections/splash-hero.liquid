@@ -100,62 +100,127 @@
   function rand(a,b) { return Math.random() * (b - a) + a; }
 
   var lastX = null, lastY = null;
+  var segments = []; // Store each stroke segment with timestamp
+  var START_FADE_AFTER = 4000; // ms before fade starts
+  var FADE_DURATION = 3000; // ms for full fade
 
   function paintStroke(x1, y1, x2, y2, speed) {
     var color = pick();
     var width = Math.min(Math.max(12, 50 - speed * 1.5), 60);
 
-    // Layer 1: soft bleed underneath (feather)
-    ctx.save();
-    ctx.globalAlpha = 0.12;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width + 16;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.restore();
+    // Store segment with timestamp
+    var seg = { x1: x1, y1: y1, x2: x2, y2: y2, w: width, color: color, ts: Date.now() };
+    segments.push(seg);
 
-    // Layer 2: main paint body (solid)
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.globalAlpha = 0.95;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.restore();
+    // Draw immediately
+    drawSegment(seg, 1);
 
-    // Layer 3: wet highlight (thin bright center)
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = Math.max(3, width * 0.25);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.restore();
-
-    // Splatter dots only on fast moves
+    // Splatter dots (also stored)
     if (speed > 6 && Math.random() > 0.65) {
       var num = Math.floor(Math.min(speed * 0.4, 4));
       for (var i = 0; i < num; i++) {
         var a = Math.random() * Math.PI * 2;
-        ctx.save();
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.35;
-        ctx.beginPath();
-        ctx.arc(x2 + Math.cos(a) * rand(8, 18 + speed), y2 + Math.sin(a) * rand(8, 18 + speed), rand(3, 6), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        var dot = {
+          x: x2 + Math.cos(a) * rand(8, 18 + speed),
+          y: y2 + Math.sin(a) * rand(8, 18 + speed),
+          r: rand(3, 6),
+          color: color,
+          ts: Date.now()
+        };
+        segments.push(dot);
+        drawDot(dot, 1);
       }
+    }
+  }
+
+  function drawSegment(seg, alpha) {
+    // Layer 1: bleed
+    ctx.save();
+    ctx.globalAlpha = 0.12 * alpha;
+    ctx.strokeStyle = seg.color;
+    ctx.lineWidth = seg.w + 16;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(seg.x1, seg.y1);
+    ctx.lineTo(seg.x2, seg.y2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Layer 2: main body
+    ctx.save();
+    ctx.strokeStyle = seg.color;
+    ctx.lineWidth = seg.w;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.95 * alpha;
+    ctx.beginPath();
+    ctx.moveTo(seg.x1, seg.y1);
+    ctx.lineTo(seg.x2, seg.y2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Layer 3: highlight
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = Math.max(3, seg.w * 0.25);
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(seg.x1, seg.y1);
+    ctx.lineTo(seg.x2, seg.y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDot(dot, alpha) {
+    ctx.save();
+    ctx.fillStyle = dot.color;
+    ctx.globalAlpha = 0.35 * alpha;
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ─── Fade loop ───
+  var fadeStarted = false;
+
+  function fadeLoop() {
+    var now = Date.now();
+    var oldest = segments.length > 0 ? segments[0].ts : now;
+    var age = now - oldest;
+
+    if (!fadeStarted && segments.length > 0 && age > START_FADE_AFTER) {
+      fadeStarted = true;
+    }
+
+    if (fadeStarted && segments.length > 0) {
+      // Calculate which segments to keep
+      var keep = [];
+      for (var i = 0; i < segments.length; i++) {
+        var segAge = now - segments[i].ts - START_FADE_AFTER;
+        if (segAge < 0) segAge = 0;
+        var alpha = 1 - (segAge / FADE_DURATION);
+        if (alpha > 0) {
+          keep.push(segments[i]);
+        }
+      }
+
+      if (keep.length < segments.length) {
+        segments = keep;
+        // Redraw everything
+        ctx.clearRect(0, 0, W, H);
+        for (var i = 0; i < segments.length; i++) {
+          var seg = segments[i];
+          var segAge = now - seg.ts - START_FADE_AFTER;
+          var alpha = Math.max(0, 1 - (segAge / FADE_DURATION));
+          if (seg.r !== undefined) drawDot(seg, alpha);
+          else drawSegment(seg, alpha);
+        }
+      }
+    }
+
+    if (segments.length > 0) {
+      requestAnimationFrame(fadeLoop);
     }
   }
 
@@ -167,13 +232,15 @@
     for (var i = 0; i < num; i++) {
       var a = Math.random() * Math.PI * 2;
       var d = rand(8, 20 + speed);
-      ctx.save();
-      ctx.fillStyle = color;
-      ctx.globalAlpha = 0.4;
-      ctx.beginPath();
-      ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(3, 7), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      var dot = {
+        x: x + Math.cos(a) * d,
+        y: y + Math.sin(a) * d,
+        r: rand(3, 7),
+        color: color,
+        ts: Date.now()
+      };
+      segments.push(dot);
+      drawDot(dot, 1);
     }
     // Central burst
     ctx.save();
@@ -205,6 +272,7 @@
       if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
     }
     lastX = x; lastY = y;
+    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
   });
   hero.addEventListener('touchmove', function(e) {
     var pos = getPos(e);
@@ -215,6 +283,7 @@
       if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
     }
     lastX = x; lastY = y;
+    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
   });
   hero.addEventListener('mouseleave', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
   hero.addEventListener('mouseup', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
