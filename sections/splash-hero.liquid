@@ -111,9 +111,9 @@
 
   // ─── Particle physics ───
   var particles = [];
-  var GRAVITY = 0.15;
-  var DAMPING = 0.98;
-  var FRICTION = 0.92;
+  var GRAVITY = 0.05;
+  var DAMPING = 0.96;
+  var STICK_SPEED = 0.2; // when velocity drops below this, particle sticks
 
   function spawnParticles(x, y, count, color, speed) {
     for (var i = 0; i < count; i++) {
@@ -140,17 +140,23 @@
       var p = particles[i];
 
       // Gravity
-      p.vy += GRAVITY;
-      p.vx *= DAMPING;
-      p.vy *= DAMPING;
-      p.x += p.vx;
-      p.y += p.vy;
+      if (!p.stuck) {
+        p.vy += GRAVITY;
+        p.vx *= DAMPING;
+        p.vy *= DAMPING;
+        p.x += p.vx;
+        p.y += p.vy;
 
-      // Bounce
-      if (p.x - p.r < 0) { p.x = p.r; p.vx *= -FRICTION; }
-      if (p.x + p.r > W) { p.x = W - p.r; p.vx *= -FRICTION; }
-      if (p.y - p.r < 0) { p.y = p.r; p.vy *= -FRICTION; }
-      if (p.y + p.r > H) { p.y = H - p.r; p.vy *= -FRICTION; }
+        // Wall collision → STICK (don't bounce)
+        if (p.x - p.r < 0) { p.x = p.r; p.vx = 0; if (Math.abs(p.vy) < 0.5) p.stuck = true; }
+        if (p.x + p.r > W) { p.x = W - p.r; p.vx = 0; if (Math.abs(p.vy) < 0.5) p.stuck = true; }
+        if (p.y - p.r < 0) { p.y = p.r; p.vy = 0; if (Math.abs(p.vx) < 0.5) p.stuck = true; }
+        if (p.y + p.r > H) { p.y = H - p.r; p.vy = 0; p.stuck = true; } // floor always sticks
+
+        // Stick when slow enough
+        var vel = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+        if (vel < STICK_SPEED) p.stuck = true;
+      }
 
       p.life -= 0.001;
       if (p.life <= 0 || p.r < 0.5) { particles.splice(i, 1); continue; }
