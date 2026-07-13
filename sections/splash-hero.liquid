@@ -102,23 +102,25 @@
   var lastX = null, lastY = null, lastColor = null;
   var segments = [];
   var START_FADE_AFTER = 4000;
-  var FADE_DURATION = 3000;
+  var BASE_FADE_DURATION = 4000;
 
   function paintStroke(x1, y1, x2, y2, speed) {
     var color = lastColor || pick();
     var nextColor = pick();
     var width = Math.min(Math.max(12, 50 - speed * 1.5), 60);
 
-    // Store segment with gradient colors
+    // Fade duration: fast stroke = fast fade (shorter), slow stroke = slow fade (longer)
+    var fadeDur = Math.max(800, BASE_FADE_DURATION - speed * 80);
+
     var seg = {
       x1: x1, y1: y1, x2: x2, y2: y2, w: width,
       colorFrom: color,
       colorTo: nextColor,
+      fadeDur: fadeDur,
       ts: Date.now()
     };
     segments.push(seg);
     drawSegment(seg, 1);
-
     lastColor = nextColor;
 
     // Splatter dots
@@ -132,6 +134,7 @@
           y: y2 + Math.sin(a) * d,
           r: rand(2, 4 + speed * 0.04),
           color: nextColor,
+          fadeDur: fadeDur,
           ts: Date.now()
         };
         segments.push(dot);
@@ -212,14 +215,15 @@
     }
 
     if (fadeStarted && segments.length > 0) {
-      // Calculate which segments to keep
       var keep = [];
       for (var i = 0; i < segments.length; i++) {
-        var segAge = now - segments[i].ts - START_FADE_AFTER;
+        var seg = segments[i];
+        var segAge = now - seg.ts - START_FADE_AFTER;
         if (segAge < 0) segAge = 0;
-        var alpha = 1 - (segAge / FADE_DURATION);
+        var fadeDur = seg.fadeDur || 3000;
+        var alpha = 1 - (segAge / fadeDur);
         if (alpha > 0) {
-          keep.push(segments[i]);
+          keep.push(seg);
         }
       }
 
@@ -229,7 +233,9 @@
         for (var i = 0; i < segments.length; i++) {
           var seg = segments[i];
           var segAge = now - seg.ts - START_FADE_AFTER;
-          var alpha = Math.max(0, 1 - (segAge / FADE_DURATION));
+          if (segAge < 0) segAge = 0;
+          var fadeDur = seg.fadeDur || 3000;
+          var alpha = Math.max(0, 1 - (segAge / fadeDur));
           if (seg.r !== undefined) drawDot(seg, alpha);
           else drawSegment(seg, alpha);
         }
