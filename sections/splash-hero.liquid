@@ -105,7 +105,10 @@
   if (!canvas || !hero) return;
 
   var ctx = canvas.getContext('2d');
+  var offscreen = document.createElement('canvas');
+  var offCtx = offscreen.getContext('2d');
   var W, H, points = [];
+  var fadeTimer = null, fading = false, firstPaint = false;
 
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
   // Saturated Splatoon colors for ink
@@ -118,11 +121,36 @@
     H = canvas.height = r.height * dpr;
     canvas.style.width = r.width + 'px';
     canvas.style.height = r.height + 'px';
+    offscreen.width = canvas.width;
+    offscreen.height = canvas.height;
     ctx.scale(dpr, dpr);
+    offCtx.scale(dpr, dpr);
   }
 
   function rand(a, b) { return Math.random() * (b - a) + a; }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  // ─── RENDER: offscreen → visible canvas ───
+  function render() {
+    ctx.clearRect(0, 0, W / (window.devicePixelRatio || 1), H / (window.devicePixelRatio || 1));
+    ctx.drawImage(offscreen, 0, 0);
+  }
+
+  // ─── INK FADE: start fading after 3s ───
+  function startFade() {
+    if (fading) return;
+    fading = true;
+    (function fadeLoop() {
+      offCtx.save();
+      offCtx.globalAlpha = 0.03;
+      offCtx.fillStyle = '#1A1A2E';
+      offCtx.fillRect(0, 0, offscreen.width, offscreen.height);
+      offCtx.restore();
+      render();
+      // Check if fully faded
+      fadeTimer = requestAnimationFrame(fadeLoop);
+    })();
+  }
 
   // ─── SMOOTH INK STROKE ───
   function inkStroke(x1, y1, x2, y2, speed) {
@@ -131,46 +159,46 @@
     var width = Math.min(Math.max(8, 40 - speed * 1.5), 50);
 
     // ── Layer 1: Soft glow (ink spread) ──
-    ctx.save();
-    ctx.shadowColor = 'rgba(255,255,255,0.08)';
-    ctx.shadowBlur = 20;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width + 12;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.globalAlpha = 0.15;
-    ctx.stroke();
-    ctx.restore();
+    offCtx.save();
+    offCtx.shadowColor = 'rgba(255,255,255,0.08)';
+    offCtx.shadowBlur = 20;
+    offCtx.beginPath();
+    offCtx.moveTo(x1, y1);
+    offCtx.lineTo(x2, y2);
+    offCtx.strokeStyle = color;
+    offCtx.lineWidth = width + 12;
+    offCtx.lineCap = 'round';
+    offCtx.lineJoin = 'round';
+    offCtx.globalAlpha = 0.15;
+    offCtx.stroke();
+    offCtx.restore();
 
     // ── Layer 2: Main ink body ──
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.1)';
-    ctx.shadowBlur = 6;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.globalAlpha = 0.95;
-    ctx.stroke();
-    ctx.restore();
+    offCtx.save();
+    offCtx.shadowColor = 'rgba(0,0,0,0.1)';
+    offCtx.shadowBlur = 6;
+    offCtx.beginPath();
+    offCtx.moveTo(x1, y1);
+    offCtx.lineTo(x2, y2);
+    offCtx.strokeStyle = color;
+    offCtx.lineWidth = width;
+    offCtx.lineCap = 'round';
+    offCtx.lineJoin = 'round';
+    offCtx.globalAlpha = 0.95;
+    offCtx.stroke();
+    offCtx.restore();
 
     // ── Layer 3: Wet highlight (center shine) ──
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = Math.max(4, width * 0.3);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-    ctx.restore();
+    offCtx.save();
+    offCtx.beginPath();
+    offCtx.moveTo(x1, y1);
+    offCtx.lineTo(x2, y2);
+    offCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+    offCtx.lineWidth = Math.max(4, width * 0.3);
+    offCtx.lineCap = 'round';
+    offCtx.lineJoin = 'round';
+    offCtx.stroke();
+    offCtx.restore();
 
     // ── Ink splatter droplets (only on fast moves) ──
     if (speed > 4 && Math.random() > 0.5) {
@@ -179,15 +207,15 @@
         var a = rand(0, Math.PI * 2);
         var d = rand(5, 12 + speed * 1.5);
         var sz = rand(3, 7);
-        ctx.save();
-        ctx.globalAlpha = 0.45;
-        ctx.fillStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 4;
-        ctx.beginPath();
-        ctx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        offCtx.save();
+        offCtx.globalAlpha = 0.45;
+        offCtx.fillStyle = color;
+        offCtx.shadowColor = color;
+        offCtx.shadowBlur = 4;
+        offCtx.beginPath();
+        offCtx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
+        offCtx.fill();
+        offCtx.restore();
       }
     }
 
@@ -213,34 +241,48 @@
         });
       }
     }
+
+    // Trigger render
+    render();
+
+    // Start 3s fade timer on first paint
+    if (!firstPaint) {
+      firstPaint = true;
+      setTimeout(startFade, 3000);
+    }
   }
 
   // ─── TAPERED STROKE (for beginning/ending) ───
   function taperedDot(x, y) {
     var color = pick(COLORS);
     // Soft outer
-    var g = ctx.createRadialGradient(x, y, 0, x, y, 20);
+    var g = offCtx.createRadialGradient(x, y, 0, x, y, 20);
     g.addColorStop(0, color);
     g.addColorStop(0.4, color);
     g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.save();
-    ctx.fillStyle = g;
-    ctx.shadowColor = 'rgba(255,255,255,0.1)';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.arc(x, y, 20, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    offCtx.save();
+    offCtx.fillStyle = g;
+    offCtx.shadowColor = 'rgba(255,255,255,0.1)';
+    offCtx.shadowBlur = 10;
+    offCtx.beginPath();
+    offCtx.arc(x, y, 20, 0, Math.PI * 2);
+    offCtx.fill();
+    offCtx.restore();
     // Bright center
-    ctx.save();
-    var g2 = ctx.createRadialGradient(x-2, y-2, 0, x, y, 10);
+    offCtx.save();
+    var g2 = offCtx.createRadialGradient(x-2, y-2, 0, x, y, 10);
     g2.addColorStop(0, 'rgba(255,255,255,0.3)');
     g2.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g2;
-    ctx.beginPath();
-    ctx.arc(x, y, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    offCtx.fillStyle = g2;
+    offCtx.beginPath();
+    offCtx.arc(x, y, 10, 0, Math.PI * 2);
+    offCtx.fill();
+    offCtx.restore();
+    render();
+    if (!firstPaint) {
+      firstPaint = true;
+      setTimeout(startFade, 3000);
+    }
   }
 
   // ─── MOUSE ───
