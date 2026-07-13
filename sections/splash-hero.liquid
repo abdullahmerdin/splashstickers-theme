@@ -38,21 +38,23 @@
   .splash-hero-{{ section.id }} .splash-hero-heading {
     font-size: clamp(2.5rem, 6vw, 4.5rem);
     font-weight: 900;
-    color: {{ heading_color }};
+    color: #FFFFFF;
     line-height: 1.1;
     letter-spacing: -0.02em;
     margin: 0 0 16px;
     position: relative;
     z-index: 25;
+    mix-blend-mode: difference;
   }
   .splash-hero-{{ section.id }} .splash-hero-subtext {
     font-size: clamp(1rem, 2vw, 1.2rem);
-    color: {{ text_color }};
+    color: #FFFFFF;
     margin: 0 0 32px;
     line-height: 1.5;
     opacity: 0.9;
     position: relative;
     z-index: 25;
+    mix-blend-mode: difference;
   }
   .splash-hero-{{ section.id }} .splash-hero-buttons {
     display: flex;
