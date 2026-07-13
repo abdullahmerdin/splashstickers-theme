@@ -1,43 +1,120 @@
 {
   "sections": {
     "hero_sticker": {
-      "type": "splash-hero",
+      "type": "hero",
       "blocks": {
-        "btn_shop": {
-          "type": "button",
+        "text_main": {
+          "type": "text",
+          "name": "Main Heading",
           "settings": {
-            "button_label": "Shop Stickers",
-            "button_link": "shopify://collections/all",
-            "button_style": "solid",
-            "button_bg": "#FFFFFF",
-            "button_text": "#00CEC9"
-          }
+            "text": "<h1>Splash Your Style</h1>",
+            "text_color": "#FFFFFF",
+            "width": "fit-content",
+            "max_width": "560px",
+            "alignment": "center",
+            "type_preset": "h1",
+            "font": "var(--font-heading--family)",
+            "line_height": "1.1",
+            "letter_spacing": "-0.02em",
+            "case": "none",
+            "wrap": "pretty",
+            "background": false,
+            "padding-block-start": 0,
+            "padding-block-end": 8
+          },
+          "blocks": {}
         },
-        "btn_custom": {
-          "type": "button",
+        "text_sub": {
+          "type": "text",
+          "name": "Subtitle",
           "settings": {
-            "button_label": "Design Your Own",
-            "button_link": "shopify://collections/custom-stickers",
-            "button_style": "outline",
-            "button_bg": "#FFFFFF",
-            "button_text": "#FFFFFF"
-          }
+            "text": "<p>Premium custom stickers \u2014 Vibrant colors \u2014 Worldwide shipping</p>",
+            "text_color": "#FFFFFF",
+            "width": "fit-content",
+            "max_width": "normal",
+            "alignment": "center",
+            "type_preset": "rte",
+            "font": "var(--font-body--family)",
+            "line_height": "normal",
+            "letter_spacing": "normal",
+            "case": "none",
+            "wrap": "pretty",
+            "background": false,
+            "padding-block-start": 8,
+            "padding-block-end": 8
+          },
+          "blocks": {}
+        },
+        "button_shop": {
+          "type": "button",
+          "name": "Shop Stickers",
+          "settings": {
+            "label": "Shop Stickers",
+            "link": "shopify://collections/all",
+            "open_in_new_tab": false,
+            "style_class": "button-custom",
+            "custom_button_background": "#FFFFFF",
+            "custom_button_text": "#00CEC9",
+            "custom_button_border": "#FFFFFF",
+            "width": "fit-content",
+            "custom_width": 100,
+            "width_mobile": "fit-content",
+            "custom_width_mobile": 100
+          },
+          "blocks": {}
+        },
+        "button_custom": {
+          "type": "button",
+          "name": "Custom Design",
+          "settings": {
+            "label": "Design Your Own",
+            "link": "shopify://collections/custom-stickers",
+            "open_in_new_tab": false,
+            "style_class": "button-custom",
+            "custom_button_background": "rgba(255,255,255,0.15)",
+            "custom_button_text": "#FFFFFF",
+            "custom_button_border": "#FFFFFF",
+            "width": "fit-content",
+            "custom_width": 100,
+            "width_mobile": "fit-content",
+            "custom_width_mobile": 100
+          },
+          "blocks": {}
         }
       },
       "block_order": [
-        "btn_shop",
-        "btn_custom"
+        "text_main",
+        "text_sub",
+        "button_shop",
+        "button_custom"
       ],
+      "name": "Hero - SplashStickers",
       "settings": {
-        "heading": "Splash Your <span class=\"splash-highlight\">Style</span>",
-        "subtext": "Premium custom stickers \u2014 Vibrant colors \u2014 Worldwide shipping",
+        "media_type_1": "image",
+        "media_type_2": "image",
+        "stack_media_on_mobile": false,
+        "custom_mobile_media": false,
+        "open_in_new_tab": false,
+        "content_direction": "column",
+        "vertical_on_mobile": true,
+        "horizontal_alignment": "center",
+        "vertical_alignment": "center",
+        "align_baseline": true,
+        "horizontal_alignment_flex_direction_column": "center",
+        "vertical_alignment_flex_direction_column": "center",
+        "gap": 16,
+        "section_width": "page-width",
+        "section_height": "large",
+        "section_height_custom": 70,
         "background_color": "#00CEC9",
-        "heading_color": "#FFFFFF",
-        "text_color": "rgba(255,255,255,0.85)",
-        "section_height": 550,
-        "padding_top": 80,
-        "padding_bottom": 80,
-        "show_animation": true
+        "toggle_overlay": false,
+        "overlay_color": "rgba(0,0,0,0)",
+        "overlay_style": "solid",
+        "gradient_direction": "to bottom",
+        "blurred_reflection": false,
+        "reflection_opacity": 75,
+        "padding-block-start": 100,
+        "padding-block-end": 72
       }
     },
     "category_cards": {
@@ -46,7 +123,7 @@
         "cat_animals": {
           "type": "category",
           "settings": {
-            "icon": "🐾",
+            "icon": "\ud83d\udc3e",
             "label": "Animals",
             "link": "",
             "color_style": "teal"
@@ -55,7 +132,7 @@
         "cat_nature": {
           "type": "category",
           "settings": {
-            "icon": "🌸",
+            "icon": "\ud83c\udf38",
             "label": "Nature",
             "link": "",
             "color_style": "pink"
@@ -64,7 +141,7 @@
         "cat_quotes": {
           "type": "category",
           "settings": {
-            "icon": "✨",
+            "icon": "\u2728",
             "label": "Quotes",
             "link": "",
             "color_style": "gold"
@@ -73,7 +150,7 @@
         "cat_aesthetic": {
           "type": "category",
           "settings": {
-            "icon": "🎨",
+            "icon": "\ud83c\udfa8",
             "label": "Aesthetic",
             "link": "",
             "color_style": "purple"
@@ -82,7 +159,7 @@
         "cat_gaming": {
           "type": "category",
           "settings": {
-            "icon": "🎮",
+            "icon": "\ud83c\udfae",
             "label": "Gaming",
             "link": "",
             "color_style": "teal"
@@ -291,7 +368,7 @@
         "badge_quality": {
           "type": "badge",
           "settings": {
-            "icon": "🎨",
+            "icon": "\ud83c\udfa8",
             "title": "Premium Quality",
             "description": "Vibrant colors, durable vinyl, weatherproof finish",
             "color_style": "teal"
@@ -300,7 +377,7 @@
         "badge_turnaround": {
           "type": "badge",
           "settings": {
-            "icon": "⚡",
+            "icon": "\u26a1",
             "title": "Fast Turnaround",
             "description": "Printed and shipped within 2-3 business days",
             "color_style": "pink"
@@ -309,7 +386,7 @@
         "badge_shapes": {
           "type": "badge",
           "settings": {
-            "icon": "✂️",
+            "icon": "\u2702\ufe0f",
             "title": "Custom Shapes",
             "description": "Die-cut to your exact design, any size",
             "color_style": "purple"
@@ -318,7 +395,7 @@
         "badge_shipping": {
           "type": "badge",
           "settings": {
-            "icon": "🌍",
+            "icon": "\ud83c\udf0d",
             "title": "Worldwide Shipping",
             "description": "We deliver to over 50 countries",
             "color_style": "gold"
