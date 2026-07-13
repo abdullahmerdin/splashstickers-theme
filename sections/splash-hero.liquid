@@ -104,10 +104,8 @@
   if (!canvas || !hero) return;
 
   var ctx = canvas.getContext('2d');
-  var W, H, lastX, lastY, hue = 0;
-  var paintTimer = 0;
+  var W, H, points = [];
 
-  // Splatoon neon colors
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
 
   function resize() {
@@ -123,68 +121,101 @@
   function rand(a, b) { return Math.random() * (b - a) + a; }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  // ─── DRAW INK BRUSH ───
-  function drawBrush(x, y, pressure) {
-    pressure = pressure || 1;
+  // ─── SMOOTH INK STROKE ───
+  function inkStroke(x1, y1, x2, y2, speed) {
     var color = pick(COLORS);
+    // Width based on speed: slow = thick ink pool, fast = thin spray
+    var width = Math.min(Math.max(8, 40 - speed * 1.5), 50);
 
-    // Main brush circle
+    // ── Layer 1: Soft glow (ink spread) ──
     ctx.save();
-    ctx.shadowColor = 'rgba(255,255,255,0.15)';
-    ctx.shadowBlur = 8;
-
-    // Outer glow
-    var g = ctx.createRadialGradient(x, y, 0, x, y, 25 * pressure);
-    g.addColorStop(0, color);
-    g.addColorStop(0.6, color);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
+    ctx.shadowColor = 'rgba(255,255,255,0.08)';
+    ctx.shadowBlur = 20;
     ctx.beginPath();
-    ctx.arc(x, y, 25 * pressure, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Inner highlight (wet look)
-    ctx.shadowColor = 'transparent';
-    var g2 = ctx.createRadialGradient(x - 4, y - 4, 0, x, y, 20 * pressure);
-    g2.addColorStop(0, 'rgba(255,255,255,0.4)');
-    g2.addColorStop(0.5, 'rgba(255,255,255,0.05)');
-    g2.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g2;
-    ctx.beginPath();
-    ctx.arc(x, y, 20 * pressure, 0, Math.PI * 2);
-    ctx.fill();
-
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width + 12;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = 0.15;
+    ctx.stroke();
     ctx.restore();
-  }
 
-  // ─── DRAW LINE BETWEEN TWO POINTS ───
-  function drawLine(x1, y1, x2, y2) {
-    var dx = x2 - x1, dy = y2 - y1;
-    var dist = Math.sqrt(dx*dx + dy*dy);
-    if (dist < 2) return;
+    // ── Layer 2: Main ink body ──
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.1)';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = 0.85;
+    ctx.stroke();
+    ctx.restore();
 
-    var steps = Math.ceil(dist / 3);
-    for (var i = 0; i <= steps; i++) {
-      var t = i / steps;
-      var x = x1 + dx * t;
-      var y = y1 + dy * t;
-      drawBrush(x, y, 0.6 + 0.4 * Math.sin(i * 1.5));
+    // ── Layer 3: Wet highlight (center shine) ──
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = Math.max(4, width * 0.25);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.restore();
 
-      // Tiny splatter droplets along the trail (very few)
-      if (i % 4 === 0 && Math.random() > 0.6) {
+    // ── Ink splatter droplets (only on fast moves) ──
+    if (speed > 4 && Math.random() > 0.5) {
+      var num = Math.floor(Math.min(speed, 6));
+      for (var i = 0; i < num; i++) {
         var a = rand(0, Math.PI * 2);
-        var d = rand(8, 20);
-        ctx.fillStyle = pick(COLORS);
-        ctx.globalAlpha = 0.4;
+        var d = rand(5, 15 + speed * 2);
+        var sz = rand(2, 6);
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(2, 5), 0, Math.PI * 2);
+        ctx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1;
+        ctx.restore();
       }
     }
   }
 
-  // ─── MOUSE EVENTS ───
+  // ─── TAPERED STROKE (for beginning/ending) ───
+  function taperedDot(x, y) {
+    var color = pick(COLORS);
+    // Soft outer
+    var g = ctx.createRadialGradient(x, y, 0, x, y, 20);
+    g.addColorStop(0, color);
+    g.addColorStop(0.4, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.fillStyle = g;
+    ctx.shadowColor = 'rgba(255,255,255,0.1)';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    // Bright center
+    ctx.save();
+    var g2 = ctx.createRadialGradient(x-2, y-2, 0, x, y, 10);
+    g2.addColorStop(0, 'rgba(255,255,255,0.3)');
+    g2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g2;
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ─── MOUSE ───
   function getPos(e) {
     var r = hero.getBoundingClientRect();
     if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
@@ -195,35 +226,47 @@
     var pos = getPos(e);
     var x = pos.x, y = pos.y;
 
-    if (lastX !== undefined) {
-      drawLine(lastX, lastY, x, y);
-    } else {
-      drawBrush(x, y, 1);
-    }
+    if (points.length > 0) {
+      var last = points[points.length - 1];
+      var dx = x - last.x, dy = y - last.y;
+      var dist = Math.sqrt(dx*dx + dy*dy);
 
-    lastX = x; lastY = y;
+      if (dist > 2) {
+        var speed = dist;
+        inkStroke(last.x, last.y, x, y, speed);
+        points.push({ x: x, y: y });
+        if (points.length > 50) points.shift();
+      }
+    } else {
+      taperedDot(x, y);
+      points.push({ x: x, y: y });
+    }
   }
 
   hero.addEventListener('mousemove', onMove);
   hero.addEventListener('touchmove', onMove);
   hero.addEventListener('touchstart', function(e) {
     var pos = getPos(e);
-    lastX = pos.x; lastY = pos.y;
-    drawBrush(pos.x, pos.y, 1);
+    points = [{ x: pos.x, y: pos.y }];
+    taperedDot(pos.x, pos.y);
   });
+  hero.addEventListener('mouseenter', function() { points = []; });
 
-  // ─── WELCOME SPLAT ───
+  // ─── WELCOME ───
   function welcomeSplat() {
     var r = hero.getBoundingClientRect();
     var cx = r.width / 2, cy = r.height / 2;
-    for (var ring = 0; ring < 3; ring++) {
-      for (var i = 0; i < 8; i++) {
-        var a = (i / 8) * Math.PI * 2 + ring * 0.3;
-        var d = 30 + ring * 20;
-        drawBrush(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0.5 + ring * 0.15);
-      }
+    // Starburst pattern
+    for (var i = 0; i < 12; i++) {
+      var a = (i / 12) * Math.PI * 2;
+      var d = 20 + (i % 3) * 15;
+      var fromX = cx + Math.cos(a) * d * 0.3;
+      var fromY = cy + Math.sin(a) * d * 0.3;
+      var toX = cx + Math.cos(a) * d;
+      var toY = cy + Math.sin(a) * d;
+      inkStroke(fromX, fromY, toX, toY, 8);
     }
-    drawBrush(cx, cy, 1.2);
+    taperedDot(cx, cy);
   }
 
   function init() {
