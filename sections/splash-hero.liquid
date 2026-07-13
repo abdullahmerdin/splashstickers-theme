@@ -21,14 +21,6 @@
     justify-content: center;
     padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
   }
-  .splash-hero-{{ section.id }} canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
-  }
   .splash-hero-{{ section.id }} .splash-hero-content {
     position: relative;
     z-index: 20;
@@ -58,16 +50,11 @@
     flex-wrap: wrap;
   }
   @media (prefers-reduced-motion: reduce) {
-    .splash-hero-{{ section.id }} canvas { display: none; }
     .splash-hero-{{ section.id }} .splash-hero-content { opacity: 1; }
   }
 {% endstyle %}
 
-<div class="splash-hero-{{ section.id }}" data-animated="false">
-  {% if show_animation %}
-    <canvas id="splash-canvas-{{ section.id }}"></canvas>
-  {% endif %}
-
+<div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
   <div class="splash-hero-content" id="splash-content-{{ section.id }}">
     {% if heading != blank %}
       <h1 class="splash-hero-heading">{{ heading }}</h1>
@@ -86,193 +73,78 @@
 </div>
 
 {% if show_animation %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
 <script>
 (function() {
   'use strict';
-  const sectionId = '{{ section.id }}';
-  const canvas = document.getElementById('splash-canvas-' + sectionId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [], stickers = [], animId;
-  const PASTEL_COLORS = ['#FFB5C2','#FFD1DC','#C3AED6','#E6E6FA','#B5EAD7','#D4F5E2','#FFDAB9','#FFE8D6','#B5D8EB','#D4EAF5','#FFF5BA','#FFFDE0'];
-  const STICKER_SYMBOLS = ['✦','♥','◆','♡','★','♪','✧','○','◇','☆'];
+  var id = '{{ section.id }}';
+  var hero = document.getElementById('splash-hero-' + id);
+  if (!hero) return;
 
-  function resize() {
-    const rect = canvas.parentElement.getBoundingClientRect();
-    W = canvas.width = rect.width * devicePixelRatio;
-    H = canvas.height = rect.height * devicePixelRatio;
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
-    ctx.scale(devicePixelRatio, devicePixelRatio);
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) {
+    document.getElementById('splash-content-' + id).style.opacity = '1';
+    return;
   }
 
-  function random(a, b) { return Math.random() * (b - a) + a; }
+  var rect = hero.getBoundingClientRect();
+  var cx = rect.width / 2;
+  var cy = rect.height / 2;
+  var originX = cx / window.innerWidth;
+  var originY = cy / window.innerHeight;
 
-  function createParticle(x, y) {
-    const angle = random(0, Math.PI * 2);
-    const speed = random(2, 12);
-    const size = random(3, 14);
-    return {
-      x, y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - random(2, 6),
-      size,
-      color: PASTEL_COLORS[Math.floor(Math.random() * PASTEL_COLORS.length)],
-      life: 1,
-      decay: random(0.006, 0.02),
-      gravity: random(0.05, 0.15),
-      rotation: random(0, Math.PI * 2),
-      rotSpeed: random(-0.05, 0.05),
-      type: Math.random() > 0.6 ? 'drop' : 'circle'
-    };
+  var pastelColors = ['#FFB5C2','#C3AED6','#B5EAD7','#FFDAB9','#B5D8EB','#FFF5BA','#FFD1DC','#D4F5E2'];
+
+  // Fire multiple bursts for a layered splash effect
+  var defaults = {
+    particleCount: 60,
+    spread: 120,
+    origin: { x: originX, y: originY },
+    colors: pastelColors,
+    ticks: 200,
+    gravity: 0.8,
+    scalar: 1.2,
+    shapes: ['circle', 'square'],
+    startVelocity: 20
+  };
+
+  function fireBurst(delay, opts) {
+    setTimeout(function() {
+      confetti(Object.assign({}, defaults, opts));
+    }, delay);
   }
 
-  function createSticker(x, y) {
-    const angle = random(0, Math.PI * 2);
-    const speed = random(5, 15);
-    const size = random(28, 42);
-    return {
-      x, y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - random(3, 8),
-      size,
-      color: PASTEL_COLORS[Math.floor(Math.random() * PASTEL_COLORS.length)],
-      symbol: STICKER_SYMBOLS[Math.floor(Math.random() * STICKER_SYMBOLS.length)],
-      life: 1,
-      decay: random(0.003, 0.008),
-      gravity: random(0.03, 0.08),
-      rotation: random(-0.3, 0.3),
-      rotSpeed: random(-0.03, 0.03),
-      type: 'sticker'
-    };
-  }
+  // Main burst
+  fireBurst(0, { particleCount: 100, spread: 160, startVelocity: 30, scalar: 1.5 });
+  // Secondary bursts for depth
+  fireBurst(100, { particleCount: 60, spread: 100, startVelocity: 20, scalar: 1 });
+  fireBurst(200, { particleCount: 40, spread: 200, startVelocity: 35, scalar: 0.8 });
+  // Side splashes
+  fireBurst(150, { particleCount: 30, spread: 80, angle: 260, startVelocity: 25, origin: { x: originX - 0.05, y: originY } });
+  fireBurst(150, { particleCount: 30, spread: 80, angle: 280, startVelocity: 25, origin: { x: originX + 0.05, y: originY } });
+  // Top splash (crown)
+  fireBurst(80,  { particleCount: 50, spread: 90, angle: 270, startVelocity: 28, origin: { x: originX, y: originY } });
 
-  function createSplash(cx, cy) {
-    const count = Math.floor(random(80, 140));
-    for (let i = 0; i < count; i++) {
-      particles.push(createParticle(cx, cy));
-    }
-    const stickerCount = Math.floor(random(6, 10));
-    for (let i = 0; i < stickerCount; i++) {
-      stickers.push(createSticker(cx, cy));
-    }
-  }
-
-  function drawParticle(p) {
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.rotation);
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle = p.color;
-
-    if (p.type === 'drop') {
-      // Teardrop shape
-      ctx.beginPath();
-      ctx.moveTo(0, -p.size * 0.6);
-      ctx.quadraticCurveTo(p.size * 0.6, p.size * 0.1, 0, p.size * 0.8);
-      ctx.quadraticCurveTo(-p.size * 0.6, p.size * 0.1, 0, -p.size * 0.6);
-      ctx.fill();
-    } else {
-      // Circle
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size * 0.4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  function drawSticker(s) {
-    ctx.save();
-    ctx.translate(s.x, s.y);
-    ctx.rotate(s.rotation);
-    ctx.globalAlpha = s.life;
-
-    // Pastel background
-    ctx.fillStyle = s.color;
-    ctx.shadowColor = 'rgba(0,0,0,0.08)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 3;
-
-    const r = s.size / 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowColor = 'transparent';
-
-    // Dashed border
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Peel corner highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.beginPath();
-    ctx.arc(r - 6, -r + 6, 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Symbol
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = 'bold ' + (r * 0.8) + 'px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(s.symbol, 0, 1);
-    ctx.restore();
-  }
-
-  function animate() {
-    ctx.clearRect(0, 0, W / devicePixelRatio, H / devicePixelRatio);
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += p.gravity;
-      p.vx *= 0.98;
-      p.life -= p.decay;
-      p.rotation += p.rotSpeed;
-      if (p.life <= 0 || p.y > H + 50) { particles.splice(i, 1); continue; }
-      drawParticle(p);
-    }
-
-    for (let i = stickers.length - 1; i >= 0; i--) {
-      const s = stickers[i];
-      s.x += s.vx;
-      s.y += s.vy;
-      s.vy += s.gravity;
-      s.vx *= 0.97;
-      s.rotation += s.rotSpeed;
-      s.life -= s.decay;
-      if (s.life <= 0 || s.y > H + 50) { stickers.splice(i, 1); continue; }
-      drawSticker(s);
-    }
-
-    if (particles.length > 0 || stickers.length > 0) {
-      animId = requestAnimationFrame(animate);
-    }
-  }
-
-  function init() {
-    resize();
-    const rect = canvas.parentElement.getBoundingClientRect();
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    createSplash(cx, cy);
-    animate();
-
-    // Fade in content
-    const content = document.getElementById('splash-content-' + sectionId);
-    if (content) {
-      content.style.transition = 'opacity 0.6s ease-out';
+  // Fade in content
+  var content = document.getElementById('splash-content-' + id);
+  if (content) {
+    setTimeout(function() {
+      content.style.transition = 'opacity 0.5s ease-out';
       content.style.opacity = '1';
-    }
-
-    window.addEventListener('resize', resize);
+    }, 300);
   }
 
-  if (document.readyState === 'complete') init();
-  else window.addEventListener('load', init);
+  // Handle resize - refire on window resize
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      var r = hero.getBoundingClientRect();
+      var nx = r.width / 2 / window.innerWidth;
+      var ny = r.height / 2 / window.innerHeight;
+      fireBurst(0, { particleCount: 30, spread: 100, startVelocity: 15, scalar: 0.7, origin: { x: nx, y: ny } });
+    }, 500);
+  });
 })();
 </script>
 {% endif %}
