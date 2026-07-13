@@ -96,8 +96,8 @@
     dotCanvas.height = H * dpr;
     dotCanvas.style.width = W + 'px';
     dotCanvas.style.height = H + 'px';
-    ctx.scale(dpr, dpr);
-    dotCtx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    dotCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   resize();
   window.addEventListener('resize', resize);
