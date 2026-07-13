@@ -81,6 +81,10 @@
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   var ctx = canvas.getContext('2d');
+  var offCanvas = document.createElement('canvas');
+  var offCtx = offCanvas.getContext('2d');
+  var tempCanvas = document.createElement('canvas');
+  var tempCtx = tempCanvas.getContext('2d');
   var W, H, dpr = window.devicePixelRatio || 1;
 
   function resize() {
@@ -90,7 +94,13 @@
     canvas.height = H * dpr;
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
+    offCanvas.width = canvas.width;
+    offCanvas.height = canvas.height;
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
     ctx.scale(dpr, dpr);
+    offCtx.scale(dpr, dpr);
+    tempCtx.scale(dpr, dpr);
   }
   resize();
   window.addEventListener('resize', resize);
@@ -122,88 +132,99 @@
   }
 
   function physicsStep() {
-    ctx.clearRect(0, 0, W, H);
+    // 1. Clear offscreen canvas
+    offCtx.clearRect(0, 0, W, H);
+
+    // 2. Draw all particles to offscreen canvas
     for (var i = particles.length - 1; i >= 0; i--) {
       var p = particles[i];
 
       // Gravity
       p.vy += GRAVITY;
-
-      // Damping
       p.vx *= DAMPING;
       p.vy *= DAMPING;
-
-      // Position
       p.x += p.vx;
       p.y += p.vy;
 
-      // Bounce off walls
+      // Bounce
       if (p.x - p.r < 0) { p.x = p.r; p.vx *= -FRICTION; }
       if (p.x + p.r > W) { p.x = W - p.r; p.vx *= -FRICTION; }
       if (p.y - p.r < 0) { p.y = p.r; p.vy *= -FRICTION; }
       if (p.y + p.r > H) { p.y = H - p.r; p.vy *= -FRICTION; }
 
-      // Slow life decay
       p.life -= 0.001;
+      if (p.life <= 0 || p.r < 0.5) { particles.splice(i, 1); continue; }
 
-      // Remove if too small or off screen
-      if (p.life <= 0 || p.r < 0.5) {
-        particles.splice(i, 1);
-        continue;
-      }
-
-      // Draw particle with gradient for 3D look
-      var g = ctx.createRadialGradient(p.x - p.r*0.2, p.y - p.r*0.2, 0, p.x, p.y, p.r);
-      g.addColorStop(0, 'rgba(255,255,255,' + (0.3 * p.life) + ')');
-      g.addColorStop(0.3, p.color);
-      g.addColorStop(1, 'rgba(0,0,0,' + (0.15 * p.life) + ')');
-
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, p.life * 1.5);
-      ctx.fillStyle = g;
-      ctx.shadowColor = 'rgba(255,255,255,0.05)';
-      ctx.shadowBlur = 2;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      // Draw to offscreen (white circles with varied opacity = metaball input)
+      offCtx.save();
+      offCtx.globalAlpha = Math.min(1, p.life * 1.5);
+      offCtx.fillStyle = '#FFFFFF';
+      offCtx.shadowColor = '#FFFFFF';
+      offCtx.shadowBlur = p.r * 0.3;
+      offCtx.beginPath();
+      offCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      offCtx.fill();
+      offCtx.restore();
     }
 
-    // Merge nearby particles
+    // 3. Merge nearby particles (mass-spring)
     for (var i = 0; i < particles.length; i++) {
       for (var j = i + 1; j < particles.length; j++) {
         var a = particles[i], b = particles[j];
         var dx = a.x - b.x, dy = a.y - b.y;
         var dist = Math.sqrt(dx*dx + dy*dy);
         var minDist = (a.r + b.r) * 0.5;
-
         if (dist < minDist && dist > 0) {
-          // Merge: larger absorbs smaller
           if (a.r > b.r) {
             a.r = Math.sqrt(a.r*a.r + b.r*b.r);
             a.x = (a.x * a.r + b.x * b.r) / (a.r + b.r);
             a.y = (a.y * a.r + b.y * b.r) / (a.r + b.r);
             a.vx = (a.vx + b.vx) * 0.5;
             a.vy = (a.vy + b.vy) * 0.5;
-            particles.splice(j, 1);
-            j--;
+            particles.splice(j, 1); j--;
           } else {
             b.r = Math.sqrt(a.r*a.r + b.r*b.r);
             b.x = (a.x * a.r + b.x * b.r) / (a.r + b.r);
             b.y = (a.y * a.r + b.y * b.r) / (a.r + b.r);
             b.vx = (a.vx + b.vx) * 0.5;
             b.vy = (a.vy + b.vy) * 0.5;
-            particles.splice(i, 1);
-            i--; break;
+            particles.splice(i, 1); i--; break;
           }
         }
       }
     }
 
-    // Cap particles
-    if (particles.length > 300) {
-      particles.splice(0, particles.length - 300);
+    // 4. METABALL RENDER: 3-stage pipeline
+    // Stage 1: Blur white particles on temp canvas
+    tempCtx.clearRect(0, 0, W, H);
+    tempCtx.filter = 'blur(10px)';
+    tempCtx.drawImage(offCanvas, 0, 0);
+    tempCtx.filter = 'none';
+
+    // Stage 2: Contrast threshold to main canvas → creates fluid shape
+    ctx.clearRect(0, 0, W, H);
+    ctx.filter = 'contrast(10) brightness(1.6)';
+    ctx.drawImage(tempCanvas, 0, 0);
+    ctx.filter = 'none';
+
+    // Stage 3: Colorize the metaball shape
+    ctx.globalCompositeOperation = 'source-atop';
+    // Draw colored gradients inside the white metaball mask
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var g = ctx.createRadialGradient(p.x - p.r*0.3, p.y - p.r*0.3, 0, p.x, p.y, p.r);
+      g.addColorStop(0, 'rgba(255,255,255,0.4)');
+      g.addColorStop(0.3, p.color);
+      g.addColorStop(1, p.color);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 1.5, 0, Math.PI * 2);
+      ctx.fill();
     }
+    ctx.globalCompositeOperation = 'source-over';
+
+    // 6. Cap particles
+    if (particles.length > 300) particles.splice(0, particles.length - 300);
 
     requestAnimationFrame(physicsStep);
   }
