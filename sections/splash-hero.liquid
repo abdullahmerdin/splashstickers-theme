@@ -102,15 +102,15 @@
   var lastX = null, lastY = null, lastColor = null;
   var segments = [];
   var START_FADE_AFTER = 4000;
-  var BASE_FADE_DURATION = 4000;
+  var BASE_FADE_DURATION = 3000;
 
   function paintStroke(x1, y1, x2, y2, speed) {
     var color = lastColor || pick();
     var nextColor = pick();
     var width = Math.min(Math.max(12, 50 - speed * 1.5), 60);
 
-    // Fade duration: fast stroke = fast fade (shorter), slow stroke = slow fade (longer)
-    var fadeDur = Math.max(800, BASE_FADE_DURATION - speed * 80);
+    // Fade duration: fast stroke = fast fade (short), slow stroke = slow fade (long)
+    var fadeDur = Math.max(400, BASE_FADE_DURATION - speed * 50);
 
     var seg = {
       x1: x1, y1: y1, x2: x2, y2: y2, w: width,
