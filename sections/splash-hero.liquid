@@ -21,13 +21,32 @@
     justify-content: center;
     padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
   }
-  .splash-hero-{{ section.id }} canvas#ink-canvas-{{ section.id }} {
+  .splash-hero-{{ section.id }} .blob-el {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    border-radius: 50%;
     pointer-events: none;
     z-index: 1;
+    will-change: transform, opacity;
+  }
+  .splash-hero-{{ section.id }} .sticker-el {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2.5px dashed rgba(255,255,255,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    will-change: transform, opacity;
+  }
+  .splash-hero-{{ section.id }} .sticker-el::after {
+    content: ''; position: absolute;
+    top: -5px; right: -5px;
+    width: 14px; height: 14px;
+    background: rgba(255,255,255,0.3); border-radius: 50%;
   }
   .splash-hero-{{ section.id }} .splash-hero-content {
     position: relative;
@@ -58,13 +77,13 @@
     flex-wrap: wrap;
   }
   @media (prefers-reduced-motion: reduce) {
-    .splash-hero-{{ section.id }} canvas#ink-canvas-{{ section.id }} { display: none; }
+    .splash-hero-{{ section.id }} .blob-el { display: none; }
+    .splash-hero-{{ section.id }} .sticker-el { display: none; }
     .splash-hero-{{ section.id }} .splash-hero-content { opacity: 1; }
   }
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
-  <canvas id="ink-canvas-{{ section.id }}"></canvas>
   <div class="splash-hero-content" id="splash-content-{{ section.id }}">
     {% if heading != blank %}
       <h1 class="splash-hero-heading">{{ heading }}</h1>
@@ -83,359 +102,235 @@
 </div>
 
 {% if show_animation %}
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
 <script>
 (function() {
   'use strict';
   var id = '{{ section.id }}';
   var hero = document.getElementById('splash-hero-' + id);
-  var canvas = document.getElementById('ink-canvas-' + id);
   var content = document.getElementById('splash-content-' + id);
-  if (!canvas || !hero) return;
+  if (!hero) return;
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (content) content.style.opacity = '1';
     return;
   }
 
-  var ctx = canvas.getContext('2d');
-  var W, H, shots = [], splats = [], stickers = [], animId;
+  var W = hero.offsetWidth;
+  var H = hero.offsetHeight;
+  var cx = W / 2, cy = H / 2;
 
-  var INK_COLORS = [
-    { main: '#FF4381', light: '#FF7EB3' },  // Neon Pink
-    { main: '#FF6B35', light: '#FF9B6B' },  // Neon Orange
-    { main: '#FFD700', light: '#FFE44D' },  // Gold/Yellow
-    { main: '#00E5A0', light: '#4CF0B8' },  // Neon Green
-    { main: '#4D7CFF', light: '#7FA3FF' },  // Neon Blue
-    { main: '#A855F7', light: '#C084FC' },  // Neon Purple
-  ];
-
-  function resize() {
-    var r = hero.getBoundingClientRect();
-    var dpr = window.devicePixelRatio || 1;
-    W = canvas.width = r.width * dpr;
-    H = canvas.height = r.height * dpr;
-    canvas.style.width = r.width + 'px';
-    canvas.style.height = r.height + 'px';
-    ctx.scale(dpr, dpr);
-    return r;
-  }
+  var COLORS = ['#FF4381','#FF6B35','#FFD700','#00E5A0','#4D7CFF','#A855F7'];
+  var LIGHT = ['#FF7EB3','#FF9B6B','#FFE44D','#4CF0B8','#7FA3FF','#C084FC'];
+  var SYMBOLS = ['✦','♥','◆','♡','★','♪','✧'];
 
   function rand(a, b) { return Math.random() * (b - a) + a; }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  // ─── SPLATOON INK SHOT ───
-  function createInkShot(fromX, fromY, toX, toY, palette) {
-    var dx = toX - fromX, dy = toY - fromY;
-    var dist = Math.sqrt(dx*dx + dy*dy);
-    var speed = rand(6, 14);
-    return {
-      x: fromX, y: fromY,
-      vx: (dx/dist) * speed + rand(-0.5, 0.5),
-      vy: (dy/dist) * speed + rand(-0.5, 0.5),
-      size: rand(8, 18),
-      color: palette.main,
-      light: palette.light,
-      trail: [],
-      life: 1,
-      decay: rand(0.003, 0.008),
-      gravity: rand(0.02, 0.06),
-      wobble: rand(0, Math.PI * 2),
-      wobbleSpeed: rand(0.05, 0.15)
-    };
+  // ─── CREATE A BLOB ───
+  function createBlob(x, y, size, colorIdx) {
+    var el = document.createElement('div');
+    el.className = 'blob-el';
+    var s = size || rand(40, 90);
+    el.style.width = s + 'px';
+    el.style.height = s + 'px';
+    el.style.background = 'radial-gradient(circle at 35% 35%, ' + LIGHT[colorIdx] + ', ' + COLORS[colorIdx] + ' 60%, rgba(0,0,0,0.1))';
+    el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15), inset 0 -4px 8px rgba(0,0,0,0.05)';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.dataset.colorIdx = colorIdx;
+    el.dataset.size = s;
+    hero.appendChild(el);
+    return el;
   }
 
-  // ─── INK SPLAT (on impact) ───
-  function createInkSplat(x, y, color, light, size) {
-    var points = [];
-    var numPoints = Math.floor(rand(8, 16));
-    for (var i = 0; i < numPoints; i++) {
-      var angle = (i / numPoints) * Math.PI * 2 + rand(-0.2, 0.2);
-      var r = size * rand(0.5, 1.5);
-      points.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
-    }
-    return {
-      x: x, y: y,
-      points: points,
-      color: color,
-      light: light,
-      size: size,
-      life: 1,
-      decay: rand(0.005, 0.012),
-      rotation: rand(0, Math.PI * 2)
-    };
+  // ─── BLOB ENTRY ───
+  function blobEntry(el, tx, ty, delay) {
+    return anime({
+      targets: el,
+      translateX: tx,
+      translateY: ty,
+      scale: [0.3, 1.1, 1],
+      opacity: [0, 1],
+      duration: rand(800, 1200),
+      easing: 'easeOutElastic(1, 0.6)',
+      delay: delay
+    });
   }
 
-  // ─── SPAWN SPLAT + STICKERS ───
-  function splatImpact(x, y, color, light) {
-    var splatSize = rand(20, 50);
-    // Central splat
-    splats.push(createInkSplat(x, y, color, light, splatSize));
-    // Secondary splatter
-    for (var i = 0; i < rand(2, 4); i++) {
-      var a = rand(0, Math.PI * 2);
-      var d = rand(15, 35);
-      splats.push(createInkSplat(
-        x + Math.cos(a) * d, y + Math.sin(a) * d,
-        color, light, rand(8, 20)
-      ));
-    }
-    // Tiny droplets
-    for (var i = 0; i < rand(5, 10); i++) {
-      var a = rand(0, Math.PI * 2);
-      var d = rand(5, 25);
-      splats.push(createInkSplat(
-        x + Math.cos(a) * d, y + Math.sin(a) * d,
-        color, light, rand(3, 7)
-      ));
-    }
-  }
+  // ─── BLOB COLLISION ───
+  function blobCollision(el1, el2, x, y) {
+    // Push blobs apart
+    anime({
+      targets: [el1, el2],
+      scale: [{ value: 1.3, duration: 200 }, { value: 1, duration: 400 }],
+      easing: 'easeOutQuad'
+    });
 
-  // ─── STICKERS ───
-  function spawnStickers(x, y, color, count) {
+    // Confetti burst
+    var normX = x / window.innerWidth;
+    var normY = y / window.innerHeight;
+    confetti({
+      particleCount: 40,
+      spread: 180,
+      origin: { x: normX, y: normY },
+      colors: [COLORS[parseInt(el1.dataset.colorIdx)], COLORS[parseInt(el2.dataset.colorIdx)], pick(COLORS)],
+      ticks: 120,
+      gravity: 0.6,
+      scalar: 0.9,
+      startVelocity: 22
+    });
+
+    // Spawn stickers
+    var count = Math.floor(rand(3, 5));
     for (var i = 0; i < count; i++) {
-      var a = rand(0, Math.PI * 2);
-      var sp = rand(3, 10);
-      var sz = rand(22, 38);
-      stickers.push({
-        x: x, y: y,
-        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - rand(1, 4),
-        size: sz, color: color,
-        life: 1, decay: rand(0.003, 0.007),
-        gravity: rand(0.03, 0.07),
-        rotation: rand(-0.3, 0.3), rotSpeed: rand(-0.03, 0.03)
-      });
+      spawnSticker(x, y);
     }
   }
 
-  // ─── DRAW SPLATOON INK SPLAT ───
-  function drawSplat(s) {
-    ctx.save();
-    ctx.translate(s.x, s.y);
-    ctx.rotate(s.rotation);
-    ctx.globalAlpha = s.life * 0.85;
-    ctx.shadowColor = 'rgba(0,0,0,0.1)';
-    ctx.shadowBlur = 10;
-    // Organic ink shape using bezier
-    ctx.beginPath();
-    var pts = s.points;
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (var i = 1; i < pts.length; i += 2) {
-      var next = pts[(i + 1) % pts.length];
-      ctx.bezierCurveTo(pts[i].x, pts[i].y, next.x, next.y, next.x, next.y);
-    }
-    ctx.closePath();
-    // Ink gradient
-    var g = ctx.createRadialGradient(0, 0, 0, 0, 0, s.size);
-    g.addColorStop(0, s.light);
-    g.addColorStop(0.6, s.color);
-    g.addColorStop(1, 'rgba(0,0,0,0.1)');
-    ctx.fillStyle = g;
-    ctx.fill();
-    // Glossy highlight
-    ctx.shadowColor = 'transparent';
-    ctx.globalAlpha = s.life * 0.2;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.ellipse(-s.size*0.15, -s.size*0.2, s.size*0.25, s.size*0.12, -0.3, 0, Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-  }
+  // ─── SPAWN STICKER ───
+  function spawnSticker(x, y) {
+    var el = document.createElement('div');
+    el.className = 'sticker-el';
+    var s = rand(28, 42);
+    var ci = Math.floor(rand(0, COLORS.length));
+    el.style.width = s + 'px';
+    el.style.height = s + 'px';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.background = 'radial-gradient(circle at 35% 35%, #FFF, ' + COLORS[ci] + ' 80%)';
+    el.style.fontSize = (s * 0.4) + 'px';
+    el.textContent = pick(SYMBOLS);
+    hero.appendChild(el);
 
-  // ─── DRAW STICKER ───
-  function drawSticker(s) {
-    ctx.save();
-    ctx.translate(s.x, s.y);
-    ctx.rotate(s.rotation);
-    ctx.globalAlpha = s.life;
-    ctx.shadowColor = 'rgba(0,0,0,0.1)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 3;
-    var g = ctx.createRadialGradient(-3, -3, 2, 0, 0, s.size/2);
-    g.addColorStop(0, '#FFFFFF');
-    g.addColorStop(0.5, s.color);
-    g.addColorStop(1, 'rgba(0,0,0,0.08)');
-    ctx.fillStyle = g;
-    var r = s.size / 2;
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.setLineDash([3, 3]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.setLineDash([]);
-    // Peel
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.beginPath(); ctx.arc(r-5, -r+5, 7, 0, Math.PI*2); ctx.fill();
-    // Splat logo
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.font = 'bold ' + (r*0.6) + 'px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('✦', 0, 1);
-    ctx.restore();
-  }
+    var angle = rand(0, Math.PI * 2);
+    var dist = rand(60, 180);
 
-  // ─── DRAW INK SHOT ───
-  function drawShot(s) {
-    // Trail
-    var wasG = ctx.globalAlpha;
-    var wasC = ctx.shadowColor;
-    for (var i = 0; i < s.trail.length; i++) {
-      var t = s.trail[i];
-      var alpha = (i / s.trail.length) * 0.6 * s.life;
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = s.color;
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, s.size * (i / s.trail.length) * 0.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = s.life;
-    ctx.shadowColor = 'rgba(255,255,255,0.3)';
-    ctx.shadowBlur = 8;
-
-    // Main ink ball with wobble
-    var wobX = Math.sin(s.wobble) * 2;
-    var wobY = Math.cos(s.wobble) * 2;
-    var g = ctx.createRadialGradient(wobX - 3, wobY - 3, 2, wobX, wobY, s.size/2);
-    g.addColorStop(0, s.light);
-    g.addColorStop(0.7, s.color);
-    g.addColorStop(1, 'rgba(0,0,0,0.15)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(s.x + wobX, s.y + wobY, s.size/2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowColor = 'transparent';
-    // Gloss
-    ctx.globalAlpha = s.life * 0.35;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.ellipse(s.x + wobX - s.size*0.15, s.y + wobY - s.size*0.2, s.size*0.18, s.size*0.1, -0.5, 0, Math.PI*2);
-    ctx.fill();
-    ctx.globalAlpha = wasG;
-    ctx.shadowColor = wasC;
-  }
-
-  // ─── ANIMATION ───
-  var shotsFinished = false;
-  var splatsDone = false;
-  var finaleFired = false;
-
-  function updateShot(s) {
-    s.trail.push({ x: s.x, y: s.y });
-    if (s.trail.length > 8) s.trail.shift();
-    s.x += s.vx; s.y += s.vy;
-    s.vy += s.gravity;
-    s.wobble += s.wobbleSpeed;
-    s.life -= s.decay;
-    // Splat on wall impact
-    var r = hero.getBoundingClientRect();
-    if (s.x < 5 || s.x > r.w - 5 || s.y < 5 || s.y > r.h - 5 || s.life <= 0) {
-      if (s.life > 0.3) splatImpact(s.x, s.y, s.color, s.light);
-      return false; // remove
-    }
-    return true;
-  }
-
-  function updateSplat(s) {
-    s.life -= s.decay;
-    return s.life > 0;
-  }
-
-  function updateSticker(s) {
-    s.x += s.vx; s.y += s.vy;
-    s.vy += s.gravity; s.vx *= 0.97;
-    s.rotation += s.rotSpeed;
-    s.life -= s.decay;
-    return s.life > 0;
-  }
-
-  function loop() {
-    var r = hero.getBoundingClientRect();
-    ctx.clearRect(0, 0, r.w, r.h);
-
-    // Update shots
-    for (var i = shots.length - 1; i >= 0; i--) {
-      if (!updateShot(shots[i])) {
-        var s = shots[i];
-        spawnStickers(s.x, s.y, s.color, Math.floor(rand(2, 4)));
-        shots.splice(i, 1);
+    anime({
+      targets: el,
+      translateX: Math.cos(angle) * dist,
+      translateY: Math.sin(angle) * dist - 30,
+      scale: [0, 1.1, 1],
+      rotate: [rand(-90, 90), rand(-15, 15)],
+      opacity: [0, 1, 0.85],
+      duration: rand(1200, 2000),
+      easing: 'easeOutCubic',
+      complete: function() {
+        // Fade out and remove after a while
+        setTimeout(function() {
+          anime({ targets: el, opacity: 0, duration: 500, easing: 'easeOutQuad', complete: function() { el.remove(); } });
+        }, rand(2000, 4000));
       }
-    }
-
-    // Draw shots
-    for (var i = 0; i < shots.length; i++) drawShot(shots[i]);
-
-    // Update & draw splats
-    for (var i = splats.length - 1; i >= 0; i--) {
-      if (!updateSplat(splats[i])) { splats.splice(i, 1); continue; }
-      drawSplat(splats[i]);
-    }
-
-    // Update & draw stickers
-    for (var i = stickers.length - 1; i >= 0; i--) {
-      if (!updateSticker(stickers[i])) { stickers.splice(i, 1); continue; }
-      drawSticker(stickers[i]);
-    }
-
-    // Check if done
-    if (shots.length === 0 && !shotsFinished) {
-      shotsFinished = true;
-    }
-
-    if (shotsFinished && splats.length === 0 && stickers.length === 0 && !finaleFired) {
-      finaleFired = true;
-      // Final content fade
-      setTimeout(function() {
-        content.style.transition = 'opacity 0.5s ease-out';
-        content.style.opacity = '1';
-      }, 300);
-      return;
-    }
-
-    animId = requestAnimationFrame(loop);
+    });
   }
 
-  function init() {
-    var r = resize();
-    // Fire ink shots from random directions
-    var palette;
-    var cx = r.w / 2, cy = r.h / 2;
+  // ─── FINALE ───
+  var finalDone = false;
+  function finale() {
+    if (finalDone) return;
+    finalDone = true;
 
-    // Shot volley 1: from left and right
-    for (var wave = 0; wave < 3; wave++) {
-      setTimeout(function() {
-        for (var i = 0; i < 4; i++) {
-          palette = INK_COLORS[Math.floor(Math.random() * INK_COLORS.length)];
-          var side = Math.floor(Math.random() * 4);
-          var fx, fy;
-          if (side === 0) { fx = -20; fy = rand(50, r.h-50); } // left
-          else if (side === 1) { fx = r.w + 20; fy = rand(50, r.h-50); } // right
-          else if (side === 2) { fx = rand(50, r.w-50); fy = -20; } // top
-          else { fx = rand(50, r.w-50); fy = r.h + 20; } // bottom
-          shots.push(createInkShot(fx, fy, cx + rand(-100,100), cy + rand(-100,100), palette));
-        }
-      }, wave * 300);
+    // Big confetti burst
+    confetti({
+      particleCount: 100,
+      spread: 200,
+      origin: { x: 0.5, y: 0.5 },
+      colors: COLORS,
+      ticks: 200,
+      gravity: 0.4,
+      scalar: 1.3,
+      startVelocity: 35
+    });
+
+    // Spawn more stickers
+    for (var i = 0; i < 8; i++) {
+      setTimeout(function() { spawnSticker(cx + rand(-50,50), cy + rand(-50,50)); }, i * 100);
     }
 
-    loop();
-    window.addEventListener('resize', resize);
-  }
-
-  if (document.readyState === 'complete') tryInit();
-  else window.addEventListener('load', tryInit);
-
-  function tryInit() {
-    try { init(); }
-    catch(e) {
-      console.warn('Splash init error:', e);
-      if (content) { content.style.transition = 'opacity 0.5s ease-out'; content.style.opacity = '1'; }
-    }
-    // Safety: show content after 6s even if animation hangs
+    // Fade in content
     setTimeout(function() {
-      if (content && content.style.opacity !== '1') {
-        content.style.transition = 'opacity 0.5s ease-out';
-        content.style.opacity = '1';
-      }
-    }, 6000);
+      anime({ targets: content, opacity: [0, 1], translateY: [20, 0], duration: 600, easing: 'easeOutQuad' });
+    }, 300);
   }
+
+  // ─── COLLISION DETECTION ───
+  var blobEls = [];
+  var collisionCount = 0;
+  var totalCollisions = 5; // need 5 collisions for finale
+
+  function checkCollisions() {
+    for (var i = 0; i < blobEls.length; i++) {
+      var a = blobEls[i];
+      if (a._collided) continue;
+      for (var j = i + 1; j < blobEls.length; j++) {
+        var b = blobEls[j];
+        if (b._collided) continue;
+
+        var ax = parseFloat(a.style.left) + parseFloat(a.dataset.size)/2;
+        var ay = parseFloat(a.style.top) + parseFloat(a.dataset.size)/2;
+        var bx = parseFloat(b.style.left) + parseFloat(b.dataset.size)/2;
+        var by = parseFloat(b.style.top) + parseFloat(b.dataset.size)/2;
+        var dx = bx - ax, dy = by - ay;
+        var dist = Math.sqrt(dx*dx + dy*dy);
+        var minDist = (parseFloat(a.dataset.size) + parseFloat(b.dataset.size)) / 2;
+
+        if (dist < minDist + 10) { // 10px tolerance
+          a._collided = true;
+          b._collided = true;
+          collisionCount++;
+          blobCollision(a, b, (ax+bx)/2, (ay+by)/2);
+          if (collisionCount >= totalCollisions) finale();
+        }
+      }
+    }
+    if (!finalDone) requestAnimationFrame(checkCollisions);
+  }
+
+  // ─── INIT ───
+  function init() {
+    W = hero.offsetWidth;
+    H = hero.offsetHeight;
+    cx = W / 2; cy = H / 2;
+
+    // Create 6 blobs entering from different sides
+    var sides = [
+      { x: -80, y: rand(100, H-100) },
+      { x: W + 80, y: rand(100, H-100) },
+      { x: rand(100, W-100), y: -80 },
+      { x: rand(100, W-100), y: H + 80 },
+      { x: -60, y: rand(50, H-50) },
+      { x: W + 60, y: rand(50, H-50) },
+    ];
+
+    var tl = anime.timeline({ complete: function() {
+      // Start collision detection after all blobs entered
+      checkCollisions();
+    }});
+
+    for (var i = 0; i < sides.length; i++) {
+      var el = createBlob(sides[i].x, sides[i].y, rand(45, 85), i % COLORS.length);
+      blobEls.push(el);
+      tl.add({
+        targets: el,
+        translateX: cx - sides[i].x - parseFloat(el.dataset.size)/2 + rand(-80, 80),
+        translateY: cy - sides[i].y - parseFloat(el.dataset.size)/2 + rand(-80, 80),
+        scale: [0.2, 1.15, 1],
+        opacity: [0, 1],
+        duration: rand(900, 1300),
+        easing: 'easeOutElastic(1, 0.5)',
+        delay: rand(0, 200)
+      }, '-=400');
+    }
+
+    // Safety timeout: show content after 7s
+    setTimeout(function() {
+      if (!finalDone) finale();
+    }, 7000);
+  }
+
+  if (document.readyState === 'complete') init();
+  else window.addEventListener('load', init);
 })();
 </script>
 {% endif %}
@@ -474,7 +369,7 @@
       "category": "Custom",
       "blocks": [
         { "type": "button", "settings": { "button_label": "Shop Stickers", "button_style": "solid", "button_bg": "#FFFFFF", "button_text": "#1A1A2E" } },
-        { "type": "button", "settings": { "button_label": "Design Your Own", "button_style": "outline", "button_bg": "#FFFFFF", "button_text": "#FFFFFF" } }
+        { "type": "button", "settings": { "button_label": "Design Your Own", "button_style": "outline", "button_bg": "#FFFFFF", "button_text": "#1A1A2E" } }
       ]
     }
   ]
