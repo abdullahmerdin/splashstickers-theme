@@ -121,7 +121,7 @@
   var lastX = null, lastY = null, lastColor = null;
   var segments = [];
   var START_FADE_AFTER = 5000;
-  var FADE_DURATION = 1200;
+  var FADE_DURATION = 4000;
 
   function paintStroke(x1, y1, x2, y2, speed) {
     var color = lastColor || pick();
@@ -270,44 +270,20 @@
   }
 
   // ─── Fade loop ───
-  var fadeStarted = false;
-
   function fadeLoop() {
     var now = Date.now();
-    var oldest = segments.length > 0 ? segments[0].ts : now;
-    var age = now - oldest;
+    if (segments.length === 0) return;
 
-    if (!fadeStarted && segments.length > 0 && age > START_FADE_AFTER) {
-      fadeStarted = true;
+    // Redraw everything with updated alpha
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < segments.length; i++) {
+      var seg = segments[i];
+      var age = now - seg.ts - START_FADE_AFTER;
+      var alpha = age < 0 ? 1 : Math.max(0.03, 1 - (age / FADE_DURATION));
+      if (seg.r !== undefined) drawDot(seg, alpha);
+      else drawSegment(seg, alpha);
     }
-
-    if (fadeStarted && segments.length > 0) {
-      var keep = [];
-      for (var i = 0; i < segments.length; i++) {
-        var segAge = now - segments[i].ts - START_FADE_AFTER;
-        if (segAge < 0) segAge = 0;
-        var alpha = 1 - (segAge / FADE_DURATION);
-        if (alpha > 0) {
-          keep.push(segments[i]);
-        }
-      }
-
-      if (keep.length < segments.length) {
-        segments = keep;
-        ctx.clearRect(0, 0, W, H);
-        for (var i = 0; i < segments.length; i++) {
-          var seg = segments[i];
-          var segAge = now - seg.ts - START_FADE_AFTER;
-          var alpha = Math.max(0, 1 - (segAge / FADE_DURATION));
-          if (seg.r !== undefined) drawDot(seg, alpha);
-          else drawSegment(seg, alpha);
-        }
-      }
-    }
-
-    if (segments.length > 0) {
-      requestAnimationFrame(fadeLoop);
-    }
+    requestAnimationFrame(fadeLoop);
   }
 
   // ─── Release splat ───
@@ -360,7 +336,7 @@
       if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
     }
     lastX = x; lastY = y;
-    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
+    setTimeout(fadeLoop, START_FADE_AFTER);
   });
   hero.addEventListener('touchmove', function(e) {
     var pos = getPos(e);
@@ -371,7 +347,7 @@
       if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
     }
     lastX = x; lastY = y;
-    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
+    setTimeout(fadeLoop, START_FADE_AFTER);
   });
   hero.addEventListener('mouseleave', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
   hero.addEventListener('mouseup', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
