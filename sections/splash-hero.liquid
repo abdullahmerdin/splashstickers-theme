@@ -104,11 +104,11 @@
   if (!canvas || !hero) return;
 
   var ctx = canvas.getContext('2d');
-  var W, H, trails = [], pastX, pastY, inkCount = 0;
+  var W, H, lastX, lastY, hue = 0;
+  var paintTimer = 0;
 
-  // Splatoon neon palette
-  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700',
-                '#FF7EB3','#FF9B6B','#4CF0B8','#7FA3FF','#C084FC','#FFE44D'];
+  // Splatoon neon colors
+  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
 
   function resize() {
     var r = hero.getBoundingClientRect();
@@ -118,141 +118,76 @@
     canvas.style.width = r.width + 'px';
     canvas.style.height = r.height + 'px';
     ctx.scale(dpr, dpr);
-    // Redraw existing trails on resize
-    redrawAll();
   }
 
   function rand(a, b) { return Math.random() * (b - a) + a; }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  // ─── SPLATTER AT CURSOR ───
-  function splatter(x, y) {
+  // ─── DRAW INK BRUSH ───
+  function drawBrush(x, y, pressure) {
+    pressure = pressure || 1;
     var color = pick(COLORS);
-    var numDots = Math.floor(rand(6, 16));
-    inkCount += numDots;
 
-    for (var i = 0; i < numDots; i++) {
-      var angle = rand(0, Math.PI * 2);
-      var dist = rand(3, 30);
-      var size = rand(4, 16);
-      var speed = rand(2, 6);
-
-      trails.push({
-        x: x + Math.cos(angle) * dist * 0.3,
-        y: y + Math.sin(angle) * dist * 0.3,
-        targetX: x + Math.cos(angle) * dist,
-        targetY: y + Math.sin(angle) * dist,
-        size: size,
-        origSize: size,
-        color: color,
-        life: 1,
-        speed: speed,
-        progress: 0,
-        type: Math.random() > 0.5 ? 'splat' : 'drip'
-      });
-    }
-
-    // Main splash blob (larger central drop)
-    trails.push({
-      x: x - rand(5, 15), y: y + rand(-5, 5),
-      targetX: x, targetY: y,
-      size: rand(18, 35),
-      origSize: rand(18, 35),
-      color: color,
-      life: 1,
-      speed: 3,
-      progress: 0,
-      type: 'blob'
-    });
-  }
-
-  // ─── DRAW ───
-  function drawTrail(t) {
+    // Main brush circle
     ctx.save();
-    ctx.globalAlpha = t.life * 0.85;
+    ctx.shadowColor = 'rgba(255,255,255,0.15)';
+    ctx.shadowBlur = 8;
 
-    if (t.type === 'blob') {
-      // Large central blob with 3D gradient
-      var g = ctx.createRadialGradient(t.x - t.size*0.15, t.y - t.size*0.15, 2, t.x, t.y, t.size/2);
-      g.addColorStop(0, '#FFFFFF');
-      g.addColorStop(0.3, t.color);
-      g.addColorStop(1, 'rgba(0,0,0,0.1)');
-      ctx.fillStyle = g;
-      ctx.shadowColor = 'rgba(0,0,0,0.15)';
-      ctx.shadowBlur = 12;
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, t.size/2 * t.progress, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (t.type === 'drip') {
-      // Teardrop/drip shape
-      ctx.fillStyle = t.color;
-      ctx.shadowColor = 'rgba(0,0,0,0.08)';
-      ctx.shadowBlur = 4;
-      ctx.beginPath();
-      ctx.moveTo(t.x, t.y - t.size * 0.5 * t.progress);
-      ctx.quadraticCurveTo(t.x + t.size*0.4, t.y + t.size*0.1, t.x, t.y + t.size*0.6 * t.progress);
-      ctx.quadraticCurveTo(t.x - t.size*0.4, t.y + t.size*0.1, t.x, t.y - t.size*0.5 * t.progress);
-      ctx.fill();
-    } else {
-      // Circular splat dot
-      ctx.fillStyle = t.color;
-      ctx.shadowColor = 'rgba(0,0,0,0.06)';
-      ctx.shadowBlur = 3;
-      ctx.beginPath();
-      ctx.arc(t.x, t.y, t.size/2 * t.progress, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    // Outer glow
+    var g = ctx.createRadialGradient(x, y, 0, x, y, 25 * pressure);
+    g.addColorStop(0, color);
+    g.addColorStop(0.6, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, 25 * pressure, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner highlight (wet look)
+    ctx.shadowColor = 'transparent';
+    var g2 = ctx.createRadialGradient(x - 4, y - 4, 0, x, y, 20 * pressure);
+    g2.addColorStop(0, 'rgba(255,255,255,0.4)');
+    g2.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    g2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g2;
+    ctx.beginPath();
+    ctx.arc(x, y, 20 * pressure, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }
 
-  function redrawAll() {
-    ctx.clearRect(0, 0, W / (window.devicePixelRatio || 1), H / (window.devicePixelRatio || 1));
-    for (var i = 0; i < trails.length; i++) {
-      drawTrail(trails[i]);
-    }
-  }
+  // ─── DRAW LINE BETWEEN TWO POINTS ───
+  function drawLine(x1, y1, x2, y2) {
+    var dx = x2 - x1, dy = y2 - y1;
+    var dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 2) return;
 
-  // ─── ANIMATE TRAILS ───
-  function animate() {
-    for (var i = trails.length - 1; i >= 0; i--) {
-      var t = trails[i];
+    var steps = Math.ceil(dist / 3);
+    for (var i = 0; i <= steps; i++) {
+      var t = i / steps;
+      var x = x1 + dx * t;
+      var y = y1 + dy * t;
+      drawBrush(x, y, 0.6 + 0.4 * Math.sin(i * 1.5));
 
-      // Animate to target position
-      t.progress = Math.min(t.progress + 0.08 * t.speed, 1);
-      t.x += (t.targetX - t.x) * 0.08 * t.speed;
-      t.y += (t.targetY - t.y) * 0.08 * t.speed;
-
-      // Slow decay
-      t.life -= 0.0002;
-
-      if (t.life <= 0 || t.progress >= 1 && t.life < 0.5) {
-        // Keep the dot but stop animating when fully splatted
-        continue;
+      // Tiny splatter droplets along the trail (very few)
+      if (i % 4 === 0 && Math.random() > 0.6) {
+        var a = rand(0, Math.PI * 2);
+        var d = rand(8, 20);
+        ctx.fillStyle = pick(COLORS);
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(2, 5), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
       }
     }
-
-    // Limit trails to prevent memory issues
-    if (trails.length > 2000) {
-      trails.splice(0, trails.length - 2000);
-    }
-
-    // Redraw
-    redrawAll();
-
-    // Update counter
-    var counter = document.getElementById('ink-count-' + id);
-    if (counter) counter.textContent = '🖌️ ' + inkCount + ' splats';
-
-    requestAnimationFrame(animate);
   }
 
-  // ─── MOUSE / TOUCH EVENTS ───
+  // ─── MOUSE EVENTS ───
   function getPos(e) {
     var r = hero.getBoundingClientRect();
-    if (e.touches) {
-      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
-    }
+    if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
 
@@ -260,43 +195,40 @@
     var pos = getPos(e);
     var x = pos.x, y = pos.y;
 
-    // Only splatter if moved enough
-    if (pastX !== undefined) {
-      var dx = x - pastX, dy = y - pastY;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > 5) {
-        // Splatter at current position
-        splatter(x, y);
-        // If moving fast, bigger splatter
-        if (dist > 15) {
-          splatter(x + rand(-5,5), y + rand(-5,5));
-        }
-        pastX = x; pastY = y;
-      }
+    if (lastX !== undefined) {
+      drawLine(lastX, lastY, x, y);
     } else {
-      pastX = x; pastY = y;
-      // Initial splatter on first move
-      splatter(x, y);
+      drawBrush(x, y, 1);
     }
+
+    lastX = x; lastY = y;
   }
 
   hero.addEventListener('mousemove', onMove);
   hero.addEventListener('touchmove', onMove);
-  hero.addEventListener('touchstart', onMove);
+  hero.addEventListener('touchstart', function(e) {
+    var pos = getPos(e);
+    lastX = pos.x; lastY = pos.y;
+    drawBrush(pos.x, pos.y, 1);
+  });
 
-  // ─── INIT ───
+  // ─── WELCOME SPLAT ───
+  function welcomeSplat() {
+    var r = hero.getBoundingClientRect();
+    var cx = r.width / 2, cy = r.height / 2;
+    for (var ring = 0; ring < 3; ring++) {
+      for (var i = 0; i < 8; i++) {
+        var a = (i / 8) * Math.PI * 2 + ring * 0.3;
+        var d = 30 + ring * 20;
+        drawBrush(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0.5 + ring * 0.15);
+      }
+    }
+    drawBrush(cx, cy, 1.2);
+  }
+
   function init() {
     resize();
-    animate();
-
-    // Initial welcome splatter in center
-    setTimeout(function() {
-      var r = hero.getBoundingClientRect();
-      for (var i = 0; i < 3; i++) {
-        setTimeout(function() { splatter(r.width/2 + rand(-30,30), r.height/2 + rand(-30,30)); }, i * 100);
-      }
-    }, 500);
-
+    welcomeSplat();
     window.addEventListener('resize', resize);
   }
 
