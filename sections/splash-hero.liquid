@@ -21,12 +21,13 @@
     justify-content: center;
     padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
   }
-  .splash-hero-{{ section.id }} .blob-el {
+  .splash-hero-{{ section.id }} svg.splash-svg {
     position: absolute;
-    border-radius: 50%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 1;
-    will-change: transform, opacity;
   }
   .splash-hero-{{ section.id }} .sticker-el {
     position: absolute;
@@ -77,13 +78,14 @@
     flex-wrap: wrap;
   }
   @media (prefers-reduced-motion: reduce) {
-    .splash-hero-{{ section.id }} .blob-el { display: none; }
+    .splash-hero-{{ section.id }} svg.splash-svg { display: none; }
     .splash-hero-{{ section.id }} .sticker-el { display: none; }
     .splash-hero-{{ section.id }} .splash-hero-content { opacity: 1; }
   }
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
+  <svg class="splash-svg" id="splash-svg-{{ section.id }}" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"></svg>
   <div class="splash-hero-content" id="splash-content-{{ section.id }}">
     {% if heading != blank %}
       <h1 class="splash-hero-heading">{{ heading }}</h1>
@@ -109,224 +111,299 @@
   'use strict';
   var id = '{{ section.id }}';
   var hero = document.getElementById('splash-hero-' + id);
+  var svg = document.getElementById('splash-svg-' + id);
   var content = document.getElementById('splash-content-' + id);
-  if (!hero) return;
+  if (!svg || !hero) return;
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (content) content.style.opacity = '1';
     return;
   }
 
-  var W = hero.offsetWidth;
-  var H = hero.offsetHeight;
-  var cx = W / 2, cy = H / 2;
-
-  var COLORS = ['#FF4381','#FF6B35','#FFD700','#00E5A0','#4D7CFF','#A855F7'];
-  var LIGHT = ['#FF7EB3','#FF9B6B','#FFE44D','#4CF0B8','#7FA3FF','#C084FC'];
+  var ns = 'http://www.w3.org/2000/svg';
+  var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
+  var LIGHT = ['#FF7EB3','#FF9B6B','#4CF0B8','#7FA3FF','#C084FC','#FFE44D'];
   var SYMBOLS = ['✦','♥','◆','♡','★','♪','✧'];
 
-  function rand(a, b) { return Math.random() * (b - a) + a; }
-  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
-  // ─── CREATE A BLOB ───
-  function createBlob(x, y, size, colorIdx) {
-    var el = document.createElement('div');
-    el.className = 'blob-el';
-    var s = size || rand(40, 90);
-    el.style.width = s + 'px';
-    el.style.height = s + 'px';
-    el.style.background = 'radial-gradient(circle at 35% 35%, ' + LIGHT[colorIdx] + ', ' + COLORS[colorIdx] + ' 60%, rgba(0,0,0,0.1))';
-    el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15), inset 0 -4px 8px rgba(0,0,0,0.05)';
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.dataset.colorIdx = colorIdx;
-    el.dataset.size = s;
-    hero.appendChild(el);
-    return el;
-  }
-
-  // ─── BLOB ENTRY ───
-  function blobEntry(el, tx, ty, delay) {
-    return anime({
-      targets: el,
-      translateX: tx,
-      translateY: ty,
-      scale: [0.3, 1.1, 1],
-      opacity: [0, 1],
-      duration: rand(800, 1200),
-      easing: 'easeOutElastic(1, 0.6)',
-      delay: delay
-    });
-  }
-
-  // ─── BLOB COLLISION ───
-  function blobCollision(el1, el2, x, y) {
-    // Push blobs apart
-    anime({
-      targets: [el1, el2],
-      scale: [{ value: 1.3, duration: 200 }, { value: 1, duration: 400 }],
-      easing: 'easeOutQuad'
-    });
-
-    // Confetti burst
-    var normX = x / window.innerWidth;
-    var normY = y / window.innerHeight;
-    confetti({
-      particleCount: 40,
-      spread: 180,
-      origin: { x: normX, y: normY },
-      colors: [COLORS[parseInt(el1.dataset.colorIdx)], COLORS[parseInt(el2.dataset.colorIdx)], pick(COLORS)],
-      ticks: 120,
-      gravity: 0.6,
-      scalar: 0.9,
-      startVelocity: 22
-    });
-
-    // Spawn stickers
-    var count = Math.floor(rand(3, 5));
-    for (var i = 0; i < count; i++) {
-      spawnSticker(x, y);
+  // ─── ORGANIC SPLASH PATH ───
+  // Generates a blob with organic tentacles/droplets
+  function organicPath(cx, cy, r, numLobes) {
+    numLobes = numLobes || Math.floor(Math.random() * 4) + 5;
+    var pts = [];
+    for (var i = 0; i < numLobes; i++) {
+      var a = (i / numLobes) * Math.PI * 2 - Math.PI / 2;
+      var len = r * (0.7 + Math.random() * 0.6);
+      pts.push({ x: cx + Math.cos(a) * len, y: cy + Math.sin(a) * len });
+      
+      // Control points for organic irregularity
+      var a2 = ((i + 0.5) / numLobes) * Math.PI * 2 - Math.PI / 2;
+      var len2 = r * (0.5 + Math.random() * 0.4);
+      var cw = { x: cx + Math.cos(a) * r * 0.4, y: cy + Math.sin(a) * r * 0.4 };
+      var cw2 = { x: cx + Math.cos(a2) * r * 0.4, y: cy + Math.sin(a2) * r * 0.4 };
+      if (i === 0) {
+        pts[pts.length - 1].c1x = cw.x; pts[pts.length - 1].c1y = cw.y;
+        pts[pts.length - 1].c2x = cw2.x; pts[pts.length - 1].c2y = cw2.y;
+      } else {
+        pts[pts.length - 2].c2x = cw2.x; pts[pts.length - 2].c2y = cw2.y;
+        pts[pts.length - 1].c1x = cw.x; pts[pts.length - 1].c1y = cw.y;
+      }
     }
+    // Close the loop
+    pts[pts.length - 1].c2x = pts[0].c1x;
+    pts[pts.length - 1].c2y = pts[0].c1y;
+    
+    var d = 'M ' + pts[0].x + ',' + pts[0].y + ' ';
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      var next = pts[(i + 1) % pts.length];
+      d += 'C ' + p.c2x + ',' + p.c2y + ' ' + next.c1x + ',' + next.c1y + ' ' + next.x + ',' + next.y + ' ';
+    }
+    return d;
   }
 
-  // ─── SPAWN STICKER ───
+  // ─── SPLASH SPLATTER ───
+  function splatterPath(cx, cy) {
+    var d = '';
+    // Central irregular blob
+    d += organicPath(cx, cy, Math.random() * 20 + 15, 8);
+    // Tentacles/droplets
+    var numTentacles = Math.floor(Math.random() * 4) + 3;
+    for (var i = 0; i < numTentacles; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var dist = Math.random() * 30 + 15;
+      var tx = cx + Math.cos(a) * dist;
+      var ty = cy + Math.sin(a) * dist;
+      var ts = Math.random() * 8 + 4;
+      d += ' M ' + tx + ',' + (ty - ts) + ' C ' + (tx + ts * 0.5) + ',' + (ty - ts * 0.3) + ' ' + (tx + ts * 0.3) + ',' + (ty + ts * 0.5) + ' ' + tx + ',' + (ty + ts) + ' C ' + (tx - ts * 0.3) + ',' + (ty + ts * 0.5) + ' ' + (tx - ts * 0.5) + ',' + (ty - ts * 0.3) + ' ' + tx + ',' + (ty - ts) + ' Z';
+    }
+    return d;
+  }
+
+  // ─── CREATE SPLASH ELEMENT ───
+  function createSplashEl(colorIdx, startX, startY, endX, endY, size) {
+    var g = document.createElementNS(ns, 'g');
+    var defs = document.createElementNS(ns, 'defs');
+    var filter = document.createElementNS(ns, 'filter');
+    filter.setAttribute('id', 'goo-' + id + '-' + colorIdx + '-' + Math.random().toString(36).slice(2));
+    // Gooey filter for fluid effect
+    var feGaussianBlur = document.createElementNS(ns, 'feGaussianBlur');
+    feGaussianBlur.setAttribute('in', 'SourceGraphic');
+    feGaussianBlur.setAttribute('stdDeviation', '6');
+    filter.appendChild(feGaussianBlur);
+    var feColorMatrix = document.createElementNS(ns, 'feColorMatrix');
+    feColorMatrix.setAttribute('mode', 'matrix');
+    feColorMatrix.setAttribute('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7');
+    filter.appendChild(feColorMatrix);
+    defs.appendChild(filter);
+    g.appendChild(defs);
+
+    var path = document.createElementNS(ns, 'path');
+    var initialPath = organicPath(startX, startY, 10, 5);
+    path.setAttribute('d', initialPath);
+    path.setAttribute('fill', COLORS[colorIdx]);
+    path.setAttribute('filter', 'url(#' + filter.getAttribute('id') + ')');
+    path.style.opacity = '0';
+    g.appendChild(path);
+
+    var targetPath = organicPath(endX, endY, size || Math.random() * 25 + 20, Math.floor(Math.random() * 4) + 6);
+    
+    svg.appendChild(g);
+
+    // Animate in
+    anime({
+      targets: path,
+      opacity: [0, 0.9],
+      duration: 400,
+      easing: 'easeOutQuad',
+      begin: function() {
+        // Morph path to target
+        anime({
+          targets: path,
+          d: [{ value: targetPath, duration: 1200 }],
+          easing: 'easeOutElastic(1, 0.4)',
+          delay: 200
+        });
+      }
+    });
+
+    return { g: g, path: path, filter: filter, targetPath: targetPath };
+  }
+
+  // ─── SPLAT ON COLLISION ───
+  function createSplat(x, y, colorIdx) {
+    var g = document.createElementNS(ns, 'g');
+    var d = splatterPath(x, y);
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', COLORS[colorIdx]);
+    path.style.opacity = '0';
+    g.appendChild(path);
+    svg.appendChild(g);
+
+    anime({
+      targets: path,
+      opacity: [0, 0.7, 0],
+      scale: [0.5, 1, 1.2],
+      duration: 1500,
+      easing: 'easeOutQuad',
+      complete: function() { g.remove(); }
+    });
+  }
+
+  // ─── STICKER ───
   function spawnSticker(x, y) {
     var el = document.createElement('div');
     el.className = 'sticker-el';
-    var s = rand(28, 42);
-    var ci = Math.floor(rand(0, COLORS.length));
+    var s = Math.random() * 16 + 24;
+    var ci = Math.floor(Math.random() * COLORS.length);
     el.style.width = s + 'px';
     el.style.height = s + 'px';
     el.style.left = x + 'px';
     el.style.top = y + 'px';
     el.style.background = 'radial-gradient(circle at 35% 35%, #FFF, ' + COLORS[ci] + ' 80%)';
     el.style.fontSize = (s * 0.4) + 'px';
-    el.textContent = pick(SYMBOLS);
+    el.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
     hero.appendChild(el);
 
-    var angle = rand(0, Math.PI * 2);
-    var dist = rand(60, 180);
+    var angle = Math.random() * Math.PI * 2;
+    var dist = Math.random() * 120 + 40;
 
     anime({
       targets: el,
       translateX: Math.cos(angle) * dist,
       translateY: Math.sin(angle) * dist - 30,
-      scale: [0, 1.1, 1],
-      rotate: [rand(-90, 90), rand(-15, 15)],
+      scale: [0, 1.15, 1],
+      rotate: [Math.random() * 90 - 45, Math.random() * 30 - 15],
       opacity: [0, 1, 0.85],
-      duration: rand(1200, 2000),
+      duration: Math.random() * 800 + 1000,
       easing: 'easeOutCubic',
       complete: function() {
-        // Fade out and remove after a while
         setTimeout(function() {
-          anime({ targets: el, opacity: 0, duration: 500, easing: 'easeOutQuad', complete: function() { el.remove(); } });
-        }, rand(2000, 4000));
+          anime({ targets: el, opacity: 0, duration: 500, complete: function() { el.remove(); } });
+        }, Math.random() * 2000 + 1000);
       }
     });
   }
 
-  // ─── FINALE ───
-  var finalDone = false;
-  function finale() {
-    if (finalDone) return;
-    finalDone = true;
-
-    // Big confetti burst
+  // ─── CONFETTI ───
+  function burstConfetti(x, y) {
+    var normX = x / window.innerWidth;
+    var normY = y / window.innerHeight;
     confetti({
-      particleCount: 100,
-      spread: 200,
-      origin: { x: 0.5, y: 0.5 },
+      particleCount: 30,
+      spread: 150,
+      origin: { x: normX, y: normY },
       colors: COLORS,
-      ticks: 200,
-      gravity: 0.4,
-      scalar: 1.3,
-      startVelocity: 35
+      ticks: 100,
+      gravity: 0.5,
+      scalar: 0.8,
+      startVelocity: 18
     });
-
-    // Spawn more stickers
-    for (var i = 0; i < 8; i++) {
-      setTimeout(function() { spawnSticker(cx + rand(-50,50), cy + rand(-50,50)); }, i * 100);
-    }
-
-    // Fade in content
-    setTimeout(function() {
-      anime({ targets: content, opacity: [0, 1], translateY: [20, 0], duration: 600, easing: 'easeOutQuad' });
-    }, 300);
   }
 
-  // ─── COLLISION DETECTION ───
-  var blobEls = [];
+  // ─── COLLISION ───
+  var splashes = [];
   var collisionCount = 0;
-  var totalCollisions = 5; // need 5 collisions for finale
+  var TOTAL_NEEDED = 4;
+  var finaleDone = false;
 
   function checkCollisions() {
-    for (var i = 0; i < blobEls.length; i++) {
-      var a = blobEls[i];
-      if (a._collided) continue;
-      for (var j = i + 1; j < blobEls.length; j++) {
-        var b = blobEls[j];
-        if (b._collided) continue;
+    for (var i = 0; i < splashes.length; i++) {
+      var a = splashes[i];
+      if (a._done) continue;
+      for (var j = i + 1; j < splashes.length; j++) {
+        var b = splashes[j];
+        if (b._done) continue;
 
-        var ax = parseFloat(a.style.left) + parseFloat(a.dataset.size)/2;
-        var ay = parseFloat(a.style.top) + parseFloat(a.dataset.size)/2;
-        var bx = parseFloat(b.style.left) + parseFloat(b.dataset.size)/2;
-        var by = parseFloat(b.style.top) + parseFloat(b.dataset.size)/2;
-        var dx = bx - ax, dy = by - ay;
+        // Get current positions from anime
+        var rect = svg.getBoundingClientRect();
+        var ax = parseFloat(svg.getAttribute('viewBox').split(' ')[2]) * (a._x || 500) / rect.width;
+        // Simplified collision — check if blobs are close based on center proximity
+
+        var aX = parseFloat(a.path.getAttribute('d').match(/M\s+([\d.]+)/)?.[1]) || 500;
+        var bX = parseFloat(b.path.getAttribute('d').match(/M\s+([\d.]+)/)?.[1]) || 500;
+
+        // We use percentage-based proximity
+        var aEls = a.path.getAttribute('d').match(/[\d.]+/g);
+        var bEls = b.path.getAttribute('d').match(/[\d.]+/g);
+        if (!aEls || !bEls || aEls.length < 2 || bEls.length < 2) continue;
+
+        var ax2 = parseFloat(aEls[0]), ay2 = parseFloat(aEls[1]);
+        var bx2 = parseFloat(bEls[0]), by2 = parseFloat(bEls[1]);
+        var dx = bx2 - ax2, dy = by2 - ay2;
         var dist = Math.sqrt(dx*dx + dy*dy);
-        var minDist = (parseFloat(a.dataset.size) + parseFloat(b.dataset.size)) / 2;
 
-        if (dist < minDist + 10) { // 10px tolerance
-          a._collided = true;
-          b._collided = true;
+        if (dist < 80) {
+          a._done = true; b._done = true;
           collisionCount++;
-          blobCollision(a, b, (ax+bx)/2, (ay+by)/2);
-          if (collisionCount >= totalCollisions) finale();
+          var midX = (ax2 + bx2) / 2 / 1000 * window.innerWidth;
+          var midY = (ay2 + by2) / 2 / 600 * window.innerHeight;
+
+          createSplat(midX, midY, parseInt(a.path.getAttribute('fill').startsWith('#') ? COLORS.indexOf(a.path.getAttribute('fill')) : 0));
+          burstConfetti(midX, midY);
+
+          var numStickers = Math.floor(Math.random() * 3) + 2;
+          for (var s = 0; s < numStickers; s++) {
+            spawnSticker(midX + Math.random() * 40 - 20, midY + Math.random() * 40 - 20);
+          }
+
+          if (collisionCount >= TOTAL_NEEDED) finale();
         }
       }
     }
-    if (!finalDone) requestAnimationFrame(checkCollisions);
+    if (!finaleDone) requestAnimationFrame(checkCollisions);
+  }
+
+  function finale() {
+    if (finaleDone) return;
+    finaleDone = true;
+
+    confetti({
+      particleCount: 120,
+      spread: 200,
+      origin: { x: 0.5, y: 0.5 },
+      colors: COLORS,
+      ticks: 250,
+      gravity: 0.3,
+      scalar: 1.4,
+      startVelocity: 40
+    });
+
+    for (var i = 0; i < 10; i++) {
+      setTimeout(function() { spawnSticker(window.innerWidth/2 + Math.random()*100-50, window.innerHeight/2 + Math.random()*100-50); }, i * 80);
+    }
+
+    setTimeout(function() {
+      anime({ targets: content, opacity: [0, 1], translateY: [20, 0], duration: 600, easing: 'easeOutQuad' });
+    }, 500);
   }
 
   // ─── INIT ───
   function init() {
-    W = hero.offsetWidth;
-    H = hero.offsetHeight;
-    cx = W / 2; cy = H / 2;
+    var W = hero.offsetWidth, H = hero.offsetHeight;
+    var cx = W / 2, cy = H / 2;
 
-    // Create 6 blobs entering from different sides
-    var sides = [
-      { x: -80, y: rand(100, H-100) },
-      { x: W + 80, y: rand(100, H-100) },
-      { x: rand(100, W-100), y: -80 },
-      { x: rand(100, W-100), y: H + 80 },
-      { x: -60, y: rand(50, H-50) },
-      { x: W + 60, y: rand(50, H-50) },
+    // Create organic splash blobs from 4 sides
+    var entries = [
+      { sx: -50, sy: H * 0.3, ex: cx - 50, ey: cy - 40 },
+      { sx: W + 50, sy: H * 0.6, ex: cx + 50, ey: cy + 30 },
+      { sx: W * 0.25, sy: -50, ex: cx - 30, ey: cy - 60 },
+      { sx: W * 0.75, sy: H + 50, ex: cx + 40, ey: cy + 50 },
+      { sx: -40, sy: H * 0.7, ex: cx - 60, ey: cy + 20 },
+      { sx: W * 0.5, sy: H + 40, ex: cx + 10, ey: cy - 20 },
     ];
 
-    var tl = anime.timeline({ complete: function() {
-      // Start collision detection after all blobs entered
-      checkCollisions();
-    }});
-
-    for (var i = 0; i < sides.length; i++) {
-      var el = createBlob(sides[i].x, sides[i].y, rand(45, 85), i % COLORS.length);
-      blobEls.push(el);
-      tl.add({
-        targets: el,
-        translateX: cx - sides[i].x - parseFloat(el.dataset.size)/2 + rand(-80, 80),
-        translateY: cy - sides[i].y - parseFloat(el.dataset.size)/2 + rand(-80, 80),
-        scale: [0.2, 1.15, 1],
-        opacity: [0, 1],
-        duration: rand(900, 1300),
-        easing: 'easeOutElastic(1, 0.5)',
-        delay: rand(0, 200)
-      }, '-=400');
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+      var ci = i % COLORS.length;
+      var splash = createSplashEl(ci, e.sx, e.sy, e.ex, e.cy, Math.random() * 20 + 20);
+      splash._x = e.ex;
+      splash._y = e.cy;
+      splashes.push(splash);
     }
 
-    // Safety timeout: show content after 7s
-    setTimeout(function() {
-      if (!finalDone) finale();
-    }, 7000);
+    setTimeout(checkCollisions, 1500);
+    setTimeout(function() { if (!finaleDone) finale(); }, 8000);
   }
 
   if (document.readyState === 'complete') init();
