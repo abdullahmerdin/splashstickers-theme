@@ -33,289 +33,291 @@
     text-align: center;
     max-width: 640px;
   }
-  .splash-hero-{{ section.id }} .splash-hero-heading {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 900;
-    color: #FFFFFF;
-    line-height: 1.1;
-    margin: 0 0 16px;
-    mix-blend-mode: difference;
-  }
-  .splash-hero-{{ section.id }} .splash-hero-subtext {
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    color: #FFFFFF;
-    margin: 0 0 32px;
-    line-height: 1.5;
-    opacity: 0.9;
-    mix-blend-mode: difference;
-  }
-  .splash-hero-{{ section.id }} .splash-hero-buttons {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
-  <canvas id="ink-canvas-{{ section.id }}"></canvas>
   <div class="splash-hero-content">
-    {% if heading != blank %}<h1 class="splash-hero-heading">{{ heading }}</h1>{% endif %}
-    {% if subtext != blank %}<p class="splash-hero-subtext">{{ subtext }}</p>{% endif %}
-    <div class="splash-hero-buttons">
+    {% if heading != blank %}<h1 class="splash-hero-heading" style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;color:#FFF;margin:0 0 16px;mix-blend-mode:difference;">{{ heading }}</h1>{% endif %}
+    {% if subtext != blank %}<p class="splash-hero-subtext" style="font-size:clamp(1rem,2vw,1.2rem);color:#FFF;margin:0 0 32px;opacity:0.9;mix-blend-mode:difference;">{{ subtext }}</p>{% endif %}
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
       {% for block in section.blocks %}
         {% if block.settings.button_label != blank and block.settings.button_link != blank %}
-          <a href="{{ block.settings.button_link }}" style="display:inline-block;padding:14px 36px;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;background:{{ block.settings.button_bg }};color:{{ block.settings.button_text }};border:{% if block.settings.button_style == 'outline' %}2px solid {{ block.settings.button_bg }}{% else %}none{% endif %};transition:transform 0.3s ease,box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">{{ block.settings.button_label }}</a>
+          <a href="{{ block.settings.button_link }}" style="display:inline-block;padding:14px 36px;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;background:{{ block.settings.button_bg }};color:{{ block.settings.button_text }};border:{% if block.settings.button_style == 'outline' %}2px solid {{ block.settings.button_bg }}{% else %}none{% endif %};transition:transform 0.3s ease,box-shadow 0.3s ease;">{{ block.settings.button_label }}</a>
         {% endif %}
       {% endfor %}
     </div>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/curtainsjs/8.2.0/curtains.min.js"></script>
 <script>
 (function() {
-  var id = '{{ section.id }}';
-  var hero = document.getElementById('splash-hero-' + id);
-  var canvas = document.getElementById('ink-canvas-' + id);
-  if (!canvas || !hero) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var hero = document.getElementById('splash-hero-{{ section.id }}');
+  if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  var ctx = canvas.getContext('2d');
+  // ─── Drawing canvas (paint strokes) ───
+  var drawCanvas = document.createElement('canvas');
+  var ctx = drawCanvas.getContext('2d');
   var W, H, dpr = window.devicePixelRatio || 1;
 
-  function resize() {
+  function resizeDraw() {
     var r = hero.getBoundingClientRect();
     W = r.width; H = r.height;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
+    drawCanvas.width = W * dpr;
+    drawCanvas.height = H * dpr;
+    drawCanvas.style.width = W + 'px';
+    drawCanvas.style.height = H + 'px';
     ctx.scale(dpr, dpr);
   }
-  resize();
-  window.addEventListener('resize', resize);
+  resizeDraw();
+  window.addEventListener('resize', resizeDraw);
+
+  drawCanvas.style.position = 'absolute';
+  drawCanvas.style.inset = '0';
+  drawCanvas.style.pointerEvents = 'none';
+  drawCanvas.style.zIndex = '1';
+  hero.prepend(drawCanvas);
 
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
   function pick() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
   function rand(a,b) { return Math.random() * (b - a) + a; }
 
   var lastX = null, lastY = null, lastColor = null;
-  var segments = [];
-  var START_FADE_AFTER = 4000;
-  var FADE_DURATION = 3000;
 
   function paintStroke(x1, y1, x2, y2, speed) {
     var color = lastColor || pick();
     var nextColor = pick();
     var width = Math.min(Math.max(12, 50 - speed * 1.5), 60);
 
-    var seg = {
-      x1: x1, y1: y1, x2: x2, y2: y2, w: width,
-      colorFrom: color,
-      colorTo: nextColor,
-      ts: Date.now()
-    };
-    segments.push(seg);
-    drawSegment(seg, 1);
+    // Bleed layer
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width + 16;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Main body with gradient
+    var dx = x2 - x1, dy = y2 - y1;
+    var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    var span = 0.5;
+    var mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    var nx = dx / dist, ny = dy / dist;
+    var grad = ctx.createLinearGradient(mx - nx * dist * span/2, my - ny * dist * span/2, mx + nx * dist * span/2, my + ny * dist * span/2);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, nextColor);
+    ctx.save();
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.95;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Highlight
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = Math.max(3, width * 0.25);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+
     lastColor = nextColor;
 
-    // Splatter dots
+    // Splatter
     if (speed > 5 && Math.random() > 0.6) {
       var num = Math.floor(Math.min(speed * 0.45, 7));
       for (var i = 0; i < num; i++) {
         var a = Math.random() * Math.PI * 2;
-        var d = rand(10, 20 + speed * 1.2);
-        var dot = {
-          x: x2 + Math.cos(a) * d,
-          y: y2 + Math.sin(a) * d,
-          r: rand(2, 4 + speed * 0.04),
-          color: nextColor,
-          ts: Date.now()
-        };
-        segments.push(dot);
-        drawDot(dot, 1);
+        ctx.save();
+        ctx.fillStyle = nextColor;
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath();
+        ctx.arc(x2 + Math.cos(a) * rand(10, 20 + speed * 1.2), y2 + Math.sin(a) * rand(10, 20 + speed * 1.2), rand(2, 4 + speed * 0.04), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
     }
   }
 
-  function drawSegment(seg, alpha) {
-    // Gradient covers 50% of segment (tighter transition)
-    var dx = seg.x2 - seg.x1, dy = seg.y2 - seg.y1;
-    var dist = Math.sqrt(dx*dx + dy*dy) || 1;
-    var span = 0.5;
-    var mx = (seg.x1 + seg.x2) / 2;
-    var my = (seg.y1 + seg.y2) / 2;
-    var nx = dx / dist, ny = dy / dist;
-    var grad = ctx.createLinearGradient(mx - nx * dist * span/2, my - ny * dist * span/2, mx + nx * dist * span/2, my + ny * dist * span/2);
-    grad.addColorStop(0, seg.colorFrom);
-    grad.addColorStop(1, seg.colorTo);
+  // ─── Curtains.js fluid plane ───
+  try {
+    var curtains = new Curtains({
+      container: hero,
+      pixelRatio: Math.min(dpr, 2),
+      alpha: true,
+      autoResize: false,
+      production: true
+    });
 
-    // Layer 1: bleed
-    ctx.save();
-    ctx.globalAlpha = 0.12 * alpha;
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = seg.w + 16;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(seg.x1, seg.y1);
-    ctx.lineTo(seg.x2, seg.y2);
-    ctx.stroke();
-    ctx.restore();
+    var vs = `
+      precision highp float;
+      attribute vec3 aVertexPosition;
+      attribute vec2 aTextureCoord;
+      varying vec2 vTextureCoord;
+      uniform mat4 uMVMatrix;
+      void main() {
+        gl_Position = uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+      }
+    `;
 
-    // Layer 2: main body
-    ctx.save();
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = seg.w;
-    ctx.lineCap = 'round';
-    ctx.globalAlpha = 0.95 * alpha;
-    ctx.beginPath();
-    ctx.moveTo(seg.x1, seg.y1);
-    ctx.lineTo(seg.x2, seg.y2);
-    ctx.stroke();
-    ctx.restore();
+    var fs = `
+      precision highp float;
+      varying vec2 vTextureCoord;
+      uniform vec2 uResolution;
+      uniform float uTime;
+      uniform vec2 uMouse;
+      uniform float uMouseSpeed;
+      uniform sampler2D uDrawTexture;
 
-    // Layer 3: highlight (white on top, no gradient)
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = Math.max(3, seg.w * 0.25);
-    ctx.lineCap = 'round';
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.moveTo(seg.x1, seg.y1);
-    ctx.lineTo(seg.x2, seg.y2);
-    ctx.stroke();
-    ctx.restore();
-  }
+      void main() {
+        vec2 uv = vTextureCoord;
+        vec2 res = uResolution;
+        float time = uTime;
 
-  function drawDot(dot, alpha) {
-    ctx.save();
-    ctx.fillStyle = dot.color;
-    ctx.globalAlpha = 0.35 * alpha;
-    ctx.beginPath();
-    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
+        // Fluid displacement based on mouse
+        vec2 center = vec2(0.5);
+        vec2 mousePos = uMouse / res;
+        vec2 dir = uv - mousePos;
+        float dist = length(dir);
+        float strength = uMouseSpeed * 0.08;
 
-  // ─── Fade loop ───
-  var fadeStarted = false;
+        // Ripple wave
+        float ripple = sin(dist * 40.0 - time * 3.0) * 0.5 + 0.5;
+        float falloff = exp(-dist * 6.0);
+        vec2 offset = normalize(dir) * ripple * falloff * strength;
 
-  function fadeLoop() {
-    var now = Date.now();
-    var oldest = segments.length > 0 ? segments[0].ts : now;
-    var age = now - oldest;
+        // Sample with displacement
+        vec2 sampleUV = uv + offset;
 
-    if (!fadeStarted && segments.length > 0 && age > START_FADE_AFTER) {
-      fadeStarted = true;
-    }
+        // Edge clamp
+        sampleUV = clamp(sampleUV, 0.0, 1.0);
 
-    if (fadeStarted && segments.length > 0) {
-      var keep = [];
-      for (var i = 0; i < segments.length; i++) {
-        var segAge = now - segments[i].ts - START_FADE_AFTER;
-        if (segAge < 0) segAge = 0;
-        var alpha = 1 - (segAge / FADE_DURATION);
-        if (alpha > 0) {
-          keep.push(segments[i]);
+        vec4 color = texture2D(uDrawTexture, sampleUV);
+
+        // Subtle vortex swirl
+        float angle = atan(dir.y, dir.x);
+        float swirl = sin(time * 1.5 + dist * 10.0) * 0.003 * falloff * uMouseSpeed;
+        vec2 swirlUV = uv;
+        swirlUV.x += cos(angle + time) * swirl;
+        swirlUV.y += sin(angle + time) * swirl;
+        swirlUV = clamp(swirlUV, 0.0, 1.0);
+        vec4 swirlColor = texture2D(uDrawTexture, swirlUV);
+
+        // Mix original and displaced
+        float mixFactor = clamp(falloff * uMouseSpeed * 0.3, 0.0, 0.6);
+        gl_FragColor = mix(color, swirlColor, mixFactor);
+        gl_FragColor.a = 1.0;
+      }
+    `;
+
+    // Upload draw canvas as texture
+    var drawTexture = curtains.createTexture({
+      sampler: 'uDrawTexture',
+      fromTexture: drawCanvas
+    });
+
+    var plane = curtains.addPlane(hero.querySelector('.splash-hero-content'), {
+      vertexShader: vs,
+      fragmentShader: fs,
+      widthSegments: 1,
+      heightSegments: 1,
+      uniforms: {
+        uResolution: {
+          name: 'uResolution',
+          type: '2f',
+          value: [W, H]
+        },
+        uTime: {
+          name: 'uTime',
+          type: '1f',
+          value: 0
+        },
+        uMouse: {
+          name: 'uMouse',
+          type: '2f',
+          value: [W/2, H/2]
+        },
+        uMouseSpeed: {
+          name: 'uMouseSpeed',
+          type: '1f',
+          value: 0
         }
       }
+    });
 
-      if (keep.length < segments.length) {
-        segments = keep;
-        ctx.clearRect(0, 0, W, H);
-        for (var i = 0; i < segments.length; i++) {
-          var seg = segments[i];
-          var segAge = now - seg.ts - START_FADE_AFTER;
-          var alpha = Math.max(0, 1 - (segAge / FADE_DURATION));
-          if (seg.r !== undefined) drawDot(seg, alpha);
-          else drawSegment(seg, alpha);
-        }
+    // Update draw texture and uniforms each frame
+    var time = 0;
+    plane.onRender(function() {
+      time += 0.01;
+      this.uniforms.uTime.value = time;
+      // Update the draw texture with latest strokes
+      drawTexture.fromTexture(drawCanvas);
+    });
+
+    // Mouse tracking for uniforms
+    var mouseX = W/2, mouseY = H/2;
+    var prevMouseX = mouseX, prevMouseY = mouseY;
+
+    hero.addEventListener('mousemove', function(e) {
+      var r = hero.getBoundingClientRect();
+      mouseX = e.clientX - r.left;
+      mouseY = e.clientY - r.top;
+
+      var dx = mouseX - prevMouseX, dy = mouseY - prevMouseY;
+      var speed = Math.sqrt(dx*dx + dy*dy);
+
+      if (plane) {
+        plane.uniforms.uMouse.value = [mouseX, H - mouseY];
+        plane.uniforms.uMouseSpeed.value = Math.min(speed * 0.5, 15);
       }
-    }
 
-    if (segments.length > 0) {
-      requestAnimationFrame(fadeLoop);
-    }
+      if (lastX !== null) {
+        var dist = Math.sqrt((mouseX - lastX)*(mouseX - lastX) + (mouseY - lastY)*(mouseY - lastY));
+        if (dist > 2) paintStroke(lastX, lastY, mouseX, mouseY, dist);
+      }
+      lastX = mouseX; lastY = mouseY;
+      prevMouseX = mouseX; prevMouseY = mouseY;
+    });
+
+    hero.addEventListener('mouseleave', function() { lastX = null; if (plane) plane.uniforms.uMouseSpeed.value = 0; });
+    hero.addEventListener('mouseup', function() { lastX = null; if (plane) plane.uniforms.uMouseSpeed.value = 0; });
+
+    // Resize handler
+    window.addEventListener('resize', function() {
+      resizeDraw();
+      if (plane) {
+        var r = hero.getBoundingClientRect();
+        plane.uniforms.uResolution.value = [r.width, r.height];
+        curtains.resize();
+      }
+    });
+
+    // Welcome stroke
+    setTimeout(function() {
+      var r = hero.getBoundingClientRect();
+      var cx = r.width/2, cy = r.height/2;
+      for (var i = 0; i < 12; i++) {
+        var a = (i / 12) * Math.PI * 2;
+        var d = 20 + (i % 3) * 15;
+        paintStroke(cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3, cx + Math.cos(a) * d, cy + Math.sin(a) * d, 6);
+      }
+    }, 300);
+
+  } catch(e) {
+    console.warn('Curtains init error:', e);
   }
-
-  // ─── Release splat ───
-  function releaseSplat(x, y, speed) {
-    speed = speed || 8;
-    var color = lastColor || pick();
-    lastColor = pick();
-    var num = Math.floor(rand(6, 12 + speed * 0.3));
-    for (var i = 0; i < num; i++) {
-      var a = Math.random() * Math.PI * 2;
-      var d = rand(8, 20 + speed);
-      var dot = {
-        x: x + Math.cos(a) * d,
-        y: y + Math.sin(a) * d,
-        r: rand(3, 7),
-        color: color,
-        ts: Date.now()
-      };
-      segments.push(dot);
-      drawDot(dot, 1);
-    }
-    // Central burst
-    ctx.save();
-    var g = ctx.createRadialGradient(x-3, y-3, 0, x, y, 18);
-    g.addColorStop(0, 'rgba(255,255,255,0.2)');
-    g.addColorStop(0.5, color);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath();
-    ctx.arc(x, y, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // ─── Mouse ───
-  function getPos(e) {
-    var r = hero.getBoundingClientRect();
-    if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  }
-
-  hero.addEventListener('mousemove', function(e) {
-    var pos = getPos(e);
-    var x = pos.x, y = pos.y;
-    if (lastX !== null) {
-      var dx = x - lastX, dy = y - lastY;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
-    }
-    lastX = x; lastY = y;
-    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
-  });
-  hero.addEventListener('touchmove', function(e) {
-    var pos = getPos(e);
-    var x = pos.x, y = pos.y;
-    if (lastX !== null) {
-      var dx = x - lastX, dy = y - lastY;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist > 2) paintStroke(lastX, lastY, x, y, dist);
-    }
-    lastX = x; lastY = y;
-    if (!fadeStarted) setTimeout(fadeLoop, START_FADE_AFTER);
-  });
-  hero.addEventListener('mouseleave', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
-  hero.addEventListener('mouseup', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
-  hero.addEventListener('touchstart', function(e) { var p = getPos(e); lastX = p.x; lastY = p.y; });
-  hero.addEventListener('touchend', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
-
-  // ─── Welcome ───
-  function welcome() {
-    var cx = W/2, cy = H/2;
-    for (var i = 0; i < 12; i++) {
-      var a = (i / 12) * Math.PI * 2;
-      var d = 20 + (i % 3) * 15;
-      paintStroke(cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3, cx + Math.cos(a) * d, cy + Math.sin(a) * d, 6);
-    }
-    releaseSplat(cx, cy, 6);
-  }
-  setTimeout(welcome, 200);
 })();
 </script>
 
