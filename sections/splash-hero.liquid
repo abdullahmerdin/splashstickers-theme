@@ -174,10 +174,12 @@
   }
 
   .splash-hero-{{ section.id }} .splash-hero-heading .splash-highlight {
-    background: linear-gradient(135deg, #FDCB6E, #FD79A8);
+    background: linear-gradient(135deg, #FDCB6E, #FD79A8, #FDCB6E);
+    background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: shimmer 4s ease-in-out infinite;
   }
 
   .splash-hero-{{ section.id }} .splash-hero-subtext {
@@ -314,6 +316,14 @@
       {% endfor %}
     </div>
   </div>
+</div>
+
+<!-- Splash wave divider -->
+<div class="splash-wave-divider" aria-hidden="true">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+    <path d="M0,20 C240,60 480,0 720,20 C960,40 1200,0 1440,20 L1440,60 L0,60 Z" fill="#00CEC9" opacity="0.08"></path>
+    <path d="M0,35 C240,55 480,15 720,35 C960,55 1200,15 1440,35 L1440,60 L0,60 Z" fill="#6C5CE7" opacity="0.06"></path>
+  </svg>
 </div>
 
 {% schema %}
