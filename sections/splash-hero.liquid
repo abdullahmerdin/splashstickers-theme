@@ -23,280 +23,254 @@
   }
 
   {% if show_animation %}
-  /* ─── PASTEL WATERCOLOR SPLASH ─── */
-  /* Large soft color blooms that expand from center */
-  .splash-hero-{{ section.id }} .pastel-bloom {
+  /* ─── SPLASH BURST RAYS ─── */
+  .splash-hero-{{ section.id }} .splash-ray {
     position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
+    top: 50%; left: 50%;
+    width: 0; height: 0;
     opacity: 0;
-    animation: bloomExpand 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: rayBurst 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     pointer-events: none;
   }
-  .splash-hero-{{ section.id }} .pastel-bloom:nth-child(1) {
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(255,181,194,0.5), rgba(255,181,194,0));
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: 0s;
-  }
-  .splash-hero-{{ section.id }} .pastel-bloom:nth-child(2) {
-    width: 450px; height: 450px;
-    background: radial-gradient(circle, rgba(195,174,214,0.45), rgba(195,174,214,0));
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: 0.3s;
-  }
-  .splash-hero-{{ section.id }} .pastel-bloom:nth-child(3) {
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(181,234,215,0.35), rgba(181,234,215,0));
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: 0.6s;
-  }
-  .splash-hero-{{ section.id }} .pastel-bloom:nth-child(4) {
-    width: 350px; height: 350px;
-    background: radial-gradient(circle, rgba(255,218,185,0.4), rgba(255,218,185,0));
-    top: 30%; left: 60%;
-    animation-delay: 0.9s;
-  }
-  .splash-hero-{{ section.id }} .pastel-bloom:nth-child(5) {
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(181,216,235,0.35), rgba(181,216,235,0));
-    top: 60%; left: 30%;
-    animation-delay: 1.2s;
+  .splash-hero-{{ section.id }} .splash-ray-inner {
+    width: 100%; height: 100%;
+    position: absolute;
+    top: 0; left: 0;
   }
 
-  @keyframes bloomExpand {
-    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
-    50% { opacity: 0.8; }
-    100% { opacity: 0.4; }
+  /* Ray 1 - pink, shoots up-right */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(1) { animation-delay: 0.05s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(1) .splash-ray-inner {
+    background: #FFB5C2;
+    clip-path: polygon(25% 100%, 50% 0%, 75% 100%);
+    transform: translate(20px, -20px) rotate(-15deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
   }
-  .splash-hero-{{ section.id }} .pastel-bloom:nth-child(4),
-  .splash-hero-{{ section.id }} .pastel-bloom:nth-child(5) {
-    animation: bloomOffset 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  /* Ray 2 - lavender, shoots up */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(2) { animation-delay: 0.1s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(2) .splash-ray-inner {
+    background: #C3AED6;
+    clip-path: polygon(30% 100%, 50% 0%, 70% 100%);
+    transform: translate(0px, -30px) rotate(0deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
   }
-  @keyframes bloomOffset {
-    0% { transform: scale(0.1); opacity: 0; }
-    50% { opacity: 0.7; }
+  /* Ray 3 - mint, shoots up-left */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(3) { animation-delay: 0.15s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(3) .splash-ray-inner {
+    background: #B5EAD7;
+    clip-path: polygon(20% 100%, 50% 0%, 80% 100%);
+    transform: translate(-20px, -20px) rotate(15deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
+  }
+  /* Ray 4 - peach, shoots right */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(4) { animation-delay: 0.2s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(4) .splash-ray-inner {
+    background: #FFDAB9;
+    clip-path: polygon(0% 30%, 100% 50%, 0% 70%);
+    transform: translate(30px, 0px) rotate(0deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
+  }
+  /* Ray 5 - baby blue, shoots down-right */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(5) { animation-delay: 0.25s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(5) .splash-ray-inner {
+    background: #B5D8EB;
+    clip-path: polygon(25% 0%, 50% 100%, 75% 0%);
+    transform: translate(15px, 20px) rotate(10deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
+  }
+  /* Ray 6 - soft yellow, shoots down */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(6) { animation-delay: 0.3s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(6) .splash-ray-inner {
+    background: #FFF5BA;
+    clip-path: polygon(30% 0%, 50% 100%, 70% 0%);
+    transform: translate(0px, 25px) rotate(0deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
+  }
+  /* Ray 7 - pink, shoots left */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(7) { animation-delay: 0.1s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(7) .splash-ray-inner {
+    background: #FFB5C2;
+    clip-path: polygon(100% 30%, 0% 50%, 100% 70%);
+    transform: translate(-30px, -5px) rotate(0deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
+  }
+  /* Ray 8 - lavender, shoots down-left */
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(8) { animation-delay: 0.2s; }
+  .splash-hero-{{ section.id }} .splash-ray:nth-child(8) .splash-ray-inner {
+    background: #C3AED6;
+    clip-path: polygon(20% 0%, 50% 100%, 80% 0%);
+    transform: translate(-20px, 15px) rotate(-8deg);
+    animation: raySettle 0.6s ease-out 0.3s forwards;
+  }
+
+  @keyframes rayBurst {
+    0% { width: 0; height: 0; opacity: 0; }
+    30% { width: 200px; height: 200px; opacity: 1; }
+    100% { width: 200px; height: 200px; opacity: 1; }
+  }
+  @keyframes raySettle {
+    0% { opacity: 0.9; }
     100% { opacity: 0.3; }
   }
 
-  /* ─── PASTEL FLOATING ORBS ─── */
-  .splash-hero-{{ section.id }} .pastel-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(4px);
-    opacity: 0;
-    animation: orbFloat 4s ease-in-out infinite;
-    pointer-events: none;
-  }
-  .splash-hero-{{ section.id }} .pastel-orb:nth-child(6) {
-    width: 40px; height: 40px;
-    background: rgba(255,181,194,0.6);
-    top: 20%; left: 15%;
-    animation-delay: 0.5s;
-  }
-  .splash-hero-{{ section.id }} .pastel-orb:nth-child(7) {
-    width: 25px; height: 25px;
-    background: rgba(195,174,214,0.5);
-    top: 70%; left: 20%;
-    animation-delay: 1s;
-  }
-  .splash-hero-{{ section.id }} .pastel-orb:nth-child(8) {
-    width: 35px; height: 35px;
-    background: rgba(181,234,215,0.5);
-    top: 15%; right: 20%;
-    animation-delay: 1.5s;
-  }
-  .splash-hero-{{ section.id }} .pastel-orb:nth-child(9) {
-    width: 20px; height: 20px;
-    background: rgba(255,218,185,0.6);
-    top: 75%; right: 15%;
-    animation-delay: 2s;
-  }
-  .splash-hero-{{ section.id }} .pastel-orb:nth-child(10) {
-    width: 30px; height: 30px;
-    background: rgba(181,216,235,0.5);
-    top: 45%; left: 8%;
-    animation-delay: 0.8s;
-    animation-duration: 5s;
-  }
-  .splash-hero-{{ section.id }} .pastel-orb:nth-child(11) {
-    width: 45px; height: 45px;
-    background: rgba(255,245,186,0.4);
-    top: 30%; right: 10%;
-    animation-delay: 1.8s;
-    animation-duration: 6s;
-  }
-
-  @keyframes orbFloat {
-    0% { transform: translateY(0) scale(0); opacity: 0; }
-    20% { opacity: 0.7; }
-    50% { transform: translateY(-40px) scale(1.1); opacity: 0.5; }
-    80% { opacity: 0.3; }
-    100% { transform: translateY(-80px) scale(0.8); opacity: 0; }
-  }
-
-  /* ─── RIPPLE RINGS ─── */
-  .splash-hero-{{ section.id }} .ripple-ring {
+  /* ─── SPLASH CROWN (top splash) ─── */
+  .splash-hero-{{ section.id }} .splash-crown {
     position: absolute;
     top: 50%; left: 50%;
-    border-radius: 50%;
-    border: 2px solid;
+    width: 0; height: 0;
     transform: translate(-50%, -50%);
     opacity: 0;
+    animation: crownBurst 0.6s ease-out 0.15s forwards;
     pointer-events: none;
   }
-  .splash-hero-{{ section.id }} .ripple-ring:nth-child(12) {
-    width: 80px; height: 80px;
-    border-color: rgba(255,181,194,0.5);
-    animation: rippleExpand 2.5s ease-out 0.2s forwards;
-  }
-  .splash-hero-{{ section.id }} .ripple-ring:nth-child(13) {
-    width: 140px; height: 140px;
-    border-color: rgba(195,174,214,0.4);
-    animation: rippleExpand 3s ease-out 0.5s forwards;
-  }
-  .splash-hero-{{ section.id }} .ripple-ring:nth-child(14) {
-    width: 220px; height: 220px;
-    border-color: rgba(181,234,215,0.3);
-    animation: rippleExpand 3.5s ease-out 0.8s forwards;
-  }
-  .splash-hero-{{ section.id }} .ripple-ring:nth-child(15) {
-    width: 320px; height: 320px;
-    border-color: rgba(255,218,185,0.25);
-    animation: rippleExpand 4s ease-out 1.1s forwards;
-  }
-  .splash-hero-{{ section.id }} .ripple-ring:nth-child(16) {
-    width: 450px; height: 450px;
-    border-color: rgba(181,216,235,0.2);
-    animation: rippleExpand 4.5s ease-out 1.4s forwards;
-  }
-
-  @keyframes rippleExpand {
-    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0.7; }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-  }
-
-  /* ─── SPARKLE PARTICLES ─── */
-  .splash-hero-{{ section.id }} .sparkle {
+  .splash-hero-{{ section.id }} .splash-crown-inner {
     position: absolute;
-    width: 6px; height: 6px;
-    border-radius: 50%;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 100%, rgba(255,181,194,0.6) 0%, transparent 70%);
+    clip-path: polygon(0% 100%, 10% 60%, 20% 80%, 30% 40%, 40% 70%, 50% 20%, 60% 70%, 70% 40%, 80% 80%, 90% 60%, 100% 100%);
+  }
+
+  @keyframes crownBurst {
+    0% { width: 0; height: 0; opacity: 0; }
+    50% { width: 300px; height: 150px; opacity: 0.8; }
+    100% { width: 300px; height: 150px; opacity: 0; }
+  }
+
+  /* ─── SPLASH DROPS ─── */
+  .splash-hero-{{ section.id }} .splash-drop {
+    position: absolute;
+    width: 0; height: 0;
     opacity: 0;
-    animation: sparkleFly 2s ease-out forwards;
+    animation: dropFly 0.7s ease-out forwards;
     pointer-events: none;
   }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(17) { background: #FFB5C2; top: 50%; left: 50%; animation-delay: 0.3s; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(18) { background: #C3AED6; top: 50%; left: 50%; animation-delay: 0.4s; width: 4px; height: 4px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(19) { background: #B5EAD7; top: 50%; left: 50%; animation-delay: 0.5s; width: 8px; height: 8px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(20) { background: #FFDAB9; top: 50%; left: 50%; animation-delay: 0.6s; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(21) { background: #B5D8EB; top: 50%; left: 50%; animation-delay: 0.45s; width: 5px; height: 5px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(22) { background: #FFF5BA; top: 50%; left: 50%; animation-delay: 0.55s; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(23) { background: #FFB5C2; top: 50%; left: 50%; animation-delay: 0.7s; width: 3px; height: 3px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(24) { background: #C3AED6; top: 50%; left: 50%; animation-delay: 0.35s; width: 7px; height: 7px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(25) { background: #B5EAD7; top: 50%; left: 50%; animation-delay: 0.65s; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(26) { background: #FFDAB9; top: 50%; left: 50%; animation-delay: 0.5s; width: 5px; height: 5px; }
-
-  @keyframes sparkleFly {
-    0% { transform: translate(0, 0) scale(0); opacity: 1; }
-    100% { transform: translate(var(--sx), var(--sy)) scale(0.3); opacity: 0; }
+  .splash-hero-{{ section.id }} .splash-drop-inner {
+    width: 100%; height: 100%;
+    border-radius: 50% 50% 50% 0;
   }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(17) { --sx: -150px; --sy: -120px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(18) { --sx: 120px; --sy: -160px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(19) { --sx: -80px; --sy: 140px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(20) { --sx: 160px; --sy: 60px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(21) { --sx: -200px; --sy: -40px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(22) { --sx: 80px; --sy: 180px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(23) { --sx: 180px; --sy: -80px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(24) { --sx: -120px; --sy: 80px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(25) { --sx: 50px; --sy: -200px; }
-  .splash-hero-{{ section.id }} .sparkle:nth-child(26) { --sx: -60px; --sy: 160px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(9) { animation-delay: 0.1s; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(10) { animation-delay: 0.15s; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(11) { animation-delay: 0.2s; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(12) { animation-delay: 0.1s; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(13) { animation-delay: 0.25s; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(14) { animation-delay: 0.18s; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(15) { animation-delay: 0.12s; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(16) { animation-delay: 0.22s; }
 
-  /* ─── PASTEL STICKERS ─── */
+  @keyframes dropFly {
+    0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--dr)); opacity: 0; }
+  }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(9)  { --dx: -80px;  --dy: -100px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(9) .splash-drop-inner  { background: #FFB5C2; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(10) { --dx: 60px;  --dy: -120px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(10) .splash-drop-inner { background: #C3AED6; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(11) { --dx: -50px; --dy: 90px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(11) .splash-drop-inner { background: #B5EAD7; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(12) { --dx: 90px;  --dy: 70px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(12) .splash-drop-inner { background: #FFDAB9; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(13) { --dx: -100px; --dy: 20px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(13) .splash-drop-inner { background: #B5D8EB; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(14) { --dx: 120px; --dy: -40px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(14) .splash-drop-inner { background: #FFF5BA; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(15) { --dx: -40px; --dy: 120px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(15) .splash-drop-inner { background: #FFB5C2; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(16) { --dx: 70px;  --dy: -80px; }
+  .splash-hero-{{ section.id }} .splash-drop:nth-child(16) .splash-drop-inner { background: #C3AED6; }
+
+  /* ─── STICKERS ─── */
   .splash-hero-{{ section.id }} .p-sticker {
     position: absolute;
     opacity: 0;
-    animation: stickerDrift 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: stickerPop 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     pointer-events: none;
   }
   .splash-hero-{{ section.id }} .p-sticker .p-sticker-body {
     width: 100%; height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.85);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700;
+    color: rgba(255,255,255,0.9);
     position: relative;
   }
-  /* Pastel circle sticker */
   .splash-hero-{{ section.id }} .p-sticker-circle {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    border: 2.5px dashed rgba(255,255,255,0.5);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06), inset 0 -2px 6px rgba(0,0,0,0.04);
-    position: relative;
-    overflow: hidden;
+    width: 68px; height: 68px; border-radius: 50%;
+    border: 2.5px dashed rgba(255,255,255,0.6);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    position: relative; overflow: hidden;
   }
   .splash-hero-{{ section.id }} .p-sticker-circle::after {
-    content: '';
-    position: absolute; top: -6px; right: -6px;
+    content: ''; position: absolute; top: -6px; right: -6px;
     width: 16px; height: 16px;
-    background: rgba(255,255,255,0.25);
-    border-radius: 50%;
+    background: rgba(255,255,255,0.3); border-radius: 50%;
   }
   .splash-hero-{{ section.id }} .p-sticker-circle.pink { background: linear-gradient(135deg, #FFB5C2, #FFD1DC); }
   .splash-hero-{{ section.id }} .p-sticker-circle.lavender { background: linear-gradient(135deg, #C3AED6, #E6E6FA); }
   .splash-hero-{{ section.id }} .p-sticker-circle.mint { background: linear-gradient(135deg, #B5EAD7, #D4F5E2); }
   .splash-hero-{{ section.id }} .p-sticker-circle.peach { background: linear-gradient(135deg, #FFDAB9, #FFE8D6); }
   .splash-hero-{{ section.id }} .p-sticker-circle.blue { background: linear-gradient(135deg, #B5D8EB, #D4EAF5); }
-  .splash-hero-{{ section.id }} .p-sticker-circle.yellow { background: linear-gradient(135deg, #FFF5BA, #FFFDE0); }
-
-  /* Pastel heart/squircle sticker */
-  .splash-hero-{{ section.id }} .p-sticker-squircle {
-    width: 65px; height: 65px;
-    border-radius: 35%;
-    border: 2.5px dashed rgba(255,255,255,0.5);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-    transform: rotate(-8deg);
+  .splash-hero-{{ section.id }} .p-sticker-square {
+    width: 60px; height: 60px; border-radius: 12px;
+    border: 2.5px dashed rgba(255,255,255,0.6);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transform: rotate(12deg);
   }
-  .splash-hero-{{ section.id }} .p-sticker-squircle.lavender { background: linear-gradient(135deg, #C3AED6, #E6E6FA); }
-  .splash-hero-{{ section.id }} .p-sticker-squircle.pink { background: linear-gradient(135deg, #FFB5C2, #FFD1DC); }
+  .splash-hero-{{ section.id }} .p-sticker-square.yellow { background: linear-gradient(135deg, #FFF5BA, #FFFDE0); }
 
-  /* Pastel diamond sticker */
-  .splash-hero-{{ section.id }} .p-sticker-diamond {
-    width: 60px; height: 60px;
-    transform: rotate(45deg);
-    border: 2.5px dashed rgba(255,255,255,0.5);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-    overflow: hidden;
-  }
-  .splash-hero-{{ section.id }} .p-sticker-diamond .p-sticker-body { transform: rotate(-45deg); }
-  .splash-hero-{{ section.id }} .p-sticker-diamond.mint { background: linear-gradient(135deg, #B5EAD7, #D4F5E2); }
-  .splash-hero-{{ section.id }} .p-sticker-diamond.blue { background: linear-gradient(135deg, #B5D8EB, #D4EAF5); }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(17) { top: 10%; left: 12%; animation-delay: 0.4s; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(18) { top: 6%; right: 14%; animation-delay: 0.55s; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(19) { bottom: 12%; left: 8%; animation-delay: 0.7s; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(20) { bottom: 8%; right: 10%; animation-delay: 0.45s; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(21) { top: 35%; left: 3%; animation-delay: 0.8s; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(22) { top: 40%; right: 3%; animation-delay: 0.6s; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(23) { top: 20%; left: 30%; animation-delay: 0.5s; }
 
-  /* Sticker positions — launched outward by the splash */
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(27) { top: 10%; left: 10%; animation-delay: 0.7s; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(28) { top: 8%; right: 12%; animation-delay: 0.9s; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(29) { bottom: 15%; left: 8%; animation-delay: 1.1s; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(30) { bottom: 10%; right: 10%; animation-delay: 0.8s; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(31) { top: 38%; left: 4%; animation-delay: 1.3s; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(32) { top: 42%; right: 4%; animation-delay: 1.0s; }
-
-  @keyframes stickerDrift {
+  @keyframes stickerPop {
     0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 0; }
-    40% { opacity: 1; }
-    70% { transform: translate(var(--dx, -50px), var(--dy, -60px)) scale(1.1) rotate(var(--dr, 15deg)); opacity: 1; }
-    100% { transform: translate(var(--dx-end, -30px), var(--dy-end, -40px)) scale(1) rotate(var(--dr-end, 5deg)); opacity: 0.9; }
+    50% { transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(var(--dr)); opacity: 1; }
+    100% { transform: translate(var(--dx-end), var(--dy-end)) scale(1) rotate(var(--dr-end)); opacity: 0.95; }
   }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(27) { --dx: -70px; --dy: -100px; --dr: -15deg; --dx-end: -40px; --dy-end: -70px; --dr-end: -8deg; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(28) { --dx: 80px; --dy: -90px; --dr: 20deg; --dx-end: 50px; --dy-end: -60px; --dr-end: 10deg; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(29) { --dx: -70px; --dy: 90px; --dr: 25deg; --dx-end: -40px; --dy-end: 60px; --dr-end: -6deg; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(30) { --dx: 70px; --dy: 80px; --dr: -20deg; --dx-end: 40px; --dy-end: 50px; --dr-end: 8deg; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(31) { --dx: -90px; --dy: -20px; --dr: 10deg; --dx-end: -60px; --dy-end: -10px; --dr-end: -4deg; }
-  .splash-hero-{{ section.id }} .p-sticker:nth-child(32) { --dx: 100px; --dy: -30px; --dr: -12deg; --dx-end: 60px; --dy-end: -20px; --dr-end: 6deg; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(17) { --dx: -50px; --dy: -80px; --dr: -20deg; --dx-end: -30px; --dy-end: -60px; --dr-end: -10deg; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(18) { --dx: 60px; --dy: -70px; --dr: 25deg; --dx-end: 40px; --dy-end: -50px; --dr-end: 12deg; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(19) { --dx: -60px; --dy: 70px; --dr: 30deg; --dx-end: -30px; --dy-end: 50px; --dr-end: -8deg; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(20) { --dx: 50px; --dy: 60px; --dr: -25deg; --dx-end: 30px; --dy-end: 40px; --dr-end: 10deg; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(21) { --dx: -70px; --dy: -10px; --dr: 15deg; --dx-end: -50px; --dy-end: -5px; --dr-end: -5deg; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(22) { --dx: 80px; --dy: -20px; --dr: -15deg; --dx-end: 50px; --dy-end: -10px; --dr-end: 8deg; }
+  .splash-hero-{{ section.id }} .p-sticker:nth-child(23) { --dx: -40px; --dy: -60px; --dr: 10deg; --dx-end: -25px; --dy-end: -40px; --dr-end: -5deg; }
+
+  /* ─── SPLASH RINGS (fast, snappy) ─── */
+  .splash-hero-{{ section.id }} .pop-ring {
+    position: absolute; top: 50%; left: 50%;
+    border-radius: 50%;
+    border: 3px solid;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .splash-hero-{{ section.id }} .pop-ring:nth-child(24) {
+    width: 40px; height: 40px;
+    border-color: rgba(255,181,194,0.6);
+    animation: popRing 0.6s ease-out 0.1s forwards;
+  }
+  .splash-hero-{{ section.id }} .pop-ring:nth-child(25) {
+    width: 80px; height: 80px;
+    border-color: rgba(195,174,214,0.5);
+    animation: popRing 0.7s ease-out 0.2s forwards;
+  }
+  .splash-hero-{{ section.id }} .pop-ring:nth-child(26) {
+    width: 130px; height: 130px;
+    border-color: rgba(181,234,215,0.4);
+    animation: popRing 0.8s ease-out 0.3s forwards;
+  }
+  .splash-hero-{{ section.id }} .pop-ring:nth-child(27) {
+    width: 190px; height: 190px;
+    border-color: rgba(255,218,185,0.3);
+    animation: popRing 0.9s ease-out 0.4s forwards;
+  }
+
+  @keyframes popRing {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
 
   /* ─── CONTENT ─── */
   .splash-hero-{{ section.id }} .splash-hero-content {
@@ -312,8 +286,7 @@
     line-height: 1.1;
     letter-spacing: -0.02em;
     margin: 0 0 16px;
-    animation: fadeUp 0.8s ease-out 0.6s both;
-    text-shadow: 0 2px 20px rgba(0,0,0,0.06);
+    animation: fadeUp 0.5s ease-out 0.3s both;
   }
   .splash-hero-{{ section.id }} .splash-hero-subtext {
     font-size: clamp(1rem, 2vw, 1.2rem);
@@ -321,26 +294,26 @@
     margin: 0 0 32px;
     line-height: 1.5;
     opacity: 0.9;
-    animation: fadeUp 0.8s ease-out 0.8s both;
+    animation: fadeUp 0.5s ease-out 0.45s both;
   }
   .splash-hero-{{ section.id }} .splash-hero-buttons {
     display: flex;
     gap: 16px;
     justify-content: center;
     flex-wrap: wrap;
-    animation: fadeUp 0.8s ease-out 1s both;
+    animation: fadeUp 0.5s ease-out 0.6s both;
   }
   @keyframes fadeUp {
-    0% { transform: translateY(20px); opacity: 0; }
+    0% { transform: translateY(15px); opacity: 0; }
     100% { transform: translateY(0); opacity: 1; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .splash-hero-{{ section.id }} .pastel-bloom,
-    .splash-hero-{{ section.id }} .pastel-orb,
-    .splash-hero-{{ section.id }} .ripple-ring,
-    .splash-hero-{{ section.id }} .sparkle,
+    .splash-hero-{{ section.id }} .splash-ray,
+    .splash-hero-{{ section.id }} .splash-crown,
+    .splash-hero-{{ section.id }} .splash-drop,
     .splash-hero-{{ section.id }} .p-sticker,
+    .splash-hero-{{ section.id }} .pop-ring,
     .splash-hero-{{ section.id }} .splash-hero-heading,
     .splash-hero-{{ section.id }} .splash-hero-subtext,
     .splash-hero-{{ section.id }} .splash-hero-buttons {
@@ -348,56 +321,52 @@
       opacity: 1 !important;
       transform: none !important;
     }
-    .splash-hero-{{ section.id }} .pastel-bloom { opacity: 0.3; }
-    .splash-hero-{{ section.id }} .sparkle,
-    .splash-hero-{{ section.id }} .pastel-orb { display: none; }
+    .splash-hero-{{ section.id }} .splash-ray,
+    .splash-hero-{{ section.id }} .splash-crown,
+    .splash-hero-{{ section.id }} .splash-drop { display: none; }
   }
   {% endif %}
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}">
   {% if show_animation %}
-    <!-- Watercolor blooms -->
-    <div class="pastel-bloom"></div>
-    <div class="pastel-bloom"></div>
-    <div class="pastel-bloom"></div>
-    <div class="pastel-bloom"></div>
-    <div class="pastel-bloom"></div>
+    <!-- Splash burst rays (clip-path triangles) -->
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
+    <div class="splash-ray"><div class="splash-ray-inner"></div></div>
 
-    <!-- Floating orbs -->
-    <div class="pastel-orb"></div>
-    <div class="pastel-orb"></div>
-    <div class="pastel-orb"></div>
-    <div class="pastel-orb"></div>
-    <div class="pastel-orb"></div>
-    <div class="pastel-orb"></div>
+    <!-- Splash crown -->
+    <div class="splash-crown"><div class="splash-crown-inner"></div></div>
 
-    <!-- Ripple rings -->
-    <div class="ripple-ring"></div>
-    <div class="ripple-ring"></div>
-    <div class="ripple-ring"></div>
-    <div class="ripple-ring"></div>
-    <div class="ripple-ring"></div>
+    <!-- Water drops -->
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
+    <div class="splash-drop"><div class="splash-drop-inner"></div></div>
 
-    <!-- Sparkles -->
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
+    <!-- Pop rings -->
+    <div class="pop-ring"></div>
+    <div class="pop-ring"></div>
+    <div class="pop-ring"></div>
+    <div class="pop-ring"></div>
 
-    <!-- Pastel stickers -->
+    <!-- Stickers -->
     <div class="p-sticker"><div class="p-sticker-body p-sticker-circle pink">✦</div></div>
-    <div class="p-sticker"><div class="p-sticker-body p-sticker-squircle lavender">♥</div></div>
-    <div class="p-sticker"><div class="p-sticker-body p-sticker-diamond mint">◇</div></div>
+    <div class="p-sticker"><div class="p-sticker-body p-sticker-circle lavender">♥</div></div>
+    <div class="p-sticker"><div class="p-sticker-body p-sticker-circle mint">◆</div></div>
     <div class="p-sticker"><div class="p-sticker-body p-sticker-circle peach">♡</div></div>
     <div class="p-sticker"><div class="p-sticker-body p-sticker-circle blue">★</div></div>
-    <div class="p-sticker"><div class="p-sticker-body p-sticker-diamond blue">♪</div></div>
+    <div class="p-sticker"><div class="p-sticker-body p-sticker-square yellow">♪</div></div>
+    <div class="p-sticker"><div class="p-sticker-body p-sticker-circle pink">✧</div></div>
   {% endif %}
 
   <div class="splash-hero-content">
@@ -410,7 +379,7 @@
     <div class="splash-hero-buttons">
       {% for block in section.blocks %}
         {% if block.settings.button_label != blank and block.settings.button_link != blank %}
-          <a href="{{ block.settings.button_link }}" style="display:inline-block;padding:14px 36px;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;background:{{ block.settings.button_bg }};color:{{ block.settings.button_text }};border:{% if block.settings.button_style == 'outline' %}2px solid {{ block.settings.button_bg }}{% else %}none{% endif %};transition:transform 0.3s ease,box-shadow 0.3s ease;backdrop-filter:blur(4px);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''">{{ block.settings.button_label }}</a>
+          <a href="{{ block.settings.button_link }}" style="display:inline-block;padding:14px 36px;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;background:{{ block.settings.button_bg }};color:{{ block.settings.button_text }};border:{% if block.settings.button_style == 'outline' %}2px solid {{ block.settings.button_bg }}{% else %}none{% endif %};transition:transform 0.3s ease,box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">{{ block.settings.button_label }}</a>
         {% endif %}
       {% endfor %}
     </div>
@@ -428,10 +397,10 @@
     { "type": "color", "id": "background_color", "label": "Background color", "default": "#F0E6FF" },
     { "type": "color", "id": "heading_color", "label": "Heading color", "default": "#5B4B6A" },
     { "type": "color", "id": "text_color", "label": "Subtext color", "default": "#7A6B8A" },
-    { "type": "range", "id": "section_height", "min": 300, "max": 800, "step": 50, "default": 550, "label": "Section height (px)" },
-    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding top (px)" },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding bottom (px)" },
-    { "type": "checkbox", "id": "show_animation", "label": "Show splash animation", "default": true }
+    { "type": "range", "id": "section_height", "min": 300, "max": 800, "step": 50, "default": 550, "label": "Height" },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding top" },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 8, "default": 80, "label": "Padding bottom" },
+    { "type": "checkbox", "id": "show_animation", "label": "Show animation", "default": true }
   ],
   "blocks": [
     {
