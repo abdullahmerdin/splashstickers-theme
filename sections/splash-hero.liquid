@@ -129,46 +129,34 @@
   // ─── FLUID RENDER (blur + merge) ───
   function renderFluid() {
     ctx.clearRect(0, 0, W / (window.devicePixelRatio || 1), H / (window.devicePixelRatio || 1));
-    // Fade old ink (very slow fade)
-    offCtx.save();
-    offCtx.globalAlpha = 0.015;
-    offCtx.fillStyle = '#1A1A2E';
-    offCtx.fillRect(0, 0, offscreen.width, offscreen.height);
-    offCtx.restore();
-    // Gooey filter: heavy blur + heavy contrast = metaballs
+    // Gooey: moderate blur + low contrast = liquid, not light
     ctx.save();
-    ctx.filter = 'blur(15px)';
+    ctx.filter = 'blur(8px)';
     ctx.drawImage(offscreen, 0, 0);
     ctx.restore();
-    // Threshold: high contrast sharpens the merged blobs
     ctx.save();
-    ctx.filter = 'contrast(15) brightness(1.2)';
+    ctx.filter = 'contrast(4) brightness(0.9)';
     ctx.drawImage(canvas, 0, 0);
     ctx.restore();
   }
 
-  // ─── INK STROKE ───
   function inkStroke(x1, y1, x2, y2, speed) {
     var color = pick(COLORS);
-    var width = Math.min(Math.max(8, 40 - speed * 1.5), 50);
-
-    // Draw to offscreen canvas (the "pool")
-    // Layer 1: Soft glow
+    var width = Math.min(Math.max(12, 50 - speed * 2), 60);
+    // Draw to offscreen canvas
+    // Layer 1: Soft spread (subtle)
     offCtx.save();
-    offCtx.shadowColor = color;
-    offCtx.shadowBlur = 20;
     offCtx.beginPath();
     offCtx.moveTo(x1, y1);
     offCtx.lineTo(x2, y2);
     offCtx.strokeStyle = color;
-    offCtx.lineWidth = width + 15;
+    offCtx.lineWidth = width + 25;
     offCtx.lineCap = 'round';
     offCtx.lineJoin = 'round';
-    offCtx.globalAlpha = 0.12;
+    offCtx.globalAlpha = 0.2;
     offCtx.stroke();
     offCtx.restore();
-
-    // Layer 2: Main ink
+    // Layer 2: Main ink body (solid)
     offCtx.save();
     offCtx.beginPath();
     offCtx.moveTo(x1, y1);
@@ -177,44 +165,39 @@
     offCtx.lineWidth = width;
     offCtx.lineCap = 'round';
     offCtx.lineJoin = 'round';
-    offCtx.globalAlpha = 0.85;
+    offCtx.globalAlpha = 0.95;
     offCtx.stroke();
     offCtx.restore();
-
-    // Layer 3: Highlight
+    // Layer 3: Subtle wet highlight
     offCtx.save();
     offCtx.beginPath();
     offCtx.moveTo(x1, y1);
     offCtx.lineTo(x2, y2);
-    offCtx.strokeStyle = 'rgba(255,255,255,0.2)';
-    offCtx.lineWidth = Math.max(3, width * 0.2);
+    offCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+    offCtx.lineWidth = Math.max(3, width * 0.15);
     offCtx.lineCap = 'round';
     offCtx.lineJoin = 'round';
     offCtx.stroke();
     offCtx.restore();
-
-    // Splatter
-    if (speed > 4 && Math.random() > 0.5) {
-      var num = Math.floor(Math.min(speed, 5));
+    // Splatter (less frequent)
+    if (speed > 6 && Math.random() > 0.7) {
+      var num = Math.floor(Math.min(speed/2, 3));
       for (var i = 0; i < num; i++) {
         var a = rand(0, Math.PI * 2);
-        var d = rand(5, 12 + speed * 2);
         offCtx.save();
-        offCtx.globalAlpha = 0.25;
+        offCtx.globalAlpha = 0.2;
         offCtx.fillStyle = color;
         offCtx.beginPath();
-        offCtx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, rand(2, 5), 0, Math.PI * 2);
+        offCtx.arc(x2 + Math.cos(a) * rand(5, 10 + speed), y2 + Math.sin(a) * rand(5, 10 + speed), rand(2, 4), 0, Math.PI * 2);
         offCtx.fill();
         offCtx.restore();
       }
     }
-
-    // Render to visible canvas periodically (not every stroke for perf)
     if (!fluidTimer) {
       fluidTimer = setTimeout(function() {
         renderFluid();
         fluidTimer = null;
-      }, 16); // ~60fps throttle
+      }, 16);
     }
   }
 
