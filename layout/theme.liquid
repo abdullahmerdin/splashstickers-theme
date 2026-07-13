@@ -140,5 +140,121 @@
     {% if settings.quick_add or settings.mobile_quick_add %}
       {% render 'quick-add-modal' %}
     {% endif %}
+
+    <script>
+    (function() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      var emojis = ['🍒', '🐻', '🦌'];
+      var items = [];
+
+      emojis.forEach(function(e, i) {
+        var el = document.createElement('div');
+        el.textContent = e;
+        el.style.cssText = 'position:fixed;font-size:48px;cursor:grab;z-index:9999;user-select:none;touch-action:none;line-height:1;pointer-events:auto;';
+        el.style.left = (100 + i * 120) + 'px';
+        el.style.top = (100 + i * 80) + 'px';
+        document.body.appendChild(el);
+
+        var item = {
+          el: el,
+          x: 100 + i * 120,
+          y: 100 + i * 80,
+          vx: (Math.random() - 0.5) * 2,
+          vy: 0,
+          r: 28,
+          dragging: false,
+          ox: 0, oy: 0
+        };
+        items.push(item);
+
+        el.addEventListener('mousedown', function(ev) {
+          item.dragging = true;
+          item.ox = ev.clientX - item.x;
+          item.oy = ev.clientY - item.y;
+          item.vx = 0; item.vy = 0;
+          el.style.cursor = 'grabbing';
+          ev.preventDefault();
+        });
+
+        el.addEventListener('touchstart', function(ev) {
+          var t = ev.touches[0];
+          item.dragging = true;
+          item.ox = t.clientX - item.x;
+          item.oy = t.clientY - item.y;
+          item.vx = 0; item.vy = 0;
+          ev.preventDefault();
+        });
+      });
+
+      var lastX = {}, lastY = {};
+      document.addEventListener('mousemove', function(ev) {
+        items.forEach(function(item) {
+          if (item.dragging) {
+            item.vx = (ev.clientX - item.ox) - item.x;
+            item.vy = (ev.clientY - item.oy) - item.y;
+            item.x = ev.clientX - item.ox;
+            item.y = ev.clientY - item.oy;
+            item.el.style.left = item.x + 'px';
+            item.el.style.top = item.y + 'px';
+          }
+        });
+      });
+
+      document.addEventListener('mouseup', function() {
+        items.forEach(function(item) {
+          if (item.dragging) {
+            item.dragging = false;
+            item.el.style.cursor = 'grab';
+          }
+        });
+      });
+
+      document.addEventListener('touchmove', function(ev) {
+        items.forEach(function(item) {
+          if (item.dragging) {
+            var t = ev.touches[0];
+            item.vx = (t.clientX - item.ox) - item.x;
+            item.vy = (t.clientY - item.oy) - item.y;
+            item.x = t.clientX - item.ox;
+            item.y = t.clientY - item.oy;
+            item.el.style.left = item.x + 'px';
+            item.el.style.top = item.y + 'px';
+          }
+        });
+      }, { passive: false });
+
+      document.addEventListener('touchend', function() {
+        items.forEach(function(item) { item.dragging = false; });
+      });
+
+      // Physics loop
+      var G = 0.3;
+      var DAMP = 0.98;
+      var BOUNCE = 0.7;
+
+      function physics() {
+        items.forEach(function(item) {
+          if (item.dragging) return;
+          item.vy += G;
+          item.vx *= DAMP;
+          item.vy *= DAMP;
+          item.x += item.vx;
+          item.y += item.vy;
+
+          // Bounce off window edges
+          if (item.x < 0) { item.x = 0; item.vx *= -BOUNCE; }
+          if (item.x + 48 > window.innerWidth) { item.x = window.innerWidth - 48; item.vx *= -BOUNCE; }
+          if (item.y < 0) { item.y = 0; item.vy *= -BOUNCE; }
+          if (item.y + 48 > window.innerHeight) { item.y = window.innerHeight - 48; item.vy *= -BOUNCE; }
+
+          item.el.style.left = item.x + 'px';
+          item.el.style.top = item.y + 'px';
+        });
+        requestAnimationFrame(physics);
+      }
+      physics();
+    })();
+    </script>
   </body>
 </html>

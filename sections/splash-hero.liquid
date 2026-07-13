@@ -114,77 +114,7 @@
   dotCanvas.style.zIndex = '2';
   hero.prepend(dotCanvas);
 
-  // ─── Draggable emojis ───
-  var emojiData = [
-    { emoji: '🍒', x: 20, y: 20 },
-    { emoji: '🐻', x: Math.min(W - 80, 200), y: 20 },
-    { emoji: '🦌', x: 20, y: Math.min(H - 80, 200) }
-  ];
 
-  var emojiEls = [];
-  emojiData.forEach(function(e) {
-    var el = document.createElement('div');
-    el.textContent = e.emoji;
-    el.style.cssText = 'position:absolute;left:' + e.x + 'px;top:' + e.y + 'px;font-size:48px;cursor:grab;z-index:10;user-select:none;touch-action:none;line-height:1;';
-    hero.appendChild(el);
-
-    var item = { el: el, x: e.x, y: e.y, dragging: false, offsetX: 0, offsetY: 0 };
-    emojiEls.push(item);
-
-    el.addEventListener('mousedown', function(ev) {
-      item.dragging = true;
-      item.offsetX = ev.clientX - item.x;
-      item.offsetY = ev.clientY - item.y;
-      el.style.cursor = 'grabbing';
-      ev.preventDefault();
-    });
-
-    el.addEventListener('touchstart', function(ev) {
-      var touch = ev.touches[0];
-      item.dragging = true;
-      item.offsetX = touch.clientX - item.x;
-      item.offsetY = touch.clientY - item.y;
-      ev.preventDefault();
-    });
-  });
-
-  document.addEventListener('mousemove', function(ev) {
-    for (var i = 0; i < emojiEls.length; i++) {
-      var item = emojiEls[i];
-      if (item.dragging) {
-        item.x = ev.clientX - item.offsetX;
-        item.y = ev.clientY - item.offsetY;
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-      }
-    }
-  });
-
-  document.addEventListener('mouseup', function() {
-    for (var i = 0; i < emojiEls.length; i++) {
-      emojiEls[i].dragging = false;
-      emojiEls[i].el.style.cursor = 'grab';
-    }
-  });
-
-  document.addEventListener('touchmove', function(ev) {
-    for (var i = 0; i < emojiEls.length; i++) {
-      var item = emojiEls[i];
-      if (item.dragging) {
-        var touch = ev.touches[0];
-        item.x = touch.clientX - item.offsetX;
-        item.y = touch.clientY - item.offsetY;
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-      }
-    }
-  }, { passive: false });
-
-  document.addEventListener('touchend', function() {
-    for (var i = 0; i < emojiEls.length; i++) {
-      emojiEls[i].dragging = false;
-    }
-  });
 
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
   function pick() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
