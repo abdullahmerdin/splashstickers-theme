@@ -118,14 +118,71 @@
       }
     },
     "category_cards": {
-      "type": "custom-liquid",
-      "settings": {
-        "custom_liquid": "<div style=\"text-align: center; padding: 48px 20px 20px;\">\n  <h2>Shop by Category</h2>\n  <p>Find your perfect sticker vibe</p>\n</div>\n<div class=\"sticker-categories-scroll page-width\" style=\"justify-content: center; padding-bottom: 48px;\">\n  <div class=\"sticker-category-card\">\n    <div class=\"sticker-category-circle teal\">🐾</div>\n    <span class=\"sticker-category-label\">Animals</span>\n  </div>\n  <div class=\"sticker-category-card\">\n    <div class=\"sticker-category-circle pink\">🌸</div>\n    <span class=\"sticker-category-label\">Nature</span>\n  </div>\n  <div class=\"sticker-category-card\">\n    <div class=\"sticker-category-circle gold\">✨</div>\n    <span class=\"sticker-category-label\">Quotes</span>\n  </div>\n  <div class=\"sticker-category-card\">\n    <div class=\"sticker-category-circle purple\">🎨</div>\n    <span class=\"sticker-category-label\">Aesthetic</span>\n  </div>\n  <div class=\"sticker-category-card\">\n    <div class=\"sticker-category-circle teal\">🎮</div>\n    <span class=\"sticker-category-label\">Gaming</span>\n  </div>\n</div>",
-        "padding-block-start": 0,
-        "padding-block-end": 0
+      "type": "sticker-categories",
+      "blocks": {
+        "cat_animals": {
+          "type": "category",
+          "settings": {
+            "icon": "🐾",
+            "label": "Animals",
+            "link": "",
+            "color_style": "teal"
+          }
+        },
+        "cat_nature": {
+          "type": "category",
+          "settings": {
+            "icon": "🌸",
+            "label": "Nature",
+            "link": "",
+            "color_style": "pink"
+          }
+        },
+        "cat_quotes": {
+          "type": "category",
+          "settings": {
+            "icon": "✨",
+            "label": "Quotes",
+            "link": "",
+            "color_style": "gold"
+          }
+        },
+        "cat_aesthetic": {
+          "type": "category",
+          "settings": {
+            "icon": "🎨",
+            "label": "Aesthetic",
+            "link": "",
+            "color_style": "purple"
+          }
+        },
+        "cat_gaming": {
+          "type": "category",
+          "settings": {
+            "icon": "🎮",
+            "label": "Gaming",
+            "link": "",
+            "color_style": "teal"
+          }
+        }
       },
-      "blocks": {},
-      "block_order": []
+      "block_order": [
+        "cat_animals",
+        "cat_nature",
+        "cat_quotes",
+        "cat_aesthetic",
+        "cat_gaming"
+      ],
+      "settings": {
+        "heading": "Shop by Category",
+        "subtext": "Find your perfect sticker vibe",
+        "columns": 5,
+        "circle_size": 100,
+        "gap": 16,
+        "background_color": "#FFFFFF",
+        "padding_top": 48,
+        "padding_bottom": 48
+      }
     },
     "featured_stickers": {
       "type": "product-list",
