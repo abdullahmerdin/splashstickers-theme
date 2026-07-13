@@ -28,6 +28,7 @@
     height: 100%;
     pointer-events: none;
     z-index: 1;
+    filter: url('#goo-{{ section.id }}');
   }
   .splash-hero-{{ section.id }} .splash-hero-content {
     position: relative;
@@ -78,6 +79,15 @@
 {% endstyle %}
 
 <div class="splash-hero-{{ section.id }}" id="splash-hero-{{ section.id }}">
+  <svg style="position:absolute;width:0;height:0;pointer-events:none;">
+    <defs>
+      <filter id="goo-{{ section.id }}">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -9" result="goo"/>
+        <feBlend in="SourceGraphic" in2="goo" mode="normal"/>
+      </filter>
+    </defs>
+  </svg>
   <canvas id="ink-canvas-{{ section.id }}"></canvas>
   <div class="splash-hero-content">
     {% if heading != blank %}
@@ -155,104 +165,81 @@
     })();
   }
 
-  // ─── SMOOTH INK STROKE ───
-  function inkStroke(x1, y1, x2, y2, speed) {
+  // ─── TAPERED BRUSH STROKE (no circles!) ───
+  function brushStroke(x1, y1, x2, y2, speed) {
     var color = pick(COLORS);
-    // Width based on speed: slow = thick ink pool, fast = thin spray
-    var width = Math.min(Math.max(8, 40 - speed * 1.5), 50);
+    var width = Math.min(Math.max(10, 45 - speed * 1.5), 55);
+    var dx = x2 - x1, dy = y2 - y1;
+    var dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 1) return;
 
-    // ── Layer 1: Soft glow (ink spread) ──
-    offCtx.save();
-    offCtx.shadowColor = 'rgba(255,255,255,0.08)';
-    offCtx.shadowBlur = 20;
-    offCtx.beginPath();
-    offCtx.moveTo(x1, y1);
-    offCtx.lineTo(x2, y2);
-    offCtx.strokeStyle = color;
-    offCtx.lineWidth = width + 12;
-    offCtx.lineCap = 'round';
-    offCtx.lineJoin = 'round';
-    offCtx.globalAlpha = 0.15;
-    offCtx.stroke();
-    offCtx.restore();
+    // Normalized direction and perpendicular
+    var nx = dx / dist, ny = dy / dist;
+    var px = -ny, py = nx;  // perpendicular
 
-    // ── Layer 2: Main ink body ──
+    // Compute left and right edge points
+    var w = width / 2;
+    var lx1 = x1 + px * w, ly1 = y1 + py * w;
+    var rx1 = x1 - px * w, ry1 = y1 - py * w;
+    var lx2 = x2 + px * w * 0.85, ly2 = y2 + py * w * 0.85;
+    var rx2 = x2 - px * w * 0.85, ry2 = y2 - py * w * 0.85;
+
+    // Draw filled quadrilateral (the brush body)
     offCtx.save();
-    offCtx.shadowColor = 'rgba(0,0,0,0.1)';
+    offCtx.shadowColor = 'rgba(0,0,0,0.08)';
     offCtx.shadowBlur = 6;
-    offCtx.beginPath();
-    offCtx.moveTo(x1, y1);
-    offCtx.lineTo(x2, y2);
-    offCtx.strokeStyle = color;
-    offCtx.lineWidth = width;
-    offCtx.lineCap = 'round';
-    offCtx.lineJoin = 'round';
+    offCtx.fillStyle = color;
     offCtx.globalAlpha = 0.95;
-    offCtx.stroke();
-    offCtx.restore();
-
-    // ── Layer 3: Wet highlight (center shine) ──
-    offCtx.save();
     offCtx.beginPath();
-    offCtx.moveTo(x1, y1);
-    offCtx.lineTo(x2, y2);
-    offCtx.strokeStyle = 'rgba(255,255,255,0.2)';
-    offCtx.lineWidth = Math.max(4, width * 0.3);
-    offCtx.lineCap = 'round';
-    offCtx.lineJoin = 'round';
-    offCtx.stroke();
+    offCtx.moveTo(lx1, ly1);
+    offCtx.lineTo(rx1, ry1);
+    offCtx.lineTo(rx2, ry2);
+    offCtx.lineTo(lx2, ly2);
+    offCtx.closePath();
+    offCtx.fill();
     offCtx.restore();
 
-    // ── Ink splatter droplets (only on fast moves) ──
-    if (speed > 4 && Math.random() > 0.5) {
-      var num = Math.floor(Math.min(speed * 1.2, 6));
+    // Caps (semicircles at each end)
+    offCtx.save();
+    offCtx.fillStyle = color;
+    offCtx.globalAlpha = 0.95;
+    offCtx.beginPath();
+    offCtx.arc(x1, y1, w, 0, Math.PI * 2);
+    offCtx.fill();
+    offCtx.beginPath();
+    offCtx.arc(x2, y2, w * 0.85, 0, Math.PI * 2);
+    offCtx.fill();
+    offCtx.restore();
+
+    // Soft spread (feathered edges)
+    offCtx.save();
+    offCtx.fillStyle = color;
+    offCtx.globalAlpha = 0.12;
+    offCtx.beginPath();
+    offCtx.arc(x1, y1, w * 1.8, 0, Math.PI * 2);
+    offCtx.fill();
+    offCtx.beginPath();
+    offCtx.arc(x2, y2, w * 1.4, 0, Math.PI * 2);
+    offCtx.fill();
+    offCtx.restore();
+
+    // Splatter
+    if (speed > 5 && Math.random() > 0.6) {
+      var num = Math.floor(Math.min(speed * 0.8, 5));
       for (var i = 0; i < num; i++) {
-        var a = rand(0, Math.PI * 2);
-        var d = rand(5, 10 + speed * 1.2);
-        var sz = rand(2, 5);
+        var a = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.0;
+        var d = rand(8, 15 + speed);
+        var sz = rand(2, 4);
         offCtx.save();
-        offCtx.globalAlpha = 0.4;
+        offCtx.globalAlpha = 0.35;
         offCtx.fillStyle = color;
-        offCtx.shadowColor = color;
-        offCtx.shadowBlur = 3;
         offCtx.beginPath();
         offCtx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
         offCtx.fill();
         offCtx.restore();
       }
     }
-
-    // ── Anime.js ink bleed: organic expansion effect ──
-    if (window.anime) {
-      var bleedCount = Math.floor(rand(1, 3));
-      for (var iB = 0; iB < bleedCount; iB++) {
-        var bAngle = rand(0, Math.PI * 2);
-        var bDist = rand(6, 18);
-        var bSize = rand(4, 9);
-        var bleedEl = document.createElement('div');
-        bleedEl.style.cssText = 'position:absolute;left:' + (x2 - bSize/2) + 'px;top:' + (y2 - bSize/2) + 'px;width:' + bSize + 'px;height:' + bSize + 'px;border-radius:50%;background:' + color + ';pointer-events:none;z-index:5;opacity:0.6;';
-        hero.appendChild(bleedEl);
-        anime({
-          targets: bleedEl,
-          translateX: Math.cos(bAngle) * bDist,
-          translateY: Math.sin(bAngle) * bDist,
-          scale: [{ value: 2, duration: 400 }, { value: 0.3, duration: 800 }],
-          opacity: [{ value: 0.7, duration: 300 }, { value: 0, duration: 900 }],
-          duration: 1200,
-          easing: 'easeOutCubic',
-          complete: function() { bleedEl.remove(); }
-        });
-      }
-    }
-
-    // Trigger render
     render();
-
-    // Start 3s fade timer on first paint
-    if (!firstPaint) {
-      firstPaint = true;
-      setTimeout(startFade, 3000);
-    }
   }
 
   // ─── TAPERED STROKE (for beginning/ending) ───
@@ -362,9 +349,11 @@
 
       if (dist > 2) {
         var speed = dist;
-        inkStroke(last.x, last.y, x, y, speed);
+        brushStroke(last.x, last.y, x, y, speed);
         points.push({ x: x, y: y });
         if (points.length > 50) points.shift();
+        // Start 3s fade timer on first paint
+        if (!firstPaint) { firstPaint = true; setTimeout(startFade, 3000); }
       }
     } else {
       taperedDot(x, y);
