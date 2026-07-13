@@ -128,23 +128,21 @@
 
   // ─── FLUID RENDER (blur + merge) ───
   function renderFluid() {
-    // 1. Clear main canvas with slight background transparency for trail fade
     ctx.clearRect(0, 0, W / (window.devicePixelRatio || 1), H / (window.devicePixelRatio || 1));
-    // 2. Draw offscreen with slight fade (new strokes overlay old ones)
+    // Fade old ink (very slow fade)
     offCtx.save();
-    // Draw a near-transparent white over old ink to fade it very slowly
-    offCtx.globalAlpha = 0.02;
+    offCtx.globalAlpha = 0.015;
     offCtx.fillStyle = '#1A1A2E';
     offCtx.fillRect(0, 0, offscreen.width, offscreen.height);
     offCtx.restore();
-    // 3. Blur + threshold to merge nearby ink
+    // Gooey filter: heavy blur + heavy contrast = metaballs
     ctx.save();
-    ctx.filter = 'blur(4px)';
+    ctx.filter = 'blur(15px)';
     ctx.drawImage(offscreen, 0, 0);
     ctx.restore();
-    // 4. Overlay with contrast boost for crisp edges
+    // Threshold: high contrast sharpens the merged blobs
     ctx.save();
-    ctx.filter = 'contrast(3) brightness(1.1)';
+    ctx.filter = 'contrast(15) brightness(1.2)';
     ctx.drawImage(canvas, 0, 0);
     ctx.restore();
   }
