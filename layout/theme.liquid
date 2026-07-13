@@ -155,6 +155,7 @@
         el.src = SVG_URLS[i];
         el.draggable = false;
         el.style.cssText = 'position:fixed;width:100px;height:100px;cursor:grab;z-index:9999;user-select:none;touch-action:none;pointer-events:auto;';
+        el.onerror = (function(idx) { return function() { this.src = 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><text y=\"70\" font-size=\"70\">' + ['🍒','🐻','🦌'][idx] + '<\/text><\/svg>'; }; })(i);
 
         var rx = Math.random() * (window.innerWidth - 60);
         var ry = Math.random() * (window.innerHeight - 60);
