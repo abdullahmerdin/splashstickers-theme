@@ -428,6 +428,13 @@
       console.warn('Splash init error:', e);
       if (content) { content.style.transition = 'opacity 0.5s ease-out'; content.style.opacity = '1'; }
     }
+    // Safety: show content after 6s even if animation hangs
+    setTimeout(function() {
+      if (content && content.style.opacity !== '1') {
+        content.style.transition = 'opacity 0.5s ease-out';
+        content.style.opacity = '1';
+      }
+    }, 6000);
   }
 })();
 </script>
