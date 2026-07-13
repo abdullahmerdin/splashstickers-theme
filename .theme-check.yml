@@ -1,0 +1,49 @@
+# Shopify Theme Check Configuration
+# Hermes Architectural Standards — v3.0.0
+root: .
+require: []
+
+# Liquid
+LiquidSyntaxCheck:
+  enabled: true
+UndefinedObject:
+  enabled: true
+DeprecatedFilter:
+  enabled: true
+DeprecatedTag:
+  enabled: true
+MissingRequiredTemplate:
+  enabled: true
+TemplateLength:
+  enabled: true
+  maxLength: 300
+
+# Performance
+ImgWidthAndHeight:
+  enabled: true
+ParserBlockingScript:
+  enabled: true
+AssetSizeCSS:
+  enabled: true
+  maxSize: 100KB
+AssetSizeJavaScript:
+  enabled: true
+  maxSize: 16KB
+ContentForHeaderModification:
+  enabled: true
+RemoteAsset:
+  enabled: true
+UnusedAssign:
+  enabled: true
+UnusedCssSelectors:
+  enabled: true
+
+# Best Practices
+DefaultShopifyLiquid:
+  enabled: true
+NestedSnippet:
+  enabled: true
+MatchingTranslations:
+  enabled: true
+RequiredTranslation:
+  enabled: true

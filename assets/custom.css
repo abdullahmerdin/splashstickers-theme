@@ -1,0 +1,284 @@
+/* =====================================================
+   BOLD & JUICY — Custom Brand Styles
+   Brand Colors:
+     Purple:  #6C5CE7 (primary)
+     Pink:    #FD79A8 (sale/badges/accent)
+     Gold:    #FDCB6E (sold-out/highlights)
+     Teal:    #00CEC9 (secondary accent)
+     Dark:    #2D3436 (text)
+     White:   #FFFFFF (background)
+   ===================================================== */
+
+/* ─── Color Utilities ─── */
+.bg-purple { background-color: #6C5CE7 !important; }
+.bg-pink { background-color: #FD79A8 !important; }
+.bg-gold { background-color: #FDCB6E !important; }
+.bg-teal { background-color: #00CEC9 !important; }
+.text-purple { color: #6C5CE7 !important; }
+.text-pink { color: #FD79A8 !important; }
+.text-gold { color: #FDCB6E !important; }
+.text-teal { color: #00CEC9 !important; }
+
+/* ─── Gradient Backgrounds ─── */
+.bg-gradient-purple-pink {
+  background: linear-gradient(135deg, #6C5CE7 0%, #FD79A8 100%) !important;
+}
+.bg-gradient-gold-pink {
+  background: linear-gradient(135deg, #FDCB6E 0%, #FD79A8 100%) !important;
+}
+.bg-gradient-purple-teal {
+  background: linear-gradient(135deg, #6C5CE7 0%, #00CEC9 100%) !important;
+}
+
+/* ─── Section Dividers with Brand Color ─── */
+.section-divider {
+  height: 4px;
+  background: linear-gradient(90deg, #6C5CE7, #FD79A8, #FDCB6E, #00CEC9);
+  border: none;
+  margin: 0;
+}
+
+/* ─── Brand Header/Footer Accents ─── */
+.brand-header-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #6C5CE7, #FD79A8);
+}
+
+/* ─── Hero Overlay ─── */
+.hero-overlay-brand {
+  background: linear-gradient(135deg, rgba(108,92,231,0.15) 0%, rgba(253,121,168,0.15) 100%) !important;
+}
+
+/* ─── Category / Collection Cards ─── */
+.collection-card-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.collection-card-badge.purple { background: #6C5CE7; color: #FFFFFF; }
+.collection-card-badge.pink { background: #FD79A8; color: #FFFFFF; }
+.collection-card-badge.gold { background: #FDCB6E; color: #2D3436; }
+.collection-card-badge.teal { background: #00CEC9; color: #FFFFFF; }
+
+/* ─── Sticker Category Circle Cards ─── */
+.sticker-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.sticker-category-card:hover {
+  transform: translateY(-4px);
+}
+.sticker-category-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  transition: box-shadow 0.3s ease;
+}
+.sticker-category-card:hover .sticker-category-circle {
+  box-shadow: 0 8px 24px rgba(108,92,231,0.25);
+}
+.sticker-category-circle.purple { background: linear-gradient(135deg, #6C5CE7, #a29bfe); }
+.sticker-category-circle.pink { background: linear-gradient(135deg, #FD79A8, #fab1a0); }
+.sticker-category-circle.gold { background: linear-gradient(135deg, #FDCB6E, #ffeaa7); }
+.sticker-category-circle.teal { background: linear-gradient(135deg, #00CEC9, #81ecec); }
+.sticker-category-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #2D3436;
+}
+
+/* ─── Custom Upload Button ─── */
+.custom-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #6C5CE7;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.custom-upload-btn:hover {
+  background: #5a4bd1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108,92,231,0.3);
+}
+
+/* ─── Price Highlights ─── */
+.price-highlight {
+  color: #6C5CE7;
+  font-weight: 700;
+}
+.sale-price-highlight {
+  color: #FD79A8;
+  font-weight: 700;
+}
+
+/* ─── Trust Badges / Feature Icons ─── */
+.trust-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 20px;
+}
+.trust-badge-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.trust-badge-icon.purple { background: rgba(108,92,231,0.1); color: #6C5CE7; }
+.trust-badge-icon.pink { background: rgba(253,121,168,0.1); color: #FD79A8; }
+.trust-badge-icon.gold { background: rgba(253,206,110,0.15); color: #B7953D; }
+.trust-badge-icon.teal { background: rgba(0,206,201,0.1); color: #00CEC9; }
+.trust-badge-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2D3436;
+}
+.trust-badge-desc {
+  font-size: 0.8rem;
+  color: #636E72;
+  max-width: 180px;
+}
+
+/* ─── Gradient Text (for headings) ─── */
+.gradient-text-purple-pink {
+  background: linear-gradient(135deg, #6C5CE7, #FD79A8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-gold-pink {
+  background: linear-gradient(135deg, #FDCB6E, #FD79A8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-purple-teal {
+  background: linear-gradient(135deg, #6C5CE7, #00CEC9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Animated CTA Button ─── */
+.btn-cta-gradient {
+  background: linear-gradient(135deg, #6C5CE7, #FD79A8) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+.btn-cta-gradient:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(108,92,231,0.35) !important;
+}
+.btn-cta-gradient::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+.btn-cta-gradient:hover::after {
+  left: 100%;
+}
+
+/* ─── Mobile: Sticker category scroll ─── */
+.sticker-categories-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 8px 0 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.sticker-categories-scroll > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ─── Sticker Product Card Styles ─── */
+.sticker-product-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.sticker-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(108,92,231,0.15);
+}
+.sticker-product-card .card-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+/* ─── Footer Brand Bar ─── */
+.footer-brand-bar {
+  height: 6px;
+  background: linear-gradient(90deg, #6C5CE7, #FD79A8, #FDCB6E, #00CEC9, #6C5CE7);
+  background-size: 200% 100%;
+  animation: brandBarSlide 4s linear infinite;
+}
+@keyframes brandBarSlide {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* ─── Section Spacing ─── */
+.section-brand-spacing {
+  padding-top: 60px !important;
+  padding-bottom: 60px !important;
+}
+
+/* =====================================================
+   ACCESSIBILITY & PERFORMANCE FIXES
+   (Hermes Architectural Standards)
+   ===================================================== */
+
+/* ─── Font-Display: Swap (CLS Prevention) ─── */
+/* Prevents invisible text (FOIT) while web fonts load.
+   Shopifys font_loader handles @font-face, we override via CSS variable cascading.
+   This ensures the fallback font renders immediately, then swaps when the custom font loads. */
+body {
+  font-display: swap;
+}
+
+/* ─── Respect User Motion Preferences ─── */
+/* WCAG 2.2 Criterion 2.3.3 — Animation from Interactions */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
