@@ -332,47 +332,76 @@
   hero.addEventListener('touchstart', function(e) { var p = getPos(e); lastX = p.x; lastY = p.y; });
   hero.addEventListener('touchend', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
 
-  // ─── Handwriting: "A <3 A" ───
+  // ─── Simulated mouse handwriting: "A <3 A" ───
   function handwriting() {
     var cx = W/2, cy = H/2 + 30;
-    var s = Math.min(W, H) * 0.12; // scale based on screen size
+    var s = Math.min(W, H) * 0.14;
 
-    // Hand-drawn path points for "A <3 A" (relative to center, scaled)
+    // Path points for "A <3 A"
     var paths = {
-      // A
-      a1: [{x: -8*s, y: 2*s}, {x: -6*s, y: -2*s}, {x: -4*s, y: 2*s}],
-      a2: [{x: -7*s, y: 0}, {x: -5*s, y: 0}],
-      // <
-      lt: [{x: -2.5*s, y: -1*s}, {x: -1*s, y: 0}, {x: -2.5*s, y: 1*s}],
-      // 3 (heart)
-      h1: [{x: 1.5*s, y: -1.5*s}, {x: 0.5*s, y: -1*s}, {x: 0.5*s, y: 0}, {x: 1.5*s, y: 1.5*s}, {x: 2.5*s, y: 0}, {x: 2.5*s, y: -1*s}, {x: 1.5*s, y: -1.5*s}],
-      // A
-      a3: [{x: 5*s, y: 2*s}, {x: 7*s, y: -2*s}, {x: 9*s, y: 2*s}],
-      a4: [{x: 6*s, y: 0}, {x: 8*s, y: 0}]
+      a1: [{x:-8*s,y:2*s},{x:-6*s,y:-2*s},{x:-4*s,y:2*s}],
+      a2: [{x:-7*s,y:0},{x:-5*s,y:0}],
+      lt: [{x:-2.5*s,y:-1.2*s},{x:-1*s,y:0},{x:-2.5*s,y:1.2*s}],
+      h1: [{x:1.5*s,y:-1.5*s},{x:0.5*s,y:-1*s},{x:0.5*s,y:0},{x:1.5*s,y:1.5*s},{x:2.5*s,y:0},{x:2.5*s,y:-1*s},{x:1.5*s,y:-1.5*s}],
+      a3: [{x:5*s,y:2*s},{x:7*s,y:-2*s},{x:9*s,y:2*s}],
+      a4: [{x:6*s,y:0},{x:8*s,y:0}]
     };
-
     var order = ['a1','a2','lt','h1','a3','a4'];
-    var idx = 0;
-    var color = pick();
 
-    function drawNext() {
-      if (idx >= order.length) return;
-      var key = order[idx];
-      var pts = paths[key];
-      lastColor = color;
+    var pathIdx = 0;
+    var ptIdx = 0;
+    var interp = 0;
+    var steps = 20; // steps between path points
+    var simX = 0, simY = 0;
 
-      for (var i = 1; i < pts.length; i++) {
-        var speed = i === pts.length - 1 ? 4 : 6;
-        paintStroke(cx + pts[i-1].x, cy + pts[i-1].y, cx + pts[i].x, cy + pts[i].y, speed);
+    function step() {
+      if (pathIdx >= order.length) {
+        lastX = null; lastY = null; // release
+        return;
       }
 
-      idx++;
-      if (idx < order.length) {
-        setTimeout(drawNext, 300 + Math.random() * 200);
+      var pts = paths[order[pathIdx]];
+      if (ptIdx === 0 && interp === 0) {
+        // First point of this stroke - set position without drawing
+        simX = cx + pts[0].x;
+        simY = cy + pts[0].y;
+        lastX = simX; lastY = simY;
+        interp = 1;
+      }
+
+      if (ptIdx < pts.length - 1) {
+        var from = pts[ptIdx];
+        var to = pts[ptIdx + 1];
+        var t = interp / steps;
+        var newX = cx + from.x + (to.x - from.x) * t;
+        var newY = cy + from.y + (to.y - from.y) * t;
+
+        if (lastX !== null) {
+          var dx = newX - lastX, dy = newY - lastY;
+          var dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist > 1) {
+            paintStroke(lastX, lastY, newX, newY, dist);
+          }
+        }
+        lastX = newX; lastY = newY;
+        interp++;
+
+        if (interp > steps) {
+          interp = 0;
+          ptIdx++;
+        }
+        setTimeout(step, 20);
+      } else {
+        // Move to next path
+        pathIdx++;
+        ptIdx = 0;
+        interp = 0;
+        lastX = null; lastY = null;
+        setTimeout(step, 400);
       }
     }
 
-    setTimeout(drawNext, 500);
+    setTimeout(step, 500);
   }
 
   // Start handwriting instead of welcome
