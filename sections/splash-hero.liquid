@@ -274,16 +274,17 @@
     var now = Date.now();
     if (segments.length === 0) return;
 
-    // Redraw everything with updated alpha
     ctx.clearRect(0, 0, W, H);
+    var anyActive = false;
     for (var i = 0; i < segments.length; i++) {
       var seg = segments[i];
       var age = now - seg.ts - START_FADE_AFTER;
       var alpha = age < 0 ? 1 : Math.max(0.03, 1 - (age / FADE_DURATION));
+      if (alpha > 0.03) anyActive = true;
       if (seg.r !== undefined) drawDot(seg, alpha);
       else drawSegment(seg, alpha);
     }
-    requestAnimationFrame(fadeLoop);
+    if (anyActive) requestAnimationFrame(fadeLoop);
   }
 
   // ─── Release splat ───
