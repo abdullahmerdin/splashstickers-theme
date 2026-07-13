@@ -165,76 +165,96 @@
     })();
   }
 
-  // ─── TAPERED BRUSH STROKE (no circles!) ───
-  function brushStroke(x1, y1, x2, y2, speed) {
+  // ─── TAPERED BRUSH STROKE (seamless!) ───
+  var brushPoints = []; // Accumulate points for current stroke
+
+  function brushStroke(x, y, speed) {
+    brushPoints.push({ x: x, y: y, w: Math.min(Math.max(10, 45 - speed * 1.5), 55) / 2 });
+    if (brushPoints.length < 2) return;
+
+    // Compute outer envelope: for each point, compute left/right edge
+    var lefts = [], rights = [];
+    for (var i = 0; i < brushPoints.length; i++) {
+      var p = brushPoints[i];
+      var nx = 0, ny = 0;
+      if (i < brushPoints.length - 1) {
+        var dx = brushPoints[i + 1].x - p.x;
+        var dy = brushPoints[i + 1].y - p.y;
+        var d = Math.sqrt(dx*dx + dy*dy);
+        if (d > 0) { nx = -dy / d; ny = dx / d; }
+      } else if (brushPoints.length > 1) {
+        var dx = p.x - brushPoints[i - 1].x;
+        var dy = p.y - brushPoints[i - 1].y;
+        var d = Math.sqrt(dx*dx + dy*dy);
+        if (d > 0) { nx = -dy / d; ny = dx / d; }
+      }
+      lefts.push({ x: p.x + nx * p.w, y: p.y + ny * p.w });
+      rights.push({ x: p.x - nx * p.w, y: p.y - ny * p.w });
+    }
+
+    // Draw smooth envelope as a single filled path
     var color = pick(COLORS);
-    var width = Math.min(Math.max(10, 45 - speed * 1.5), 55);
-    var dx = x2 - x1, dy = y2 - y1;
-    var dist = Math.sqrt(dx*dx + dy*dy);
-    if (dist < 1) return;
 
-    // Normalized direction and perpendicular
-    var nx = dx / dist, ny = dy / dist;
-    var px = -ny, py = nx;  // perpendicular
-
-    // Compute left and right edge points
-    var w = width / 2;
-    var lx1 = x1 + px * w, ly1 = y1 + py * w;
-    var rx1 = x1 - px * w, ry1 = y1 - py * w;
-    var lx2 = x2 + px * w * 0.85, ly2 = y2 + py * w * 0.85;
-    var rx2 = x2 - px * w * 0.85, ry2 = y2 - py * w * 0.85;
-
-    // Draw filled quadrilateral (the brush body)
+    // ── Soft spread (feathered base) ──
     offCtx.save();
-    offCtx.shadowColor = 'rgba(0,0,0,0.08)';
-    offCtx.shadowBlur = 6;
     offCtx.fillStyle = color;
-    offCtx.globalAlpha = 0.95;
+    offCtx.globalAlpha = 0.1;
     offCtx.beginPath();
-    offCtx.moveTo(lx1, ly1);
-    offCtx.lineTo(rx1, ry1);
-    offCtx.lineTo(rx2, ry2);
-    offCtx.lineTo(lx2, ly2);
+    offCtx.moveTo(lefts[0].x, lefts[0].y);
+    for (var i = 1; i < lefts.length; i++) {
+      var midx = (lefts[i-1].x + lefts[i].x) / 2;
+      var midy = (lefts[i-1].y + lefts[i].y) / 2;
+      offCtx.quadraticCurveTo(lefts[i-1].x, lefts[i-1].y, midx, midy);
+    }
+    var last = lefts[lefts.length - 1];
+    offCtx.lineTo(last.x, last.y);
+    for (var i = rights.length - 1; i >= 0; i--) {
+      var midx = (rights[(i+1)%rights.length] ? (rights[i].x + rights[(i+1)%rights.length].x)/2 : rights[i].x);
+      var midy = (rights[(i+1)%rights.length] ? (rights[i].y + rights[(i+1)%rights.length].y)/2 : rights[i].y);
+      if (i < rights.length - 1) {
+        offCtx.quadraticCurveTo(rights[i].x, rights[i].y, (rights[i].x + rights[i+1].x)/2, (rights[i].y + rights[i+1].y)/2);
+      } else {
+        offCtx.lineTo(rights[i].x, rights[i].y);
+      }
+    }
     offCtx.closePath();
     offCtx.fill();
     offCtx.restore();
 
-    // Caps (semicircles at each end)
+    // ── Main ink body (same path, solid fill, offset for 3D) ──
     offCtx.save();
+    offCtx.shadowColor = 'rgba(0,0,0,0.06)';
+    offCtx.shadowBlur = 4;
     offCtx.fillStyle = color;
     offCtx.globalAlpha = 0.95;
     offCtx.beginPath();
-    offCtx.arc(x1, y1, w, 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.beginPath();
-    offCtx.arc(x2, y2, w * 0.85, 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.restore();
-
-    // Soft spread (feathered edges)
-    offCtx.save();
-    offCtx.fillStyle = color;
-    offCtx.globalAlpha = 0.12;
-    offCtx.beginPath();
-    offCtx.arc(x1, y1, w * 1.8, 0, Math.PI * 2);
-    offCtx.fill();
-    offCtx.beginPath();
-    offCtx.arc(x2, y2, w * 1.4, 0, Math.PI * 2);
+    offCtx.moveTo(lefts[0].x, lefts[0].y);
+    for (var i = 1; i < lefts.length; i++) {
+      offCtx.quadraticCurveTo(lefts[i-1].x, lefts[i-1].y, (lefts[i-1].x + lefts[i].x)/2, (lefts[i-1].y + lefts[i].y)/2);
+    }
+    offCtx.lineTo(last.x, last.y);
+    for (var i = rights.length - 1; i >= 0; i--) {
+      if (i < rights.length - 1) {
+        offCtx.quadraticCurveTo(rights[i].x, rights[i].y, (rights[i].x + rights[i+1].x)/2, (rights[i].y + rights[i+1].y)/2);
+      } else {
+        offCtx.lineTo(rights[i].x, rights[i].y);
+      }
+    }
+    offCtx.closePath();
     offCtx.fill();
     offCtx.restore();
 
-    // Splatter
-    if (speed > 5 && Math.random() > 0.6) {
-      var num = Math.floor(Math.min(speed * 0.8, 5));
+    // Splatter (less frequent)
+    if (speed > 6 && Math.random() > 0.7) {
+      var num = Math.floor(Math.min(speed * 0.6, 4));
       for (var i = 0; i < num; i++) {
-        var a = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.0;
-        var d = rand(8, 15 + speed);
-        var sz = rand(2, 4);
+        var a = Math.random() * Math.PI * 2;
+        var d = rand(10, 20 + speed);
         offCtx.save();
-        offCtx.globalAlpha = 0.35;
+        offCtx.globalAlpha = 0.3;
         offCtx.fillStyle = color;
         offCtx.beginPath();
-        offCtx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
+        offCtx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(2, 4), 0, Math.PI * 2);
         offCtx.fill();
         offCtx.restore();
       }
@@ -277,11 +297,10 @@
 
   // ─── RELEASE SPLASH (ink flick in movement direction) ───
   function releaseSplash(x, y) {
-    // Get last movement direction and speed
     var dirX = 0, dirY = -1, speed = 5;
-    if (points.length >= 2) {
-      var p1 = points[points.length - 2];
-      var p2 = points[points.length - 1];
+    if (brushPoints.length >= 2) {
+      var p1 = brushPoints[brushPoints.length - 2];
+      var p2 = brushPoints[brushPoints.length - 1];
       dirX = p2.x - p1.x;
       dirY = p2.y - p1.y;
       var mag = Math.sqrt(dirX*dirX + dirY*dirY);
@@ -349,10 +368,7 @@
 
       if (dist > 2) {
         var speed = dist;
-        brushStroke(last.x, last.y, x, y, speed);
-        points.push({ x: x, y: y });
-        if (points.length > 50) points.shift();
-        // Start 3s fade timer on first paint
+        brushStroke(x, y, speed);
         if (!firstPaint) { firstPaint = true; setTimeout(startFade, 3000); }
       }
     } else {
@@ -371,30 +387,31 @@
   hero.addEventListener('mousemove', onMove);
   hero.addEventListener('touchmove', onMove);
   hero.addEventListener('mouseleave', function(e) {
-    if (points.length > 0) {
-      var last = points[points.length - 1];
+    if (brushPoints.length > 0) {
+      var last = brushPoints[brushPoints.length - 1];
       releaseSplash(last.x, last.y);
     }
-    points = [];
+    brushPoints = []; points = [];
     if (releaseTimer) { clearTimeout(releaseTimer); releaseTimer = null; }
   });
   hero.addEventListener('mouseup', function(e) {
-    if (points.length > 0) {
-      var last = points[points.length - 1];
+    if (brushPoints.length > 0) {
+      var last = brushPoints[brushPoints.length - 1];
       releaseSplash(last.x, last.y);
     }
+    brushPoints = [];
   });
   hero.addEventListener('touchstart', function(e) {
     var pos = getPos(e);
-    points = [{ x: pos.x, y: pos.y }];
+    brushPoints = []; points = [];
     taperedDot(pos.x, pos.y);
   });
   hero.addEventListener('touchend', function(e) {
-    if (points.length > 0) {
-      var last = points[points.length - 1];
+    if (brushPoints.length > 0) {
+      var last = brushPoints[brushPoints.length - 1];
       releaseSplash(last.x, last.y);
     }
-    points = [];
+    brushPoints = []; points = [];
   });
 
   // ─── WELCOME ───
