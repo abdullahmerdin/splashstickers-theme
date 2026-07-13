@@ -93,20 +93,22 @@
   app.view.style.width = '100%';
   app.view.style.height = '100%';
 
-  // Gooey container - all ink goes here
-  var gooContainer = new PIXI.Container();
-  app.stage.addChild(gooContainer);
+  // Gooey container - blurred version for edge merging
+  var blurContainer = new PIXI.Container();
+  app.stage.addChild(blurContainer);
 
-  // Gooey filter: blur + threshold
   var blurFilter = new PIXI.BlurFilter();
-  blurFilter.blur = 12;
-  blurFilter.quality = 4;
+  blurFilter.blur = 4;
+  blurFilter.quality = 3;
 
   var colorMatrix = new PIXI.ColorMatrixFilter();
-  colorMatrix.contrast(20, false);
-  colorMatrix.brightness(1.1, false);
+  colorMatrix.contrast(6, false);
 
-  gooContainer.filters = [blurFilter, colorMatrix];
+  blurContainer.filters = [blurFilter, colorMatrix];
+
+  // Sharp container - crisp ink drawn on top
+  var sharpContainer = new PIXI.Container();
+  app.stage.addChild(sharpContainer);
 
   var COLORS = [0xFF4381, 0xFF6B35, 0x00E5A0, 0x4D7CFF, 0xA855F7, 0xFFD700];
   function pick() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
@@ -120,24 +122,32 @@
     var color = pick();
     var width = Math.min(Math.max(10, 45 - speed * 1.5), 55);
 
-    // Feather (soft spread)
+    // Feather (soft spread) - only in blur container for merging
     var f1 = new PIXI.Graphics();
-    f1.beginFill(color, 0.08);
+    f1.beginFill(color, 0.12);
     f1.drawCircle(x1, y1, width * 0.8);
     f1.drawCircle(x2, y2, width * 0.6);
     f1.endFill();
-    gooContainer.addChild(f1);
+    blurContainer.addChild(f1);
     items.push(f1);
 
-    // Main ink body - thick line
+    // Main ink body - sharp line (in sharp container)
     var g = new PIXI.Graphics();
     g.lineStyle(width, color, 0.92);
     g.moveTo(x1, y1);
     g.lineTo(x2, y2);
-    gooContainer.addChild(g);
+    sharpContainer.addChild(g);
     items.push(g);
 
-    // Splatter
+    // Blurred copy of main line for gooey edge merging
+    var bg = new PIXI.Graphics();
+    bg.lineStyle(width + 6, color, 0.15);
+    bg.moveTo(x1, y1);
+    bg.lineTo(x2, y2);
+    blurContainer.addChild(bg);
+    items.push(bg);
+
+    // Splatter - add to both
     if (speed > 5 && Math.random() > 0.7) {
       var num = Math.floor(Math.min(speed * 0.5, 3));
       for (var i = 0; i < num; i++) {
@@ -148,8 +158,14 @@
         dot.beginFill(color, 0.3);
         dot.drawCircle(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, s);
         dot.endFill();
-        gooContainer.addChild(dot);
+        sharpContainer.addChild(dot);
         items.push(dot);
+        var bdot = new PIXI.Graphics();
+        bdot.beginFill(color, 0.1);
+        bdot.drawCircle(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, s + 3);
+        bdot.endFill();
+        blurContainer.addChild(bdot);
+        items.push(bdot);
       }
     }
   }
@@ -164,18 +180,30 @@
       var d = rand(10, 25 + speed);
       var sz = rand(3, 7);
       var dot = new PIXI.Graphics();
-      dot.beginFill(color, 0.4);
+      dot.beginFill(color, 0.5);
       dot.drawCircle(x + Math.cos(a) * d, y + Math.sin(a) * d, sz);
       dot.endFill();
-      gooContainer.addChild(dot);
+      sharpContainer.addChild(dot);
       items.push(dot);
+      var bdot = new PIXI.Graphics();
+      bdot.beginFill(color, 0.15);
+      bdot.drawCircle(x + Math.cos(a) * d, y + Math.sin(a) * d, sz + 2);
+      bdot.endFill();
+      blurContainer.addChild(bdot);
+      items.push(bdot);
     }
     var burst = new PIXI.Graphics();
-    burst.beginFill(color, 0.2);
+    burst.beginFill(color, 0.25);
     burst.drawCircle(x, y, 18);
     burst.endFill();
-    gooContainer.addChild(burst);
+    sharpContainer.addChild(burst);
     items.push(burst);
+    var bburst = new PIXI.Graphics();
+    bburst.beginFill(color, 0.08);
+    bburst.drawCircle(x, y, 24);
+    bburst.endFill();
+    blurContainer.addChild(bburst);
+    items.push(bburst);
   }
 
   // ─── Mouse ───
