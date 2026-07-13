@@ -288,35 +288,54 @@
     }
   }
 
-  // ─── RELEASE SPLASH (when stroke ends) ───
+  // ─── RELEASE SPLASH (ink flick in movement direction) ───
   function releaseSplash(x, y) {
+    // Get last movement direction and speed
+    var dirX = 0, dirY = -1, speed = 5;
+    if (points.length >= 2) {
+      var p1 = points[points.length - 2];
+      var p2 = points[points.length - 1];
+      dirX = p2.x - p1.x;
+      dirY = p2.y - p1.y;
+      var mag = Math.sqrt(dirX*dirX + dirY*dirY);
+      if (mag > 1) { dirX /= mag; dirY /= mag; speed = Math.min(mag, 25); }
+    }
     var color = pick(COLORS);
-    var num = Math.floor(rand(8, 16));
+    // Forward-flying splatter (biased in movement direction)
+    var num = Math.floor(Math.min(8 + speed, 22));
     for (var i = 0; i < num; i++) {
-      var a = rand(0, Math.PI * 2);
-      var d = rand(10, 35);
-      var sz = rand(3, 8);
+      // Angle biased forward ± 60 degrees
+      var spread = (Math.random() - 0.5) * 1.2;
+      var a = Math.atan2(dirY, dirX) + spread;
+      var d = rand(5, 8 + speed * 1.2);
+      var sz = rand(2, 5 + speed * 0.08);
       offCtx.save();
-      offCtx.globalAlpha = 0.5;
+      offCtx.globalAlpha = rand(0.3, 0.6);
       offCtx.fillStyle = color;
       offCtx.shadowColor = color;
-      offCtx.shadowBlur = 5;
+      offCtx.shadowBlur = sz * 1.2;
+      // Stretched droplet (elliptical in movement direction)
       offCtx.beginPath();
-      offCtx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, sz, 0, Math.PI * 2);
+      offCtx.ellipse(
+        x + Math.cos(a) * d, y + Math.sin(a) * d,
+        sz * 1.2, sz * 0.5,
+        a + Math.PI/2, 0, Math.PI * 2
+      );
       offCtx.fill();
       offCtx.restore();
     }
     // Central burst blob
     offCtx.save();
-    var g = offCtx.createRadialGradient(x-3, y-3, 0, x, y, 18);
-    g.addColorStop(0, 'rgba(255,255,255,0.3)');
+    var burstSize = 10 + speed * 0.5;
+    var g = offCtx.createRadialGradient(x - dirX*3, y - dirY*3, 0, x, y, burstSize);
+    g.addColorStop(0, 'rgba(255,255,255,0.35)');
     g.addColorStop(0.4, color);
     g.addColorStop(1, 'rgba(0,0,0,0)');
     offCtx.fillStyle = g;
     offCtx.shadowColor = color;
-    offCtx.shadowBlur = 10;
+    offCtx.shadowBlur = 8 + speed * 0.4;
     offCtx.beginPath();
-    offCtx.arc(x, y, 18, 0, Math.PI * 2);
+    offCtx.ellipse(x + dirX * 3, y + dirY * 3, burstSize * 1.3, burstSize * 0.9, Math.atan2(dirY, dirX), 0, Math.PI * 2);
     offCtx.fill();
     offCtx.restore();
     render();
