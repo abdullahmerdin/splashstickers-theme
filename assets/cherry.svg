@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <defs>
+    <!-- Texture Pattern for the Green Canvas -->
+    <pattern id="green_canvas_texture" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.5" fill="#1b4d29" opacity="0.4"/>
+      <circle cx="7" cy="7" r="1.5" fill="#1e542d" opacity="0.3"/>
+    </pattern>
+    
+    <!-- Texture Pattern for the Gold Embroidery (simplified) -->
+    <pattern id="gold_stitch_texture" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+      <path d="M0,2 l5,0 M2,0 l0,5" stroke="#b18f35" stroke-width="0.5" opacity="0.6"/>
+    </pattern>
+
+    <!-- Curve for the top text -->
+    <path id="topTextCurve" d="M 120,250 a 130,130 0 1,1 260,0" fill="none"/>
+    <!-- Curve for the bottom text -->
+    <path id="bottomTextCurve" d="M 380,250 a 130,130 0 0,1 -260,0" fill="none"/>
+    
+    <!-- Drop Shadow for the entire patch -->
+    <filter id="patchShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="6" stdDeviation="5" flood-color="#111" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Patch base with canvas texture and drop shadow -->
+  <circle cx="250" cy="250" r="235" fill="#2d6a4f" filter="url(#patchShadow)"/>
+  <circle cx="250" cy="250" r="235" fill="url(#green_canvas_texture)" opacity="0.7"/>
+
+  <!-- Outer Merrowed Corded Edge (Gold) -->
+  <circle cx="250" cy="250" r="230" fill="none" stroke="#d4af37" stroke-width="15" stroke-dasharray="10 2 10 2" />
+  <circle cx="250" cy="250" r="230" fill="none" stroke="#e0c067" stroke-width="15" stroke-dasharray="5 7 5 7" />
+  <circle cx="250" cy="250" r="230" fill="none" stroke="#ffe066" stroke-width="4" stroke-dasharray="2 3 2 3" />
+
+  <!-- Gold text and stars with stitch texture -->
+  <g fill="url(#gold_stitch_texture)" stroke="#ffe066" stroke-width="1">
+    <text font-family="'Open Sans', sans-serif" font-weight="bold" font-size="34">
+      <textPath href="#topTextCurve" startOffset="50%" text-anchor="middle">WILDERNESS</textPath>
+    </text>
+    <text font-family="'Open Sans', sans-serif" font-weight="bold" font-size="34">
+      <textPath href="#bottomTextCurve" startOffset="50%" text-anchor="middle">CLUB</textPath>
+    </text>
+    <path d="M 95,250 l -5,-15 l 20,0 l -15,10 l 5,15 z" transform="translate(0, 0)" /> <!-- Star left -->
+    <path d="M 405,250 l -5,-15 l 20,0 l -15,10 l 5,15 z" transform="translate(0, 0)" /> <!-- Star right -->
+  </g>
+
+  <!-- Central Element: Embroidered Cherry Emoji (🍒) with stitches -->
+  <g transform="translate(250, 250) scale(1.6)">
+    <!-- Red Cherries with simplified stitch pattern -->
+    <circle cx="-35" cy="40" r="45" fill="#bf1c2e" stroke="#ffe066" stroke-width="1.5"/>
+    <circle cx="-35" cy="40" r="40" fill="#e3263a" stroke="#fff" stroke-width="0.5" opacity="0.6"/> <!-- Highlight -->
+    <circle cx="35" cy="40" r="45" fill="#bf1c2e" stroke="#ffe066" stroke-width="1.5"/>
+    <circle cx="35" cy="40" r="40" fill="#e3263a" stroke="#fff" stroke-width="0.5" opacity="0.6"/> <!-- Highlight -->
+    
+    <!-- Stems -->
+    <path d="M -30,-50 C -15,-30 15,-30 30,-50" fill="none" stroke="#4a2c14" stroke-width="8"/>
+    <path d="M -30,-50 C -15,-30 15,-30 30,-50" fill="none" stroke="#ffe066" stroke-width="0.5" stroke-dasharray="2 3"/> <!-- Thread detail -->
+    <path d="M -30,-50 L -35,5" fill="none" stroke="#4a2c14" stroke-width="6"/>
+    <path d="M 30,-50 L 35,5" fill="none" stroke="#4a2c14" stroke-width="6"/>
+    
+    <!-- Leaves -->
+    <path d="M -5,-55 C -20,-75 -30,-90 -25,-100 Q -15,-105 0,-100 Q 15,-95 10,-80 L -5,-55" fill="#2d6a4f" stroke="#ffe066" stroke-width="1.5"/>
+    <path d="M 5,-55 C 20,-75 30,-90 25,-100 Q 15,-105 0,-100 Q -15,-95 -10,-80 L 5,-55" fill="#2d6a4f" stroke="#ffe066" stroke-width="1.5"/>
+    
+    <!-- Cherry simple stitch details -->
+    <path d="M -35,40 m -20,0 a 20,20 0 1,1 40,0" fill="none" stroke="#ffe066" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.5"/>
+    <path d="M 35,40 m -20,0 a 20,20 0 1,1 40,0" fill="none" stroke="#ffe066" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.5"/>
+  </g>
+</svg>
