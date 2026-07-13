@@ -111,6 +111,7 @@
   var offCtx = offscreen.getContext('2d');
   var W, H, points = [];
   var fadeTimer = null, fading = false, firstPaint = false;
+  var releaseTimer = null;
 
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
   // Saturated Splatoon colors for ink
@@ -204,16 +205,16 @@
 
     // ── Ink splatter droplets (only on fast moves) ──
     if (speed > 4 && Math.random() > 0.5) {
-      var num = Math.floor(Math.min(speed * 1.2, 8));
+      var num = Math.floor(Math.min(speed * 1.2, 6));
       for (var i = 0; i < num; i++) {
         var a = rand(0, Math.PI * 2);
-        var d = rand(5, 12 + speed * 1.5);
-        var sz = rand(3, 7);
+        var d = rand(5, 10 + speed * 1.2);
+        var sz = rand(2, 5);
         offCtx.save();
-        offCtx.globalAlpha = 0.45;
+        offCtx.globalAlpha = 0.4;
         offCtx.fillStyle = color;
         offCtx.shadowColor = color;
-        offCtx.shadowBlur = 4;
+        offCtx.shadowBlur = 3;
         offCtx.beginPath();
         offCtx.arc(x2 + Math.cos(a) * d, y2 + Math.sin(a) * d, sz, 0, Math.PI * 2);
         offCtx.fill();
@@ -287,6 +288,40 @@
     }
   }
 
+  // ─── RELEASE SPLASH (when stroke ends) ───
+  function releaseSplash(x, y) {
+    var color = pick(COLORS);
+    var num = Math.floor(rand(8, 16));
+    for (var i = 0; i < num; i++) {
+      var a = rand(0, Math.PI * 2);
+      var d = rand(10, 35);
+      var sz = rand(3, 8);
+      offCtx.save();
+      offCtx.globalAlpha = 0.5;
+      offCtx.fillStyle = color;
+      offCtx.shadowColor = color;
+      offCtx.shadowBlur = 5;
+      offCtx.beginPath();
+      offCtx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, sz, 0, Math.PI * 2);
+      offCtx.fill();
+      offCtx.restore();
+    }
+    // Central burst blob
+    offCtx.save();
+    var g = offCtx.createRadialGradient(x-3, y-3, 0, x, y, 18);
+    g.addColorStop(0, 'rgba(255,255,255,0.3)');
+    g.addColorStop(0.4, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    offCtx.fillStyle = g;
+    offCtx.shadowColor = color;
+    offCtx.shadowBlur = 10;
+    offCtx.beginPath();
+    offCtx.arc(x, y, 18, 0, Math.PI * 2);
+    offCtx.fill();
+    offCtx.restore();
+    render();
+  }
+
   // ─── MOUSE ───
   function getPos(e) {
     var r = hero.getBoundingClientRect();
@@ -297,6 +332,9 @@
   function onMove(e) {
     var pos = getPos(e);
     var x = pos.x, y = pos.y;
+
+    // Clear release timer (user is still drawing)
+    if (releaseTimer) { clearTimeout(releaseTimer); releaseTimer = null; }
 
     if (points.length > 0) {
       var last = points[points.length - 1];
@@ -313,16 +351,43 @@
       taperedDot(x, y);
       points.push({ x: x, y: y });
     }
+
+    // Set release timer - if no movement for 120ms, fire release splash
+    var cx = x, cy = y;
+    releaseTimer = setTimeout(function() {
+      releaseSplash(cx, cy);
+      releaseTimer = null;
+    }, 120);
   }
 
   hero.addEventListener('mousemove', onMove);
   hero.addEventListener('touchmove', onMove);
+  hero.addEventListener('mouseleave', function(e) {
+    if (points.length > 0) {
+      var last = points[points.length - 1];
+      releaseSplash(last.x, last.y);
+    }
+    points = [];
+    if (releaseTimer) { clearTimeout(releaseTimer); releaseTimer = null; }
+  });
+  hero.addEventListener('mouseup', function(e) {
+    if (points.length > 0) {
+      var last = points[points.length - 1];
+      releaseSplash(last.x, last.y);
+    }
+  });
   hero.addEventListener('touchstart', function(e) {
     var pos = getPos(e);
     points = [{ x: pos.x, y: pos.y }];
     taperedDot(pos.x, pos.y);
   });
-  hero.addEventListener('mouseenter', function() { points = []; });
+  hero.addEventListener('touchend', function(e) {
+    if (points.length > 0) {
+      var last = points[points.length - 1];
+      releaseSplash(last.x, last.y);
+    }
+    points = [];
+  });
 
   // ─── WELCOME ───
   function welcomeSplat() {
