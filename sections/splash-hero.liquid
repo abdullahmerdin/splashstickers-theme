@@ -332,17 +332,51 @@
   hero.addEventListener('touchstart', function(e) { var p = getPos(e); lastX = p.x; lastY = p.y; });
   hero.addEventListener('touchend', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
 
-  // ─── Welcome ───
-  function welcome() {
-    var cx = W/2, cy = H/2;
-    for (var i = 0; i < 12; i++) {
-      var a = (i / 12) * Math.PI * 2;
-      var d = 20 + (i % 3) * 15;
-      paintStroke(cx + Math.cos(a) * d * 0.3, cy + Math.sin(a) * d * 0.3, cx + Math.cos(a) * d, cy + Math.sin(a) * d, 6);
+  // ─── Handwriting: "A <3 A" ───
+  function handwriting() {
+    var cx = W/2, cy = H/2 + 30;
+    var s = Math.min(W, H) * 0.12; // scale based on screen size
+
+    // Hand-drawn path points for "A <3 A" (relative to center, scaled)
+    var paths = {
+      // A
+      a1: [{x: -8*s, y: 2*s}, {x: -6*s, y: -2*s}, {x: -4*s, y: 2*s}],
+      a2: [{x: -7*s, y: 0}, {x: -5*s, y: 0}],
+      // <
+      lt: [{x: -2.5*s, y: -1*s}, {x: -1*s, y: 0}, {x: -2.5*s, y: 1*s}],
+      // 3 (heart)
+      h1: [{x: 1.5*s, y: -1.5*s}, {x: 0.5*s, y: -1*s}, {x: 0.5*s, y: 0}, {x: 1.5*s, y: 1.5*s}, {x: 2.5*s, y: 0}, {x: 2.5*s, y: -1*s}, {x: 1.5*s, y: -1.5*s}],
+      // A
+      a3: [{x: 5*s, y: 2*s}, {x: 7*s, y: -2*s}, {x: 9*s, y: 2*s}],
+      a4: [{x: 6*s, y: 0}, {x: 8*s, y: 0}]
+    };
+
+    var order = ['a1','a2','lt','h1','a3','a4'];
+    var idx = 0;
+    var color = pick();
+
+    function drawNext() {
+      if (idx >= order.length) return;
+      var key = order[idx];
+      var pts = paths[key];
+      lastColor = color;
+
+      for (var i = 1; i < pts.length; i++) {
+        var speed = i === pts.length - 1 ? 4 : 6;
+        paintStroke(cx + pts[i-1].x, cy + pts[i-1].y, cx + pts[i].x, cy + pts[i].y, speed);
+      }
+
+      idx++;
+      if (idx < order.length) {
+        setTimeout(drawNext, 300 + Math.random() * 200);
+      }
     }
-    releaseSplat(cx, cy, 6);
+
+    setTimeout(drawNext, 500);
   }
-  setTimeout(welcome, 200);
+
+  // Start handwriting instead of welcome
+  setTimeout(handwriting, 500);
 
   // Start dot animation loop
   // animateDot called per-dot in paintStroke
