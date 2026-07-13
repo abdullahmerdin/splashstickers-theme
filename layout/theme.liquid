@@ -156,9 +156,14 @@
       var items = [];
 
       emojis.forEach(function(e, i) {
-        var el = document.createElement('img');
-        el.src = STICKER_SVGS[i];
-        el.draggable = false;
+        var el = document.createElement('div');
+        el.innerHTML = SVG_DATA[i];
+        var svgEl = el.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.width = '100px';
+          svgEl.style.height = '100px';
+          svgEl.style.display = 'block';
+        }
         el.style.cssText = 'position:fixed;width:100px;height:100px;cursor:grab;z-index:9999;user-select:none;touch-action:none;pointer-events:auto;';
 
         var rx = Math.random() * (window.innerWidth - 60);
