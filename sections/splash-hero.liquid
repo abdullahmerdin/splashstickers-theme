@@ -107,7 +107,7 @@
   function paintStroke(x1, y1, x2, y2, speed) {
     var color = lastColor || pick();
     var nextColor = pick();
-    var width = Math.min(Math.max(12, 50 - speed * 1.5), 60);
+    var width = Math.min(Math.max(8, 35 - speed * 1.2), 40);
 
     var seg = {
       x1: x1, y1: y1, x2: x2, y2: y2, w: width,
@@ -128,7 +128,7 @@
         var dot = {
           x: x2 + Math.cos(a) * d,
           y: y2 + Math.sin(a) * d,
-          r: rand(2, 4 + speed * 0.04),
+          r: rand(2, 3 + speed * 0.03),
           color: nextColor,
           ts: Date.now()
         };
@@ -154,7 +154,7 @@
     ctx.save();
     ctx.globalAlpha = 0.12 * alpha;
     ctx.strokeStyle = grad;
-    ctx.lineWidth = seg.w + 16;
+    ctx.lineWidth = seg.w + 10;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(seg.x1, seg.y1);
