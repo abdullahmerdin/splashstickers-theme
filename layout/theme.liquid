@@ -141,7 +141,7 @@
       {% render 'quick-add-modal' %}
     {% endif %}
 
-    <script>
+        <script>
     (function() {
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -152,31 +152,31 @@
         var el = document.createElement('div');
         el.textContent = e;
         el.style.cssText = 'position:fixed;font-size:48px;cursor:grab;z-index:9999;user-select:none;touch-action:none;line-height:1;pointer-events:auto;';
-        el.style.left = (100 + i * 120) + 'px';
-        el.style.top = (100 + i * 80) + 'px';
+
+        var rx = Math.random() * (window.innerWidth - 60);
+        var ry = Math.random() * (window.innerHeight - 60);
+        el.style.left = rx + 'px';
+        el.style.top = ry + 'px';
         document.body.appendChild(el);
 
-        var item = {
-          el: el,
-          x: 100 + i * 120,
-          y: 100 + i * 80,
-          vx: (Math.random() - 0.5) * 2,
-          vy: 0,
-          r: 28,
-          dragging: false,
-          ox: 0, oy: 0
-        };
+        var item = { el: el, x: rx, y: ry, dragging: false, ox: 0, oy: 0 };
         items.push(item);
 
         el.addEventListener('mousedown', function(ev) {
           item.dragging = true;
           item.ox = ev.clientX - item.x;
           item.oy = ev.clientY - item.y;
-          item.vx = 0; item.vy = 0;
           el.style.cursor = 'grabbing';
-          el.style.transition = 'transform 0.2s ease-out, filter 0.2s ease-out';
-          el.style.transform = 'scale(1.15) rotate(-5deg)';
-          el.style.filter = 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))';
+          // Peel: lift corner first, then full peel
+          el.style.transition = 'transform 0.12s ease-out, filter 0.12s ease-out';
+          el.style.transform = 'perspective(200px) rotateX(-10deg) rotateY(6deg) scale(1.15) translateY(-6px)';
+          el.style.filter = 'drop-shadow(0 12px 24px rgba(0,0,0,0.3))';
+          setTimeout(function() {
+            if (item.dragging) {
+              el.style.transition = 'transform 0.15s ease-out';
+              el.style.transform = 'perspective(200px) rotateX(-4deg) rotateY(3deg) scale(1.1) translateY(-3px)';
+            }
+          }, 120);
           ev.preventDefault();
         });
 
@@ -185,20 +185,21 @@
           item.dragging = true;
           item.ox = t.clientX - item.x;
           item.oy = t.clientY - item.y;
-          item.vx = 0; item.vy = 0;
-          el.style.transition = 'transform 0.2s ease-out, filter 0.2s ease-out';
-          el.style.transform = 'scale(1.15) rotate(-5deg)';
-          el.style.filter = 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))';
+          el.style.transition = 'transform 0.12s ease-out, filter 0.12s ease-out';
+          el.style.transform = 'perspective(200px) rotateX(-10deg) rotateY(6deg) scale(1.15) translateY(-6px)';
+          el.style.filter = 'drop-shadow(0 12px 24px rgba(0,0,0,0.3))';
+          setTimeout(function() {
+            if (item.dragging) {
+              el.style.transform = 'perspective(200px) rotateX(-4deg) rotateY(3deg) scale(1.1) translateY(-3px)';
+            }
+          }, 120);
           ev.preventDefault();
         });
       });
 
-      var lastX = {}, lastY = {};
       document.addEventListener('mousemove', function(ev) {
         items.forEach(function(item) {
           if (item.dragging) {
-            item.vx = (ev.clientX - item.ox) - item.x;
-            item.vy = (ev.clientY - item.oy) - item.y;
             item.x = ev.clientX - item.ox;
             item.y = ev.clientY - item.oy;
             item.el.style.left = item.x + 'px';
@@ -212,19 +213,21 @@
           if (item.dragging) {
             item.dragging = false;
             item.el.style.cursor = 'grab';
-            // Sticker stick effect: curl down and settle
-            item.el.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease-out';
-            item.el.style.transform = 'scale(1) rotate(0deg)';
-            item.el.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))';
-            // Add a little curl animation
+            // Stick: one corner touches first, smooth down
+            item.el.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease-out';
+            item.el.style.transform = 'perspective(200px) rotateX(3deg) rotateY(-2deg) scale(0.96)';
+            item.el.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.08))';
             setTimeout(function() {
-              item.el.style.transition = 'transform 0.3s ease-out';
-              item.el.style.transform = 'scale(0.98)';
+              item.el.style.transition = 'transform 0.18s ease-out';
+              item.el.style.transform = 'perspective(200px) rotateX(0) rotateY(0) scale(1)';
               setTimeout(function() {
-                item.el.style.transition = 'transform 0.2s ease-out';
-                item.el.style.transform = 'scale(1)';
-              }, 150);
-            }, 50);
+                item.el.style.transition = 'transform 0.12s ease-out';
+                item.el.style.transform = 'perspective(200px) rotateX(1deg) scale(0.99)';
+                setTimeout(function() {
+                  item.el.style.transform = 'perspective(200px) rotateX(0) scale(1)';
+                }, 80);
+              }, 120);
+            }, 100);
           }
         });
       });
@@ -233,8 +236,6 @@
         items.forEach(function(item) {
           if (item.dragging) {
             var t = ev.touches[0];
-            item.vx = (t.clientX - item.ox) - item.x;
-            item.vy = (t.clientY - item.oy) - item.y;
             item.x = t.clientX - item.ox;
             item.y = t.clientY - item.oy;
             item.el.style.left = item.x + 'px';
@@ -244,35 +245,22 @@
       }, { passive: false });
 
       document.addEventListener('touchend', function() {
-        items.forEach(function(item) { item.dragging = false; });
-      });
-
-      // Physics loop
-      var G = 0.3;
-      var DAMP = 0.98;
-      var BOUNCE = 0.7;
-
-      function physics() {
         items.forEach(function(item) {
-          if (item.dragging) return;
-          item.vy += G;
-          item.vx *= DAMP;
-          item.vy *= DAMP;
-          item.x += item.vx;
-          item.y += item.vy;
-
-          // Bounce off window edges
-          if (item.x < 0) { item.x = 0; item.vx *= -BOUNCE; }
-          if (item.x + 48 > window.innerWidth) { item.x = window.innerWidth - 48; item.vx *= -BOUNCE; }
-          if (item.y < 0) { item.y = 0; item.vy *= -BOUNCE; }
-          if (item.y + 48 > window.innerHeight) { item.y = window.innerHeight - 48; item.vy *= -BOUNCE; }
-
-          item.el.style.left = item.x + 'px';
-          item.el.style.top = item.y + 'px';
+          if (item.dragging) {
+            item.dragging = false;
+            item.el.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease-out';
+            item.el.style.transform = 'perspective(200px) rotateX(3deg) rotateY(-2deg) scale(0.96)';
+            item.el.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.08))';
+            setTimeout(function() {
+              item.el.style.transform = 'perspective(200px) rotateX(0) rotateY(0) scale(1)';
+              setTimeout(function() {
+                item.el.style.transform = 'perspective(200px) rotateX(1deg) scale(0.99)';
+                setTimeout(function() { item.el.style.transform = 'perspective(200px) rotateX(0) scale(1)'; }, 80);
+              }, 120);
+            }, 100);
+          }
         });
-        requestAnimationFrame(physics);
-      }
-      physics();
+      });
     })();
     </script>
   </body>
