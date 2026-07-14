@@ -152,6 +152,35 @@
       hero.style.minHeight = origHeight + 'px';
       this.innerHTML = '⤢';
     }
+    // Resize canvas after transition
+    setTimeout(function() {
+      var r = hero.getBoundingClientRect();
+      W = r.width; H = r.height;
+      dpr = window.devicePixelRatio || 1;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      dotCanvas.width = W * dpr;
+      dotCanvas.height = H * dpr;
+      dotCanvas.style.width = W + 'px';
+      dotCanvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      dotCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // Redraw existing segments
+      for (var i = 0; i < segments.length; i++) {
+        var seg = segments[i];
+        ctx.beginPath();
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(seg.x2, seg.y2);
+        ctx.strokeStyle = seg.color;
+        ctx.lineWidth = seg.width;
+        ctx.globalAlpha = seg.alpha;
+        ctx.stroke();
+        if (seg.r !== undefined) drawDot(seg);
+      }
+      ctx.globalAlpha = 1;
+    }, 50);
   };
   hero.appendChild(expandBtn);
 
