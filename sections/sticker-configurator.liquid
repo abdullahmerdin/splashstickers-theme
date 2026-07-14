@@ -153,7 +153,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#B2BEC3;">
       <input type="checkbox" id="snap-toggle-{{ section.id }}" style="accent-color:#00CEC9;cursor:pointer;">
-      <label for="snap-toggle-{{ section.id }}" style="cursor:pointer;">Snap to grid (10mm)</label>
+      <label for="snap-toggle-{{ section.id }}" style="cursor:pointer;">Snap to grid</label>
     </div>
     <div style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
       <span id="item-count-{{ section.id }}">0 items</span>
@@ -360,7 +360,7 @@
         item.x = Math.max(0, Math.min(cw - item.w, sp.x + dx));
         item.y = Math.max(0, Math.min(ch - item.h, sp.y + dy));
         var snap = document.getElementById('snap-toggle-'+sid).checked;
-        var gridPx = snap ? Math.round(canvas.clientWidth / 600 * 10) : 0;
+        var gridPx = snap ? Math.round(canvas.clientWidth / 600 * 5) : 0;
         if (gridPx > 0) {
           item.x = snapVal(item.x, gridPx);
           item.y = snapVal(item.y, gridPx);
