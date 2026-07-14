@@ -541,12 +541,12 @@
     if (itemEl) {
       var cid = parseInt(itemEl.dataset.itemId);
       if (e.target.classList.contains('resize-handle')) {
-        if (!selectedIds[cid]) { selectedIds = {}; selectedIds[cid] = true; updateSelection(); }
+        if (selectedIds.indexOf(cid) === -1) { selectedIds = [cid]; updateSelection(); }
         startResize(e, cid, e.target.dataset.handle);
         return;
       }
       if (e.target.classList.contains('rot-handle')) {
-        if (!selectedIds[cid]) { selectedIds = {}; selectedIds[cid] = true; updateSelection(); }
+        if (selectedIds.indexOf(cid) === -1) { selectedIds = [cid]; updateSelection(); }
         startRotate(e, cid);
         return;
       }
