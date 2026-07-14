@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "main": {
@@ -109,6 +118,7 @@
                 "border_opacity": 100,
                 "border_color": "",
                 "border_radius": 0,
+                "link": "",
                 "open_in_new_tab": false,
                 "placeholder": "",
                 "padding-block-start": 0,
@@ -300,23 +310,12 @@
             "buy_buttons_eYQEYi",
             "text_aEtTtq"
           ]
-        },
-        "sticker_config": {
-          "type": "sticker-configurator",
-          "name": "Sticker Config",
-          "settings": {
-            "heading": "Configure Your Sticker",
-            "subtext": "Choose size, material, quantity and upload your design",
-            "bg_color": "#F8F9FA",
-            "padding_top": 48,
-            "padding_bottom": 48
-          }
         }
       },
       "block_order": [
-        "disclosures_g9mWze",
-        "sticker_config"
+        "disclosures_g9mWze"
       ],
+      "disabled": true,
       "settings": {
         "content_width": "content-center-aligned",
         "desktop_media_position": "left",
