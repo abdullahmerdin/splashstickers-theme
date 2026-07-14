@@ -144,43 +144,37 @@
   expandBtn.onmouseleave = function() { this.style.background = 'rgba(255,255,255,0.1)'; this.style.borderColor = 'rgba(255,255,255,0.3)'; };
   expandBtn.onclick = function() {
     expanded = !expanded;
+    var targetH = expanded ? Math.max(window.innerHeight, origHeight * 2) : origHeight;
     hero.style.transition = 'min-height 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
-    if (expanded) {
-      hero.style.minHeight = Math.max(window.innerHeight, origHeight * 2) + 'px';
-      this.innerHTML = '⤡';
-    } else {
-      hero.style.minHeight = origHeight + 'px';
-      this.innerHTML = '⤢';
+    hero.style.minHeight = targetH + 'px';
+    this.innerHTML = expanded ? '⤡' : '⤢';
+    // Resize canvas immediately to target height
+    var r = hero.getBoundingClientRect();
+    W = r.width; H = targetH;
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    dotCanvas.width = W * dpr;
+    dotCanvas.height = H * dpr;
+    dotCanvas.style.width = W + 'px';
+    dotCanvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    dotCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Redraw existing segments
+    for (var i = 0; i < segments.length; i++) {
+      var seg = segments[i];
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(seg.x2, seg.y2);
+      ctx.strokeStyle = seg.color;
+      ctx.lineWidth = seg.width;
+      ctx.globalAlpha = seg.alpha;
+      ctx.stroke();
+      if (seg.r !== undefined) drawDot(seg);
     }
-    // Resize canvas after transition
-    setTimeout(function() {
-      var r = hero.getBoundingClientRect();
-      W = r.width; H = r.height;
-      dpr = window.devicePixelRatio || 1;
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-      dotCanvas.width = W * dpr;
-      dotCanvas.height = H * dpr;
-      dotCanvas.style.width = W + 'px';
-      dotCanvas.style.height = H + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      dotCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // Redraw existing segments
-      for (var i = 0; i < segments.length; i++) {
-        var seg = segments[i];
-        ctx.beginPath();
-        ctx.moveTo(seg.x1, seg.y1);
-        ctx.lineTo(seg.x2, seg.y2);
-        ctx.strokeStyle = seg.color;
-        ctx.lineWidth = seg.width;
-        ctx.globalAlpha = seg.alpha;
-        ctx.stroke();
-        if (seg.r !== undefined) drawDot(seg);
-      }
-      ctx.globalAlpha = 1;
-    }, 50);
+    ctx.globalAlpha = 1;
   };
   hero.appendChild(expandBtn);
 
