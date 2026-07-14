@@ -408,6 +408,13 @@
               btn.style.position = 'relative';
               btn.style.overflow = 'visible';
 
+          // Edge distance from center to button edge at angle a
+          function edgeDist(w, h, a) {
+            var c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
+            var hw = w/2, hh = h/2;
+            return Math.min(c > 0.01 ? hw/c : 9999, s > 0.01 ? hh/s : 9999);
+          }
+
               var colors = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700','#00CEC9'];
               var hoverParticles = [];
 
@@ -427,9 +434,9 @@
                 var w = r.width, h = r.height;
                 hoverParticles.forEach(function(p) {
                   // Emit from button edge based on angle
-                  var rad = Math.max(w, h) * 0.5 + p.dist;
-                  var dx = Math.cos(p.angle) * rad;
-                  var dy = Math.sin(p.angle) * rad;
+              var d = edgeDist(w, h, p.angle) + 6 + Math.random() * 10;
+              var dx = Math.cos(p.angle) * d;
+              var dy = Math.sin(p.angle) * d;
                   p.el.style.transform = 'translate(-50%,-50%) translate('+dx+'px,'+dy+'px)';
                   p.el.style.opacity = '1';
                 });
