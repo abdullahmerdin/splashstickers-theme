@@ -192,7 +192,7 @@
   var priceEl = document.getElementById('price-display-' + sid);
 
   var items = [];
-  var selectedIds = {};
+  var selectedIds = [];
   var nextId = 1;
   var dragState = null;
   var selBoxState = null;
@@ -218,18 +218,18 @@
   function selectAllInRect(x1, y1, x2, y2) {
     var l = Math.min(x1, x2), r = Math.max(x1, x2);
     var t = Math.min(y1, y2), b = Math.max(y1, y2);
-    selectedIds = {};
+    selectedIds = [];
     items.forEach(function(item) {
       var cx = item.x + item.w/2, cy = item.y + item.h/2;
-      if (cx >= l && cx <= r && cy >= t && cy <= b) selectedIds[item.id] = true;
+      if (cx >= l && cx <= r && cy >= t && cy <= b) selectedIds.push(item.id);
     });
     updateSelection();
   }
 
   function updateSelection() {
-    var count = Object.keys(selectedIds).length;
+    var count = selectedIds.length;
     canvas.querySelectorAll('.canvas-item').forEach(function(el) {
-      el.classList.toggle('selected', selectedIds[el.dataset.itemId]);
+      el.classList.toggle('selected', selectedIds.indexOf(parseInt(el.dataset.itemId)) !== -1);
     });
     delBtn.disabled = count === 0;
     dupBtn.disabled = count === 0;
@@ -238,7 +238,7 @@
     updateSizeInputs();
   }
 
-  function getSelected() { return items.filter(function(i) { return selectedIds[i.id]; }); }
+  function getSelected() { return items.filter(function(i) { return selectedIds.indexOf(i.id) !== -1; }); }
 
   function pxToMm(px) {
     return Math.round(px / canvas.clientWidth * 600);
@@ -279,7 +279,7 @@
 
     var item = { id: id, el: el, x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: w, h: h, rotation: 0, scaleX: 1, scaleY: 1 };
     items.push(item);
-    selectedIds = {}; selectedIds[id] = true; updateSelection();
+    selectedIds = [id]; updateSelection();
     updateSizeInfo(item);
     updateCount(); updatePrice();
     return item;
@@ -288,8 +288,7 @@
   function startDrag(e, id) {
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
-    dragState = { type: 'move', ids: Object.keys(selectedIds), ox: e.clientX, oy: e.clientY, startPos: {} };
-    selectedIds[id] = true;
+    dragState = { type: 'move', ids: selectedIds.slice(), ox: e.clientX, oy: e.clientY, startPos: {} };
     getSelected().forEach(function(i) { dragState.startPos[i.id] = { x: i.x, y: i.y }; });
     item.el.style.cursor = 'grabbing';
     e.preventDefault();
@@ -308,11 +307,11 @@
   }
 
   function updateSizeInputs() {
-    var sel = Object.keys(selectedIds).length === 1;
+    var sel = selectedIds.length === 1;
     var inputs = document.getElementById('size-inputs-'+sid);
     var sizeLabel = document.getElementById('sel-size-'+sid);
-    if (sel && Object.keys(selectedIds).length > 0) {
-      var id = parseInt(Object.keys(selectedIds)[0]);
+    if (sel && selectedIds.length > 0) {
+      var id = parseInt(selectedIds[0]);
       var item = items.find(function(i) { return i.id === id; });
       if (item) {
         inputs.style.display = 'flex';
@@ -536,12 +535,12 @@
         return;
       }
       if (e.ctrlKey || e.metaKey) { toggleSelect(cid, true); return; }
-      selectedIds = {}; selectedIds[cid] = true; updateSelection();
+      selectedIds = [cid]; updateSelection();
       startDrag(e, cid);
       return;
     }
     // Canvas background click = start selection box
-    if (!(e.ctrlKey || e.metaKey)) { selectedIds = {}; updateSelection(); }
+    if (!(e.ctrlKey || e.metaKey)) { selectedIds = []; updateSelection(); }
     var cr = canvas.getBoundingClientRect();
     selBoxState = { sx: e.clientX - cr.left, sy: e.clientY - cr.top };
     dragState = { type: 'selbox', sx: selBoxState.sx, sy: selBoxState.sy };
@@ -580,7 +579,7 @@
 
   // Size input listeners
   document.getElementById('w-input-'+sid).addEventListener('change', function() {
-    var id = parseInt(Object.keys(selectedIds)[0]);
+    var id = parseInt(selectedIds[0]);
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
     var cw = canvas.clientWidth;
@@ -589,7 +588,7 @@
     updateSizeInfo(item); updatePrice();
   });
   document.getElementById('h-input-'+sid).addEventListener('change', function() {
-    var id = parseInt(Object.keys(selectedIds)[0]);
+    var id = parseInt(selectedIds[0]);
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
     var ch = canvas.clientHeight;
@@ -599,7 +598,7 @@
   });
 
   function updateCount() {
-    var sel = Object.keys(selectedIds).length;
+    var sel = selectedIds.length;
     countEl.textContent = items.length + ' items' + (sel ? ' (' + sel + ' selected)' : '');
   }
   function updatePrice() {
