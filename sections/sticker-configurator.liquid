@@ -66,6 +66,22 @@
   border: 2px solid #fff; cursor: grab; display: none;
 }
 .sticker-config-{{ section.id }} .canvas-item.selected .rot-handle { display: block; }
+.sticker-config-{{ section.id }} .qty-group {
+  display: flex; align-items: center; gap: 6px;
+  background: #fff; border: 2px solid #DFE6E9; border-radius: 12px;
+  padding: 2px;
+}
+.sticker-config-{{ section.id }} .qty-group button {
+  width: 36px; height: 36px; border: none; border-radius: 10px;
+  background: transparent; cursor: pointer; font-size: 1.2rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; color: #636E72; font-weight: 600;
+}
+.sticker-config-{{ section.id }} .qty-group button:hover { background: #00CEC910; color: #00CEC9; }
+.sticker-config-{{ section.id }} .qty-group .qty-val {
+  font-size: 1.1rem; font-weight: 700; min-width: 36px;
+  text-align: center; color: #2D3436;
+}
 .sticker-config-{{ section.id }} .canvas-size-label {
   font-size: 0.7rem; color: #B2BEC3; text-align: right; padding-right: 4px;
 }
@@ -118,9 +134,11 @@
     <div class="upload-btn-area">
       <button id="add-btn-{{ section.id }}">&#x2795; Add design</button>
       <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" style="display:none;">
-      <button id="qty-down-{{ section.id }}" style="width:32px;height:32px;border-radius:50%;border:1px solid #DFE6E9;background:#fff;">&minus;</button>
-      <span id="qty-display-{{ section.id }}" style="font-weight:700;min-width:30px;text-align:center;">10</span>
-      <button id="qty-up-{{ section.id }}" style="width:32px;height:32px;border-radius:50%;border:1px solid #DFE6E9;background:#fff;">+</button>
+      <div class="qty-group">
+        <button id="qty-down-{{ section.id }}">&minus;</button>
+        <span class="qty-val" id="qty-display-{{ section.id }}">10</span>
+        <button id="qty-up-{{ section.id }}">+</button>
+      </div>
       <span style="font-size:0.8rem;color:#636E72;">pieces</span>
     </div>
     <button id="submit-{{ section.id }}" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#00CEC9,#00A8A3);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;">
