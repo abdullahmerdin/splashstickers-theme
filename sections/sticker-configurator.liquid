@@ -285,6 +285,7 @@
     toggleSelect(id, false);
 
     el.addEventListener('mousedown', function(e) {
+      e.stopPropagation();
       if (e.target.classList.contains('resize-handle')) {
         if (!selectedIds[id]) toggleSelect(id, false);
         startResize(e, id, e.target.dataset.handle);
