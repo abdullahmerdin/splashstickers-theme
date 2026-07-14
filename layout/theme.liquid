@@ -322,15 +322,7 @@
             var b = cta.getBoundingClientRect();
             var cx = ev.clientX - b.left - item.ox;
             var cy = ev.clientY - b.top - item.oy;
-            // Rope constraint: max distance from anchor
-            var dx = cx - item.ax, dy = cy - item.ay;
-            var dist = Math.sqrt(dx*dx + dy*dy);
-            var maxDist = 200; // max rope length
-            if (dist > maxDist) {
-              cx = item.ax + (dx / dist) * maxDist;
-              cy = item.ay + (dy / dist) * maxDist;
-            }
-            // Within section bounds (center = +40)
+            // Within section bounds
             item.x = Math.max(0, Math.min(b.width - 80, cx));
             item.y = Math.max(0, Math.min(b.height - 80, cy));
             item.el.style.left = item.x + 'px';
@@ -367,12 +359,6 @@
             var t = ev.touches[0];
             var cx = t.clientX - b.left - item.ox;
             var cy = t.clientY - b.top - item.oy;
-            var dx = cx - item.ax, dy = cy - item.ay;
-            var dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > 200) {
-              cx = item.ax + (dx / dist) * 200;
-              cy = item.ay + (dy / dist) * 200;
-            }
             item.x = Math.max(0, Math.min(b.width - 80, cx));
             item.y = Math.max(0, Math.min(b.height - 80, cy));
             item.el.style.left = item.x + 'px';
