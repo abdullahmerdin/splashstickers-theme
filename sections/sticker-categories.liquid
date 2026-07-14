@@ -40,8 +40,8 @@
 }
 
 .sticker-categories-{{ section.id }} .category-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transform: none;
+  box-shadow: none;
 }
 
 .sticker-categories-{{ section.id }} .category-circle {
@@ -52,14 +52,58 @@
   align-items: center;
   justify-content: center;
   font-size: calc({{ circle_size }} * 0.38);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sticker-categories-{{ section.id }} .category-card:hover .category-circle {
-  transform: scale(1.08);
-  box-shadow: 0 0 30px rgba(var(--circle-color, 0,206,201), 0.35);
+  transform: scale(1.12);
+}
+
+/* Splash burst effect */
+.sticker-categories-{{ section.id }} .category-circle::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--circle-color, 0,206,201), 0.3) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: scale(0.6);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.sticker-categories-{{ section.id }} .category-card:hover .category-circle::before {
+  opacity: 1;
+  transform: scale(1.5);
+}
+
+/* Splatter dots */
+.sticker-categories-{{ section.id }} .category-circle::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background:
+    radial-gradient(4px 4px at 120% 50%, rgba(var(--circle-color, 0,206,201), 0.5) 50%, transparent 50%),
+    radial-gradient(3px 3px at 140% 80%, rgba(var(--circle-color, 0,206,201), 0.4) 50%, transparent 50%),
+    radial-gradient(5px 5px at -20% 30%, rgba(var(--circle-color, 0,206,201), 0.35) 50%, transparent 50%),
+    radial-gradient(3px 3px at 80% -25%, rgba(var(--circle-color, 0,206,201), 0.45) 50%, transparent 50%),
+    radial-gradient(4px 4px at -30% 90%, rgba(var(--circle-color, 0,206,201), 0.3) 50%, transparent 50%),
+    radial-gradient(2px 2px at 160% 20%, rgba(var(--circle-color, 0,206,201), 0.4) 50%, transparent 50%),
+    radial-gradient(3px 3px at 50% 130%, rgba(var(--circle-color, 0,206,201), 0.35) 50%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.35s ease 0.05s, transform 0.35s ease;
+  transform: scale(0.5);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.sticker-categories-{{ section.id }} .category-card:hover .category-circle::after {
+  opacity: 1;
+  transform: scale(1.2);
 }
 
 .sticker-categories-{{ section.id }} .category-circle img {
