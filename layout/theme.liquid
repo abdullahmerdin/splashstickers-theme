@@ -401,5 +401,30 @@
       initStickers();
     })();
     </script>
+
+    <script>
+    (function() {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn, .btn-cta-gradient, .btn-cta-outline, button, a[href*="collections"], a[href*="products"]');
+        if (!btn) return;
+        var r = btn.getBoundingClientRect();
+        var cx = e.clientX - r.left, cy = e.clientY - r.top;
+        var ring = document.createElement('div');
+        ring.style.cssText = 'position:absolute;width:6px;height:6px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);pointer-events:none;top:'+(cy-3)+'px;left:'+(cx-3)+'px;z-index:999;opacity:0.7;transition:none;';
+        btn.style.position = 'relative';
+        btn.appendChild(ring);
+        requestAnimationFrame(function() {
+          ring.style.transition = 'all 0.5s cubic-bezier(0.22,1,0.36,1)';
+          ring.style.width = '100px';
+          ring.style.height = '100px';
+          ring.style.top = (cy - 50) + 'px';
+          ring.style.left = (cx - 50) + 'px';
+          ring.style.borderWidth = '1px';
+          ring.style.opacity = '0';
+        });
+        setTimeout(function() { if (ring.parentNode) ring.remove(); }, 600);
+      });
+    })();
+    </script>
   </body>
 </html>
