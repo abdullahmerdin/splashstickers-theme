@@ -300,10 +300,22 @@
             "buy_buttons_eYQEYi",
             "text_aEtTtq"
           ]
+        },
+        "sticker_config": {
+          "type": "sticker-configurator",
+          "name": "Sticker Config",
+          "settings": {
+            "heading": "Configure Your Sticker",
+            "subtext": "Choose size, material, quantity and upload your design",
+            "bg_color": "#F8F9FA",
+            "padding_top": 48,
+            "padding_bottom": 48
+          }
         }
       },
       "block_order": [
-        "disclosures_g9mWze"
+        "disclosures_g9mWze",
+        "sticker_config"
       ],
       "settings": {
         "content_width": "content-center-aligned",
@@ -458,25 +470,10 @@
         "padding-block-start": 48,
         "padding-block-end": 48
       }
-    },
-    "configurator": {
-      "type": "sticker-configurator",
-      "blocks": {},
-      "block_order": [],
-      "settings": {
-        "heading": "Configure Your Sticker",
-        "subtext": "Choose size, material, quantity and upload your design",
-        "base_price": 5,
-        "bg_color": "#FFFFFF",
-        "accent_color": "#00CEC9",
-        "padding_top": 48,
-        "padding_bottom": 48
-      }
     }
   },
   "order": [
     "main",
-    "configurator",
     "product_recommendations_qggXJq"
   ]
 }
