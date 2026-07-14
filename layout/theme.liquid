@@ -147,6 +147,101 @@
     (function() {
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+      var urlDiv = document.getElementById('sticker-urls');
+      var SVG_URLS = [
+        urlDiv ? urlDiv.dataset.cherry : '/assets/cherry.svg',
+        urlDiv ? urlDiv.dataset.bear : '/assets/bear.svg',
+        urlDiv ? urlDiv.dataset.deer : '/assets/deer.svg'
+      ];
+
+      // ─── Rope canvas ───
+      var ropeCanvas = document.createElement('canvas');
+      ropeCanvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
+      document.body.prepend(ropeCanvas);
+      var rctx = ropeCanvas.getContext('2d');
+
+      function resizeRope() {
+        ropeCanvas.width = window.innerWidth;
+        ropeCanvas.height = window.innerHeight;
+      }
+      resizeRope();
+      window.addEventListener('resize', resizeRope);
+
+      // ─── Rope physics ───
+      function makeRope(a, b, segs) {
+        var pts = [];
+        for (var i = 0; i <= segs; i++) {
+          var t = i / segs;
+          pts.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t + 60, pinned: i === 0 || i === segs });
+        }
+        return { a: a, b: b, pts: pts, segs: segs };
+      }
+
+      var ropes = [];
+      var ropeReady = false;
+
+      function updateRopes() {
+        if (!ropeReady || ropes.length < 2) return;
+        rctx.clearRect(0, 0, ropeCanvas.width, ropeCanvas.height);
+
+        for (var r = 0; r < ropes.length; r++) {
+          var rope = ropes[r];
+          var a = rope.a, b = rope.b;
+          var segs = rope.segs;
+          var dx = b.x - a.x, dy = b.y - a.y;
+          var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+          var ropeLen = dist * 1.2;
+          var segLen = ropeLen / segs;
+
+          // Pin endpoints to sticker centers (+50 for center offset)
+          rope.pts[0].x = a.x + 50; rope.pts[0].y = a.y + 50;
+          rope.pts[segs].x = b.x + 50; rope.pts[segs].y = b.y + 50;
+
+          // Verlet iterations
+          for (var iter = 0; iter < 8; iter++) {
+            for (var i = 0; i < segs; i++) {
+              var p1 = rope.pts[i], p2 = rope.pts[i + 1];
+              var pdx = p2.x - p1.x, pdy = p2.y - p1.y;
+              var d = Math.sqrt(pdx*pdx + pdy*pdy);
+              if (d < 0.001) continue;
+              var diff = (d - segLen) / d * 0.5;
+              if (!p1.pinned) { p1.x += pdx * diff; p1.y += pdy * diff; }
+              if (!p2.pinned) { p2.x -= pdx * diff; p2.y -= pdy * diff; }
+            }
+            // Gravity on non-pinned nodes
+            for (var i = 1; i < segs; i++) {
+              if (!rope.pts[i].pinned) rope.pts[i].y += 0.6;
+            }
+          }
+
+          // Draw rope as a smooth curve
+          rctx.beginPath();
+          rctx.moveTo(rope.pts[0].x, rope.pts[0].y);
+          for (var i = 1; i < rope.pts.length; i++) {
+            rctx.lineTo(rope.pts[i].x, rope.pts[i].y);
+          }
+          rctx.strokeStyle = 'rgba(255,255,255,0.12)';
+          rctx.lineWidth = 2.5;
+          rctx.stroke();
+
+          // Second pass: thinner brighter line on top
+          rctx.beginPath();
+          rctx.moveTo(rope.pts[0].x, rope.pts[0].y);
+          for (var i = 1; i < rope.pts.length; i++) {
+            rctx.lineTo(rope.pts[i].x, rope.pts[i].y);
+          }
+          rctx.strokeStyle = 'rgba(255,255,255,0.06)';
+          rctx.lineWidth = 1;
+          rctx.stroke();
+        }
+      }
+
+      // Physics loop
+      function ropeLoop() {
+        updateRopes();
+        requestAnimationFrame(ropeLoop);
+      }
+      setTimeout(ropeLoop, 200);
       var emojis = ['🍒', '🐻', '🦌'];
       var items = [];
 
@@ -265,6 +360,15 @@
           }
         });
       });
+
+      // Build ropes after stickers are placed
+      setTimeout(function() {
+        if (items.length >= 3) {
+          ropes.push(makeRope(items[0], items[1], 14));
+          ropes.push(makeRope(items[1], items[2], 14));
+          ropeReady = true;
+        }
+      }, 300);
     })();
     </script>
   </body>
