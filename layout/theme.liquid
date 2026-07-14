@@ -245,7 +245,7 @@
 
       function initStickers() {
       if (items.length > 0) return;
-      var cta = document.querySelector('.splash-cta') || document.querySelector('.splash-cta-section');
+      var cta = document.querySelector('.splash-cta-section') || document.querySelector('.splash-cta');
       if (!cta) { setTimeout(initStickers, 500); return; }
       var bounds = cta.getBoundingClientRect();
       var W = bounds.width, H = bounds.height;
