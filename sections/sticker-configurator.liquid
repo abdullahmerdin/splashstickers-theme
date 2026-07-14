@@ -31,14 +31,14 @@
   max-width: 400px;
   width: 100%;
   margin: 0 auto;
-  background: {{ bg_color | color_darken: 5 }};
+  background: {{ bg_color }};
   border-radius: 20px;
-  border: 2px dashed {{ accent_color }}40;
+  border: 2px dashed {{ accent_color }};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
-  color: {{ accent_color }}40;
+  color: {{ accent_color }};
   overflow: hidden;
 }
 
@@ -94,29 +94,29 @@
 
 .sticker-config-{{ section.id }} .option-btn.active {
   border-color: {{ accent_color }};
-  background: {{ accent_color }}15;
+  background: {{ accent_color }};
   color: {{ accent_color }};
   font-weight: 600;
 }
 
 .sticker-config-{{ section.id }} .upload-zone {
-  border: 2px dashed {{ accent_color }}40;
+  border: 2px dashed {{ accent_color }};
   border-radius: 16px;
   padding: 32px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: {{ accent_color }}08;
+  background: {{ accent_color }};
 }
 
 .sticker-config-{{ section.id }} .upload-zone:hover {
   border-color: {{ accent_color }};
-  background: {{ accent_color }}12;
+  background: {{ accent_color }};
 }
 
 .sticker-config-{{ section.id }} .upload-zone.dragover {
   border-color: {{ accent_color }};
-  background: {{ accent_color }}18;
+  background: {{ accent_color }};
   transform: scale(1.02);
 }
 
@@ -178,7 +178,7 @@
   padding: 14px 32px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, {{ accent_color }}, {{ accent_color | color_darken: 15 }});
+  background: linear-gradient(135deg, {{ accent_color }}, {{ accent_color }});
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
@@ -189,7 +189,7 @@
 
 .sticker-config-{{ section.id }} .config-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px {{ accent_color }}30;
+  box-shadow: 0 8px 24px {{ accent_color }};
 }
 
 @media (max-width: 768px) {
