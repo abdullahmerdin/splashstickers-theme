@@ -144,10 +144,12 @@
   expandBtn.onmouseleave = function() { this.style.background = 'rgba(255,255,255,0.1)'; this.style.borderColor = 'rgba(255,255,255,0.3)'; };
   expandBtn.onclick = function() {
     expanded = !expanded;
-    var targetH = expanded ? Math.max(window.innerHeight, origHeight * 2) : origHeight;
+    var targetH = expanded ? window.innerHeight : origHeight;
     hero.style.transition = 'min-height 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
     hero.style.minHeight = targetH + 'px';
     this.innerHTML = expanded ? '⤡' : '⤢';
+    // Scroll to keep hero visible
+    hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // Resize canvas immediately to target height
     var r = hero.getBoundingClientRect();
     W = r.width; H = targetH;
