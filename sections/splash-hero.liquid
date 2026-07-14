@@ -114,6 +114,12 @@
   dotCanvas.style.zIndex = '2';
   hero.prepend(dotCanvas);
 
+  // Dark overlay to keep text readable after paint builds up
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;inset:0;background:rgba(26,26,46,0.55);z-index:3;pointer-events:none;opacity:0;transition:opacity 1.5s ease-out;';
+  hero.appendChild(overlay);
+  setTimeout(function() { overlay.style.opacity = '1'; }, 6000);
+
 
 
   var COLORS = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700'];
