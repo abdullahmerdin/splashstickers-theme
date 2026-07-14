@@ -154,22 +154,12 @@
         urlDiv ? urlDiv.dataset.deer : '/assets/deer.svg'
       ];
 
-      // ─── Rope canvas vars ───
       var ropeCanvas, rctx;
-      function initRopeCanvas() {
-        ropeCanvas = document.createElement('canvas');
-        ropeCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;';
-        cta.appendChild(ropeCanvas);
-        rctx = ropeCanvas.getContext('2d');
-        var b = cta.getBoundingClientRect();
-        ropeCanvas.width = b.width;
-        ropeCanvas.height = b.height;
-      }
       window.addEventListener('resize', function() {
-        if (ropeCanvas && cta) {
-          var b = cta.getBoundingClientRect();
-          ropeCanvas.width = b.width;
-          ropeCanvas.height = b.height;
+        if (ropeCanvas) {
+          var r = ropeCanvas.parentElement.getBoundingClientRect();
+          ropeCanvas.width = r.width;
+          ropeCanvas.height = r.height;
         }
       });
 
@@ -264,7 +254,13 @@
       var anchorBounds = anchor ? anchor.getBoundingClientRect() : bounds;
       var anchorX = (anchorBounds.left - bounds.left) + anchorBounds.width / 2;
       var anchorY = (anchorBounds.top - bounds.top) + anchorBounds.height / 2;
-      initRopeCanvas();
+      // Rope canvas inside CTA
+      ropeCanvas = document.createElement('canvas');
+      ropeCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;';
+      cta.appendChild(ropeCanvas);
+      rctx = ropeCanvas.getContext('2d');
+      ropeCanvas.width = W;
+      ropeCanvas.height = H;
 
       emojis.forEach(function(e, i) {
         var el = document.createElement('img');
