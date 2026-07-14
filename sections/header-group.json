@@ -125,22 +125,10 @@
         "collection_inverse_logo": false,
         "text_color_transparent_collection": ""
       }
-    },
-    "sticker_configurator_Kz8nGp": {
-      "type": "sticker-configurator",
-      "name": "Sticker Configurator",
-      "settings": {
-        "heading": "Design Your Sticker Sheet",
-        "subtext": "Arrange your stickers on a 60cm workspace",
-        "bg_color": "#F8F9FA",
-        "padding_top": 48,
-        "padding_bottom": 48
-      }
     }
   },
   "order": [
     "header_announcements_9jGBFp",
-    "header_section",
-    "sticker_configurator_Kz8nGp"
+    "header_section"
   ]
 }

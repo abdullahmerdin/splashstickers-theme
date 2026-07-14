@@ -469,9 +469,21 @@
         "padding-block-start": 48,
         "padding-block-end": 48
       }
+    },
+    "sticker_configurator_DtD3cf": {
+      "type": "sticker-configurator",
+      "name": "Sticker Configurator",
+      "settings": {
+        "heading": "Design Your Sticker Sheet",
+        "subtext": "Arrange your stickers on a 60cm workspace",
+        "bg_color": "#F8F9FA",
+        "padding_top": 48,
+        "padding_bottom": 48
+      }
     }
   },
   "order": [
+    "sticker_configurator_DtD3cf",
     "main",
     "product_recommendations_qggXJq"
   ]
