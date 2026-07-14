@@ -190,9 +190,9 @@
           var segLen = ropeLen / segs;
 
           // Pin endpoints (anchor or sticker center)
-          var off = rope.a.ax !== undefined ? [rope.a.x + 40, rope.a.y + 40] : [rope.a.x, rope.a.y];
+          var off = rope.a.ax !== undefined ? [rope.a.x + 48, rope.a.y + 48] : [rope.a.x, rope.a.y];
           rope.pts[0].x = off[0]; rope.pts[0].y = off[1];
-          rope.pts[segs].x = b.x + 40; rope.pts[segs].y = b.y + 40;
+          rope.pts[segs].x = b.x + 48; rope.pts[segs].y = b.y + 48;
 
           // Verlet iterations
           for (var iter = 0; iter < 8; iter++) {
@@ -267,7 +267,7 @@
         var el = document.createElement('img');
         el.src = SVG_URLS[i];
         el.draggable = false;
-        el.style.cssText = 'position:absolute;width:80px;height:80px;cursor:grab;z-index:50;user-select:none;touch-action:none;pointer-events:auto;';
+        el.style.cssText = 'position:absolute;width:96px;height:96px;cursor:grab;z-index:50;user-select:none;touch-action:none;pointer-events:auto;';
         el.onerror = (function(idx) { return function() { this.src = 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><text y=\"70\" font-size=\"70\">' + ['🍒','🐻','🦌'][idx] + '<\/text><\/svg>'; }; })(i);
 
         var rx = 20 + Math.random() * (W - 100);
@@ -323,8 +323,8 @@
             var cx = ev.clientX - b.left - item.ox;
             var cy = ev.clientY - b.top - item.oy;
             // Within section bounds
-            item.x = Math.max(0, Math.min(b.width - 80, cx));
-            item.y = Math.max(0, Math.min(b.height - 80, cy));
+            item.x = Math.max(0, Math.min(b.width - 96, cx));
+            item.y = Math.max(0, Math.min(b.height - 96, cy));
             item.el.style.left = item.x + 'px';
             item.el.style.top = item.y + 'px';
           }
@@ -359,8 +359,8 @@
             var t = ev.touches[0];
             var cx = t.clientX - b.left - item.ox;
             var cy = t.clientY - b.top - item.oy;
-            item.x = Math.max(0, Math.min(b.width - 80, cx));
-            item.y = Math.max(0, Math.min(b.height - 80, cy));
+            item.x = Math.max(0, Math.min(b.width - 96, cx));
+            item.y = Math.max(0, Math.min(b.height - 96, cy));
             item.el.style.left = item.x + 'px';
             item.el.style.top = item.y + 'px';
           }
