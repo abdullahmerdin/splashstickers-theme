@@ -118,7 +118,6 @@
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:absolute;inset:0;background:rgba(26,26,46,0.55);z-index:3;pointer-events:none;opacity:0;transition:opacity 1.5s ease-out;';
   hero.appendChild(overlay);
-  setTimeout(function() { overlay.style.opacity = '1'; }, 10000);
 
 
 
@@ -340,11 +339,14 @@
   hero.addEventListener('touchstart', function(e) { var p = getPos(e); lastX = p.x; lastY = p.y; });
   hero.addEventListener('touchend', function() { if (lastX !== null) { releaseSplat(lastX, lastY); lastX = null; } });
 
-  // ─── Interactive paint only — no auto-draw ───
-  // User moves mouse to paint on the hero
+  // ─── Hover overlay on Shop Stickers button ───
+  var shopBtn = hero.querySelector('a[href*="collections"]');
+  if (shopBtn) {
+    shopBtn.addEventListener('mouseenter', function() { overlay.style.opacity = '1'; });
+    shopBtn.addEventListener('mouseleave', function() { overlay.style.opacity = '0'; });
+  }
 
-  // Start dot animation loop
-  // animateDot called per-dot in paintStroke
+  // ─── Interactive paint only — no auto-draw ───
 })();
 </script>
 
