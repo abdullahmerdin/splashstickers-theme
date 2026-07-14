@@ -446,10 +446,16 @@
     if (dragState) {
       if (dragState.type === 'selbox') {
         selBox.style.display = 'none';
-        selectAllInRect(
-          parseFloat(selBox.style.left), parseFloat(selBox.style.top),
-          parseFloat(selBox.style.left) + parseFloat(selBox.style.width),
-          parseFloat(selBox.style.top) + parseFloat(selBox.style.height));
+        var sw = parseFloat(selBox.style.width) || 0;
+        var sh = parseFloat(selBox.style.height) || 0;
+        selBox.style.width = '0px';
+        selBox.style.height = '0px';
+        if (sw > 3 || sh > 3) {
+          selectAllInRect(
+            parseFloat(selBox.style.left), parseFloat(selBox.style.top),
+            parseFloat(selBox.style.left) + sw,
+            parseFloat(selBox.style.top) + sh);
+        }
       } else if (dragState.type === 'move') {
         revertOverlaps();
         var item = items.find(function(i) { return i.id === dragState.ids[0]; });
