@@ -87,7 +87,7 @@
 .sticker-config-{{ section.id }} .canvas-item.selected .size-info { display: block; }
 /* Size inputs */
 .sticker-config-{{ section.id }} .size-inputs {
-  display: flex; gap: 8px; align-items: center;
+  display: flex; gap: 8px; align-items: center; height: 24px;
 }
 .sticker-config-{{ section.id }} .size-inputs input {
   width: 52px; padding: 4px 6px; border: 2px solid #DFE6E9; border-radius: 8px;
@@ -160,7 +160,7 @@
       <span id="sel-size-{{ section.id }}" style="display:none;">&nbsp;</span>
       <span>Drag canvas to multi-select</span>
     </div>
-    <div class="size-inputs" id="size-inputs-{{ section.id }}" style="display:none;">
+    <div class="size-inputs" id="size-inputs-{{ section.id }}" style="visibility:hidden;height:24px;">
       <label>W:</label><input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1">
       <label>H:</label><input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1">
       <label style="color:#B2BEC3;">mm</label>
@@ -324,14 +324,14 @@
       var id = parseInt(selectedIds[0]);
       var item = items.find(function(i) { return i.id === id; });
       if (item) {
-        inputs.style.display = 'flex';
+        inputs.style.visibility = 'visible';
         sizeLabel.style.display = 'none';
         document.getElementById('w-input-'+sid).value = pxToMm(item.w);
         document.getElementById('h-input-'+sid).value = pxToMm(item.h);
         return;
       }
     }
-    inputs.style.display = 'none';
+    inputs.style.visibility = 'hidden';
     sizeLabel.style.display = 'none';
   }
 
