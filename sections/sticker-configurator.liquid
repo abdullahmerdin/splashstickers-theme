@@ -151,6 +151,10 @@
       <button title="Flip horizontal" id="flip-h-{{ section.id }}" disabled>&#x2194;&#xFE0F;</button>
       <button title="Flip vertical" id="flip-v-{{ section.id }}" disabled>&#x2195;&#xFE0F;</button>
     </div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#B2BEC3;">
+      <input type="checkbox" id="snap-toggle-{{ section.id }}" style="accent-color:#00CEC9;cursor:pointer;">
+      <label for="snap-toggle-{{ section.id }}" style="cursor:pointer;">Snap to grid (10mm)</label>
+    </div>
     <div style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
       <span id="item-count-{{ section.id }}">0 items</span>
       <span id="sel-size-{{ section.id }}" style="display:none;">&nbsp;</span>
@@ -287,6 +291,10 @@
     return item;
   }
 
+  function snapVal(v, gridPx) {
+    return gridPx > 0 ? Math.round(v / gridPx) * gridPx : v;
+  }
+
   function startDrag(e, id) {
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
@@ -351,6 +359,12 @@
         if (!sp) return;
         item.x = Math.max(0, Math.min(cw - item.w, sp.x + dx));
         item.y = Math.max(0, Math.min(ch - item.h, sp.y + dy));
+        var snap = document.getElementById('snap-toggle-'+sid).checked;
+        var gridPx = snap ? Math.round(canvas.clientWidth / 600 * 10) : 0;
+        if (gridPx > 0) {
+          item.x = snapVal(item.x, gridPx);
+          item.y = snapVal(item.y, gridPx);
+        }
         item.el.style.left = item.x + 'px';
         item.el.style.top = item.y + 'px';
         item.el.style.opacity = '1';
