@@ -37,7 +37,7 @@
 .sticker-config-{{ section.id }} .toolbar button:hover { border-color: #00CEC9; color: #00CEC9; }
 .sticker-config-{{ section.id }} .toolbar button:disabled { opacity: 0.3; cursor: default; }
 .sticker-config-{{ section.id }} .canvas-area {
-  position: relative; width: 100%; aspect-ratio: 3 / 2;
+  position: relative; width: 100%; aspect-ratio: 2 / 1;
   background: #fff; border: 2px solid #DFE6E9; border-radius: 12px;
   overflow: hidden; cursor: default; user-select: none;
 }
@@ -79,7 +79,7 @@
 .sticker-config-{{ section.id }} .canvas-item.selected .rot-handle { display: block; }
 /* Size display during resize */
 .sticker-config-{{ section.id }} .size-info {
-  position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
   background: #2D3436; color: #fff; font-size: 0.7rem; padding: 2px 8px;
   border-radius: 6px; white-space: nowrap; display: none; z-index: 20;
   pointer-events: none;
