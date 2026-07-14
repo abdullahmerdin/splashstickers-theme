@@ -154,15 +154,16 @@
         urlDiv ? urlDiv.dataset.deer : '/assets/deer.svg'
       ];
 
-      // ─── Rope canvas ───
+      // ─── Rope canvas (inside CTA) ───
       var ropeCanvas = document.createElement('canvas');
-      ropeCanvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
-      document.body.prepend(ropeCanvas);
+      ropeCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;';
+      cta.appendChild(ropeCanvas);
       var rctx = ropeCanvas.getContext('2d');
 
       function resizeRope() {
-        ropeCanvas.width = window.innerWidth;
-        ropeCanvas.height = window.innerHeight;
+        var b = cta.getBoundingClientRect();
+        ropeCanvas.width = b.width;
+        ropeCanvas.height = b.height;
       }
       resizeRope();
       window.addEventListener('resize', resizeRope);
@@ -193,9 +194,9 @@
           var ropeLen = dist * 1.2;
           var segLen = ropeLen / segs;
 
-          // Pin endpoints to sticker centers (+50 for center offset)
-          rope.pts[0].x = a.x + 50; rope.pts[0].y = a.y + 50;
-          rope.pts[segs].x = b.x + 50; rope.pts[segs].y = b.y + 50;
+          // Pin endpoints to sticker centers (+40 for center of 80px)
+          rope.pts[0].x = a.x + 40; rope.pts[0].y = a.y + 40;
+          rope.pts[segs].x = b.x + 40; rope.pts[segs].y = b.y + 40;
 
           // Verlet iterations
           for (var iter = 0; iter < 8; iter++) {
@@ -241,57 +242,65 @@
         updateRopes();
         requestAnimationFrame(ropeLoop);
       }
-      setTimeout(ropeLoop, 200);
       var emojis = ['🍒', '🐻', '🦌'];
       var items = [];
+      var ropes = [];
+      var ropeReady = false;
+
+      function initStickers() {
+      if (items.length > 0) return; // already initialized
+      var cta = document.querySelector('.splash-cta');
+      if (!cta) { setTimeout(initStickers, 500); return; }
+      var bounds = cta.getBoundingClientRect();
+      var W = bounds.width, H = bounds.height;
 
       emojis.forEach(function(e, i) {
         var el = document.createElement('img');
         el.src = SVG_URLS[i];
         el.draggable = false;
-        el.style.cssText = 'position:fixed;width:100px;height:100px;cursor:grab;z-index:9999;user-select:none;touch-action:none;pointer-events:auto;';
+        el.style.cssText = 'position:absolute;width:80px;height:80px;cursor:grab;z-index:50;user-select:none;touch-action:none;pointer-events:auto;';
         el.onerror = (function(idx) { return function() { this.src = 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><text y=\"70\" font-size=\"70\">' + ['🍒','🐻','🦌'][idx] + '<\/text><\/svg>'; }; })(i);
 
-        var rx = Math.random() * (window.innerWidth - 60);
-        var ry = Math.random() * (window.innerHeight - 60);
+        var rx = 20 + Math.random() * (W - 100);
+        var ry = 20 + Math.random() * (H - 100);
         el.style.left = rx + 'px';
         el.style.top = ry + 'px';
-        document.body.appendChild(el);
+        cta.appendChild(el);
 
         var item = { el: el, x: rx, y: ry, dragging: false, ox: 0, oy: 0 };
         items.push(item);
 
         el.addEventListener('mousedown', function(ev) {
           item.dragging = true;
-          item.ox = ev.clientX - item.x;
-          item.oy = ev.clientY - item.y;
+          item.ox = ev.clientX - item.x - bounds.left;
+          item.oy = ev.clientY - item.y - bounds.top;
           el.style.cursor = 'grabbing';
-          // Peel: lift corner first, then full peel
-          el.style.transition = 'transform 0.12s ease-out, filter 0.12s ease-out';
-          el.style.transform = 'perspective(200px) rotateX(-10deg) rotateY(6deg) scale(1.15) translateY(-6px)';
-          el.style.filter = 'drop-shadow(0 12px 24px rgba(0,0,0,0.3))';
+          // Peel: curl from one corner
+          el.style.transition = 'transform 0.15s ease-out, filter 0.15s ease-out';
+          el.style.transform = 'perspective(120px) rotateX(12deg) scale(0.92)';
+          el.style.filter = 'drop-shadow(4px 6px 12px rgba(0,0,0,0.3))';
           setTimeout(function() {
             if (item.dragging) {
-              el.style.transition = 'transform 0.15s ease-out';
-              el.style.transform = 'perspective(200px) rotateX(-4deg) rotateY(3deg) scale(1.1) translateY(-3px)';
+              el.style.transition = 'transform 0.1s ease-out';
+              el.style.transform = 'perspective(120px) rotateX(4deg) scale(0.96) translateY(-2px)';
             }
-          }, 120);
+          }, 100);
           ev.preventDefault();
         });
 
         el.addEventListener('touchstart', function(ev) {
           var t = ev.touches[0];
           item.dragging = true;
-          item.ox = t.clientX - item.x;
-          item.oy = t.clientY - item.y;
-          el.style.transition = 'transform 0.12s ease-out, filter 0.12s ease-out';
-          el.style.transform = 'perspective(200px) rotateX(-10deg) rotateY(6deg) scale(1.15) translateY(-6px)';
-          el.style.filter = 'drop-shadow(0 12px 24px rgba(0,0,0,0.3))';
+          item.ox = t.clientX - item.x - bounds.left;
+          item.oy = t.clientY - item.y - bounds.top;
+          el.style.transition = 'transform 0.15s ease-out, filter 0.15s ease-out';
+          el.style.transform = 'perspective(120px) rotateX(12deg) scale(0.92)';
+          el.style.filter = 'drop-shadow(4px 6px 12px rgba(0,0,0,0.3))';
           setTimeout(function() {
             if (item.dragging) {
-              el.style.transform = 'perspective(200px) rotateX(-4deg) rotateY(3deg) scale(1.1) translateY(-3px)';
+              el.style.transform = 'perspective(120px) rotateX(4deg) scale(0.96) translateY(-2px)';
             }
-          }, 120);
+          }, 100);
           ev.preventDefault();
         });
       });
@@ -299,8 +308,12 @@
       document.addEventListener('mousemove', function(ev) {
         items.forEach(function(item) {
           if (item.dragging) {
-            item.x = ev.clientX - item.ox;
-            item.y = ev.clientY - item.oy;
+            var b = cta.getBoundingClientRect();
+            var cx = ev.clientX - b.left - item.ox;
+            var cy = ev.clientY - b.top - item.oy;
+            // Constrain center (40px = half of 80px) within bounds
+            item.x = Math.max(0, Math.min(b.width - 80, cx));
+            item.y = Math.max(0, Math.min(b.height - 80, cy));
             item.el.style.left = item.x + 'px';
             item.el.style.top = item.y + 'px';
           }
@@ -312,21 +325,18 @@
           if (item.dragging) {
             item.dragging = false;
             item.el.style.cursor = 'grab';
-            // Stick: one corner touches first, smooth down
-            item.el.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease-out';
-            item.el.style.transform = 'perspective(200px) rotateX(3deg) rotateY(-2deg) scale(0.96)';
-            item.el.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.08))';
+            // Stick: curl down smoothly from one edge
+            item.el.style.transition = 'transform 0.12s ease-in, filter 0.15s ease-out';
+            item.el.style.transform = 'perspective(120px) rotateX(-6deg) scale(0.96)';
+            item.el.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.06))';
             setTimeout(function() {
-              item.el.style.transition = 'transform 0.18s ease-out';
-              item.el.style.transform = 'perspective(200px) rotateX(0) rotateY(0) scale(1)';
+              item.el.style.transition = 'transform 0.15s ease-out';
+              item.el.style.transform = 'perspective(120px) rotateX(2deg) scale(0.99)';
               setTimeout(function() {
-                item.el.style.transition = 'transform 0.12s ease-out';
-                item.el.style.transform = 'perspective(200px) rotateX(1deg) scale(0.99)';
-                setTimeout(function() {
-                  item.el.style.transform = 'perspective(200px) rotateX(0) scale(1)';
-                }, 80);
-              }, 120);
-            }, 100);
+                item.el.style.transition = 'transform 0.1s ease-out';
+                item.el.style.transform = 'perspective(120px) rotateX(0) scale(1)';
+              }, 80);
+            }, 80);
           }
         });
       });
@@ -334,9 +344,12 @@
       document.addEventListener('touchmove', function(ev) {
         items.forEach(function(item) {
           if (item.dragging) {
+            var b = cta.getBoundingClientRect();
             var t = ev.touches[0];
-            item.x = t.clientX - item.ox;
-            item.y = t.clientY - item.oy;
+            var cx = t.clientX - b.left - item.ox;
+            var cy = t.clientY - b.top - item.oy;
+            item.x = Math.max(0, Math.min(b.width - 80, cx));
+            item.y = Math.max(0, Math.min(b.height - 80, cy));
             item.el.style.left = item.x + 'px';
             item.el.style.top = item.y + 'px';
           }
@@ -369,6 +382,8 @@
           ropeReady = true;
         }
       }, 300);
+      }
+      initStickers();
     })();
     </script>
   </body>
