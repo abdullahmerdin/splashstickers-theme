@@ -85,6 +85,10 @@
 .sticker-config-{{ section.id }} .upload-btn-area button:hover {
   border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
 }
+.sticker-config-{{ section.id }} .sel-box {
+  position: absolute; border: 1px solid #00CEC9; background: rgba(0,206,201,0.08);
+  pointer-events: none; z-index: 999; display: none;
+}
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} {
     position: static; padding: 16px;
@@ -95,6 +99,7 @@
 <div class="sticker-config-{{ section.id }}">
   <div class="editor-wrap">
     <div class="toolbar">
+      <button title="Auto arrange" id="auto-btn-{{ section.id }}">&#x25A8;&#xFE0F;</button>
       <button title="Delete selected" id="del-btn-{{ section.id }}" disabled>&#x1F5D1;</button>
       <button title="Duplicate selected" id="dup-btn-{{ section.id }}" disabled>&#x1F4DD;</button>
       <button title="Flip horizontal" id="flip-h-{{ section.id }}" disabled>&#x2194;&#xFE0F;</button>
@@ -103,8 +108,8 @@
       <button title="Send to back" id="back-btn-{{ section.id }}" disabled>&#x2B07;&#xFE0F;</button>
     </div>
     <div style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
-      <span>60 cm workspace</span>
       <span id="item-count-{{ section.id }}">0 items</span>
+      <span>Drag canvas to multi-select</span>
     </div>
     <div class="canvas-area" id="canvas-{{ section.id }}">
       <div class="grid-bg"></div>
@@ -135,94 +140,103 @@
   var priceEl = document.getElementById('price-display-' + sid);
 
   var items = [];
-  var selectedId = null;
+  var selectedIds = {};
   var nextId = 1;
   var dragState = null;
+  var selBoxState = null;
   var basePrice = 2.5;
 
-  // Toolbar buttons
   var delBtn = document.getElementById('del-btn-'+sid);
   var dupBtn = document.getElementById('dup-btn-'+sid);
   var flipHBtn = document.getElementById('flip-h-'+sid);
   var flipVBtn = document.getElementById('flip-v-'+sid);
   var frontBtn = document.getElementById('front-btn-'+sid);
   var backBtn = document.getElementById('back-btn-'+sid);
+  var autoBtn = document.getElementById('auto-btn-'+sid);
 
-  function selectItem(id) {
-    deselectAll();
-    selectedId = id;
-    var el = document.querySelector('[data-item-id="'+id+'"]');
-    if (el) el.classList.add('selected');
-    updateToolbar();
+  var selBox = document.createElement('div');
+  selBox.className = 'sel-box';
+  canvas.appendChild(selBox);
+
+  function toggleSelect(id, add) {
+    if (add && selectedIds[id]) { delete selectedIds[id]; }
+    else if (add) { selectedIds[id] = true; }
+    else { selectedIds = {}; selectedIds[id] = true; }
+    updateSelection();
   }
 
-  function deselectAll() {
-    selectedId = null;
-    canvas.querySelectorAll('.canvas-item.selected').forEach(function(el) { el.classList.remove('selected'); });
-    updateToolbar();
+  function selectAllInRect(x1, y1, x2, y2) {
+    var l = Math.min(x1, x2), r = Math.max(x1, x2);
+    var t = Math.min(y1, y2), b = Math.max(y1, y2);
+    selectedIds = {};
+    items.forEach(function(item) {
+      var cx = item.x + item.w/2, cy = item.y + item.h/2;
+      if (cx >= l && cx <= r && cy >= t && cy <= b) selectedIds[item.id] = true;
+    });
+    updateSelection();
   }
 
-  function updateToolbar() {
-    var has = selectedId !== null;
-    delBtn.disabled = !has;
-    dupBtn.disabled = !has;
-    flipHBtn.disabled = !has;
-    flipVBtn.disabled = !has;
-    frontBtn.disabled = !has;
-    backBtn.disabled = !has;
+  function updateSelection() {
+    var count = Object.keys(selectedIds).length;
+    canvas.querySelectorAll('.canvas-item').forEach(function(el) {
+      el.classList.toggle('selected', selectedIds[el.dataset.itemId]);
+    });
+    delBtn.disabled = count === 0;
+    dupBtn.disabled = count === 0;
+    flipHBtn.disabled = count === 0;
+    flipVBtn.disabled = count === 0;
+    frontBtn.disabled = count === 0;
+    backBtn.disabled = count === 0;
   }
+
+  function getSelected() { return items.filter(function(i) { return selectedIds[i.id]; }); }
 
   function addItem(src) {
     var id = nextId++;
-    var w = 80 + Math.random() * 60;
-    var h = w * (0.7 + Math.random() * 0.6);
+    var cw = canvas.clientWidth, ch = canvas.clientHeight;
+    var w = 80 + Math.random() * 50, h = w * 0.75;
     var el = document.createElement('div');
     el.className = 'canvas-item';
     el.dataset.itemId = id;
-    el.style.cssText = 'left:'+(20+Math.random()*(canvas.clientWidth-w-40))+'px;top:'+(20+Math.random()*(canvas.clientHeight-h-40))+'px;width:'+w+'px;height:'+h+'px;';
+    el.style.left = (20+Math.random()*(cw-w-40))+'px';
+    el.style.top = (20+Math.random()*(ch-h-40))+'px';
+    el.style.width = w+'px'; el.style.height = h+'px';
 
     var img = document.createElement('img');
-    img.src = src;
-    img.draggable = false;
+    img.src = src; img.draggable = false;
     el.appendChild(img);
-
     var rot = document.createElement('div');
-    rot.className = 'rot-handle';
-    el.appendChild(rot);
-
+    rot.className = 'rot-handle'; el.appendChild(rot);
     canvas.appendChild(el);
     hint.style.display = 'none';
 
-    var item = {
-      id: id, el: el, x: parseFloat(el.style.left), y: parseFloat(el.style.top),
-      w: w, h: h, rotation: 0, scaleX: 1, scaleY: 1
-    };
+    var item = { id: id, el: el, x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: w, h: h, rotation: 0, scaleX: 1, scaleY: 1 };
     items.push(item);
-    if (items.length === 1) selectItem(id);
+    toggleSelect(id, false);
 
-    // Select on click
     el.addEventListener('mousedown', function(e) {
       if (e.target === rot) return;
-      selectItem(id);
+      if (e.ctrlKey || e.metaKey) { toggleSelect(id, true); return; }
+      if (!selectedIds[id]) toggleSelect(id, false);
       startDrag(e, id);
     });
 
-    // Rotation handle
     rot.addEventListener('mousedown', function(e) {
       e.stopPropagation();
-      selectItem(id);
+      if (!selectedIds[id]) toggleSelect(id, false);
       startRotate(e, id);
     });
 
-    updateCount();
-    updatePrice();
+    updateCount(); updatePrice();
     return item;
   }
 
   function startDrag(e, id) {
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
-    dragState = { type: 'move', id: id, ox: e.clientX - item.x, oy: e.clientY - item.y };
+    dragState = { type: 'move', ids: Object.keys(selectedIds), ox: e.clientX, oy: e.clientY, startPos: {} };
+    selectedIds[id] = true;
+    getSelected().forEach(function(i) { dragState.startPos[i.id] = { x: i.x, y: i.y }; });
     item.el.style.cursor = 'grabbing';
     e.preventDefault();
   }
@@ -237,26 +251,47 @@
 
   document.addEventListener('mousemove', function(e) {
     if (!dragState) return;
-    var item = items.find(function(i) { return i.id === dragState.id; });
-    if (!item) return;
-
     if (dragState.type === 'move') {
+      var dx = e.clientX - dragState.ox, dy = e.clientY - dragState.oy;
       var cw = canvas.clientWidth, ch = canvas.clientHeight;
-      item.x = Math.max(0, Math.min(cw - item.w, e.clientX - dragState.ox));
-      item.y = Math.max(0, Math.min(ch - item.h, e.clientY - dragState.oy));
-      item.el.style.left = item.x + 'px';
-      item.el.style.top = item.y + 'px';
+      dragState.ids.forEach(function(id) {
+        var item = items.find(function(i) { return i.id == id; });
+        if (!item) return;
+        var sp = dragState.startPos[id];
+        if (!sp) return;
+        item.x = Math.max(0, Math.min(cw - item.w, sp.x + dx));
+        item.y = Math.max(0, Math.min(ch - item.h, sp.y + dy));
+        item.el.style.left = item.x + 'px';
+        item.el.style.top = item.y + 'px';
+      });
     } else if (dragState.type === 'rotate') {
+      var item = items.find(function(i) { return i.id === dragState.id; });
+      if (!item) return;
       var angle = Math.atan2(e.clientY - dragState.cy, e.clientX - dragState.cx) - dragState.startAngle;
       item.rotation = angle * 180 / Math.PI;
       applyTransform(item);
+    } else if (dragState.type === 'selbox') {
+      var l = Math.min(dragState.sx, e.clientX - canvas.getBoundingClientRect().left);
+      var r = Math.max(dragState.sx, e.clientX - canvas.getBoundingClientRect().left);
+      var t = Math.min(dragState.sy, e.clientY - canvas.getBoundingClientRect().top);
+      var b = Math.max(dragState.sy, e.clientY - canvas.getBoundingClientRect().top);
+      selBox.style.display = 'block';
+      selBox.style.left = l + 'px'; selBox.style.top = t + 'px';
+      selBox.style.width = (r-l) + 'px'; selBox.style.height = (b-t) + 'px';
     }
   });
 
   document.addEventListener('mouseup', function() {
     if (dragState) {
-      var item = items.find(function(i) { return i.id === dragState.id; });
-      if (item) item.el.style.cursor = 'grab';
+      if (dragState.type === 'selbox') {
+        selBox.style.display = 'none';
+        selectAllInRect(dragState.sx, dragState.sy,
+          parseFloat(selBox.style.left) + parseFloat(selBox.style.width),
+          parseFloat(selBox.style.top) + parseFloat(selBox.style.height));
+      } else {
+        var item = items.find(function(i) { return i.id === dragState.id; });
+        if (item) item.el.style.cursor = 'grab';
+      }
       dragState = null;
     }
   });
@@ -265,65 +300,78 @@
     item.el.style.transform = 'rotate('+item.rotation+'deg) scaleX('+item.scaleX+') scaleY('+item.scaleY+')';
   }
 
-  // ── Toolbar actions ──
+  // ── Toolbar ──
   delBtn.addEventListener('click', function() {
-    if (selectedId === null) return;
-    var idx = items.findIndex(function(i) { return i.id === selectedId; });
-    if (idx === -1) return;
-    var item = items[idx];
-    item.el.remove();
-    items.splice(idx, 1);
-    selectedId = null;
-    updateCount(); updatePrice(); updateToolbar();
+    var sel = getSelected();
+    sel.forEach(function(item) {
+      item.el.remove();
+      var idx = items.indexOf(item);
+      if (idx !== -1) items.splice(idx, 1);
+    });
+    selectedIds = {};
+    updateSelection();
+    updateCount(); updatePrice();
     if (items.length === 0) hint.style.display = '';
   });
 
   dupBtn.addEventListener('click', function() {
-    if (selectedId === null) return;
-    var src = items.find(function(i) { return i.id === selectedId; });
-    if (!src) return;
-    var img = src.el.querySelector('img');
-    if (!img) return;
-    var newItem = addItem(img.src);
-    newItem.x = src.x + 20;
-    newItem.y = src.y + 20;
-    newItem.w = src.w;
-    newItem.h = src.h;
-    newItem.el.style.left = newItem.x + 'px';
-    newItem.el.style.top = newItem.y + 'px';
-    newItem.el.style.width = newItem.w + 'px';
-    newItem.el.style.height = newItem.h + 'px';
-    selectItem(newItem.id);
+    var sel = getSelected();
+    if (sel.length === 0) return;
+    sel.forEach(function(src) {
+      var img = src.el.querySelector('img');
+      if (!img) return;
+      var n = addItem(img.src);
+      n.x = src.x + 25; n.y = src.y + 25;
+      n.w = src.w; n.h = src.h;
+      n.el.style.left = n.x + 'px'; n.el.style.top = n.y + 'px';
+      n.el.style.width = n.w + 'px'; n.el.style.height = n.h + 'px';
+    });
   });
 
   flipHBtn.addEventListener('click', function() {
-    if (selectedId === null) return;
-    var item = items.find(function(i) { return i.id === selectedId; });
-    if (!item) return;
-    item.scaleX *= -1;
-    applyTransform(item);
+    getSelected().forEach(function(item) { item.scaleX *= -1; applyTransform(item); });
   });
-
   flipVBtn.addEventListener('click', function() {
-    if (selectedId === null) return;
-    var item = items.find(function(i) { return i.id === selectedId; });
-    if (!item) return;
-    item.scaleY *= -1;
-    applyTransform(item);
+    getSelected().forEach(function(item) { item.scaleY *= -1; applyTransform(item); });
   });
-
   frontBtn.addEventListener('click', function() {
-    if (selectedId === null) return;
-    var el = canvas.querySelector('[data-item-id="'+selectedId+'"]');
-    if (!el) return;
-    el.style.zIndex = Math.max.apply(null, items.map(function(i) { return parseInt(i.el.style.zIndex) || 0; })) + 1;
+    var maxZ = Math.max.apply(null, items.map(function(i) { return parseInt(i.el.style.zIndex) || 0; })) + 1;
+    getSelected().forEach(function(item) { item.el.style.zIndex = maxZ; });
+  });
+  backBtn.addEventListener('click', function() {
+    var minZ = Math.min.apply(null, items.map(function(i) { return parseInt(i.el.style.zIndex) || 0; })) - 1;
+    getSelected().forEach(function(item) { item.el.style.zIndex = minZ; });
   });
 
-  backBtn.addEventListener('click', function() {
-    if (selectedId === null) return;
-    var el = canvas.querySelector('[data-item-id="'+selectedId+'"]');
-    if (!el) return;
-    el.style.zIndex = Math.min.apply(null, items.map(function(i) { return parseInt(i.el.style.zIndex) || 0; })) - 1;
+  // ── Auto arrange ──
+  autoBtn.addEventListener('click', function() {
+    var cw = canvas.clientWidth, ch = canvas.clientHeight;
+    var pad = 15, gap = 10;
+    var cols = Math.ceil(Math.sqrt(items.length * cw / ch));
+    var cellW = (cw - pad * 2 - gap * (cols - 1)) / cols;
+    var rows = Math.ceil(items.length / cols);
+    var cellH = (ch - pad * 2 - gap * (rows - 1)) / rows;
+    items.forEach(function(item, idx) {
+      var col = idx % cols, row = Math.floor(idx / cols);
+      item.x = pad + col * (cellW + gap);
+      item.y = pad + row * (cellH + gap);
+      item.w = cellW * 0.85;
+      item.h = cellH * 0.85;
+      item.rotation = 0;
+      item.el.style.left = item.x + 'px'; item.el.style.top = item.y + 'px';
+      item.el.style.width = item.w + 'px'; item.el.style.height = item.h + 'px';
+      applyTransform(item);
+    });
+  });
+
+  // ── Selection box ──
+  canvas.addEventListener('mousedown', function(e) {
+    if (e.target === canvas || e.target.classList.contains('grid-bg')) {
+      if (!(e.ctrlKey || e.metaKey)) { selectedIds = {}; updateSelection(); }
+      var cr = canvas.getBoundingClientRect();
+      selBoxState = { sx: e.clientX - cr.left, sy: e.clientY - cr.top };
+      dragState = { type: 'selbox', sx: selBoxState.sx, sy: selBoxState.sy };
+    }
   });
 
   // ── Upload ──
@@ -331,7 +379,6 @@
     if (!file.type.match('image.*')) return;
     var reader = new FileReader();
     reader.onload = function(e) {
-      // Add 3 items at once for gang sheet feel
       addItem(e.target.result);
       addItem(e.target.result);
       addItem(e.target.result);
@@ -341,17 +388,11 @@
 
   document.getElementById('add-btn-'+sid).addEventListener('click', function() { fileInput.click(); });
   fileInput.addEventListener('change', function() { if (this.files.length) handleFile(this.files[0]); });
-
   canvas.addEventListener('drop', function(e) {
     e.preventDefault();
     if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
   });
   canvas.addEventListener('dragover', function(e) { e.preventDefault(); });
-
-  // Deselect on canvas background click
-  canvas.addEventListener('mousedown', function(e) {
-    if (e.target === canvas || e.target.classList.contains('grid-bg')) deselectAll();
-  });
 
   // ── Quantity ──
   document.getElementById('qty-down-'+sid).addEventListener('click', function() {
@@ -364,14 +405,16 @@
     updatePrice();
   });
 
-  function updateCount() { countEl.textContent = items.length + ' items'; }
+  function updateCount() {
+    var sel = Object.keys(selectedIds).length;
+    countEl.textContent = items.length + ' items' + (sel ? ' (' + sel + ' selected)' : '');
+  }
   function updatePrice() {
     var qty = parseInt(qtyEl.textContent) || 1;
     var count = items.length || 1;
     priceEl.textContent = '$' + (basePrice * count * qty).toFixed(2);
   }
-  updatePrice();
-  updateToolbar();
+  updatePrice(); updateSelection();
 })();
 </script>
 
