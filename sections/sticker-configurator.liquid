@@ -7,9 +7,28 @@
 -%}
 
 {% style %}
+/* Hide product media gallery */
+.product-information__media { display: none !important; }
+
+/* Place configurator in media gallery's position (left column) */
+.product-information {
+  display: grid !important;
+  grid-template-columns: 1fr min(50vw, var(--sidebar-width, 400px)) !important;
+  gap: var(--gap, 40px) !important;
+  align-items: start !important;
+}
+.product-information product-component {
+  grid-column: 2 !important;
+  width: 100% !important;
+}
 .sticker-config-{{ section.id }} {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
   background: {{ bg_color }};
-  padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
+  border-radius: 20px;
+  padding: 24px;
+  position: sticky;
+  top: 100px;
 }
 .sticker-config-{{ section.id }} .config-inner {
   max-width: 1000px;
