@@ -394,95 +394,11 @@
           // Also connect stickers to each other
           ropes.push(makeRope(items[0], items[1], 10, 160));
           ropes.push(makeRope(items[1], items[2], 10, 160));
-              ropeReady = true;
-            }
-          }, 300);
-          }
-
-          // ─── Global Splatter Effect ───
-          function initSplatter() {
-            var btns = document.querySelectorAll('.btn, .btn-cta-gradient, .btn-cta-outline, button, a[href*="collections"], a[href*="products"]');
-            btns.forEach(function(btn) {
-              if (btn.dataset.splatter) return;
-              btn.dataset.splatter = '1';
-              btn.style.position = 'relative';
-              btn.style.overflow = 'visible';
-
-          // Edge distance from center to button edge at angle a
-          function edgeDist(w, h, a) {
-            var c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
-            var hw = w/2, hh = h/2;
-            return Math.min(c > 0.01 ? hw/c : 9999, s > 0.01 ? hh/s : 9999);
-          }
-
-              var colors = ['#FF4381','#FF6B35','#00E5A0','#4D7CFF','#A855F7','#FFD700','#00CEC9'];
-              var hoverParticles = [];
-
-              // Create hover particles positioned around button perimeter
-              for (var i = 0; i < 12; i++) {
-                var p = document.createElement('div');
-                var a = (i / 12) * Math.PI * 2 + Math.random() * 0.25;
-                var d = 18 + Math.random() * 28;
-                var s = 3 + Math.random() * 5;
-                p.style.cssText = 'position:absolute;width:'+s+'px;height:'+s+'px;border-radius:50%;background:'+colors[i%colors.length]+';pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%) translate(0,0);opacity:0;transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;z-index:-1;';
-                btn.appendChild(p);
-                hoverParticles.push({ el: p, angle: a, dist: d });
-              }
-
-              btn.addEventListener('mouseenter', function() {
-                var r = btn.getBoundingClientRect();
-                var w = r.width, h = r.height;
-                hoverParticles.forEach(function(p) {
-                  // Emit from button edge based on angle
-              var d = edgeDist(w, h, p.angle) + 6 + Math.random() * 10;
-              var dx = Math.cos(p.angle) * d;
-              var dy = Math.sin(p.angle) * d;
-                  p.el.style.transform = 'translate(-50%,-50%) translate('+dx+'px,'+dy+'px)';
-                  p.el.style.opacity = '1';
-                });
-              });
-
-              btn.addEventListener('mouseleave', function() {
-                hoverParticles.forEach(function(p) {
-                  p.el.style.transform = 'translate(-50%,-50%) translate(0,0)';
-                  p.el.style.opacity = '0';
-                });
-              });
-
-              // ── Click ripple ──
-              btn.addEventListener('click', function(e) {
-                var r = btn.getBoundingClientRect();
-                var cx = e.clientX - r.left;
-                var cy = e.clientY - r.top;
-                for (var ri = 0; ri < 2; ri++) {
-                  (function() {
-                    var ring = document.createElement('div');
-                    var color = colors[Math.floor(Math.random() * colors.length)];
-                    var sz = 4;
-                    ring.style.cssText = 'position:absolute;width:'+sz+'px;height:'+sz+'px;border-radius:50%;border:2px solid '+color+';pointer-events:none;top:'+(cy-sz/2)+'px;left:'+(cx-sz/2)+'px;z-index:999;opacity:0.6;transition:none;';
-                    btn.appendChild(ring);
-                    requestAnimationFrame(function() {
-                      ring.style.transition = 'all 0.6s cubic-bezier(0.22,1,0.36,1)';
-                      ring.style.width = '120px';
-                      ring.style.height = '120px';
-                      ring.style.top = (cy - 60) + 'px';
-                      ring.style.left = (cx - 60) + 'px';
-                      ring.style.borderWidth = '1px';
-                      ring.style.opacity = '0';
-                    });
-                    setTimeout(function() { if (ring.parentNode) ring.remove(); }, 800);
-                  })();
-                }
-              });
-            });
-          }
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initSplatter);
-          } else {
-            setTimeout(initSplatter, 500);
-          }
-
-          initStickers();
+          ropeReady = true;
+        }
+      }, 300);
+      }
+      initStickers();
     })();
     </script>
   </body>
