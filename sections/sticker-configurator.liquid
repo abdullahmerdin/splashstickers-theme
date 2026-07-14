@@ -286,21 +286,23 @@
 
     el.addEventListener('mousedown', function(e) {
       e.stopPropagation();
+      var cid = parseInt(this.dataset.itemId);
       if (e.target.classList.contains('resize-handle')) {
-        if (!selectedIds[id]) toggleSelect(id, false);
-        startResize(e, id, e.target.dataset.handle);
+        if (!selectedIds[cid]) toggleSelect(cid, false);
+        startResize(e, cid, e.target.dataset.handle);
         return;
       }
-      if (e.target === rot) return;
-      if (e.ctrlKey || e.metaKey) { toggleSelect(id, true); return; }
-      if (!selectedIds[id]) toggleSelect(id, false);
-      startDrag(e, id);
+      if (e.target.classList.contains('rot-handle')) return;
+      if (e.ctrlKey || e.metaKey) { toggleSelect(cid, true); return; }
+      if (!selectedIds[cid]) toggleSelect(cid, false);
+      startDrag(e, cid);
     });
 
     rot.addEventListener('mousedown', function(e) {
       e.stopPropagation();
-      if (!selectedIds[id]) toggleSelect(id, false);
-      startRotate(e, id);
+      var cid = parseInt(this.parentElement.dataset.itemId);
+      if (!selectedIds[cid]) toggleSelect(cid, false);
+      startRotate(e, cid);
     });
 
     updateSizeInfo(item);
