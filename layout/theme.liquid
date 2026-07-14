@@ -281,8 +281,9 @@
 
         el.addEventListener('mousedown', function(ev) {
           item.dragging = true;
-          item.ox = ev.clientX - item.x - bounds.left;
-          item.oy = ev.clientY - item.y - bounds.top;
+          var er = item.el.getBoundingClientRect();
+          item.ox = ev.clientX - er.left;
+          item.oy = ev.clientY - er.top;
           el.style.cursor = 'grabbing';
           // Peel: curl from one corner
           el.style.transition = 'transform 0.15s ease-out, filter 0.15s ease-out';
@@ -300,8 +301,9 @@
         el.addEventListener('touchstart', function(ev) {
           var t = ev.touches[0];
           item.dragging = true;
-          item.ox = t.clientX - item.x - bounds.left;
-          item.oy = t.clientY - item.y - bounds.top;
+          var er = item.el.getBoundingClientRect();
+          item.ox = t.clientX - er.left;
+          item.oy = t.clientY - er.top;
           el.style.transition = 'transform 0.15s ease-out, filter 0.15s ease-out';
           el.style.transform = 'perspective(120px) rotateX(12deg) scale(0.92)';
           el.style.filter = 'drop-shadow(4px 6px 12px rgba(0,0,0,0.3))';
