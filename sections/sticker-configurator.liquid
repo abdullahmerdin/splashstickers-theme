@@ -54,7 +54,7 @@
 }
 .sticker-config-{{ section.id }} .canvas-item:hover { box-shadow: 0 0 0 2px #00CEC944; }
 .sticker-config-{{ section.id }} .canvas-item.selected {
-  box-shadow: 0 0 0 2px #00CEC9, 0 0 12px rgba(0,206,201,0.25);
+  outline: 2px solid #00CEC9;
   z-index: 100 !important;
 }
 .sticker-config-{{ section.id }} .canvas-item img {
@@ -228,8 +228,10 @@
 
   function updateSelection() {
     var count = selectedIds.length;
+    var mm3 = Math.round(canvas.clientWidth / 600 * 3);
     canvas.querySelectorAll('.canvas-item').forEach(function(el) {
       el.classList.toggle('selected', selectedIds.indexOf(parseInt(el.dataset.itemId)) !== -1);
+      el.style.outlineOffset = el.classList.contains('selected') ? mm3 + 'px' : '';
     });
     delBtn.disabled = count === 0;
     dupBtn.disabled = count === 0;
@@ -488,7 +490,7 @@
   // ── Auto arrange ──
   autoBtn.addEventListener('click', function() {
     var cw = canvas.clientWidth, ch = canvas.clientHeight;
-    var pad = 12, gap = 6;
+    var pad = 12, gap = Math.round(cw / 600 * 3);
     var totalW = items.reduce(function(s, i) { return s + i.w; }, 0) + gap * (items.length - 1);
     var totalH = Math.max.apply(null, items.map(function(i) { return i.h; }));
     // Pack in rows preserving original size
