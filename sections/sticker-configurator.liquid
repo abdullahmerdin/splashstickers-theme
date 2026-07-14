@@ -446,7 +446,8 @@
     if (dragState) {
       if (dragState.type === 'selbox') {
         selBox.style.display = 'none';
-        selectAllInRect(dragState.sx, dragState.sy,
+        selectAllInRect(
+          parseFloat(selBox.style.left), parseFloat(selBox.style.top),
           parseFloat(selBox.style.left) + parseFloat(selBox.style.width),
           parseFloat(selBox.style.top) + parseFloat(selBox.style.height));
       } else if (dragState.type === 'move') {
