@@ -60,12 +60,42 @@
 .sticker-config-{{ section.id }} .canvas-item img {
   width: 100%; height: 100%; object-fit: contain; pointer-events: none;
 }
+/* Resize handles on all 4 corners */
+.sticker-config-{{ section.id }} .canvas-item .resize-handle {
+  position: absolute; width: 12px; height: 12px; border-radius: 2px;
+  background: #00CEC9; border: 2px solid #fff; display: none; z-index: 10;
+}
+.sticker-config-{{ section.id }} .canvas-item.selected .resize-handle { display: block; }
+.sticker-config-{{ section.id }} .canvas-item .resize-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+.sticker-config-{{ section.id }} .canvas-item .resize-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+.sticker-config-{{ section.id }} .canvas-item .resize-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+.sticker-config-{{ section.id }} .canvas-item .resize-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+/* Rotate handle */
 .sticker-config-{{ section.id }} .canvas-item .rot-handle {
-  position: absolute; bottom: -20px; left: 50%; margin-left: -8px;
-  width: 16px; height: 16px; border-radius: 50%; background: #00CEC9;
-  border: 2px solid #fff; cursor: grab; display: none;
+  position: absolute; bottom: -24px; left: 50%; margin-left: -8px;
+  width: 16px; height: 16px; border-radius: 50%; background: #6C5CE7;
+  border: 2px solid #fff; cursor: grab; display: none; z-index: 10;
 }
 .sticker-config-{{ section.id }} .canvas-item.selected .rot-handle { display: block; }
+/* Size display during resize */
+.sticker-config-{{ section.id }} .size-info {
+  position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+  background: #2D3436; color: #fff; font-size: 0.7rem; padding: 2px 8px;
+  border-radius: 6px; white-space: nowrap; display: none; z-index: 20;
+  pointer-events: none;
+}
+.sticker-config-{{ section.id }} .canvas-item.selected .size-info { display: block; }
+/* Size inputs */
+.sticker-config-{{ section.id }} .size-inputs {
+  display: flex; gap: 8px; align-items: center;
+}
+.sticker-config-{{ section.id }} .size-inputs input {
+  width: 52px; padding: 4px 6px; border: 2px solid #DFE6E9; border-radius: 8px;
+  font-size: 0.8rem; text-align: center; color: #2D3436; font-weight: 600;
+  outline: none; transition: border-color 0.15s;
+}
+.sticker-config-{{ section.id }} .size-inputs input:focus { border-color: #00CEC9; }
+.sticker-config-{{ section.id }} .size-inputs label { font-size: 0.7rem; color: #B2BEC3; }
 .sticker-config-{{ section.id }} .qty-group {
   display: flex; align-items: center; gap: 6px;
   background: #fff; border: 2px solid #DFE6E9; border-radius: 12px;
@@ -123,7 +153,13 @@
     </div>
     <div style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
       <span id="item-count-{{ section.id }}">0 items</span>
+      <span id="sel-size-{{ section.id }}" style="display:none;">&nbsp;</span>
       <span>Drag canvas to multi-select</span>
+    </div>
+    <div class="size-inputs" id="size-inputs-{{ section.id }}" style="display:none;">
+      <label>W:</label><input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1">
+      <label>H:</label><input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1">
+      <label style="color:#B2BEC3;">mm</label>
     </div>
     <div class="canvas-area" id="canvas-{{ section.id }}">
       <div class="grid-bg"></div>
@@ -199,14 +235,22 @@
     dupBtn.disabled = count === 0;
     flipHBtn.disabled = count === 0;
     flipVBtn.disabled = count === 0;
+    updateSizeInputs();
   }
 
   function getSelected() { return items.filter(function(i) { return selectedIds[i.id]; }); }
 
+  function pxToMm(px) {
+    return Math.round(px / canvas.clientWidth * 600);
+  }
+  function mmToPx(mm) {
+    return mm / 600 * canvas.clientWidth;
+  }
+
   function addItem(src) {
     var id = nextId++;
     var cw = canvas.clientWidth, ch = canvas.clientHeight;
-    var w = 80 + Math.random() * 50, h = w * 0.75;
+    var w = 80 + Math.random() * 30, h = w * 0.75;
     var el = document.createElement('div');
     el.className = 'canvas-item';
     el.dataset.itemId = id;
@@ -217,6 +261,20 @@
     var img = document.createElement('img');
     img.src = src; img.draggable = false;
     el.appendChild(img);
+
+    // Size info label
+    var si = document.createElement('div');
+    si.className = 'size-info'; si.id = 'size-info-'+id;
+    el.appendChild(si);
+
+    // 4 resize handles
+    ['nw','ne','sw','se'].forEach(function(pos) {
+      var h = document.createElement('div');
+      h.className = 'resize-handle ' + pos;
+      h.dataset.handle = pos;
+      el.appendChild(h);
+    });
+
     var rot = document.createElement('div');
     rot.className = 'rot-handle'; el.appendChild(rot);
     canvas.appendChild(el);
@@ -227,6 +285,11 @@
     toggleSelect(id, false);
 
     el.addEventListener('mousedown', function(e) {
+      if (e.target.classList.contains('resize-handle')) {
+        if (!selectedIds[id]) toggleSelect(id, false);
+        startResize(e, id, e.target.dataset.handle);
+        return;
+      }
       if (e.target === rot) return;
       if (e.ctrlKey || e.metaKey) { toggleSelect(id, true); return; }
       if (!selectedIds[id]) toggleSelect(id, false);
@@ -239,6 +302,7 @@
       startRotate(e, id);
     });
 
+    updateSizeInfo(item);
     updateCount(); updatePrice();
     return item;
   }
@@ -251,6 +315,37 @@
     getSelected().forEach(function(i) { dragState.startPos[i.id] = { x: i.x, y: i.y }; });
     item.el.style.cursor = 'grabbing';
     e.preventDefault();
+  }
+
+  function startResize(e, id, handle) {
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    dragState = { type: 'resize', id: id, handle: handle, ox: e.clientX, oy: e.clientY, sw: item.w, sh: item.h, sx: item.x, sy: item.y };
+    e.preventDefault();
+  }
+
+  function updateSizeInfo(item) {
+    var si = document.getElementById('size-info-'+item.id);
+    if (si) si.textContent = pxToMm(item.w) + '×' + pxToMm(item.h) + ' mm';
+  }
+
+  function updateSizeInputs() {
+    var sel = Object.keys(selectedIds).length === 1;
+    var inputs = document.getElementById('size-inputs-'+sid);
+    var sizeLabel = document.getElementById('sel-size-'+sid);
+    if (sel && Object.keys(selectedIds).length > 0) {
+      var id = parseInt(Object.keys(selectedIds)[0]);
+      var item = items.find(function(i) { return i.id === id; });
+      if (item) {
+        inputs.style.display = 'flex';
+        sizeLabel.style.display = 'none';
+        document.getElementById('w-input-'+sid).value = pxToMm(item.w);
+        document.getElementById('h-input-'+sid).value = pxToMm(item.h);
+        return;
+      }
+    }
+    inputs.style.display = 'none';
+    sizeLabel.style.display = 'none';
   }
 
   function startRotate(e, id) {
@@ -292,6 +387,22 @@
         primary.el.style.opacity = collides ? '0.5' : '1';
         primary.el.style.outline = collides ? '2px solid #FF4381' : '';
       }
+    } else if (dragState.type === 'resize') {
+      var item = items.find(function(i) { return i.id === dragState.id; });
+      if (!item) return;
+      var dx = e.clientX - dragState.ox, dy = e.clientY - dragState.oy;
+      var cw = canvas.clientWidth, ch = canvas.clientHeight;
+      var h = dragState.handle;
+      var minS = 30;
+      if (h.includes('e')) { item.w = Math.max(minS, dragState.sw + dx); }
+      if (h.includes('w')) { var nw = Math.max(minS, dragState.sw - dx); item.x = dragState.sx + dragState.sw - nw; item.w = nw; }
+      if (h.includes('s')) { item.h = Math.max(minS, dragState.sh + dy); }
+      if (h.includes('n')) { var nh = Math.max(minS, dragState.sh - dy); item.y = dragState.sy + dragState.sh - nh; item.h = nh; }
+      item.x = Math.max(0, Math.min(cw - item.w, item.x));
+      item.y = Math.max(0, Math.min(ch - item.h, item.y));
+      item.el.style.left = item.x + 'px'; item.el.style.top = item.y + 'px';
+      item.el.style.width = item.w + 'px'; item.el.style.height = item.h + 'px';
+      updateSizeInfo(item);
     } else if (dragState.type === 'rotate') {
       var item = items.find(function(i) { return i.id === dragState.id; });
       if (!item) return;
@@ -400,21 +511,34 @@
   // ── Auto arrange ──
   autoBtn.addEventListener('click', function() {
     var cw = canvas.clientWidth, ch = canvas.clientHeight;
-    var pad = 15, gap = 10;
-    var cols = Math.ceil(Math.sqrt(items.length * cw / ch));
-    var cellW = (cw - pad * 2 - gap * (cols - 1)) / cols;
-    var rows = Math.ceil(items.length / cols);
-    var cellH = (ch - pad * 2 - gap * (rows - 1)) / rows;
+    var pad = 12, gap = 6;
+    var totalW = items.reduce(function(s, i) { return s + i.w; }, 0) + gap * (items.length - 1);
+    var totalH = Math.max.apply(null, items.map(function(i) { return i.h; }));
+    // Pack in rows preserving original size
+    var cols = 1, rows = items.length;
+    // Simple row packing: try to fit items in rows
+    var packed = [], row = [], rowW = 0, maxRowH = 0;
     items.forEach(function(item, idx) {
-      var col = idx % cols, row = Math.floor(idx / cols);
-      item.x = pad + col * (cellW + gap);
-      item.y = pad + row * (cellH + gap);
-      item.w = cellW * 0.85;
-      item.h = cellH * 0.85;
-      item.rotation = 0;
-      item.el.style.left = item.x + 'px'; item.el.style.top = item.y + 'px';
-      item.el.style.width = item.w + 'px'; item.el.style.height = item.h + 'px';
-      applyTransform(item);
+      if (row.length > 0 && rowW + gap + item.w > cw - pad * 2) {
+        packed.push({ items: row, h: maxRowH });
+        row = []; rowW = 0; maxRowH = 0;
+      }
+      row.push(idx); rowW += (row.length > 1 ? gap : 0) + item.w;
+      maxRowH = Math.max(maxRowH, item.h);
+    });
+    if (row.length) packed.push({ items: row, h: maxRowH });
+    var yy = pad;
+    packed.forEach(function(p) {
+      var xx = pad;
+      p.items.forEach(function(idx) {
+        var item = items[idx];
+        item.x = xx; item.y = yy; item.rotation = 0;
+        item.el.style.left = item.x + 'px'; item.el.style.top = item.y + 'px';
+        applyTransform(item);
+        updateSizeInfo(item);
+        xx += item.w + gap;
+      });
+      yy += p.h + gap;
     });
   });
 
@@ -457,6 +581,26 @@
   document.getElementById('qty-up-'+sid).addEventListener('click', function() {
     qtyEl.textContent = (parseInt(qtyEl.textContent) || 1) + 1;
     updatePrice();
+  });
+
+  // Size input listeners
+  document.getElementById('w-input-'+sid).addEventListener('change', function() {
+    var id = parseInt(Object.keys(selectedIds)[0]);
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    var cw = canvas.clientWidth;
+    item.w = Math.max(20, Math.min(cw - item.x, mmToPx(parseInt(this.value) || 50)));
+    item.el.style.width = item.w + 'px';
+    updateSizeInfo(item); updatePrice();
+  });
+  document.getElementById('h-input-'+sid).addEventListener('change', function() {
+    var id = parseInt(Object.keys(selectedIds)[0]);
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    var ch = canvas.clientHeight;
+    item.h = Math.max(20, Math.min(ch - item.y, mmToPx(parseInt(this.value) || 50)));
+    item.el.style.height = item.h + 'px';
+    updateSizeInfo(item); updatePrice();
   });
 
   function updateCount() {
