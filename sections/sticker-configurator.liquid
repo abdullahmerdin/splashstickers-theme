@@ -7,256 +7,371 @@
 -%}
 
 {% style %}
-/* Hide product media gallery */
 .product-information__media { display: none !important; }
-
-/* Place configurator in media gallery's position (left column) */
 .product-information {
   display: grid !important;
   grid-template-columns: 1fr min(50vw, var(--sidebar-width, 400px)) !important;
   gap: var(--gap, 40px) !important;
   align-items: start !important;
 }
-.product-information product-component {
-  grid-column: 2 !important;
-  width: 100% !important;
-}
+.product-information product-component { grid-column: 2 !important; width: 100% !important; }
+
+/* ─── Canvas Editor ─── */
 .sticker-config-{{ section.id }} {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
+  grid-column: 1 !important; grid-row: 1 !important;
   background: {{ bg_color }};
-  border-radius: 20px;
-  padding: 24px;
-  position: sticky;
-  top: 100px;
+  border-radius: 20px; padding: 24px; position: sticky; top: 100px;
 }
-.sticker-config-{{ section.id }} .config-inner {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: start;
+.sticker-config-{{ section.id }} .editor-wrap {
+  display: flex; flex-direction: column; gap: 12px;
 }
-.sticker-config-{{ section.id }} .preview-area {
-  position: sticky; top: 100px;
-  aspect-ratio: 1; max-width: 400px; width: 100%; margin: 0 auto;
-  background: #eee; border-radius: 20px; border: 2px dashed #ccc;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 3rem; color: #ccc; overflow: hidden;
+.sticker-config-{{ section.id }} .toolbar {
+  display: flex; gap: 4px; flex-wrap: wrap;
 }
-.sticker-config-{{ section.id }} .preview-area img {
-  width: 100%; height: 100%; object-fit: contain; padding: 20px;
+.sticker-config-{{ section.id }} .toolbar button {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid #DFE6E9;
+  background: #fff; cursor: pointer; font-size: 16px; display: flex;
+  align-items: center; justify-content: center; transition: all 0.15s;
+  color: #636E72;
 }
-.sticker-config-{{ section.id }} .config-form {
-  display: flex; flex-direction: column; gap: 24px;
+.sticker-config-{{ section.id }} .toolbar button:hover { border-color: #00CEC9; color: #00CEC9; }
+.sticker-config-{{ section.id }} .toolbar button:disabled { opacity: 0.3; cursor: default; }
+.sticker-config-{{ section.id }} .canvas-area {
+  position: relative; width: 100%; aspect-ratio: 3 / 2;
+  background: #fff; border: 2px solid #DFE6E9; border-radius: 12px;
+  overflow: hidden; cursor: default; user-select: none;
 }
-.sticker-config-{{ section.id }} .config-group {
-  display: flex; flex-direction: column; gap: 8px;
+.sticker-config-{{ section.id }} .canvas-area .grid-bg {
+  position: absolute; inset: 0;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 20px 20px; pointer-events: none;
 }
-.sticker-config-{{ section.id }} .config-group label {
-  font-size: 0.9rem; font-weight: 600; color: #2D3436;
-  text-transform: uppercase; letter-spacing: 0.05em;
+.sticker-config-{{ section.id }} .canvas-item {
+  position: absolute; cursor: grab; user-select: none;
+  transition: box-shadow 0.15s;
 }
-.sticker-config-{{ section.id }} .option-row {
-  display: flex; gap: 8px; flex-wrap: wrap;
+.sticker-config-{{ section.id }} .canvas-item:hover { box-shadow: 0 0 0 2px #00CEC944; }
+.sticker-config-{{ section.id }} .canvas-item.selected {
+  box-shadow: 0 0 0 2px #00CEC9, 0 0 12px rgba(0,206,201,0.25);
+  z-index: 100 !important;
 }
-.sticker-config-{{ section.id }} .option-btn {
-  padding: 10px 20px; border: 2px solid #DFE6E9; border-radius: 10px;
-  background: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 500;
-  transition: all 0.2s ease; color: #636E72;
+.sticker-config-{{ section.id }} .canvas-item img {
+  width: 100%; height: 100%; object-fit: contain; pointer-events: none;
 }
-.sticker-config-{{ section.id }} .option-btn:hover,
-.sticker-config-{{ section.id }} .option-btn.active {
-  border-color: #00CEC9; color: #00CEC9; font-weight: 600;
+.sticker-config-{{ section.id }} .canvas-item .rot-handle {
+  position: absolute; bottom: -20px; left: 50%; margin-left: -8px;
+  width: 16px; height: 16px; border-radius: 50%; background: #00CEC9;
+  border: 2px solid #fff; cursor: grab; display: none;
 }
-.sticker-config-{{ section.id }} .upload-zone {
-  border: 2px dashed #ccc; border-radius: 16px; padding: 32px; text-align: center;
-  cursor: pointer; transition: all 0.3s ease; background: #fafafa;
+.sticker-config-{{ section.id }} .canvas-item.selected .rot-handle { display: block; }
+.sticker-config-{{ section.id }} .canvas-size-label {
+  font-size: 0.7rem; color: #B2BEC3; text-align: right; padding-right: 4px;
 }
-.sticker-config-{{ section.id }} .upload-zone:hover,
-.sticker-config-{{ section.id }} .upload-zone.dragover {
-  border-color: #00CEC9; background: #f0fdfd; transform: scale(1.02);
+.sticker-config-{{ section.id }} .canvas-hint {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  color: #DFE6E9; font-size: 0.9rem; text-align: center;
+  pointer-events: none; font-weight: 500;
 }
-.sticker-config-{{ section.id }} .upload-zone input { display: none; }
-.sticker-config-{{ section.id }} .upload-icon { font-size: 2.5rem; margin-bottom: 8px; }
-.sticker-config-{{ section.id }} .upload-text { font-size: 0.9rem; color: #636E72; }
-.sticker-config-{{ section.id }} .upload-hint { font-size: 0.75rem; color: #B2BEC3; margin-top: 4px; }
-.sticker-config-{{ section.id }} .qty-row {
-  display: flex; align-items: center; gap: 12px;
+.sticker-config-{{ section.id }} .upload-btn-area {
+  display: flex; gap: 8px; align-items: center;
 }
-.sticker-config-{{ section.id }} .qty-btn {
-  width: 36px; height: 36px; border-radius: 50%; border: 2px solid #DFE6E9;
-  background: #fff; cursor: pointer; font-size: 1.1rem;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s ease; color: #636E72;
+.sticker-config-{{ section.id }} .upload-btn-area button {
+  padding: 8px 20px; border: 2px dashed #DFE6E9; border-radius: 10px;
+  background: transparent; cursor: pointer; font-size: 0.85rem; color: #636E72;
+  transition: all 0.2s; flex: 1;
 }
-.sticker-config-{{ section.id }} .qty-btn:hover {
-  border-color: #00CEC9; color: #00CEC9;
-}
-.sticker-config-{{ section.id }} .qty-value {
-  font-size: 1.2rem; font-weight: 700; min-width: 40px;
-  text-align: center; color: #2D3436;
-}
-.sticker-config-{{ section.id }} .config-submit {
-  padding: 14px 32px; border: none; border-radius: 12px;
-  background: linear-gradient(135deg, #00CEC9, #00A8A3);
-  color: #fff; font-size: 1rem; font-weight: 700;
-  cursor: pointer; transition: all 0.3s ease; margin-top: 8px;
-}
-.sticker-config-{{ section.id }} .config-submit:hover {
-  transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,206,201,0.3);
+.sticker-config-{{ section.id }} .upload-btn-area button:hover {
+  border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
 }
 @media (max-width: 768px) {
-  .sticker-config-{{ section.id }} .config-inner { grid-template-columns: 1fr; gap: 24px; }
-  .sticker-config-{{ section.id }} .preview-area { position: static; max-width: 300px; }
+  .sticker-config-{{ section.id }} {
+    position: static; padding: 16px;
+  }
 }
 {% endstyle %}
 
 <div class="sticker-config-{{ section.id }}">
-  <div class="page-width">
-    {% if heading != blank %}
-      <div style="text-align:center;padding:0 20px 24px;">
-        <h2 style="margin:0;">{{ heading }}</h2>
-        {% if subtext != blank %}
-          <p style="color:#636E72;margin:4px 0 0;">{{ subtext }}</p>
-        {% endif %}
-      </div>
-    {% endif %}
-
-    <div class="config-inner">
-      <div class="preview-area" id="preview-{{ section.id }}">
-        <span id="preview-icon-{{ section.id }}">&#x1F5BC;</span>
-        <img id="preview-img-{{ section.id }}" style="display:none;" alt="Preview">
-      </div>
-
-      <div class="config-form" id="config-form-{{ section.id }}">
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'size' %}
-              <div class="config-group" {{ block.shopify_attributes }}>
-                <label>{{ block.settings.heading | default: 'Size' }}</label>
-                <div class="option-row" data-option="size">
-                  {% assign opts = block.settings.options | default: 'Small, Medium, Large, XL' | split: ',' %}
-                  {% for opt in opts %}
-                    <button class="option-btn{% if forloop.first %} active{% endif %}" data-value="{{ opt | strip }}">{{ opt | strip }}</button>
-                  {% endfor %}
-                </div>
-              </div>
-
-            {% when 'material' %}
-              <div class="config-group" {{ block.shopify_attributes }}>
-                <label>{{ block.settings.heading | default: 'Material' }}</label>
-                <div class="option-row" data-option="material">
-                  {% assign opts = block.settings.options | default: 'Matte, Glossy, Transparent, Holographic' | split: ',' %}
-                  {% for opt in opts %}
-                    <button class="option-btn{% if forloop.first %} active{% endif %}" data-value="{{ opt | strip }}">{{ opt | strip }}</button>
-                  {% endfor %}
-                </div>
-              </div>
-
-            {% when 'quantity' %}
-              <div class="config-group" {{ block.shopify_attributes }}>
-                <label>{{ block.settings.heading | default: 'Quantity' }}</label>
-                <div class="qty-row">
-                  <button class="qty-btn" data-qty="dec">&minus;</button>
-                  <span class="qty-value" id="qty-{{ section.id }}">{{ block.settings.default_qty | default: 10 }}</span>
-                  <button class="qty-btn" data-qty="inc">+</button>
-                  <span style="font-size:0.85rem;color:#636E72;margin-left:8px;">{{ block.settings.unit | default: 'pieces' }}</span>
-                </div>
-              </div>
-
-            {% when 'upload' %}
-              <div class="config-group" {{ block.shopify_attributes }}>
-                <label>{{ block.settings.heading | default: 'Upload Your Design' }}</label>
-                <div class="upload-zone" id="upload-zone-{{ section.id }}">
-                  <div class="upload-icon">&#x1F4C1;</div>
-                  <div class="upload-text">{{ block.settings.upload_text | default: 'Click or drag to upload your artwork' }}</div>
-                  <div class="upload-hint">{{ block.settings.hint | default: 'PNG, JPG, SVG &middot; Max 10MB' }}</div>
-                  <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}">
-                </div>
-              </div>
-          {% endcase %}
-        {% endfor %}
-
-        <button class="config-submit" id="submit-{{ section.id }}">
-          Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
-        </button>
-      </div>
+  <div class="editor-wrap">
+    <div class="toolbar">
+      <button title="Delete selected" id="del-btn-{{ section.id }}" disabled>&#x1F5D1;</button>
+      <button title="Duplicate selected" id="dup-btn-{{ section.id }}" disabled>&#x1F4DD;</button>
+      <button title="Flip horizontal" id="flip-h-{{ section.id }}" disabled>&#x2194;&#xFE0F;</button>
+      <button title="Flip vertical" id="flip-v-{{ section.id }}" disabled>&#x2195;&#xFE0F;</button>
+      <button title="Bring to front" id="front-btn-{{ section.id }}" disabled>&#x2B06;&#xFE0F;</button>
+      <button title="Send to back" id="back-btn-{{ section.id }}" disabled>&#x2B07;&#xFE0F;</button>
     </div>
+    <div style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
+      <span>60 cm workspace</span>
+      <span id="item-count-{{ section.id }}">0 items</span>
+    </div>
+    <div class="canvas-area" id="canvas-{{ section.id }}">
+      <div class="grid-bg"></div>
+      <div class="canvas-hint" id="hint-{{ section.id }}">Upload a design to start</div>
+    </div>
+    <div class="upload-btn-area">
+      <button id="add-btn-{{ section.id }}">&#x2795; Add design</button>
+      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" style="display:none;">
+      <button id="qty-down-{{ section.id }}" style="width:32px;height:32px;border-radius:50%;border:1px solid #DFE6E9;background:#fff;">&minus;</button>
+      <span id="qty-display-{{ section.id }}" style="font-weight:700;min-width:30px;text-align:center;">10</span>
+      <button id="qty-up-{{ section.id }}" style="width:32px;height:32px;border-radius:50%;border:1px solid #DFE6E9;background:#fff;">+</button>
+      <span style="font-size:0.8rem;color:#636E72;">pieces</span>
+    </div>
+    <button id="submit-{{ section.id }}" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#00CEC9,#00A8A3);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;">
+      Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
+    </button>
   </div>
 </div>
 
 <script>
 (function() {
   var sid = '{{ section.id }}';
-  var form = document.getElementById('config-form-' + sid);
-  if (!form) return;
-  var selections = {};
-  var qtyEl = document.getElementById('qty-' + sid);
-  var previewImg = document.getElementById('preview-img-' + sid);
-  var previewIcon = document.getElementById('preview-icon-' + sid);
+  var canvas = document.getElementById('canvas-' + sid);
+  var hint = document.getElementById('hint-' + sid);
+  var fileInput = document.getElementById('file-input-' + sid);
+  var countEl = document.getElementById('item-count-' + sid);
+  var qtyEl = document.getElementById('qty-display-' + sid);
   var priceEl = document.getElementById('price-display-' + sid);
 
-  form.querySelectorAll('.option-row').forEach(function(row) {
-    var key = row.dataset.option;
-    row.querySelectorAll('.option-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        row.querySelector('.active') && row.querySelector('.active').classList.remove('active');
-        this.classList.add('active');
-        selections[key] = this.dataset.value;
-        updatePrice();
-      });
-      if (btn.classList.contains('active')) selections[key] = btn.dataset.value;
+  var items = [];
+  var selectedId = null;
+  var nextId = 1;
+  var dragState = null;
+  var basePrice = 2.5;
+
+  // Toolbar buttons
+  var delBtn = document.getElementById('del-btn-'+sid);
+  var dupBtn = document.getElementById('dup-btn-'+sid);
+  var flipHBtn = document.getElementById('flip-h-'+sid);
+  var flipVBtn = document.getElementById('flip-v-'+sid);
+  var frontBtn = document.getElementById('front-btn-'+sid);
+  var backBtn = document.getElementById('back-btn-'+sid);
+
+  function selectItem(id) {
+    deselectAll();
+    selectedId = id;
+    var el = document.querySelector('[data-item-id="'+id+'"]');
+    if (el) el.classList.add('selected');
+    updateToolbar();
+  }
+
+  function deselectAll() {
+    selectedId = null;
+    canvas.querySelectorAll('.canvas-item.selected').forEach(function(el) { el.classList.remove('selected'); });
+    updateToolbar();
+  }
+
+  function updateToolbar() {
+    var has = selectedId !== null;
+    delBtn.disabled = !has;
+    dupBtn.disabled = !has;
+    flipHBtn.disabled = !has;
+    flipVBtn.disabled = !has;
+    frontBtn.disabled = !has;
+    backBtn.disabled = !has;
+  }
+
+  function addItem(src) {
+    var id = nextId++;
+    var w = 80 + Math.random() * 60;
+    var h = w * (0.7 + Math.random() * 0.6);
+    var el = document.createElement('div');
+    el.className = 'canvas-item';
+    el.dataset.itemId = id;
+    el.style.cssText = 'left:'+(20+Math.random()*(canvas.clientWidth-w-40))+'px;top:'+(20+Math.random()*(canvas.clientHeight-h-40))+'px;width:'+w+'px;height:'+h+'px;';
+
+    var img = document.createElement('img');
+    img.src = src;
+    img.draggable = false;
+    el.appendChild(img);
+
+    var rot = document.createElement('div');
+    rot.className = 'rot-handle';
+    el.appendChild(rot);
+
+    canvas.appendChild(el);
+    hint.style.display = 'none';
+
+    var item = {
+      id: id, el: el, x: parseFloat(el.style.left), y: parseFloat(el.style.top),
+      w: w, h: h, rotation: 0, scaleX: 1, scaleY: 1
+    };
+    items.push(item);
+    if (items.length === 1) selectItem(id);
+
+    // Select on click
+    el.addEventListener('mousedown', function(e) {
+      if (e.target === rot) return;
+      selectItem(id);
+      startDrag(e, id);
     });
-  });
 
-  form.querySelectorAll('.qty-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var qty = parseInt(qtyEl.textContent) || 1;
-      if (this.dataset.qty === 'inc') qty += 1;
-      else if (this.dataset.qty === 'dec' && qty > 1) qty -= 1;
-      qtyEl.textContent = qty;
-      updatePrice();
+    // Rotation handle
+    rot.addEventListener('mousedown', function(e) {
+      e.stopPropagation();
+      selectItem(id);
+      startRotate(e, id);
     });
+
+    updateCount();
+    updatePrice();
+    return item;
+  }
+
+  function startDrag(e, id) {
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    dragState = { type: 'move', id: id, ox: e.clientX - item.x, oy: e.clientY - item.y };
+    item.el.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+
+  function startRotate(e, id) {
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    var r = item.el.getBoundingClientRect();
+    dragState = { type: 'rotate', id: id, cx: r.left + r.width/2, cy: r.top + r.height/2, startAngle: Math.atan2(e.clientY - (r.top + r.height/2), e.clientX - (r.left + r.width/2)) - item.rotation * Math.PI / 180 };
+    e.preventDefault();
+  }
+
+  document.addEventListener('mousemove', function(e) {
+    if (!dragState) return;
+    var item = items.find(function(i) { return i.id === dragState.id; });
+    if (!item) return;
+
+    if (dragState.type === 'move') {
+      var cw = canvas.clientWidth, ch = canvas.clientHeight;
+      item.x = Math.max(0, Math.min(cw - item.w, e.clientX - dragState.ox));
+      item.y = Math.max(0, Math.min(ch - item.h, e.clientY - dragState.oy));
+      item.el.style.left = item.x + 'px';
+      item.el.style.top = item.y + 'px';
+    } else if (dragState.type === 'rotate') {
+      var angle = Math.atan2(e.clientY - dragState.cy, e.clientX - dragState.cx) - dragState.startAngle;
+      item.rotation = angle * 180 / Math.PI;
+      applyTransform(item);
+    }
   });
 
-  var uploadZone = document.getElementById('upload-zone-' + sid);
-  var fileInput = document.getElementById('file-input-' + sid);
-  uploadZone.addEventListener('click', function() { fileInput.click(); });
-  uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover'); });
-  uploadZone.addEventListener('dragleave', function() { this.classList.remove('dragover'); });
-  uploadZone.addEventListener('drop', function(e) {
-    e.preventDefault(); this.classList.remove('dragover');
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  document.addEventListener('mouseup', function() {
+    if (dragState) {
+      var item = items.find(function(i) { return i.id === dragState.id; });
+      if (item) item.el.style.cursor = 'grab';
+      dragState = null;
+    }
   });
-  fileInput.addEventListener('change', function() { if (this.files.length) handleFile(this.files[0]); });
 
+  function applyTransform(item) {
+    item.el.style.transform = 'rotate('+item.rotation+'deg) scaleX('+item.scaleX+') scaleY('+item.scaleY+')';
+  }
+
+  // ── Toolbar actions ──
+  delBtn.addEventListener('click', function() {
+    if (selectedId === null) return;
+    var idx = items.findIndex(function(i) { return i.id === selectedId; });
+    if (idx === -1) return;
+    var item = items[idx];
+    item.el.remove();
+    items.splice(idx, 1);
+    selectedId = null;
+    updateCount(); updatePrice(); updateToolbar();
+    if (items.length === 0) hint.style.display = '';
+  });
+
+  dupBtn.addEventListener('click', function() {
+    if (selectedId === null) return;
+    var src = items.find(function(i) { return i.id === selectedId; });
+    if (!src) return;
+    var img = src.el.querySelector('img');
+    if (!img) return;
+    var newItem = addItem(img.src);
+    newItem.x = src.x + 20;
+    newItem.y = src.y + 20;
+    newItem.w = src.w;
+    newItem.h = src.h;
+    newItem.el.style.left = newItem.x + 'px';
+    newItem.el.style.top = newItem.y + 'px';
+    newItem.el.style.width = newItem.w + 'px';
+    newItem.el.style.height = newItem.h + 'px';
+    selectItem(newItem.id);
+  });
+
+  flipHBtn.addEventListener('click', function() {
+    if (selectedId === null) return;
+    var item = items.find(function(i) { return i.id === selectedId; });
+    if (!item) return;
+    item.scaleX *= -1;
+    applyTransform(item);
+  });
+
+  flipVBtn.addEventListener('click', function() {
+    if (selectedId === null) return;
+    var item = items.find(function(i) { return i.id === selectedId; });
+    if (!item) return;
+    item.scaleY *= -1;
+    applyTransform(item);
+  });
+
+  frontBtn.addEventListener('click', function() {
+    if (selectedId === null) return;
+    var el = canvas.querySelector('[data-item-id="'+selectedId+'"]');
+    if (!el) return;
+    el.style.zIndex = Math.max.apply(null, items.map(function(i) { return parseInt(i.el.style.zIndex) || 0; })) + 1;
+  });
+
+  backBtn.addEventListener('click', function() {
+    if (selectedId === null) return;
+    var el = canvas.querySelector('[data-item-id="'+selectedId+'"]');
+    if (!el) return;
+    el.style.zIndex = Math.min.apply(null, items.map(function(i) { return parseInt(i.el.style.zIndex) || 0; })) - 1;
+  });
+
+  // ── Upload ──
   function handleFile(file) {
     if (!file.type.match('image.*')) return;
     var reader = new FileReader();
     reader.onload = function(e) {
-      previewImg.src = e.target.result; previewImg.style.display = 'block';
-      previewIcon.style.display = 'none';
-      uploadZone.querySelector('.upload-text').textContent = file.name;
-      uploadZone.querySelector('.upload-icon').textContent = '\u2705';
+      // Add 3 items at once for gang sheet feel
+      addItem(e.target.result);
+      addItem(e.target.result);
+      addItem(e.target.result);
     };
     reader.readAsDataURL(file);
   }
 
-  var basePrice = {{ section.settings.base_price | default: 5 | json }};
+  document.getElementById('add-btn-'+sid).addEventListener('click', function() { fileInput.click(); });
+  fileInput.addEventListener('change', function() { if (this.files.length) handleFile(this.files[0]); });
+
+  canvas.addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  canvas.addEventListener('dragover', function(e) { e.preventDefault(); });
+
+  // Deselect on canvas background click
+  canvas.addEventListener('mousedown', function(e) {
+    if (e.target === canvas || e.target.classList.contains('grid-bg')) deselectAll();
+  });
+
+  // ── Quantity ──
+  document.getElementById('qty-down-'+sid).addEventListener('click', function() {
+    var q = parseInt(qtyEl.textContent) || 1;
+    if (q > 1) qtyEl.textContent = q - 1;
+    updatePrice();
+  });
+  document.getElementById('qty-up-'+sid).addEventListener('click', function() {
+    qtyEl.textContent = (parseInt(qtyEl.textContent) || 1) + 1;
+    updatePrice();
+  });
+
+  function updateCount() { countEl.textContent = items.length + ' items'; }
   function updatePrice() {
     var qty = parseInt(qtyEl.textContent) || 1;
-    var mult = 1;
-    var size = (selections.size || '').toLowerCase();
-    if (size.includes('large') || size.includes('xl')) mult = 1.5;
-    else if (size.includes('small')) mult = 0.8;
-    var mat = (selections.material || '').toLowerCase();
-    if (mat.includes('holographic') || mat.includes('premium')) mult *= 1.3;
-    else if (mat.includes('weatherproof')) mult *= 1.2;
-    priceEl.textContent = '$' + (basePrice * mult * qty).toFixed(2);
+    var count = items.length || 1;
+    priceEl.textContent = '$' + (basePrice * count * qty).toFixed(2);
   }
   updatePrice();
+  updateToolbar();
 })();
 </script>
 
@@ -266,55 +381,16 @@
   "tag": "section",
   "class": "sticker-configurator",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Configure Your Sticker" },
-    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Customize your perfect sticker" },
-    { "type": "range", "id": "base_price", "label": "Base price ($)", "min": 1, "max": 50, "step": 0.5, "default": 5 },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Design Your Sticker Sheet" },
+    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Arrange your stickers on a 60cm workspace" },
     { "type": "color", "id": "bg_color", "label": "Background", "default": "#F8F9FA" },
     { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 100, "step": 4, "default": 48 },
     { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 100, "step": 4, "default": 48 }
   ],
-  "blocks": [
-    {
-      "type": "size", "name": "Size options", "limit": 1,
-      "settings": [
-        { "type": "text", "id": "heading", "label": "Label", "default": "Size" },
-        { "type": "text", "id": "options", "label": "Options (comma-separated)", "default": "Small, Medium, Large, XL", "info": "First option is default" }
-      ]
-    },
-    {
-      "type": "material", "name": "Material options", "limit": 1,
-      "settings": [
-        { "type": "text", "id": "heading", "label": "Label", "default": "Material" },
-        { "type": "text", "id": "options", "label": "Options (comma-separated)", "default": "Matte, Glossy, Transparent, Holographic" }
-      ]
-    },
-    {
-      "type": "quantity", "name": "Quantity", "limit": 1,
-      "settings": [
-        { "type": "text", "id": "heading", "label": "Label", "default": "Quantity" },
-        { "type": "number", "id": "default_qty", "label": "Default quantity", "default": 10 },
-        { "type": "text", "id": "unit", "label": "Unit label", "default": "pieces" }
-      ]
-    },
-    {
-      "type": "upload", "name": "File upload", "limit": 1,
-      "settings": [
-        { "type": "text", "id": "heading", "label": "Label", "default": "Upload Your Design" },
-        { "type": "text", "id": "upload_text", "label": "Upload area text", "default": "Click or drag to upload your artwork" },
-        { "type": "text", "id": "hint", "label": "Hint text", "default": "PNG, JPG, SVG · Max 10MB" }
-      ]
-    }
-  ],
   "presets": [
     {
       "name": "Sticker Configurator",
-      "category": "Custom",
-      "blocks": [
-        { "type": "size" },
-        { "type": "material" },
-        { "type": "quantity" },
-        { "type": "upload" }
-      ]
+      "category": "Custom"
     }
   ]
 }
