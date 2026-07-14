@@ -4,18 +4,109 @@
   assign columns = section.settings.columns | times: 1
   assign circle_size = section.settings.circle_size | append: 'px'
   assign background_color = section.settings.background_color
+  assign accent_color = section.settings.accent_color
   assign padding_top = section.settings.padding_top
   assign padding_bottom = section.settings.padding_bottom
+  assign animation = section.settings.animation
 -%}
 
-<div
-  class="sticker-categories-section"
-  style="background-color: {{ background_color }}; padding-top: {{ padding_top }}px; padding-bottom: {{ padding_bottom }}px;"
->
+{% style %}
+.sticker-categories-{{ section.id }} {
+  background-color: {{ background_color }};
+  padding-top: {{ padding_top }}px;
+  padding-bottom: {{ padding_bottom }}px;
+  overflow: hidden;
+}
+
+.sticker-categories-{{ section.id }} .categories-grid {
+  display: grid;
+  grid-template-columns: repeat({{ columns }}, 1fr);
+  gap: {{ section.settings.gap }}px;
+  padding: 24px 20px 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sticker-categories-{{ section.id }} .category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: {% if link != blank %}pointer{% else %}default{% endif %};
+  text-decoration: none;
+  padding: 16px 8px;
+  border-radius: 16px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.sticker-categories-{{ section.id }} .category-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.sticker-categories-{{ section.id }} .category-circle {
+  width: {{ circle_size }};
+  height: {{ circle_size }};
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc({{ circle_size }} * 0.38);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.sticker-categories-{{ section.id }} .category-card:hover .category-circle {
+  transform: scale(1.08);
+  box-shadow: 0 0 30px rgba(var(--circle-color, 0,206,201), 0.35);
+}
+
+.sticker-categories-{{ section.id }} .category-circle img {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+}
+
+{% if animation == 'fade' %}
+.sticker-categories-{{ section.id }} .category-card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: catFadeIn 0.5s ease-out forwards;
+}
+.sticker-categories-{{ section.id }} .category-card:nth-child(1) { animation-delay: 0.05s; }
+.sticker-categories-{{ section.id }} .category-card:nth-child(2) { animation-delay: 0.1s; }
+.sticker-categories-{{ section.id }} .category-card:nth-child(3) { animation-delay: 0.15s; }
+.sticker-categories-{{ section.id }} .category-card:nth-child(4) { animation-delay: 0.2s; }
+.sticker-categories-{{ section.id }} .category-card:nth-child(5) { animation-delay: 0.25s; }
+.sticker-categories-{{ section.id }} .category-card:nth-child(6) { animation-delay: 0.3s; }
+.sticker-categories-{{ section.id }} .category-card:nth-child(7) { animation-delay: 0.35s; }
+.sticker-categories-{{ section.id }} .category-card:nth-child(8) { animation-delay: 0.4s; }
+@keyframes catFadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+{% endif %}
+
+@media (max-width: 768px) {
+  .sticker-categories-{{ section.id }} .categories-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 16px 12px 0;
+  }
+}
+@media (max-width: 480px) {
+  .sticker-categories-{{ section.id }} .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+{% endstyle %}
+
+<div class="sticker-categories-{{ section.id }}">
   <div class="page-width">
     {% if section_heading != blank %}
       <div style="text-align: center; padding: 0 20px 8px;">
-        <h2>{{ section_heading }}</h2>
+        <h2 style="margin: 0; font-size: 2rem;">{{ section_heading }}</h2>
         {% if section_subtext != blank %}
           <p style="color: #636E72; margin: 4px 0 0;">{{ section_subtext }}</p>
         {% endif %}
@@ -23,34 +114,36 @@
     {% endif %}
 
     {% if section.blocks.size > 0 %}
-      <div
-        class="sticker-categories-scroll"
-        style="justify-content: center; padding: 24px 20px 0; gap: {{ section.settings.gap }}px;"
-      >
+      <div class="categories-grid">
         {% for block in section.blocks %}
           {%- liquid
             assign icon = block.settings.icon
             assign label = block.settings.label
             assign link = block.settings.link
-            assign color_style = block.settings.color_style
+            assign block_color = block.settings.block_color
+            assign block_image = block.settings.image
+            assign icon_type = block.settings.icon_type
+            assign r = block_color.red | default: 0
+            assign g = block_color.green | default: 206
+            assign b = block_color.blue | default: 201
           -%}
-          <div
-            class="sticker-category-card"
-            style="cursor: {% if link != blank %}pointer{% else %}default{% endif %};"
-            {% if link != blank %}
-              onclick="window.location.href='{{ link }}'"
-              role="link"
-              tabindex="0"
-              onkeydown="if(event.key==='Enter')window.location.href='{{ link }}'"
-            {% endif %}
+          <a
+            class="category-card"
+            href="{{ link | default: '#' }}"
+            style="--circle-color: {{ r }},{{ g }},{{ b }};"
+            {% if link == blank %}onclick="return false;"{% endif %}
           >
-            <div class="sticker-category-circle {{ color_style }}" style="width: {{ circle_size }}; height: {{ circle_size }}; font-size: calc({{ circle_size }} * 0.4);">
-              {{ icon }}
+            <div class="category-circle" style="background: {{ block_color }}20; color: {{ block_color }};">
+              {% if icon_type == 'image' and block_image != blank %}
+                <img src="{{ block_image | img_url: '100x' }}" alt="{{ label }}" loading="lazy">
+              {% else %}
+                <span>{{ icon }}</span>
+              {% endif %}
             </div>
             {% if label != blank %}
-              <span class="sticker-category-label">{{ label }}</span>
+              <span style="font-size: 0.9rem; font-weight: 600; color: #2D3436; text-align: center; line-height: 1.2;">{{ label }}</span>
             {% endif %}
-          </div>
+          </a>
         {% endfor %}
       </div>
     {% else %}
@@ -82,7 +175,7 @@
     {
       "type": "range",
       "id": "columns",
-      "label": "Columns",
+      "label": "Columns (desktop)",
       "min": 2,
       "max": 8,
       "step": 1,
@@ -107,10 +200,26 @@
       "default": 16
     },
     {
+      "type": "select",
+      "id": "animation",
+      "label": "Entrance animation",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "fade", "label": "Fade in staggered" }
+      ],
+      "default": "fade"
+    },
+    {
       "type": "color",
       "id": "background_color",
       "label": "Background",
       "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#00CEC9"
     },
     {
       "type": "range",
@@ -137,11 +246,27 @@
       "name": "Category",
       "settings": [
         {
+          "type": "select",
+          "id": "icon_type",
+          "label": "Icon type",
+          "options": [
+            { "value": "emoji", "label": "Emoji / Text" },
+            { "value": "image", "label": "Image" }
+          ],
+          "default": "emoji"
+        },
+        {
           "type": "text",
           "id": "icon",
           "label": "Emoji / Icon",
           "default": "🐾",
-          "info": "Use an emoji or short text"
+          "info": "Used when icon type is Emoji"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Icon image",
+          "info": "Used when icon type is Image. 100x100 recommended"
         },
         {
           "type": "text",
@@ -156,16 +281,10 @@
           "info": "Link to collection or page"
         },
         {
-          "type": "select",
-          "id": "color_style",
-          "label": "Color style",
-          "options": [
-            { "value": "teal", "label": "Teal (primary)" },
-            { "value": "purple", "label": "Purple" },
-            { "value": "pink", "label": "Pink" },
-            { "value": "gold", "label": "Gold" }
-          ],
-          "default": "teal"
+          "type": "color",
+          "id": "block_color",
+          "label": "Circle color",
+          "default": "#00CEC9"
         }
       ]
     }
@@ -175,11 +294,11 @@
       "name": "Sticker Categories",
       "category": "Custom",
       "blocks": [
-        { "type": "category", "settings": { "icon": "🐾", "label": "Animals", "color_style": "teal" } },
-        { "type": "category", "settings": { "icon": "🌸", "label": "Nature", "color_style": "pink" } },
-        { "type": "category", "settings": { "icon": "✨", "label": "Quotes", "color_style": "gold" } },
-        { "type": "category", "settings": { "icon": "🎨", "label": "Aesthetic", "color_style": "purple" } },
-        { "type": "category", "settings": { "icon": "🎮", "label": "Gaming", "color_style": "teal" } }
+        { "type": "category", "settings": { "icon": "🐾", "label": "Animals", "block_color": "#00CEC9" } },
+        { "type": "category", "settings": { "icon": "🌸", "label": "Nature", "block_color": "#FD79A8" } },
+        { "type": "category", "settings": { "icon": "✨", "label": "Quotes", "block_color": "#FDCB6E" } },
+        { "type": "category", "settings": { "icon": "🎨", "label": "Aesthetic", "block_color": "#6C5CE7" } },
+        { "type": "category", "settings": { "icon": "🎮", "label": "Gaming", "block_color": "#00CEC9" } }
       ]
     }
   ]
