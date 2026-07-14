@@ -262,16 +262,13 @@
     img.src = src; img.draggable = false;
     el.appendChild(img);
 
-    // Size info label
     var si = document.createElement('div');
     si.className = 'size-info'; si.id = 'size-info-'+id;
     el.appendChild(si);
 
-    // 4 resize handles
     ['nw','ne','sw','se'].forEach(function(pos) {
       var h = document.createElement('div');
-      h.className = 'resize-handle ' + pos;
-      h.dataset.handle = pos;
+      h.className = 'resize-handle ' + pos; h.dataset.handle = pos;
       el.appendChild(h);
     });
 
@@ -282,29 +279,7 @@
 
     var item = { id: id, el: el, x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: w, h: h, rotation: 0, scaleX: 1, scaleY: 1 };
     items.push(item);
-    toggleSelect(id, false);
-
-    el.addEventListener('mousedown', function(e) {
-      e.stopPropagation();
-      var cid = parseInt(this.dataset.itemId);
-      if (e.target.classList.contains('resize-handle')) {
-        if (!selectedIds[cid]) toggleSelect(cid, false);
-        startResize(e, cid, e.target.dataset.handle);
-        return;
-      }
-      if (e.target.classList.contains('rot-handle')) return;
-      if (e.ctrlKey || e.metaKey) { toggleSelect(cid, true); return; }
-      if (!selectedIds[cid]) toggleSelect(cid, false);
-      startDrag(e, cid);
-    });
-
-    rot.addEventListener('mousedown', function(e) {
-      e.stopPropagation();
-      var cid = parseInt(this.parentElement.dataset.itemId);
-      if (!selectedIds[cid]) toggleSelect(cid, false);
-      startRotate(e, cid);
-    });
-
+    selectedIds = {}; selectedIds[id] = true; updateSelection();
     updateSizeInfo(item);
     updateCount(); updatePrice();
     return item;
@@ -547,12 +522,29 @@
 
   // ── Selection box ──
   canvas.addEventListener('mousedown', function(e) {
-    if (e.target === canvas || e.target.classList.contains('grid-bg')) {
-      if (!(e.ctrlKey || e.metaKey)) { selectedIds = {}; updateSelection(); }
-      var cr = canvas.getBoundingClientRect();
-      selBoxState = { sx: e.clientX - cr.left, sy: e.clientY - cr.top };
-      dragState = { type: 'selbox', sx: selBoxState.sx, sy: selBoxState.sy };
+    var itemEl = e.target.closest('.canvas-item');
+    if (itemEl) {
+      var cid = parseInt(itemEl.dataset.itemId);
+      if (e.target.classList.contains('resize-handle')) {
+        if (!selectedIds[cid]) { selectedIds = {}; selectedIds[cid] = true; updateSelection(); }
+        startResize(e, cid, e.target.dataset.handle);
+        return;
+      }
+      if (e.target.classList.contains('rot-handle')) {
+        if (!selectedIds[cid]) { selectedIds = {}; selectedIds[cid] = true; updateSelection(); }
+        startRotate(e, cid);
+        return;
+      }
+      if (e.ctrlKey || e.metaKey) { toggleSelect(cid, true); return; }
+      selectedIds = {}; selectedIds[cid] = true; updateSelection();
+      startDrag(e, cid);
+      return;
     }
+    // Canvas background click = start selection box
+    if (!(e.ctrlKey || e.metaKey)) { selectedIds = {}; updateSelection(); }
+    var cr = canvas.getBoundingClientRect();
+    selBoxState = { sx: e.clientX - cr.left, sy: e.clientY - cr.top };
+    dragState = { type: 'selbox', sx: selBoxState.sx, sy: selBoxState.sy };
   });
 
   // ── Upload ──
