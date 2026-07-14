@@ -61,49 +61,9 @@
   transform: scale(1.12);
 }
 
-/* Splash burst effect */
-.sticker-categories-{{ section.id }} .category-circle::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--circle-color, 0,206,201), 0.3) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  transform: scale(0.6);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.sticker-categories-{{ section.id }} .category-card:hover .category-circle::before {
-  opacity: 1;
-  transform: scale(1.5);
-}
-
-/* Splatter dots */
-.sticker-categories-{{ section.id }} .category-circle::after {
-  content: '';
-  position: absolute;
-  inset: -20px;
-  border-radius: 50%;
-  background:
-    radial-gradient(4px 4px at 120% 50%, rgba(var(--circle-color, 0,206,201), 0.5) 50%, transparent 50%),
-    radial-gradient(3px 3px at 140% 80%, rgba(var(--circle-color, 0,206,201), 0.4) 50%, transparent 50%),
-    radial-gradient(5px 5px at -20% 30%, rgba(var(--circle-color, 0,206,201), 0.35) 50%, transparent 50%),
-    radial-gradient(3px 3px at 80% -25%, rgba(var(--circle-color, 0,206,201), 0.45) 50%, transparent 50%),
-    radial-gradient(4px 4px at -30% 90%, rgba(var(--circle-color, 0,206,201), 0.3) 50%, transparent 50%),
-    radial-gradient(2px 2px at 160% 20%, rgba(var(--circle-color, 0,206,201), 0.4) 50%, transparent 50%),
-    radial-gradient(3px 3px at 50% 130%, rgba(var(--circle-color, 0,206,201), 0.35) 50%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.35s ease 0.05s, transform 0.35s ease;
-  transform: scale(0.5);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.sticker-categories-{{ section.id }} .category-card:hover .category-circle::after {
-  opacity: 1;
-  transform: scale(1.2);
+/* Keep just the scale pop */
+.sticker-categories-{{ section.id }} .category-card:hover .category-circle {
+  transform: scale(1.12);
 }
 
 .sticker-categories-{{ section.id }} .category-circle img {
