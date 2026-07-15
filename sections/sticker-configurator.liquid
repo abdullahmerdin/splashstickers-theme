@@ -44,11 +44,13 @@
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
   position: relative; width: 100%; overflow: hidden; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff; aspect-ratio: 2 / 1;
+  border: 2px solid #DFE6E9; background: #fff; min-height: 300px;
+  display: flex; align-items: flex-start;
 }
 .sticker-config-{{ section.id }} .canvas-area {
-  position: absolute; inset: 0; cursor: default; user-select: none;
-  transform-origin: 0 0;
+  position: absolute; left: 0; top: 0; cursor: default; user-select: none;
+  transform-origin: 0 0; overflow: hidden;
+  width: 600px; height: 400px;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
   position: absolute; inset: 0; pointer-events: none;
@@ -166,8 +168,7 @@
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
 }
 .sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
-  flex: 1; aspect-ratio: auto !important; min-height: 0;
-  border-radius: 8px;
+  flex: 1; min-height: 0; border-radius: 8px; overflow: hidden;
 }
 .sticker-config-{{ section.id }}.mobile-mode .toolbar {
   padding: 4px; gap: 2px; overflow-x: auto; flex-wrap: wrap;
@@ -355,18 +356,18 @@
   function getSelected(){return items.filter(function(i){return selectedIds.indexOf(i.id)!==-1;});}
 
   /* ── Unit conversion ── */
-  function pxToMm(px){return Math.round(px/(canvas.clientWidth/zoom)*600);}
-  function mmToPx(mm){return mm/600*(canvas.clientWidth/zoom);}
+  function pxToMm(px){return Math.round(px/CANVAS_W*600);}
+  function mmToPx(mm){return mm/600*CANVAS_W;}
   function snapVal(v,g){return g>0?Math.round(v/g)*g:v;}
 
   /* ── Add items ── */
   function addImageItem(src, silent) {
-    var id=nextId++, cw=canvas.clientWidth/zoom, ch=canvas.clientHeight/zoom;
+    var id=nextId++;
     var w=80+Math.random()*30, h=w*0.75;
     var el=document.createElement('div');
     el.className='canvas-item'; el.dataset.itemId=id;
-    el.style.left=(20+Math.random()*(cw-w-40))+'px';
-    el.style.top=(20+Math.random()*(ch-h-40))+'px';
+    el.style.left=(20+Math.random()*(CANVAS_W-w-40))+'px';
+    el.style.top=(20+Math.random()*(CANVAS_H-h-40))+'px';
     el.style.width=w+'px'; el.style.height=h+'px';
     var img=document.createElement('img'); img.src=src; img.draggable=false;
     el.appendChild(img);
@@ -376,11 +377,11 @@
     return item;
   }
   function addTextItem(text, fontSize, silent) {
-    var id=nextId++, cw=canvas.clientWidth/zoom, ch=canvas.clientHeight/zoom;
+    var id=nextId++;
     var w=120, h=40+fontSize;
     var el=document.createElement('div');
     el.className='canvas-item'; el.dataset.itemId=id;
-    el.style.left=((cw-w)/2)+'px'; el.style.top=((ch-h)/2)+'px';
+    el.style.left=((CANVAS_W-w)/2)+'px'; el.style.top=((CANVAS_H-h)/2)+'px';
     el.style.width=w+'px'; el.style.height=h+'px';
     var tc=document.createElement('div');
     tc.className='text-content'; tc.textContent=text;
@@ -487,24 +488,30 @@
   }
 
   /* ── Zoom / Pan ── */
+  var CANVAS_W=600, CANVAS_H=400;
+  function clampPan() {
+    var vw=wrap.clientWidth, vh=wrap.clientHeight;
+    var maxX=CANVAS_W-vw/zoom, maxY=CANVAS_H-vh/zoom;
+    panX=Math.max(-maxX,Math.min(0,panX));
+    panY=Math.max(-maxY,Math.min(0,panY));
+  }
   function applyZoom() {
     zoom=Math.max(1,Math.min(5,zoom));
+    clampPan();
     canvas.style.transform='scale('+zoom+') translate('+panX+'px,'+panY+'px)';
-    canvas.style.width=(100/zoom)+'%'; canvas.style.height=(100/zoom)+'%';
     zoomDisplay.textContent=Math.round(zoom*100)+'%';
     drawGrid();
   }
   function drawGrid() {
     var gc=document.getElementById('grid-canvas-'+sid);
     if(!gc) return;
-    var w=canvas.clientWidth, h=canvas.clientHeight;
-    gc.width=w; gc.height=h;
+    gc.width=CANVAS_W; gc.height=CANVAS_H;
     var ctx=gc.getContext('2d');
     var gs=20;
     ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.lineWidth=1;
     ctx.beginPath();
-    for(var x=0; x<w; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,h);}
-    for(var y=0; y<h; y+=gs){ctx.moveTo(0,y);ctx.lineTo(w,y);}
+    for(var x=0; x<CANVAS_W; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,CANVAS_H);}
+    for(var y=0; y<CANVAS_H; y+=gs){ctx.moveTo(0,y);ctx.lineTo(CANVAS_W,y);}
     ctx.stroke();
   }
 
@@ -512,10 +519,11 @@
     if(items.length===0){zoom=1;panX=0;panY=0;applyZoom();return;}
     var minX=1/0,minY=1/0,maxX=-1/0,maxY=-1/0;
     items.forEach(function(i){if(i.x<minX)minX=i.x;if(i.y<minY)minY=i.y;if(i.x+i.w>maxX)maxX=i.x+i.w;if(i.y+i.h>maxY)maxY=i.y+i.h;});
-    var pw=wrap.clientWidth-40, ph=wrap.clientHeight-40;
-    var zw=pw/(maxX-minX+40), zh=ph/(maxY-minY+40);
+    var vw=wrap.clientWidth, vh=wrap.clientHeight;
+    var zw=vw/(maxX-minX+40), zh=vh/(maxY-minY+40);
     zoom=Math.min(zw,zh,2); zoom=Math.max(zoom,1);
-    panX=-(minX-20); panY=-(minY-20);
+    var cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+    panX=vw/2/zoom-cx; panY=vh/2/zoom-cy;
     applyZoom();
   }
 
@@ -574,12 +582,11 @@
     if(dragState.type==='pan'){var dx=e.clientX-dragState.ox,dy=e.clientY-dragState.oy;panX+=dx;panY+=dy;dragState.ox=e.clientX;dragState.oy=e.clientY;applyZoom();return;}
     if(dragState.type==='move'){
       var dx=(e.clientX-dragState.ox)/zoom, dy=(e.clientY-dragState.oy)/zoom;
-      var cw=canvas.clientWidth/zoom, ch=canvas.clientHeight/zoom;
       dragState.ids.forEach(function(id){
         var item=items.find(function(i){return i.id==id;}); if(!item) return;
         var sp=dragState.startPos[id]; if(!sp) return;
-        item.x=Math.max(0,Math.min(cw-item.w,sp.x+dx));
-        item.y=Math.max(0,Math.min(ch-item.h,sp.y+dy));
+        item.x=Math.max(0,Math.min(CANVAS_W-item.w,sp.x+dx));
+        item.y=Math.max(0,Math.min(CANVAS_H-item.h,sp.y+dy));
         var snap=document.getElementById('snap-toggle-'+sid).checked;
         var gridPx=snap?Math.round(canvas.clientWidth/600*5):0;
         if(gridPx>0){item.x=snapVal(item.x,gridPx);item.y=snapVal(item.y,gridPx);}
@@ -596,7 +603,7 @@
       if(h.includes('w')){var nw=Math.max(minS,dragState.sw-dx);item.x=dragState.sx+dragState.sw-nw;item.w=nw;}
       if(h.includes('s')) item.h=Math.max(minS,dragState.sh+dy);
       if(h.includes('n')){var nh=Math.max(minS,dragState.sh-dy);item.y=dragState.sy+dragState.sh-nh;item.h=nh;}
-      item.x=Math.max(0,Math.min(cw-item.w,item.x));item.y=Math.max(0,Math.min(ch-item.h,item.y));
+      item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,Math.min(CANVAS_H-item.h,item.y));
       item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';
       item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';
       updateSizeInfo(item); return;
@@ -638,7 +645,7 @@
     var f=e.deltaY>0?0.9:1.1;
     zoom*=f; zoom=Math.max(1,Math.min(5,zoom));
     panX=mx-mx*zoom/(zoom/f); panY=my-my*zoom/(zoom/f);
-    applyZoom();
+    clampPan(); applyZoom();
   },{passive:false});
 
   /* ── Toolbar ── */
@@ -647,7 +654,7 @@
   flipHBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleX*=-1;applyTransform(it);});});
   flipVBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleY*=-1;applyTransform(it);});});
   autoBtn.addEventListener('click',function(){
-    saveState(); var cw=canvas.clientWidth/zoom,ch=canvas.clientHeight/zoom,pad=12,gap=Math.round(cw/600*3);
+    saveState(); var cw=CANVAS_W,ch=CANVAS_H,pad=12,gap=Math.round(cw/600*3);
     var packed=[],row=[],rowW=0,maxRowH=0;
     items.forEach(function(it,idx){if(row.length&&rowW+gap+it.w>cw-pad*2){packed.push({items:row,h:maxRowH});row=[];rowW=0;maxRowH=0;}row.push(idx);rowW+=gap+it.w;maxRowH=Math.max(maxRowH,it.h);});
     if(row.length) packed.push({items:row,h:maxRowH});
@@ -681,7 +688,8 @@
   layerBtn.addEventListener('click',function(){layerOpen=!layerOpen;layerPanel.classList.toggle('open',layerOpen);updateLayerPanel();});
 
   /* ── Export ── */
-  function renderToCanvas(cw, ch) {
+  function renderToCanvas() {
+    var cw=CANVAS_W, ch=CANVAS_H;
     var c = document.createElement('canvas');
     c.width=cw*2; c.height=ch*2;
     var ctx=c.getContext('2d');
@@ -705,8 +713,7 @@
     return c;
   }
   exportBtn.addEventListener('click',function(){
-    var cw=canvas.clientWidth/zoom, ch=canvas.clientHeight/zoom;
-    var expCanvas=renderToCanvas(cw,ch);
+    var expCanvas=renderToCanvas();
     expCanvas.toBlob(function(blob){
       if(!blob) return;
       var fr=new FileReader();
