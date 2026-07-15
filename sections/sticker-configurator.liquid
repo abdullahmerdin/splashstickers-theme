@@ -44,13 +44,11 @@
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
   position: relative; width: 100%; overflow: hidden; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff; min-height: 300px;
-  display: flex; align-items: flex-start;
+  border: 2px solid #DFE6E9; background: #fff; aspect-ratio: 3 / 2;
 }
 .sticker-config-{{ section.id }} .canvas-area {
-  position: absolute; left: 0; top: 0; cursor: default; user-select: none;
+  position: absolute; inset: 0; cursor: default; user-select: none;
   transform-origin: 0 0; overflow: hidden;
-  width: 600px; height: 400px;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
   position: absolute; inset: 0; pointer-events: none;
@@ -488,15 +486,19 @@
   }
 
   /* ── Zoom / Pan ── */
-  var CANVAS_W=600, CANVAS_H=400;
+  var CANVAS_W=wrap.clientWidth, CANVAS_H=wrap.clientHeight;
   function clampPan() {
     var vw=wrap.clientWidth, vh=wrap.clientHeight;
-    var maxX=CANVAS_W-vw/zoom, maxY=CANVAS_H-vh/zoom;
-    panX=Math.max(-maxX,Math.min(0,panX));
-    panY=Math.max(-maxY,Math.min(0,panY));
+    var maxX=CANVAS_W*zoom-vw;
+    panX=Math.min(0,Math.max(-maxX,panX));
+    panY=Math.min(0,Math.max(-(CANVAS_H*zoom-vh),panY));
+  }
+  function updateCanvasWH() {
+    CANVAS_W=wrap.clientWidth; CANVAS_H=wrap.clientHeight;
   }
   function applyZoom() {
     zoom=Math.max(1,Math.min(5,zoom));
+    updateCanvasWH();
     clampPan();
     canvas.style.transform='scale('+zoom+') translate('+panX+'px,'+panY+'px)';
     zoomDisplay.textContent=Math.round(zoom*100)+'%';
@@ -517,13 +519,13 @@
 
   function zoomToFit() {
     if(items.length===0){zoom=1;panX=0;panY=0;applyZoom();return;}
+    updateCanvasWH();
     var minX=1/0,minY=1/0,maxX=-1/0,maxY=-1/0;
     items.forEach(function(i){if(i.x<minX)minX=i.x;if(i.y<minY)minY=i.y;if(i.x+i.w>maxX)maxX=i.x+i.w;if(i.y+i.h>maxY)maxY=i.y+i.h;});
-    var vw=wrap.clientWidth, vh=wrap.clientHeight;
-    var zw=vw/(maxX-minX+40), zh=vh/(maxY-minY+40);
+    var zw=CANVAS_W/(maxX-minX+40), zh=CANVAS_H/(maxY-minY+40);
     zoom=Math.min(zw,zh,2); zoom=Math.max(zoom,1);
     var cx=(minX+maxX)/2, cy=(minY+maxY)/2;
-    panX=vw/2/zoom-cx; panY=vh/2/zoom-cy;
+    panX=CANVAS_W/2/zoom-cx; panY=CANVAS_H/2/zoom-cy;
     applyZoom();
   }
 
@@ -554,7 +556,7 @@
     return { x: (e.clientX-cr.left)/zoom, y: (e.clientY-cr.top)/zoom };
   }
 
-  canvas.addEventListener('mousedown',function(e){
+  canvas.addEventListener('mousedown',function(e){updateCanvasWH();
     var itemEl=e.target.closest('.canvas-item');
     if(itemEl){
       var cid=parseInt(itemEl.dataset.itemId);
@@ -645,7 +647,7 @@
     var f=e.deltaY>0?0.9:1.1;
     zoom*=f; zoom=Math.max(1,Math.min(5,zoom));
     panX=mx-mx*zoom/(zoom/f); panY=my-my*zoom/(zoom/f);
-    clampPan(); applyZoom();
+    updateCanvasWH();clampPan(); applyZoom();
   },{passive:false});
 
   /* ── Toolbar ── */
