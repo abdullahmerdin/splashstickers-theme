@@ -30,13 +30,16 @@
   grid-column: 1; grid-row: 1;
   background: {{ bg_color }};
   border-radius: 20px; padding: 24px; position: sticky; top: 100px;
+  max-height: calc(100vh - 130px); display: flex; flex-direction: column;
 }
 .sticker-config-{{ section.id }} .editor-wrap {
   display: flex; flex-direction: column; gap: 12px;
+  flex: 1; overflow-y: auto; min-height: 0;
 }
 .sticker-config-{{ section.id }} .toolbar {
   display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
   background: #f8f9fa; border-radius: 12px; padding: 4px;
+  position: sticky; top: 0; z-index: 10;
 }
 .sticker-config-{{ section.id }} .toolbar button {
   width: 34px; height: 34px; border-radius: 8px; border: none;
@@ -243,6 +246,9 @@
 }
 .sticker-config-{{ section.id }}.mobile-mode .editor-wrap {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
+  flex: 1; min-height: 200px; overflow: auto;
 }
 .sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
   flex: 1; min-height: 0; border-radius: 8px; overflow: hidden;
@@ -631,8 +637,8 @@
     items.forEach(function(i){var b=i.y+i.h;if(b>maxB)maxB=b;});
     maxB=Math.max(maxB, wrap.clientHeight);
     if(maxB>wrap.clientHeight){
-      wrap.style.height=maxB+40+'px';
-      CANVAS_H=wrap.clientHeight;
+      CANVAS_H=maxB+40;
+      canvas.style.height=CANVAS_H+'px';
       drawGrid();
     }
   }
