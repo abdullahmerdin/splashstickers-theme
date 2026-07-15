@@ -349,7 +349,7 @@
       el.style.outlineOffset=el.classList.contains('selected')?mm3+'px':'';
     });
     delBtn.disabled=dupBtn.disabled=flipHBtn.disabled=flipVBtn.disabled=count===0;
-    updateSizeInputs(); updateLayerPanel();
+    updateSizeInputs(); updateLayerPanel(); updateCount();
   }
   function getSelected(){return items.filter(function(i){return selectedIds.indexOf(i.id)!==-1;});}
 
