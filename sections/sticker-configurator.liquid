@@ -61,7 +61,7 @@
   transform-origin: 0 0; overflow: hidden;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
-  position: absolute; inset: 0; pointer-events: none;
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
 }
 .sticker-config-{{ section.id }} .canvas-item {
   position: absolute; cursor: grab; user-select: none;
@@ -633,14 +633,15 @@
   function drawGrid() {
     var gc=document.getElementById('grid-canvas-'+sid);
     if(!gc) return;
-    gc.width=CANVAS_W; gc.height=CANVAS_H;
-    gc.style.height='';
+    var w=wrap.clientWidth, h=wrap.clientHeight;
+    gc.width=w; gc.height=h;
+    gc.style.width=w+'px'; gc.style.height=h+'px';
     var ctx=gc.getContext('2d');
     var gs=parseInt((document.getElementById('grid-size-'+sid)||{}).value)||20;
     ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.lineWidth=1;
     ctx.beginPath();
-    for(var x=0; x<CANVAS_W; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,CANVAS_H);}
-    for(var y=0; y<CANVAS_H; y+=gs){ctx.moveTo(0,y);ctx.lineTo(CANVAS_W,y);}
+    for(var x=0; x<w; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,CANVAS_H);}
+    for(var y=0; y<h; y+=gs){ctx.moveTo(0,y);ctx.lineTo(CANVAS_W,y);}
     ctx.stroke();
   }
 
