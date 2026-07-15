@@ -63,7 +63,6 @@
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
   transform-origin: 0 0; overflow: hidden;
-  width: 600px; height: 400px;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
   position: absolute; inset: 0; pointer-events: none; overflow: hidden;
@@ -631,16 +630,15 @@
   }
 
   /* ── Zoom / Pan ── */
-  var CANVAS_W=600, CANVAS_H=400;
+  var CANVAS_W=wrap.clientWidth, CANVAS_H=Math.round(wrap.clientWidth*400/600);
   function clampPan() {
     var vw=wrap.clientWidth, vh=wrap.clientHeight;
     var maxX=CANVAS_W - vw/zoom;
     panX=Math.min(0,Math.max(-maxX,panX));
     panY=Math.min(0,Math.max(-(CANVAS_H - vh/zoom),panY));
   }
-  function updateCanvasWH() {
-    CANVAS_W=600; CANVAS_H=400;
-  }
+  function updateCanvasWH() {}
+
   function growCanvas() {
     var maxB=0;
     items.forEach(function(i){var b=i.y+i.h;if(b>maxB)maxB=b;});
