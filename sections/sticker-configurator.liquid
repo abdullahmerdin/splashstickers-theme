@@ -345,14 +345,28 @@
         </div>
       </div>
     </div>
-    <div class="bottom-extra">
+        <div class="bottom-extra">
       <div class="be-row">
-        <span class="be-label">Canvas</span>
-        <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:32px;height:32px;border:none;cursor:pointer;border-radius:6px;">
-        <button class="be-btn danger" id="clear-btn-{{ section.id }}" style="">Clear all</button>
-        <span id="stats-{{ section.id }}" style="font-size:0.75rem;color:#636E72;margin-left:8px;"></span>
+        <span class="be-label">Snap</span>
+        <input type="checkbox" id="snap-btm-{{ section.id }}" checked style="accent-color:var(--cfg-primary);cursor:pointer;">
+        <span style="font-size:0.7rem;color:#B2BEC3;">Grid</span>
+        <input type="number" id="grid-size-{{ section.id }}" value="20" min="5" max="100" step="5" style="width:40px;padding:2px 4px;border:2px solid #DFE6E9;border-radius:6px;font-size:0.75rem;text-align:center;">
+        <span style="font-size:0.7rem;color:#B2BEC3;">px</span>
+        <span class="be-label" style="margin-left:4px;">Gap</span>
+        <input type="number" id="gap-size-{{ section.id }}" value="3" min="0" max="50" step="1" style="width:36px;padding:2px 4px;border:2px solid #DFE6E9;border-radius:6px;font-size:0.75rem;text-align:center;">
+        <span style="font-size:0.7rem;color:#B2BEC3;">mm</span>
       </div>
-    </div>
+      <div class="be-row">
+        <span class="be-label">Zoom</span>
+        <button class="be-btn" id="zoom100-btn-{{ section.id }}">100%</button>
+        <button class="be-btn" id="zoomfit-btn-{{ section.id }}">Fit</button>
+        <button class="be-btn" id="zoom200-btn-{{ section.id }}">200%</button>
+        <button class="be-btn" id="auto-btn2-{{ section.id }}">Auto</button>
+        <button class="be-btn" id="export-btn2-{{ section.id }}">PDF</button>
+        <span id="stats-{{ section.id }}" style="font-size:0.75rem;color:#636E72;margin-left:auto;"></span>
+        <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:5px;padding:0;">
+        <button class="be-btn danger" id="clear-btn-{{ section.id }}" style="padding:2px 8px;font-size:0.7rem;">Clear</button>
+      </div>
     </div>
   </div>
 </div>
