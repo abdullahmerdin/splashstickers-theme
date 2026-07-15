@@ -244,13 +244,47 @@
   function saveState() {
     historyIdx++;
     history.length = historyIdx;
-    history.push(items.map(function(i) { return { id: i.id, x: i.x, y: i.y, w: i.w, h: i.h, rotation: i.rotation, scaleX: i.scaleX, scaleY: i.scaleY }; }));
-    if (history.length > 50) history.shift();
+    history.push(items.map(function(i) {
+      var img = i.el.querySelector('img');
+      return { id: i.id, src: img ? img.src : '', x: i.x, y: i.y, w: i.w, h: i.h, rotation: i.rotation, scaleX: i.scaleX, scaleY: i.scaleY };
+    }));
+    if (history.length > 50) { history.shift(); historyIdx--; }
     updateHistoryBtns();
   }
   function restoreState(state) {
+    var savedIds = state.map(function(s) { return s.id; });
+    // Remove items not in saved state
+    for (var ri = items.length - 1; ri >= 0; ri--) {
+      var riItem = items[ri];
+      if (savedIds.indexOf(riItem.id) === -1) {
+        riItem.el.remove();
+        items.splice(ri, 1);
+      }
+    }
+    // Re-create or update items from saved state
     state.forEach(function(s) {
       var item = items.find(function(i) { return i.id === s.id; });
+      if (!item && s.src) {
+        // Re-create deleted item
+        var el = document.createElement('div');
+        el.className = 'canvas-item'; el.dataset.itemId = s.id;
+        el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
+        el.style.width = s.w + 'px'; el.style.height = s.h + 'px';
+        var img = document.createElement('img'); img.src = s.src; img.draggable = false;
+        el.appendChild(img);
+        var si = document.createElement('div'); si.className = 'size-info'; si.id = 'size-info-'+s.id;
+        el.appendChild(si);
+        ['nw','ne','sw','se'].forEach(function(pos) {
+          var h = document.createElement('div');
+          h.className = 'resize-handle ' + pos; h.dataset.handle = pos;
+          el.appendChild(h);
+        });
+        var rot = document.createElement('div');
+        rot.className = 'rot-handle'; el.appendChild(rot);
+        canvas.appendChild(el);
+        item = { id: s.id, el: el, x: s.x, y: s.y, w: s.w, h: s.h, rotation: s.rotation, scaleX: s.scaleX, scaleY: s.scaleY };
+        items.push(item);
+      }
       if (!item) return;
       item.x = s.x; item.y = s.y; item.w = s.w; item.h = s.h;
       item.rotation = s.rotation; item.scaleX = s.scaleX; item.scaleY = s.scaleY;
@@ -259,6 +293,8 @@
       applyTransform(item);
       updateSizeInfo(item);
     });
+    if (items.length === 0) hint.style.display = '';
+    else hint.style.display = 'none';
   }
   function undo() {
     if (historyIdx <= 0) return;
