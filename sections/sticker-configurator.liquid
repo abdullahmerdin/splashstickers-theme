@@ -131,6 +131,30 @@
 .sticker-config-{{ section.id }} .upload-btn-area button:hover {
   border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
 }
+.sticker-config-{{ section.id }}.mobile-mode {
+  position: fixed !important; inset: 0 !important; z-index: 99998 !important;
+  border-radius: 0 !important; padding: 8px !important; top: 0 !important;
+  display: flex !important; flex-direction: column !important;
+}
+.sticker-config-{{ section.id }}.mobile-mode .editor-wrap {
+  flex: 1; display: flex; flex-direction: column;
+}
+.sticker-config-{{ section.id }}.mobile-mode .canvas-area {
+  flex: 1; aspect-ratio: auto !important; min-height: 0;
+}
+.sticker-config-{{ section.id }}.mobile-mode .toolbar button {
+  width: 40px; height: 40px; font-size: 18px;
+}
+.sticker-config-{{ section.id }}.mobile-mode .toolbar {
+  padding: 6px; gap: 4px;
+}
+.sticker-config-{{ section.id }}.mobile-mode .modal-box {
+  max-width: 100% !important; width: 100% !important; height: 100% !important;
+  border-radius: 0 !important; overflow-y: auto;
+}
+.sticker-config-{{ section.id }}.mobile-mode .modal-overlay {
+  align-items: flex-end !important;
+}
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} {
     position: static; padding: 16px;
@@ -150,6 +174,8 @@
       <span class="toolbar-divider"></span>
       <button title="Flip horizontal" id="flip-h-{{ section.id }}" disabled>&#x2194;&#xFE0F;</button>
       <button title="Flip vertical" id="flip-v-{{ section.id }}" disabled>&#x2195;&#xFE0F;</button>
+      <span class="toolbar-divider"></span>
+      <button title="Mobile mode (full screen canvas)" id="mobile-btn-{{ section.id }}">&#x1F4F1;</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#B2BEC3;">
       <input type="checkbox" id="snap-toggle-{{ section.id }}" style="accent-color:#00CEC9;cursor:pointer;">
@@ -210,6 +236,7 @@
   var flipHBtn = document.getElementById('flip-h-'+sid);
   var flipVBtn = document.getElementById('flip-v-'+sid);
   var autoBtn = document.getElementById('auto-btn-'+sid);
+  var mobileBtn = document.getElementById('mobile-btn-'+sid);
   // Undo/redo history
   var history = [];
   var historyIdx = -1;
@@ -756,6 +783,18 @@
     var count = items.length || 1;
     priceEl.textContent = '$' + (basePrice * count * qty).toFixed(2);
   }
+  var mobile = false;
+  mobileBtn.addEventListener('click', function() {
+    mobile = !mobile;
+    document.querySelector('.sticker-config-'+sid).classList.toggle('mobile-mode', mobile);
+    this.innerHTML = mobile ? '&#x1F5A5;' : '&#x1F4F1;';
+    if (mobile) {
+      document.getElementById('modal-'+sid).querySelector('.modal-box').style.maxWidth = '100%';
+      document.getElementById('modal-'+sid).querySelector('.modal-box').style.width = '100%';
+      document.getElementById('modal-'+sid).querySelector('.modal-box').style.height = '100%';
+      document.getElementById('modal-'+sid).querySelector('.modal-box').style.borderRadius = '0';
+    }
+  });
   saveState();
   undoBtn.addEventListener('click', undo);
   redoBtn.addEventListener('click', redo);
