@@ -384,6 +384,7 @@
   CANVAS_H = Math.round(CANVAS_W * 400 / 600);
   canvas.style.width = CANVAS_W + 'px';
   canvas.style.height = CANVAS_H + 'px';
+  wrap.style.height = CANVAS_H + 'px';
   var hint = document.getElementById('hint-'+sid);
   var fileInput = document.getElementById('file-input-'+sid);
   var countEl = document.getElementById('item-count-'+sid);
@@ -650,6 +651,7 @@
     if(maxB>CANVAS_H){
       CANVAS_H=maxB+40;
       canvas.style.height=CANVAS_H+'px';
+      wrap.style.height=CANVAS_H+'px';
       drawGrid();
     }
   }
