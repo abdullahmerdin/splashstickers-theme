@@ -160,9 +160,10 @@
   padding: 8px 0; margin-top: -2px;
 }
 .sticker-config-{{ section.id }} .sticky-ctrls.fixed {
-  position: fixed; bottom: 0; left: 0; right: 0;
+  position: fixed; bottom: 0; z-index: 50;
   padding: 8px 16px; border-radius: 0;
   box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  background: {{ bg_color }};
 }
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} { position: static; padding: 16px; }
@@ -834,28 +835,28 @@
     setTimeout(function(){zoomToFit();},100);
   });
 
-  /* ── Sticky controls via scroll ── */
+  /* ── Sticky controls vi sentinel ── */
   var stickyEl = document.querySelector('.sticker-config-'+sid+' .sticky-ctrls');
-  var stickySentinel = document.createElement('div'); // invisible marker above ctrls
+  var stickySentinel = null;
   if(stickyEl){
-    stickySentinel.style.height='1px'; stickySentinel.style.margin='0';
+    stickySentinel = document.createElement('div');
+    stickySentinel.style.cssText='height:1px;margin:0;width:100%';
     stickyEl.parentNode.insertBefore(stickySentinel, stickyEl);
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var shouldFix = !entry.isIntersecting || entry.boundingClientRect.top < 0;
+        stickyEl.classList.toggle('fixed', shouldFix);
+        if(shouldFix){
+          var sr = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
+          stickyEl.style.width = sr.width + 'px';
+          stickyEl.style.left = sr.left + 'px';
+        } else {
+          stickyEl.style.width = ''; stickyEl.style.left = '';
+        }
+      });
+    }, { root: null, threshold: [0, 1] });
+    io.observe(stickySentinel);
   }
-  function updateSticky() {
-    if(!stickySentinel)return;
-    var rect=stickySentinel.getBoundingClientRect();
-    var shouldFix=rect.top<0; // sentinel above viewport = controls need fixing
-    stickyEl.classList.toggle('fixed',shouldFix);
-    if(shouldFix){
-      var sectionRect=document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
-      stickyEl.style.width=sectionRect.width+'px';
-      stickyEl.style.left=sectionRect.left+'px';
-    } else {
-      stickyEl.style.width=''; stickyEl.style.left='';
-    }
-  }
-  window.addEventListener('scroll',updateSticky,{passive:true});
-  window.addEventListener('resize',updateSticky,{passive:true});
 
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
