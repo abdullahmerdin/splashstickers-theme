@@ -163,6 +163,17 @@
 .sticker-config-{{ section.id }} .modal-file-name {
   font-size: 0.8rem; color: #00CEC9; margin-top: 4px; display: none;
 }
+.sticker-config-{{ section.id }} .upload-btn-area {
+  display: flex; gap: 8px; align-items: center;
+}
+.sticker-config-{{ section.id }} .upload-btn-area button {
+  padding: 8px 20px; border: 2px dashed #DFE6E9; border-radius: 10px;
+  background: transparent; cursor: pointer; font-size: 0.85rem; color: #636E72;
+  transition: all 0.2s; flex: 1;
+}
+.sticker-config-{{ section.id }} .upload-btn-area button:hover {
+  border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
+}
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} {
     position: static; padding: 16px;
@@ -211,6 +222,8 @@
           <label>Width</label>
           <input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1">
           <span class="modal-unit">mm</span>
+        </div>
+        <div class="modal-row">
           <label>Height</label>
           <input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1">
           <span class="modal-unit">mm</span>
