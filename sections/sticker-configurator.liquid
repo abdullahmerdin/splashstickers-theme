@@ -56,9 +56,9 @@
   width: 1px; height: 20px; background: #DFE6E9; margin: 0 4px;
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
-  position: relative; width: 100%; overflow: hidden; border-radius: 12px;
+  position: relative; width: 100%; overflow: auto; border-radius: 12px;
   border: 2px solid #DFE6E9; background: #fff;
-  flex-shrink: 0; min-height: 300px;
+  flex-shrink: 0;
 }
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
@@ -380,6 +380,7 @@
 (function() {
   var sid = '{{ section.id }}';
   var wrap = document.getElementById('canvas-wrap-'+sid);
+  wrap.style.height = '400px';
   var canvas = document.getElementById('canvas-'+sid);
   var hint = document.getElementById('hint-'+sid);
   var fileInput = document.getElementById('file-input-'+sid);
