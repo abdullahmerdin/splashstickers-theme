@@ -154,6 +154,30 @@
   font-size: 0.7rem; color: #B2BEC3; margin-left: auto; white-space: nowrap;
 }
 
+.sticker-config-{{ section.id }} .bottom-extra {
+  padding: 8px 0; display: flex; flex-direction: column; gap: 6px;
+  font-size: 0.8rem;
+}
+.sticker-config-{{ section.id }} .bottom-extra .be-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.sticker-config-{{ section.id }} .bottom-extra .be-label {
+  color: #B2BEC3; font-size: 0.7rem; font-weight: 600; min-width: 40px;
+}
+.sticker-config-{{ section.id }} .bottom-extra .be-btn {
+  padding: 4px 12px; border: 1px solid #DFE6E9; border-radius: 8px;
+  background: #fff; cursor: pointer; font-size: 0.75rem; color: #636E72;
+  transition: all 0.12s;
+}
+.sticker-config-{{ section.id }} .bottom-extra .be-btn:hover {
+  border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
+}
+.sticker-config-{{ section.id }} .bottom-extra .be-btn.danger {
+  border-color: #FF4444; color: #FF4444;
+}
+.sticker-config-{{ section.id }} .bottom-extra .be-btn.danger:hover {
+  background: #FFF0F0;
+}
 .sticker-config-{{ section.id }} .sticky-ctrls {
   background: {{ bg_color }}; border-radius: 0 0 20px 20px;
   padding: 8px 0; margin-top: -2px;
@@ -258,7 +282,28 @@
       Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
     </button>
     </div>
-    <div style="height:60px;pointer-events:none;"></div>
+    <div class="bottom-extra">
+      <div class="be-row">
+        <span class="be-label">Presets</span>
+        <button class="be-btn" data-w="50" data-h="50">50×50</button>
+        <button class="be-btn" data-w="80" data-h="50">80×50</button>
+        <button class="be-btn" data-w="100" data-h="70">100×70</button>
+        <button class="be-btn" data-w="50" data-h="100">50×100</button>
+      </div>
+      <div class="be-row">
+        <span class="be-label">Canvas</span>
+        <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:32px;height:32px;border:none;cursor:pointer;border-radius:6px;">
+        <span class="be-label" style="margin-left:8px;">Grid</span>
+        <input type="number" id="grid-size-{{ section.id }}" value="20" min="5" max="100" step="5" style="width:48px;padding:4px;border:2px solid #DFE6E9;border-radius:8px;font-size:0.8rem;text-align:center;">
+        <span style="font-size:0.7rem;color:#B2BEC3;">px</span>
+      </div>
+      <div class="be-row">
+        <button class="be-btn danger" id="clear-btn-{{ section.id }}">Clear all</button>
+        <button class="be-btn" id="save-btn-{{ section.id }}">Save</button>
+        <button class="be-btn" id="load-btn-{{ section.id }}">Load</button>
+        <span id="stats-{{ section.id }}" style="font-size:0.75rem;color:#636E72;margin-left:auto;"></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -835,6 +880,78 @@
 
 
 
+
+  /* ── Bottom panel ── */
+  // Preset buttons → set modal W/H and open modal
+  document.querySelectorAll('.sticker-config-'+sid+' .be-btn[data-w]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.getElementById('modal-w-'+sid).value=this.dataset.w;
+      document.getElementById('modal-h-'+sid).value=this.dataset.h;
+      document.getElementById('add-btn-'+sid).click();
+    });
+  });
+  // Background color
+  document.getElementById('bg-color-'+sid).addEventListener('input',function(){
+    document.querySelector('.sticker-config-'+sid+' .grid-bg').style.background=this.value;
+    canvas.style.background=this.value;
+  });
+  // Grid size
+  document.getElementById('grid-size-'+sid).addEventListener('change',function(){
+    var gs=parseInt(this.value)||20;
+    document.querySelector('.sticker-config-'+sid+' .grid-bg').style.backgroundSize=gs+'px '+gs+'px';
+  });
+  // Clear all
+  document.getElementById('clear-btn-'+sid).addEventListener('click',function(){
+    if(items.length===0)return;
+    if(!confirm('Clear all designs?'))return;
+    saveState();
+    items.slice().forEach(function(it){it.el.remove();});
+    items.length=0; selectedIds=[]; updateSelection(); updateCount(); updatePrice(); saveState();
+    hint.style.display='';
+  });
+  // Save template
+  document.getElementById('save-btn-'+sid).addEventListener('click',function(){
+    var data=items.map(function(it){
+      var img=it.el.querySelector('img');
+      return {id:it.id,src:img?img.src:(it.text||''),isText:!!it.text,text:it.text||'',fontSize:it.fontSize||16,
+        x:it.x,y:it.y,w:it.w,h:it.h,rotation:it.rotation,scaleX:it.scaleX,scaleY:it.scaleY};
+    });
+    localStorage.setItem('sticker-config-'+sid, JSON.stringify(data));
+    this.textContent='Saved!';
+    var self=this; setTimeout(function(){self.textContent='Save';},1500);
+  });
+  // Load template
+  document.getElementById('load-btn-'+sid).addEventListener('click',function(){
+    var raw=localStorage.getItem('sticker-config-'+sid);
+    if(!raw){alert('No saved template found.');return;}
+    if(items.length&&!confirm('Replace current designs?'))return;
+    var data=JSON.parse(raw);
+    items.slice().forEach(function(it){it.el.remove();});
+    items.length=0; selectedIds=[];
+    data.forEach(function(s){
+      if(s.isText) addTextItem(s.text,s.fontSize||16,true);
+      else if(s.src) addImageItem(s.src,true);
+    });
+    // Restore positions
+    data.forEach(function(s){
+      var item=items.find(function(i){return i.id===s.id;});
+      if(!item) return;
+      item.x=s.x;item.y=s.y;item.w=s.w;item.h=s.h;item.rotation=s.rotation;item.scaleX=s.scaleX;item.scaleY=s.scaleY;
+      item.el.style.left=s.x+'px';item.el.style.top=s.y+'px';item.el.style.width=s.w+'px';item.el.style.height=s.h+'px';
+      applyTransform(item);updateSizeInfo(item);
+    });
+    saveState(); updateCount(); updatePrice(); hint.style.display='none';
+  });
+  // Stats
+  function updateStats(){
+    var el=document.getElementById('stats-'+sid);
+    if(!el)return;
+    var area=0; items.forEach(function(it){area+=it.w*it.h;});
+    var areaCm=Math.round(area/CANVAS_W*600/CANVAS_W*600/100);
+    el.textContent=items.length+' items · '+areaCm+' cm²';
+  }
+  // Patch updateCount/updatePrice to also call updateStats
+  var origUC=updateCount; updateCount=function(){origUC();updateStats();};
 
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
