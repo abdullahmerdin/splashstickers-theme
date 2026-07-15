@@ -719,6 +719,7 @@
     modalZone.querySelector('.text').textContent = 'Click to choose a design file';
     modalZone.querySelector('.icon').innerHTML = '&#x1F5BC;';
     modalEl.style.display = 'flex';
+    fileInput.value = '';
   });
 
   modalZone.addEventListener('click', function() { fileInput.click(); });
