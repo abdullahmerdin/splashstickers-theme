@@ -16,7 +16,6 @@
 }
 .product-information product-component { grid-column: 2 !important; width: 100% !important; }
 
-/* ─── Canvas Editor ─── */
 .sticker-config-{{ section.id }} {
   grid-column: 1 !important; grid-row: 1 !important;
   background: {{ bg_color }};
@@ -60,7 +59,6 @@
 .sticker-config-{{ section.id }} .canvas-item img {
   width: 100%; height: 100%; object-fit: contain; pointer-events: none;
 }
-/* Resize handles on all 4 corners */
 .sticker-config-{{ section.id }} .canvas-item .resize-handle {
   position: absolute; width: 12px; height: 12px; border-radius: 2px;
   background: #00CEC9; border: 2px solid #fff; display: none; z-index: 10;
@@ -70,14 +68,12 @@
 .sticker-config-{{ section.id }} .canvas-item .resize-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
 .sticker-config-{{ section.id }} .canvas-item .resize-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
 .sticker-config-{{ section.id }} .canvas-item .resize-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
-/* Rotate handle */
 .sticker-config-{{ section.id }} .canvas-item .rot-handle {
   position: absolute; bottom: -24px; left: 50%; margin-left: -8px;
   width: 16px; height: 16px; border-radius: 50%; background: #6C5CE7;
   border: 2px solid #fff; cursor: grab; display: none; z-index: 10;
 }
 .sticker-config-{{ section.id }} .canvas-item.selected .rot-handle { display: block; }
-/* Size display during resize */
 .sticker-config-{{ section.id }} .size-info {
   position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
   background: #2D3436; color: #fff; font-size: 0.7rem; padding: 2px 8px;
@@ -85,7 +81,6 @@
   pointer-events: none;
 }
 .sticker-config-{{ section.id }} .canvas-item.selected .size-info { display: block; }
-/* Size inputs */
 .sticker-config-{{ section.id }} .size-inputs {
   display: flex; gap: 8px; align-items: center; height: 24px;
 }
@@ -96,6 +91,10 @@
 }
 .sticker-config-{{ section.id }} .size-inputs input:focus { border-color: #00CEC9; }
 .sticker-config-{{ section.id }} .size-inputs label { font-size: 0.7rem; color: #B2BEC3; }
+.sticker-config-{{ section.id }} .sel-box {
+  position: absolute; border: 1px solid #00CEC9; background: rgba(0,206,201,0.08);
+  pointer-events: none; z-index: 999; display: none;
+}
 .sticker-config-{{ section.id }} .qty-group {
   display: flex; align-items: center; gap: 6px;
   background: #fff; border: 2px solid #DFE6E9; border-radius: 12px;
@@ -120,20 +119,49 @@
   color: #DFE6E9; font-size: 0.9rem; text-align: center;
   pointer-events: none; font-weight: 500;
 }
-.sticker-config-{{ section.id }} .upload-btn-area {
-  display: flex; gap: 8px; align-items: center;
+.sticker-config-{{ section.id }} .modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99999;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
 }
-.sticker-config-{{ section.id }} .upload-btn-area button {
-  padding: 8px 20px; border: 2px dashed #DFE6E9; border-radius: 10px;
-  background: transparent; cursor: pointer; font-size: 0.85rem; color: #636E72;
-  transition: all 0.2s; flex: 1;
+.sticker-config-{{ section.id }} .modal-box {
+  background: #fff; border-radius: 20px; padding: 32px; max-width: 420px;
+  width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
 }
-.sticker-config-{{ section.id }} .upload-btn-area button:hover {
-  border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
+.sticker-config-{{ section.id }} .modal-box h3 { margin: 0 0 20px; font-size: 1.1rem; color: #2D3436; }
+.sticker-config-{{ section.id }} .modal-row {
+  display: flex; gap: 12px; margin-bottom: 16px; align-items: center;
 }
-.sticker-config-{{ section.id }} .sel-box {
-  position: absolute; border: 1px solid #00CEC9; background: rgba(0,206,201,0.08);
-  pointer-events: none; z-index: 999; display: none;
+.sticker-config-{{ section.id }} .modal-row label { font-size: 0.85rem; font-weight: 600; color: #636E72; min-width: 50px; }
+.sticker-config-{{ section.id }} .modal-row input[type=number] {
+  flex: 1; padding: 10px 12px; border: 2px solid #DFE6E9; border-radius: 10px;
+  font-size: 0.9rem; outline: none;
+}
+.sticker-config-{{ section.id }} .modal-row input[type=number]:focus { border-color: #00CEC9; }
+.sticker-config-{{ section.id }} .modal-row .modal-unit { font-size: 0.8rem; color: #B2BEC3; min-width: 30px; }
+.sticker-config-{{ section.id }} .modal-upload-zone {
+  border: 2px dashed #DFE6E9; border-radius: 12px; padding: 24px;
+  text-align: center; cursor: pointer; margin-bottom: 16px;
+}
+.sticker-config-{{ section.id }} .modal-upload-zone:hover { border-color: #00CEC9; background: #f0fdfd; }
+.sticker-config-{{ section.id }} .modal-upload-zone .icon { font-size: 2rem; margin-bottom: 4px; }
+.sticker-config-{{ section.id }} .modal-upload-zone .text { font-size: 0.85rem; color: #636E72; }
+.sticker-config-{{ section.id }} .modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
+}
+.sticker-config-{{ section.id }} .modal-actions button {
+  padding: 10px 24px; border-radius: 10px; border: none; font-size: 0.9rem;
+  font-weight: 600; cursor: pointer;
+}
+.sticker-config-{{ section.id }} .modal-actions .btn-cancel { background: #f5f5f5; color: #636E72; }
+.sticker-config-{{ section.id }} .modal-actions .btn-cancel:hover { background: #eee; }
+.sticker-config-{{ section.id }} .modal-actions .btn-add {
+  background: linear-gradient(135deg, #00CEC9, #00A8A3); color: #fff;
+}
+.sticker-config-{{ section.id }} .modal-actions .btn-add:hover { box-shadow: 0 4px 12px rgba(0,206,201,0.3); }
+.sticker-config-{{ section.id }} .modal-actions .btn-add:disabled { opacity: 0.4; cursor: default; }
+.sticker-config-{{ section.id }} .modal-file-name {
+  font-size: 0.8rem; color: #00CEC9; margin-top: 4px; display: none;
 }
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} {
@@ -169,9 +197,38 @@
       <div class="grid-bg"></div>
       <div class="canvas-hint" id="hint-{{ section.id }}">Upload a design to start</div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-{{ section.id }}">
+      <div class="modal-box">
+        <h3>Add Design</h3>
+        <div class="modal-upload-zone" id="modal-zone-{{ section.id }}">
+          <div class="icon">&#x1F5BC;</div>
+          <div class="text">Click to choose a design file</div>
+          <div class="modal-file-name" id="modal-fname-{{ section.id }}"></div>
+        </div>
+        <div class="modal-row">
+          <label>Width</label>
+          <input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1">
+          <span class="modal-unit">mm</span>
+          <label>Height</label>
+          <input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1">
+          <span class="modal-unit">mm</span>
+        </div>
+        <div class="modal-row">
+          <label>Copies</label>
+          <input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1">
+          <span class="modal-unit">pcs</span>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" id="modal-cancel-{{ section.id }}">Cancel</button>
+          <button class="btn-add" id="modal-add-{{ section.id }}" disabled>Add to Canvas</button>
+        </div>
+      </div>
+    </div>
+    <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" style="display:none;">
     <div class="upload-btn-area">
       <button id="add-btn-{{ section.id }}">&#x2795; Add design</button>
-      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" style="display:none;">
       <div class="qty-group">
         <button id="qty-down-{{ section.id }}">&minus;</button>
         <span class="qty-val" id="qty-display-{{ section.id }}">10</span>
@@ -213,9 +270,13 @@
   canvas.appendChild(selBox);
 
   function toggleSelect(id, add) {
-    if (add && selectedIds[id]) { delete selectedIds[id]; }
-    else if (add) { selectedIds[id] = true; }
-    else { selectedIds = {}; selectedIds[id] = true; }
+    if (add) {
+      var idx = selectedIds.indexOf(id);
+      if (idx !== -1) selectedIds.splice(idx, 1);
+      else selectedIds.push(id);
+    } else {
+      selectedIds = [id];
+    }
     updateSelection();
   }
 
@@ -251,6 +312,10 @@
   }
   function mmToPx(mm) {
     return mm / 600 * canvas.clientWidth;
+  }
+
+  function snapVal(v, gridPx) {
+    return gridPx > 0 ? Math.round(v / gridPx) * gridPx : v;
   }
 
   function addItem(src) {
@@ -291,29 +356,9 @@
     return item;
   }
 
-  function snapVal(v, gridPx) {
-    return gridPx > 0 ? Math.round(v / gridPx) * gridPx : v;
-  }
-
-  function startDrag(e, id) {
-    var item = items.find(function(i) { return i.id === id; });
-    if (!item) return;
-    dragState = { type: 'move', ids: selectedIds.slice(), ox: e.clientX, oy: e.clientY, startPos: {} };
-    getSelected().forEach(function(i) { dragState.startPos[i.id] = { x: i.x, y: i.y }; });
-    item.el.style.cursor = 'grabbing';
-    e.preventDefault();
-  }
-
-  function startResize(e, id, handle) {
-    var item = items.find(function(i) { return i.id === id; });
-    if (!item) return;
-    dragState = { type: 'resize', id: id, handle: handle, ox: e.clientX, oy: e.clientY, sw: item.w, sh: item.h, sx: item.x, sy: item.y };
-    e.preventDefault();
-  }
-
   function updateSizeInfo(item) {
     var si = document.getElementById('size-info-'+item.id);
-    if (si) si.textContent = pxToMm(item.w) + '×' + pxToMm(item.h) + ' mm';
+    if (si) si.textContent = pxToMm(item.w) + '\u00D7' + pxToMm(item.h) + ' mm';
   }
 
   function updateSizeInputs() {
@@ -333,6 +378,22 @@
     }
     inputs.style.visibility = 'hidden';
     sizeLabel.style.display = 'none';
+  }
+
+  function startDrag(e, id) {
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    dragState = { type: 'move', ids: selectedIds.slice(), ox: e.clientX, oy: e.clientY, startPos: {} };
+    getSelected().forEach(function(i) { dragState.startPos[i.id] = { x: i.x, y: i.y }; });
+    item.el.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+
+  function startResize(e, id, handle) {
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    dragState = { type: 'resize', id: id, handle: handle, ox: e.clientX, oy: e.clientY, sw: item.w, sh: item.h, sx: item.x, sy: item.y };
+    e.preventDefault();
   }
 
   function startRotate(e, id) {
@@ -369,7 +430,6 @@
         item.el.style.top = item.y + 'px';
         item.el.style.opacity = '1';
       });
-      // Check overlap for primary dragged item
       var primary = items.find(function(i) { return i.id == dragState.ids[0]; });
       if (primary) {
         var collides = items.some(function(other) {
@@ -413,6 +473,10 @@
     }
   });
 
+  function applyTransform(item) {
+    item.el.style.transform = 'rotate('+item.rotation+'deg) scaleX('+item.scaleX+') scaleY('+item.scaleY+')';
+  }
+
   function revertOverlaps() {
     var moved = {};
     if (dragState && dragState.type === 'move') {
@@ -423,7 +487,6 @@
       items.forEach(function(b, bi) {
         if (ai >= bi || moved[b.id]) return;
         if (rectsOverlap({ x: a.x, y: a.y, w: a.w, h: a.h }, { x: b.x, y: b.y, w: b.w, h: b.h })) {
-          // Push b away from a
           var dx = b.x + b.w/2 - (a.x + a.w/2);
           var dy = b.y + b.h/2 - (a.y + a.h/2);
           var adx = Math.abs(dx), ady = Math.abs(dy);
@@ -468,9 +531,31 @@
     }
   });
 
-  function applyTransform(item) {
-    item.el.style.transform = 'rotate('+item.rotation+'deg) scaleX('+item.scaleX+') scaleY('+item.scaleY+')';
-  }
+  // ── Canvas delegated mousedown ──
+  canvas.addEventListener('mousedown', function(e) {
+    var itemEl = e.target.closest('.canvas-item');
+    if (itemEl) {
+      var cid = parseInt(itemEl.dataset.itemId);
+      if (e.target.classList.contains('resize-handle')) {
+        if (selectedIds.indexOf(cid) === -1) { selectedIds = [cid]; updateSelection(); }
+        startResize(e, cid, e.target.dataset.handle);
+        return;
+      }
+      if (e.target.classList.contains('rot-handle')) {
+        if (selectedIds.indexOf(cid) === -1) { selectedIds = [cid]; updateSelection(); }
+        startRotate(e, cid);
+        return;
+      }
+      if (e.ctrlKey || e.metaKey) { toggleSelect(cid, true); return; }
+      selectedIds = [cid]; updateSelection();
+      startDrag(e, cid);
+      return;
+    }
+    if (!(e.ctrlKey || e.metaKey)) { selectedIds = []; updateSelection(); }
+    var cr = canvas.getBoundingClientRect();
+    selBoxState = { sx: e.clientX - cr.left, sy: e.clientY - cr.top };
+    dragState = { type: 'selbox', sx: selBoxState.sx, sy: selBoxState.sy };
+  });
 
   // ── Toolbar ──
   delBtn.addEventListener('click', function() {
@@ -480,7 +565,7 @@
       var idx = items.indexOf(item);
       if (idx !== -1) items.splice(idx, 1);
     });
-    selectedIds = {};
+    selectedIds = [];
     updateSelection();
     updateCount(); updatePrice();
     if (items.length === 0) hint.style.display = '';
@@ -507,16 +592,10 @@
     getSelected().forEach(function(item) { item.scaleY *= -1; applyTransform(item); });
   });
 
-
   // ── Auto arrange ──
   autoBtn.addEventListener('click', function() {
     var cw = canvas.clientWidth, ch = canvas.clientHeight;
     var pad = 12, gap = Math.round(cw / 600 * 3);
-    var totalW = items.reduce(function(s, i) { return s + i.w; }, 0) + gap * (items.length - 1);
-    var totalH = Math.max.apply(null, items.map(function(i) { return i.h; }));
-    // Pack in rows preserving original size
-    var cols = 1, rows = items.length;
-    // Simple row packing: try to fit items in rows
     var packed = [], row = [], rowW = 0, maxRowH = 0;
     items.forEach(function(item, idx) {
       if (row.length > 0 && rowW + gap + item.w > cw - pad * 2) {
@@ -542,50 +621,83 @@
     });
   });
 
-  // ── Selection box ──
-  canvas.addEventListener('mousedown', function(e) {
-    var itemEl = e.target.closest('.canvas-item');
-    if (itemEl) {
-      var cid = parseInt(itemEl.dataset.itemId);
-      if (e.target.classList.contains('resize-handle')) {
-        if (selectedIds.indexOf(cid) === -1) { selectedIds = [cid]; updateSelection(); }
-        startResize(e, cid, e.target.dataset.handle);
-        return;
-      }
-      if (e.target.classList.contains('rot-handle')) {
-        if (selectedIds.indexOf(cid) === -1) { selectedIds = [cid]; updateSelection(); }
-        startRotate(e, cid);
-        return;
-      }
-      if (e.ctrlKey || e.metaKey) { toggleSelect(cid, true); return; }
-      selectedIds = [cid]; updateSelection();
-      startDrag(e, cid);
-      return;
-    }
-    // Canvas background click = start selection box
-    if (!(e.ctrlKey || e.metaKey)) { selectedIds = []; updateSelection(); }
-    var cr = canvas.getBoundingClientRect();
-    selBoxState = { sx: e.clientX - cr.left, sy: e.clientY - cr.top };
-    dragState = { type: 'selbox', sx: selBoxState.sx, sy: selBoxState.sy };
+  // ── Modal ──
+  var modalFile = null;
+  var modalEl = document.getElementById('modal-'+sid);
+  var modalZone = document.getElementById('modal-zone-'+sid);
+  var modalFname = document.getElementById('modal-fname-'+sid);
+  var modalW = document.getElementById('modal-w-'+sid);
+  var modalH = document.getElementById('modal-h-'+sid);
+  var modalQty = document.getElementById('modal-qty-'+sid);
+  var modalAddBtn = document.getElementById('modal-add-'+sid);
+  var modalCancel = document.getElementById('modal-cancel-'+sid);
+
+  document.getElementById('add-btn-'+sid).addEventListener('click', function() {
+    modalFile = null;
+    modalW.value = 50; modalH.value = 50; modalQty.value = 3;
+    modalAddBtn.disabled = true;
+    modalFname.style.display = 'none';
+    modalZone.querySelector('.text').textContent = 'Click to choose a design file';
+    modalZone.querySelector('.icon').innerHTML = '&#x1F5BC;';
+    modalEl.style.display = 'flex';
   });
 
-  // ── Upload ──
+  modalZone.addEventListener('click', function() { fileInput.click(); });
+  modalCancel.addEventListener('click', function() { modalEl.style.display = 'none'; });
+
+  fileInput.addEventListener('change', function() {
+    if (this.files.length) {
+      modalFile = this.files[0];
+      modalFname.textContent = modalFile.name;
+      modalFname.style.display = 'block';
+      modalZone.querySelector('.text').textContent = 'File selected';
+      modalZone.querySelector('.icon').innerHTML = '&#x2705;';
+      modalAddBtn.disabled = false;
+    }
+  });
+
+  modalAddBtn.addEventListener('click', function() {
+    if (!modalFile) return;
+    var reader = new FileReader();
+    var qty = parseInt(modalQty.value) || 1;
+    var wMm = parseInt(modalW.value) || 50;
+    var hMm = parseInt(modalH.value) || 50;
+    modalEl.style.display = 'none';
+    reader.onload = function(e) {
+      for (var i = 0; i < qty; i++) {
+        var item = addItem(e.target.result);
+        var cw = canvas.clientWidth;
+        item.w = Math.round(wMm / 600 * cw);
+        item.h = Math.round(hMm / 600 * cw);
+        item.el.style.width = item.w + 'px';
+        item.el.style.height = item.h + 'px';
+      }
+    };
+    reader.readAsDataURL(modalFile);
+  });
+
   function handleFile(file) {
     if (!file.type.match('image.*')) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      addItem(e.target.result);
-      addItem(e.target.result);
-      addItem(e.target.result);
-    };
-    reader.readAsDataURL(file);
+    modalFile = file;
+    modalFname.textContent = file.name;
+    modalFname.style.display = 'block';
+    modalZone.querySelector('.text').textContent = 'File selected';
+    modalZone.querySelector('.icon').innerHTML = '&#x2705;';
+    modalAddBtn.disabled = false;
+    if (modalEl) modalEl.style.display = 'flex';
   }
 
-  document.getElementById('add-btn-'+sid).addEventListener('click', function() { fileInput.click(); });
-  fileInput.addEventListener('change', function() { if (this.files.length) handleFile(this.files[0]); });
   canvas.addEventListener('drop', function(e) {
     e.preventDefault();
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files.length) {
+      modalFile = e.dataTransfer.files[0];
+      modalFname.textContent = modalFile.name;
+      modalFname.style.display = 'block';
+      modalZone.querySelector('.text').textContent = 'File selected';
+      modalZone.querySelector('.icon').innerHTML = '&#x2705;';
+      modalAddBtn.disabled = false;
+      modalEl.style.display = 'flex';
+    }
   });
   canvas.addEventListener('dragover', function(e) { e.preventDefault(); });
 
@@ -600,13 +712,12 @@
     updatePrice();
   });
 
-  // Size input listeners
+  // ── Size input listeners ──
   document.getElementById('w-input-'+sid).addEventListener('change', function() {
     var id = parseInt(selectedIds[0]);
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
-    var cw = canvas.clientWidth;
-    item.w = Math.max(20, Math.min(cw - item.x, mmToPx(parseInt(this.value) || 50)));
+    item.w = Math.max(20, mmToPx(parseInt(this.value) || 50));
     item.el.style.width = item.w + 'px';
     updateSizeInfo(item); updatePrice();
   });
@@ -614,8 +725,7 @@
     var id = parseInt(selectedIds[0]);
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
-    var ch = canvas.clientHeight;
-    item.h = Math.max(20, Math.min(ch - item.y, mmToPx(parseInt(this.value) || 50)));
+    item.h = Math.max(20, mmToPx(parseInt(this.value) || 50));
     item.el.style.height = item.h + 'px';
     updateSizeInfo(item); updatePrice();
   });
