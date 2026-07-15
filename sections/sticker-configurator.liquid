@@ -52,9 +52,9 @@
   width: 1px; height: 20px; background: #DFE6E9; margin: 0 4px;
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
-  position: relative; width: 100%; overflow: visible; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff; aspect-ratio: 3 / 2;
-  flex-shrink: 0; min-height: 200px;
+  position: relative; width: 100%; overflow: hidden; border-radius: 12px;
+  border: 2px solid #DFE6E9; background: #fff;
+  flex-shrink: 0; min-height: 300px;
 }
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
@@ -615,10 +615,10 @@
   function growCanvas() {
     var maxB=0;
     items.forEach(function(i){var b=i.y+i.h;if(b>maxB)maxB=b;});
-    maxB=Math.max(maxB, CANVAS_H);
-    if(maxB>CANVAS_H){
-      CANVAS_H=maxB+40;
-      canvas.style.height=CANVAS_H+'px';
+    maxB=Math.max(maxB, wrap.clientHeight);
+    if(maxB>wrap.clientHeight){
+      wrap.style.height=maxB+40+'px';
+      CANVAS_H=wrap.clientHeight;
       drawGrid();
     }
   }
