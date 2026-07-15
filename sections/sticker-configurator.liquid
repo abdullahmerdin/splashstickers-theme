@@ -989,10 +989,10 @@
     keys.sort().reverse().forEach(function(k){
       try {
         var t = JSON.parse(localStorage.getItem(k));
-        html += '<div class="tpl-item" onclick="loadTpl(''+k+'')">' +
+        html += '<div class="tpl-item" onclick="loadTpl(encodeURIComponent(k))">' +
           (t.thumb ? '<img src="'+t.thumb+'" class="tpl-thumb">' : '<div class="tpl-thumb" style="background:#f0f0f0;"></div>') +
           '<div style="flex:1;min-width:0;"><div class="tpl-name">'+(t.name||k)+'</div><div class="tpl-date">'+new Date(t.date).toLocaleDateString()+'</div></div>' +
-          '<button class="be-btn danger" onclick="event.stopPropagation();deleteTpl(''+k+'')">Delete</button></div>';
+          '<button class="be-btn danger" onclick="event.stopPropagation();deleteTpl(encodeURIComponent(k))">Delete</button></div>';
       } catch(e){}
     });
     html += '</div></div></div>';
@@ -1036,7 +1036,7 @@
     localStorage.setItem(key, JSON.stringify({name:name, date:Date.now(), thumb:thumb, items:data}));
     closeTplModal(); showTplModal();
   }
-  function loadTpl(key) {
+  function loadTpl(ekey) { var key=decodeURIComponent(ekey); 
     try {
       var t = JSON.parse(localStorage.getItem(key));
       if(!t || !t.items) return;
