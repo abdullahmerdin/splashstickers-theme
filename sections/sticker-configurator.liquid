@@ -711,6 +711,7 @@
     if(dragState.type==='pan'){var dx=e.clientX-dragState.ox,dy=e.clientY-dragState.oy;panX+=dx;panY+=dy;dragState.ox=e.clientX;dragState.oy=e.clientY;applyZoom();return;}
     if(dragState.type==='move'){
       var dx=(e.clientX-dragState.ox)/zoom, dy=(e.clientY-dragState.oy)/zoom;
+      // First pass: compute positions
       dragState.ids.forEach(function(id){
         var item=items.find(function(i){return i.id==id;}); if(!item) return;
         var sp=dragState.startPos[id]; if(!sp) return;
@@ -719,7 +720,26 @@
         var snap=document.getElementById('snap-toggle-'+sid).checked;
         var gridPx=snap?Math.round(CANVAS_W/600*5):0;
         if(gridPx>0){item.x=snapVal(item.x,gridPx);item.y=snapVal(item.y,gridPx);}
+      });
+      // Second pass: push apart overlapping items
+      for(var p=0;p<3;p++){var ov=false;
+        for(var ai=0;ai<items.length;ai++){for(var bi=ai+1;bi<items.length;bi++){
+          var a=items[ai],b=items[bi];
+          if(rectsOverlap(a,b)){ov=true;
+            var dx2=(a.x+a.w/2)-(b.x+b.w/2),dy2=(a.y+a.h/2)-(b.y+b.h/2);
+            if(Math.abs(dx2)>Math.abs(dy2)){var push=dx2>0?1:-1;a.x+=push;b.x-=push;}
+            else{var push=dy2>0?1:-1;a.y+=push;b.y-=push;}
+          }
+        }}
+        if(!ov)break;
+      }
+      // Render
+      dragState.ids.forEach(function(id){
+        var item=items.find(function(i){return i.id==id;}); if(!item) return;
+        item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
         item.el.style.left=item.x+'px'; item.el.style.top=item.y+'px';
+        var valid=items.every(function(o){return o.id==id||!rectsOverlap(item,o);});
+        item.el.style.opacity=valid?'':'0.4';item.el.style.outline=valid?'':'2px solid #FF4444';
       });
       guideH.style.display='none';guideV.style.display='none';
       var primary=items.find(function(i){return i.id==dragState.ids[0];}); if(primary) updateGuides(primary,items);
