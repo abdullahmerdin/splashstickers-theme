@@ -20,8 +20,7 @@
   grid-column: 1 !important; grid-row: 1 !important;
   background: {{ bg_color }};
   border-radius: 20px; padding: 24px; position: sticky; top: 100px;
-  display: flex; flex-direction: column;
-  max-height: calc(100vh - 130px);
+  overflow: hidden;
 }
 .sticker-config-{{ section.id }} .editor-wrap {
   display: flex; flex-direction: column; gap: 12px;
@@ -163,9 +162,9 @@
 }
 
 @media (max-width: 768px) {
-  .sticker-config-{{ section.id }} { position: static; padding: 16px; max-height: none; }
-  .sticker-config-{{ section.id }} .editor-wrap { overflow: visible; }
-  .sticker-config-{{ section.id }} .canvas-wrap { overflow: hidden; }
+  .sticker-config-{{ section.id }} { position: static; padding: 16px; }
+  .sticker-config-{{ section.id }} .editor-wrap { }
+  .sticker-config-{{ section.id }} .canvas-wrap { }
 }
 .sticker-config-{{ section.id }}.mobile-mode {
   position: fixed !important; inset: 0 !important; z-index: 99998 !important;
