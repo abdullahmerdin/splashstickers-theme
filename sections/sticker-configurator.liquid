@@ -256,16 +256,17 @@
 }
 .sticker-config-{{ section.id }}.mobile-mode .toolbar .toolbar-divider { display: none; }
 .sticker-config-{{ section.id }}.mobile-mode .zoom-display { display: none; }
-.sticker-config-{{ section.id }} .upload-btn-area {
-  display: flex; gap: 8px; align-items: center;
-}
+
 .sticker-config-{{ section.id }} .upload-btn-area button {
-  padding: 8px 20px; border: 2px dashed #DFE6E9; border-radius: 10px;
-  background: transparent; cursor: pointer; font-size: 0.85rem; color: #636E72;
-  transition: all 0.2s; flex: 1;
+  padding: 6px 14px; border: 2px dashed #DFE6E9; border-radius: 8px;
+  background: transparent; cursor: pointer; font-size: 0.78rem; color: #636E72;
+  transition: all 0.2s;
 }
 .sticker-config-{{ section.id }} .upload-btn-area button:hover {
   border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
+}
+.sticker-config-{{ section.id }} .upload-btn-area {
+  display: flex; gap: 6px; align-items: center;
 }
 {% endstyle %}
 
@@ -324,7 +325,7 @@
       </div>
       <span style="font-size:0.8rem;color:#636E72;">pieces</span>
     </div>
-    <button id="submit-{{ section.id }}" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--cfg-primary),#00A8A3);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;">
+    <button id="submit-{{ section.id }}" style="width:100%;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--cfg-primary),#00A8A3);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;">
       Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
     </button>
     <div id="modal-{{ section.id }}" class="cfg-modal">
@@ -621,7 +622,7 @@
     gc.width=CANVAS_W; gc.height=CANVAS_H;
     gc.style.height='';
     var ctx=gc.getContext('2d');
-    var gs=20;
+    var gs=parseInt((document.getElementById('grid-size-'+sid)||{}).value)||20;
     ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.lineWidth=1;
     ctx.beginPath();
     for(var x=0; x<CANVAS_W; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,CANVAS_H);}
@@ -764,7 +765,7 @@
   flipHBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleX*=-1;applyTransform(it);});growCanvas();});
   flipVBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleY*=-1;applyTransform(it);});});
   autoBtn.addEventListener('click',function(){
-    saveState(); var cw=CANVAS_W,ch=CANVAS_H,pad=12,gap=Math.round(cw/600*3);
+    saveState(); var cw=CANVAS_W,ch=CANVAS_H,pad=12; var gapInput=document.getElementById('gap-size-'+sid); var gap=gapInput?Math.round(cw/600*parseInt(gapInput.value)||3):Math.round(cw/600*3);
     var packed=[],row=[],rowW=0,maxRowH=0;
     items.forEach(function(it,idx){if(row.length&&rowW+gap+it.w>cw-pad*2){packed.push({items:row,h:maxRowH});row=[];rowW=0;maxRowH=0;}row.push(idx);rowW+=gap+it.w;maxRowH=Math.max(maxRowH,it.h);});
     if(row.length) packed.push({items:row,h:maxRowH});
@@ -912,6 +913,25 @@
     items.length=0; selectedIds=[]; updateSelection(); updateCount(); updatePrice(); saveState();
     hint.style.display='';
   });
+  // Bottom panel buttons
+  document.getElementById('snap-btm-'+sid).addEventListener('change',function(){
+    document.getElementById('snap-toggle-'+sid).checked = this.checked;
+  });
+  document.getElementById('snap-toggle-'+sid).addEventListener('change',function(){
+    document.getElementById('snap-btm-'+sid).checked = this.checked;
+  });
+  document.getElementById('grid-size-'+sid).addEventListener('change',function(){ drawGrid(); });
+  document.getElementById('gap-size-'+sid).addEventListener('change',function(){});
+  document.getElementById('zoom100-btn-'+sid).addEventListener('click',function(){zoom=1;panX=0;panY=0;applyZoom();});
+  document.getElementById('zoomfit-btn-'+sid).addEventListener('click',zoomToFit);
+  document.getElementById('zoom200-btn-'+sid).addEventListener('click',function(){zoom=2;panX=0;panY=0;applyZoom();});
+  document.getElementById('auto-btn2-'+sid).addEventListener('click',function(){
+    document.getElementById('auto-btn-'+sid).click();
+  });
+  document.getElementById('export-btn2-'+sid).addEventListener('click',function(){
+    document.getElementById('export-btn-'+sid).click();
+  });
+
   // Stats
   function updateStats(){
     var el=document.getElementById('stats-'+sid);
