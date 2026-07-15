@@ -7,6 +7,16 @@
 -%}
 
 {% style %}
+:root {
+  --cfg-primary: #00CEC9;
+  --cfg-accent: #6C5CE7;
+  --cfg-pink: #FD79A8;
+  --cfg-gold: #FDCB6E;
+  --cfg-text: #2D3436;
+  --cfg-muted: #636E72;
+  --cfg-border: #DFE6E9;
+  --cfg-bg: #F8F9FA;
+}
 .product-information__media { display: none !important; }
 .product-information {
   display: grid !important;
@@ -17,7 +27,7 @@
 .product-information product-component { grid-column: 2 !important; width: 100% !important; }
 
 .sticker-config-{{ section.id }} {
-  grid-column: 1 !important; grid-row: 1 !important;
+  grid-column: 1; grid-row: 1;
   background: {{ bg_color }};
   border-radius: 20px; padding: 24px; position: sticky; top: 100px;
 }
@@ -35,7 +45,7 @@
   color: #636E72;
 }
 .sticker-config-{{ section.id }} .toolbar button svg { display: block; }
-.sticker-config-{{ section.id }} .toolbar button:hover { background: #fff; color: #00CEC9; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.sticker-config-{{ section.id }} .toolbar button:hover { background: #fff; color: var(--cfg-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .sticker-config-{{ section.id }} .toolbar button:disabled { opacity: 0.25; cursor: default; box-shadow: none; background: transparent; }
 .sticker-config-{{ section.id }} .toolbar button.active { background: #00CEC910; color: #00CEC9; }
 .sticker-config-{{ section.id }} .toolbar .toolbar-divider {
@@ -178,6 +188,63 @@
 .sticker-config-{{ section.id }} .bottom-extra .be-btn.danger:hover {
   background: #FFF0F0;
 }
+.sticker-config-{{ section.id }} .cfg-modal {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,0.4); display: none;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.sticker-config-{{ section.id }} .cfg-modal-box {
+  background: #fff; border-radius: 20px; padding: 32px;
+  max-width: 420px; width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.sticker-config-{{ section.id }} .cfg-modal-title {
+  margin: 0 0 20px; font-size: 1.1rem; color: var(--cfg-text);
+}
+.sticker-config-{{ section.id }} .cfg-modal-zone {
+  border: 2px dashed var(--cfg-border); border-radius: 12px;
+  padding: 24px; text-align: center; cursor: pointer; margin-bottom: 16px;
+}
+.sticker-config-{{ section.id }} .cfg-modal-zone .cfg-modal-icon {
+  font-size: 2rem; margin-bottom: 4px;
+}
+.sticker-config-{{ section.id }} .cfg-modal-zone .cfg-modal-text {
+  font-size: 0.85rem; color: var(--cfg-muted);
+}
+.sticker-config-{{ section.id }} .cfg-modal-fname {
+  font-size: 0.8rem; color: var(--cfg-primary); margin-top: 4px; display: none;
+}
+.sticker-config-{{ section.id }} .cfg-modal-row {
+  display: flex; gap: 12px; align-items: center; margin-bottom: 16px;
+}
+.sticker-config-{{ section.id }} .cfg-modal-row label {
+  font-size: 0.85rem; font-weight: 600; color: var(--cfg-muted); min-width: 50px;
+}
+.sticker-config-{{ section.id }} .cfg-modal-row input {
+  flex: 1; padding: 10px 12px; border: 2px solid var(--cfg-border);
+  border-radius: 10px; font-size: 0.9rem; outline: none;
+}
+.sticker-config-{{ section.id }} .cfg-modal-row input:focus {
+  border-color: var(--cfg-primary);
+}
+.sticker-config-{{ section.id }} .cfg-modal-row span {
+  font-size: 0.8rem; color: #B2BEC3;
+}
+.sticker-config-{{ section.id }} .cfg-modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
+}
+.sticker-config-{{ section.id }} .cfg-btn-sec {
+  padding: 10px 24px; border-radius: 10px; border: none;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  background: #f5f5f5; color: var(--cfg-muted);
+}
+.sticker-config-{{ section.id }} .cfg-btn-pry {
+  padding: 10px 24px; border-radius: 10px; border: none;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  background: linear-gradient(135deg,var(--cfg-primary),#00A8A3); color: #fff;
+}
+.sticker-config-{{ section.id }} .cfg-btn-pry:disabled { opacity: 0.4; cursor: default; }
 .sticker-config-{{ section.id }} .sticky-ctrls {
   background: {{ bg_color }}; border-radius: 0 0 20px 20px;
   padding: 8px 0; margin-top: -2px;
@@ -278,9 +345,26 @@
       </div>
       <span style="font-size:0.8rem;color:#636E72;">pieces</span>
     </div>
-    <button id="submit-{{ section.id }}" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#00CEC9,#00A8A3);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;">
+    <button id="submit-{{ section.id }}" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--cfg-primary),#00A8A3);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;">
       Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
     </button>
+    <div id="modal-{{ section.id }}" class="cfg-modal">
+      <div class="cfg-modal-box">
+        <h3 class="cfg-modal-title">Add Design</h3>
+        <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}">
+          <div class="cfg-modal-icon">&#x1F5BC;</div>
+          <div class="cfg-modal-text">Click to choose a design file</div>
+          <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
+        </div>
+        <div class="cfg-modal-row"><label>W</label><input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1"><span>mm</span></div>
+        <div class="cfg-modal-row"><label>H</label><input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1"><span>mm</span></div>
+        <div class="cfg-modal-row"><label>Copies</label><input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1"><span>pcs</span></div>
+        <div class="cfg-modal-actions">
+          <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec">Cancel</button>
+          <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" disabled>Add to Canvas</button>
+        </div>
+      </div>
+    </div>
     <div class="bottom-extra">
       <div class="be-row">
         <span class="be-label">Presets</span>
@@ -829,30 +913,17 @@
 
   /* ── Modal ── */
   var modalFile=null;
-  var modalEl=document.createElement('div');
-  modalEl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
-  modalEl.innerHTML='<div style="background:#fff;border-radius:20px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15);">'+
-    '<h3 style="margin:0 0 20px;font-size:1.1rem;color:#2D3436;">Add Design</h3>'+
-    '<div id="modal-zone-'+sid+'" style="border:2px dashed #DFE6E9;border-radius:12px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px;">'+
-      '<div style="font-size:2rem;margin-bottom:4px;">&#x1F5BC;</div><div style="font-size:0.85rem;color:#636E72;">Click to choose a design file</div>'+
-      '<div id="modal-fname-'+sid+'" style="font-size:0.8rem;color:#00CEC9;margin-top:4px;display:none;"></div></div>'+
-    '<div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;"><label style="font-size:0.85rem;font-weight:600;color:#636E72;min-width:50px;">W</label><input type="number" id="modal-w-'+sid+'" value="50" min="10" max="600" step="1" style="flex:1;padding:10px 12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.9rem;outline:none;"><span style="font-size:0.8rem;color:#B2BEC3;">mm</span></div>'+
-    '<div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;"><label style="font-size:0.85rem;font-weight:600;color:#636E72;min-width:50px;">H</label><input type="number" id="modal-h-'+sid+'" value="50" min="10" max="600" step="1" style="flex:1;padding:10px 12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.9rem;outline:none;"><span style="font-size:0.8rem;color:#B2BEC3;">mm</span></div>'+
-    '<div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;"><label style="font-size:0.85rem;font-weight:600;color:#636E72;min-width:50px;">Copies</label><input type="number" id="modal-qty-'+sid+'" value="3" min="1" max="50" step="1" style="flex:1;padding:10px 12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.9rem;outline:none;"><span style="font-size:0.8rem;color:#B2BEC3;">pcs</span></div>'+
-    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">'+
-      '<button id="modal-cancel-'+sid+'" style="padding:10px 24px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:#f5f5f5;color:#636E72;">Cancel</button>'+
-      '<button id="modal-add-'+sid+'" disabled style="padding:10px 24px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00CEC9,#00A8A3);color:#fff;">Add to Canvas</button></div></div>';
-  document.body.appendChild(modalEl);
+  var modalEl = document.getElementById('modal-{{ section.id }}');
   var modalZone=document.getElementById('modal-zone-'+sid),modalFname=document.getElementById('modal-fname-'+sid);
   var modalW=document.getElementById('modal-w-'+sid),modalH=document.getElementById('modal-h-'+sid);
   var modalQty=document.getElementById('modal-qty-'+sid),modalAddBtn=document.getElementById('modal-add-'+sid),modalCancel=document.getElementById('modal-cancel-'+sid);
 
-  document.getElementById('add-btn-'+sid).addEventListener('click',function(){modalFile=null;modalW.value=50;modalH.value=50;modalQty.value=3;modalAddBtn.disabled=true;modalFname.style.display='none';modalZone.querySelector('div:not([id])').textContent='Click to choose a design file';modalZone.querySelector('div:first-child').innerHTML='&#x1F5BC;';modalEl.style.display='flex';fileInput.value='';});
+  document.getElementById('add-btn-'+sid).addEventListener('click',function(){modalFile=null;modalW.value=50;modalH.value=50;modalQty.value=3;modalAddBtn.disabled=true;modalFname.style.display='none';modalZone.querySelector('.cfg-modal-text').textContent='Click to choose a design file';modalZone.querySelector('.cfg-modal-icon').innerHTML='&#x1F5BC;';modalEl.style.display='flex';fileInput.value='';});
   modalZone.addEventListener('click',function(){fileInput.click();});
   modalCancel.addEventListener('click',function(){modalEl.style.display='none';});
-  fileInput.addEventListener('change',function(){if(this.files.length){modalFile=this.files[0];modalFname.textContent=modalFile.name;modalFname.style.display='block';modalZone.querySelector('div:not([id])').textContent='File selected';modalZone.querySelector('div:first-child').innerHTML='&#x2705;';modalAddBtn.disabled=false;}});
+  fileInput.addEventListener('change',function(){if(this.files.length){modalFile=this.files[0];modalFname.textContent=modalFile.name;modalFname.style.display='block';modalZone.querySelector('.cfg-modal-text').textContent='File selected';modalZone.querySelector('.cfg-modal-icon').innerHTML='&#x2705;';modalAddBtn.disabled=false;}});
   modalAddBtn.addEventListener('click',function(){if(!modalFile)return;var reader=new FileReader(),qty=parseInt(modalQty.value)||1,wMm=parseInt(modalW.value)||50,hMm=parseInt(modalH.value)||50;modalEl.style.display='none';reader.onload=function(e){for(var i=0;i<qty;i++){var item=addImageItem(e.target.result,false);item.w=wMm/600*(CANVAS_W);item.h=hMm/600*(CANVAS_W);item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';}};reader.readAsDataURL(modalFile);growCanvas();});
-  function handleFile(f){if(!f.type.match('image.*'))return;modalFile=f;modalFname.textContent=f.name;modalFname.style.display='block';modalZone.querySelector('div:not([id])').textContent='File selected';modalZone.querySelector('div:first-child').innerHTML='&#x2705;';modalAddBtn.disabled=false;if(modalEl)modalEl.style.display='flex';}
+  function handleFile(f){if(!f.type.match('image.*'))return;modalFile=f;modalFname.textContent=f.name;modalFname.style.display='block';modalZone.querySelector('.cfg-modal-text').textContent='File selected';modalZone.querySelector('.cfg-modal-icon').innerHTML='&#x2705;';modalAddBtn.disabled=false;if(modalEl)modalEl.style.display='flex';}
 
   canvas.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);});
   canvas.addEventListener('dragover',function(e){e.preventDefault();});
