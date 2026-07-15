@@ -161,6 +161,38 @@
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} { position: static; padding: 16px; }
 }
+.sticker-config-{{ section.id }}.mobile-mode {
+  position: fixed !important; inset: 0 !important; z-index: 99998 !important;
+  border-radius: 0 !important; padding: 8px !important; top: 0 !important;
+  display: flex !important; flex-direction: column !important; overflow: hidden;
+}
+.sticker-config-{{ section.id }}.mobile-mode .editor-wrap {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+.sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
+  flex: 1; aspect-ratio: auto !important; min-height: 0;
+  border-radius: 8px;
+}
+.sticker-config-{{ section.id }}.mobile-mode .toolbar {
+  padding: 4px; gap: 2px; overflow-x: auto; flex-wrap: wrap;
+  justify-content: center; max-height: 120px;
+}
+.sticker-config-{{ section.id }}.mobile-mode .toolbar button {
+  width: 38px; height: 38px; font-size: 16px; flex-shrink: 0;
+}
+.sticker-config-{{ section.id }}.mobile-mode .toolbar .toolbar-divider { display: none; }
+.sticker-config-{{ section.id }}.mobile-mode .zoom-display { display: none; }
+.sticker-config-{{ section.id }} .upload-btn-area {
+  display: flex; gap: 8px; align-items: center;
+}
+.sticker-config-{{ section.id }} .upload-btn-area button {
+  padding: 8px 20px; border: 2px dashed #DFE6E9; border-radius: 10px;
+  background: transparent; cursor: pointer; font-size: 0.85rem; color: #636E72;
+  transition: all 0.2s; flex: 1;
+}
+.sticker-config-{{ section.id }} .upload-btn-area button:hover {
+  border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
+}
 {% endstyle %}
 
 <div class="sticker-config-{{ section.id }}">
@@ -182,7 +214,8 @@
       <button title="Export PNG" id="export-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <span class="toolbar-divider"></span>
       <button title="Mobile" id="mobile-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
-      <span class="zoom-display" id="zoom-display-{{ section.id }}" style="cursor:pointer;border-bottom:1px dotted #B2BEC3;" title="Click to reset zoom">100%</span>
+      <button title="Reset zoom (100%)" id="zoom-reset-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
+      <span class="zoom-display" id="zoom-display-{{ section.id }}">100%</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#B2BEC3;">
       <input type="checkbox" id="snap-toggle-{{ section.id }}" style="accent-color:#00CEC9;cursor:pointer;">
@@ -632,7 +665,8 @@
 
   /* ── Zoom fit ── */
   zoomFitBtn.addEventListener('click',zoomToFit);
-  zoomDisplay.addEventListener('click',function(){zoom=1;panX=0;panY=0;applyZoom();});
+  var zoomReset = document.getElementById('zoom-reset-'+sid);
+  zoomReset.addEventListener('click',function(){zoom=1;panX=0;panY=0;applyZoom();});
 
   /* ── Layers ── */
   layerBtn.addEventListener('click',function(){layerOpen=!layerOpen;layerPanel.classList.toggle('open',layerOpen);updateLayerPanel();});
