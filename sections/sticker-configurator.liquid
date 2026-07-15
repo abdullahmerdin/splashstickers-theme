@@ -57,11 +57,12 @@
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
   position: relative; width: 100%; overflow: auto; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff; flex: 1 0 auto; min-height: 200px;
+  border: 2px solid #DFE6E9; background: #fff; flex-shrink: 0; min-height: 400px;
 }
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
   transform-origin: 0 0; overflow: hidden;
+  width: 600px; height: 400px; z-index: 0;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
   position: absolute; inset: 0; pointer-events: none; overflow: hidden;
@@ -378,8 +379,6 @@
 (function() {
   var sid = '{{ section.id }}';
   var wrap = document.getElementById('canvas-wrap-'+sid);
-  CANVAS_W = wrap.clientWidth; CANVAS_H = Math.round(CANVAS_W*400/600);
-  wrap.style.width = CANVAS_W+'px'; wrap.style.height = CANVAS_H+'px';
   var canvas = document.getElementById('canvas-'+sid);
   var hint = document.getElementById('hint-'+sid);
   var fileInput = document.getElementById('file-input-'+sid);
@@ -632,7 +631,7 @@
   }
 
   /* ── Zoom / Pan ── */
-  var CANVAS_W=wrap.clientWidth, CANVAS_H=Math.round(wrap.clientWidth*400/600);
+  var CANVAS_W=600, CANVAS_H=400;
   function clampPan() {
     var vw=CANVAS_W, vh=CANVAS_H;
     var maxX=CANVAS_W - vw/zoom;
@@ -647,7 +646,6 @@
     if(maxB>CANVAS_H){
       CANVAS_H=maxB+40;
       canvas.style.height=CANVAS_H+'px';
-      wrap.style.height=CANVAS_H+'px';
       drawGrid();
     }
   }
