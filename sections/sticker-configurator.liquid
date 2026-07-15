@@ -637,11 +637,10 @@
   layerBtn.addEventListener('click',function(){layerOpen=!layerOpen;layerPanel.classList.toggle('open',layerOpen);updateLayerPanel();});
 
   /* ── Export ── */
-  exportBtn.addEventListener('click',function(){
-    var cw=canvas.clientWidth/zoom, ch=canvas.clientHeight/zoom;
-    var expCanvas=document.createElement('canvas');
-    expCanvas.width=cw*2; expCanvas.height=ch*2;
-    var ctx=expCanvas.getContext('2d');
+  function renderToCanvas(cw, ch) {
+    var c = document.createElement('canvas');
+    c.width=cw*2; c.height=ch*2;
+    var ctx=c.getContext('2d');
     ctx.scale(2,2);
     ctx.fillStyle='#fff'; ctx.fillRect(0,0,cw,ch);
     items.forEach(function(it){
@@ -659,10 +658,29 @@
       }
       ctx.restore();
     });
-    var link=document.createElement('a');
-    link.download='sticker-sheet.png';
-    link.href=expCanvas.toDataURL();
-    link.click();
+    return c;
+  }
+  exportBtn.addEventListener('click',function(){
+    var cw=canvas.clientWidth/zoom, ch=canvas.clientHeight/zoom;
+    var expCanvas=renderToCanvas(cw,ch);
+    expCanvas.toBlob(function(blob){
+      if(!blob) return;
+      var fr=new FileReader();
+      fr.onload=function(){
+        var imgData=fr.result;
+        var script=document.createElement('script');
+        script.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload=function(){
+          var doc=new jspdf.jsPDF({orientation:'landscape',unit:'mm',format:[297,210]});
+          var mmPerPx=210/ch;
+          doc.addImage(imgData,'PNG',0,0,cw*mmPerPx,ch*mmPerPx);
+          doc.save('sticker-sheet.pdf');
+        };
+        script.onerror=function(){alert('Could not load PDF library. Check internet connection.');};
+        document.head.appendChild(script);
+      };
+      fr.readAsDataURL(blob);
+    },'image/png');
   });
 
   /* ── Text edit on double-click ── */
