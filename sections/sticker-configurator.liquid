@@ -488,7 +488,7 @@
 
   /* ── Zoom / Pan ── */
   function applyZoom() {
-    zoom=Math.max(0.1,Math.min(5,zoom));
+    zoom=Math.max(1,Math.min(5,zoom));
     canvas.style.transform='scale('+zoom+') translate('+panX+'px,'+panY+'px)';
     canvas.style.width=(100/zoom)+'%'; canvas.style.height=(100/zoom)+'%';
     zoomDisplay.textContent=Math.round(zoom*100)+'%';
@@ -500,12 +500,11 @@
     var w=canvas.clientWidth, h=canvas.clientHeight;
     gc.width=w; gc.height=h;
     var ctx=gc.getContext('2d');
-    var gs=20; // grid step in canvas px
-    var ox=((-panX)%gs+gs)%gs, oy=((-panY)%gs+gs)%gs;
+    var gs=20;
     ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.lineWidth=1;
     ctx.beginPath();
-    for(var x=ox; x<w; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,h);}
-    for(var y=oy; y<h; y+=gs){ctx.moveTo(0,y);ctx.lineTo(w,y);}
+    for(var x=0; x<w; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,h);}
+    for(var y=0; y<h; y+=gs){ctx.moveTo(0,y);ctx.lineTo(w,y);}
     ctx.stroke();
   }
 
@@ -515,7 +514,7 @@
     items.forEach(function(i){if(i.x<minX)minX=i.x;if(i.y<minY)minY=i.y;if(i.x+i.w>maxX)maxX=i.x+i.w;if(i.y+i.h>maxY)maxY=i.y+i.h;});
     var pw=wrap.clientWidth-40, ph=wrap.clientHeight-40;
     var zw=pw/(maxX-minX+40), zh=ph/(maxY-minY+40);
-    zoom=Math.min(zw,zh,2); zoom=Math.max(zoom,0.2);
+    zoom=Math.min(zw,zh,2); zoom=Math.max(zoom,1);
     panX=-(minX-20); panY=-(minY-20);
     applyZoom();
   }
@@ -637,7 +636,7 @@
     var rect=wrap.getBoundingClientRect();
     var mx=(e.clientX-rect.left-20)/zoom-panX, my=(e.clientY-rect.top-40)/zoom-panY;
     var f=e.deltaY>0?0.9:1.1;
-    zoom*=f; zoom=Math.max(0.1,Math.min(5,zoom));
+    zoom*=f; zoom=Math.max(1,Math.min(5,zoom));
     panX=mx-mx*zoom/(zoom/f); panY=my-my*zoom/(zoom/f);
     applyZoom();
   },{passive:false});
