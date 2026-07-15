@@ -477,20 +477,21 @@
     drawRulers();
   }
   function drawRulers() {
-    var step=20, mmStep=10;
-    var cw=canvas.clientWidth, ch=canvas.clientHeight;
+    var mmStep=10, cw=canvas.clientWidth, ch=canvas.clientHeight;
     rulerTop.innerHTML=''; rulerLeft.innerHTML='';
-    for(var x=step; x<cw-10; x+=step) {
-      var mm=Math.round((x+panX)/cw*600);
-      if(mm%mmStep===0 && mm>=0 && mm<=600){
-        var l=document.createElement('label'); l.textContent=mm; l.style.left=(x+panX)*zoom+'px';
+    for(var mm=mmStep; mm<=600; mm+=mmStep) {
+      var px=mm/600*cw;
+      var sx=(px+panX)*zoom;
+      if(sx>10&&sx<wrap.clientWidth-10){
+        var l=document.createElement('label'); l.textContent=mm; l.style.left=sx+'px';
         rulerTop.appendChild(l);
       }
     }
-    for(var y=step; y<ch-10; y+=step) {
-      var mm=Math.round((y+panY)/ch*600);
-      if(mm%mmStep===0 && mm>=0 && mm<=600){
-        var l=document.createElement('label'); l.textContent=mm; l.style.top=(y+panY)*zoom+'px';
+    for(var mm=mmStep; mm<=600; mm+=mmStep) {
+      var py=mm/600*ch;
+      var sy=(py+panY)*zoom;
+      if(sy>10&&sy<wrap.clientHeight-10){
+        var l=document.createElement('label'); l.textContent=mm; l.style.top=sy+'px';
         rulerLeft.appendChild(l);
       }
     }
