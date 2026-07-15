@@ -45,7 +45,8 @@
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
   position: relative; width: 100%; overflow: visible; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff; aspect-ratio: 3 / 2;
+  border: 2px solid #DFE6E9; background: #fff;
+  flex-shrink: 0; min-height: 200px;
 }
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
@@ -158,6 +159,7 @@
 .sticker-config-{{ section.id }} .sticky-ctrls {
   background: {{ bg_color }}; border-radius: 0 0 20px 20px;
   padding: 8px 0; margin-top: -2px;
+  position: sticky; bottom: 0; z-index: 50;
 }
 
 @media (max-width: 768px) {
@@ -834,37 +836,7 @@
 
 
 
-  /* ── Sticky controls ── */
-  var ctrlEl = document.querySelector('.sticker-config-'+sid+' .sticky-ctrls');
-  var sentinel = null; // marker to detect page bottom
-  if(ctrlEl){
-    sentinel = document.createElement('div');
-    sentinel.style.cssText = 'height:1px;width:100%;margin:0';
-    ctrlEl.parentNode.insertBefore(sentinel, ctrlEl.nextSibling);
-  }
-  function onScroll() {
-    if(!ctrlEl || !sentinel) return;
-    var sentRect = sentinel.getBoundingClientRect();
-    var cr = ctrlEl.getBoundingClientRect();
-    // Sentinel not visible = more content below = fix controls
-    var isBelow = cr.top > window.innerHeight;
-    var bottomNear = sentRect.bottom <= window.innerHeight; // at bottom of page
-    var shouldFix = isBelow && !bottomNear;
-    ctrlEl.style.position = shouldFix ? 'fixed' : '';
-    ctrlEl.style.bottom = shouldFix ? '0' : '';
-    if(shouldFix){
-      var sr = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
-      ctrlEl.style.width = sr.width + 'px';
-      ctrlEl.style.left = sr.left + 'px';
-      ctrlEl.style.zIndex = '50';
-    } else {
-      ctrlEl.style.width = '';
-      ctrlEl.style.left = '';
-      ctrlEl.style.zIndex = '';
-    }
-  }
-  window.addEventListener('scroll', onScroll, {passive:true});
-  onScroll();
+
 
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
