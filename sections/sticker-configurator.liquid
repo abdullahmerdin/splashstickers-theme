@@ -111,57 +111,10 @@
   font-size: 1.1rem; font-weight: 700; min-width: 36px;
   text-align: center; color: #2D3436;
 }
-.sticker-config-{{ section.id }} .canvas-size-label {
-  font-size: 0.7rem; color: #B2BEC3; text-align: right; padding-right: 4px;
-}
 .sticker-config-{{ section.id }} .canvas-hint {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   color: #DFE6E9; font-size: 0.9rem; text-align: center;
   pointer-events: none; font-weight: 500;
-}
-.sticker-config-{{ section.id }} .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99999;
-  display: none; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.sticker-config-{{ section.id }} .modal-box {
-  background: #fff; border-radius: 20px; padding: 32px; max-width: 420px;
-  width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-}
-.sticker-config-{{ section.id }} .modal-box h3 { margin: 0 0 20px; font-size: 1.1rem; color: #2D3436; }
-.sticker-config-{{ section.id }} .modal-row {
-  display: flex; gap: 12px; margin-bottom: 16px; align-items: center;
-}
-.sticker-config-{{ section.id }} .modal-row label { font-size: 0.85rem; font-weight: 600; color: #636E72; min-width: 50px; }
-.sticker-config-{{ section.id }} .modal-row input[type=number] {
-  flex: 1; padding: 10px 12px; border: 2px solid #DFE6E9; border-radius: 10px;
-  font-size: 0.9rem; outline: none;
-}
-.sticker-config-{{ section.id }} .modal-row input[type=number]:focus { border-color: #00CEC9; }
-.sticker-config-{{ section.id }} .modal-row .modal-unit { font-size: 0.8rem; color: #B2BEC3; min-width: 30px; }
-.sticker-config-{{ section.id }} .modal-upload-zone {
-  border: 2px dashed #DFE6E9; border-radius: 12px; padding: 24px;
-  text-align: center; cursor: pointer; margin-bottom: 16px;
-}
-.sticker-config-{{ section.id }} .modal-upload-zone:hover { border-color: #00CEC9; background: #f0fdfd; }
-.sticker-config-{{ section.id }} .modal-upload-zone .icon { font-size: 2rem; margin-bottom: 4px; }
-.sticker-config-{{ section.id }} .modal-upload-zone .text { font-size: 0.85rem; color: #636E72; }
-.sticker-config-{{ section.id }} .modal-actions {
-  display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
-}
-.sticker-config-{{ section.id }} .modal-actions button {
-  padding: 10px 24px; border-radius: 10px; border: none; font-size: 0.9rem;
-  font-weight: 600; cursor: pointer;
-}
-.sticker-config-{{ section.id }} .modal-actions .btn-cancel { background: #f5f5f5; color: #636E72; }
-.sticker-config-{{ section.id }} .modal-actions .btn-cancel:hover { background: #eee; }
-.sticker-config-{{ section.id }} .modal-actions .btn-add {
-  background: linear-gradient(135deg, #00CEC9, #00A8A3); color: #fff;
-}
-.sticker-config-{{ section.id }} .modal-actions .btn-add:hover { box-shadow: 0 4px 12px rgba(0,206,201,0.3); }
-.sticker-config-{{ section.id }} .modal-actions .btn-add:disabled { opacity: 0.4; cursor: default; }
-.sticker-config-{{ section.id }} .modal-file-name {
-  font-size: 0.8rem; color: #00CEC9; margin-top: 4px; display: none;
 }
 .sticker-config-{{ section.id }} .upload-btn-area {
   display: flex; gap: 8px; align-items: center;
@@ -209,7 +162,6 @@
       <div class="canvas-hint" id="hint-{{ section.id }}">Upload a design to start</div>
     </div>
 
-    <!-- Modal -->
 
     <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" style="display:none;">
     <div class="upload-btn-area">
@@ -241,7 +193,6 @@
   var selectedIds = [];
   var nextId = 1;
   var dragState = null;
-  var selBoxState = null;
   var basePrice = 2.5;
 
   var delBtn = document.getElementById('del-btn-'+sid);
@@ -538,8 +489,7 @@
     }
     if (!(e.ctrlKey || e.metaKey)) { selectedIds = []; updateSelection(); }
     var cr = canvas.getBoundingClientRect();
-    selBoxState = { sx: e.clientX - cr.left, sy: e.clientY - cr.top };
-    dragState = { type: 'selbox', sx: selBoxState.sx, sy: selBoxState.sy };
+    dragState = { type: 'selbox', sx: e.clientX - cr.left, sy: e.clientY - cr.top };
   });
 
   // ── Toolbar ──
