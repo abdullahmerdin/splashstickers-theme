@@ -182,7 +182,7 @@
       <button title="Export PNG" id="export-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <span class="toolbar-divider"></span>
       <button title="Mobile" id="mobile-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
-      <span class="zoom-display" id="zoom-display-{{ section.id }}">100%</span>
+      <span class="zoom-display" id="zoom-display-{{ section.id }}" style="cursor:pointer;border-bottom:1px dotted #B2BEC3;" title="Click to reset zoom">100%</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#B2BEC3;">
       <input type="checkbox" id="snap-toggle-{{ section.id }}" style="accent-color:#00CEC9;cursor:pointer;">
@@ -501,7 +501,7 @@
   /* ── Mouse events ── */
   function getCanvasXY(e) {
     var cr=canvas.getBoundingClientRect();
-    return { x: (e.clientX-cr.left)/zoom-panX, y: (e.clientY-cr.top)/zoom-panY };
+    return { x: (e.clientX-cr.left)/zoom, y: (e.clientY-cr.top)/zoom };
   }
 
   canvas.addEventListener('mousedown',function(e){
@@ -632,6 +632,7 @@
 
   /* ── Zoom fit ── */
   zoomFitBtn.addEventListener('click',zoomToFit);
+  zoomDisplay.addEventListener('click',function(){zoom=1;panX=0;panY=0;applyZoom();});
 
   /* ── Layers ── */
   layerBtn.addEventListener('click',function(){layerOpen=!layerOpen;layerPanel.classList.toggle('open',layerOpen);updateLayerPanel();});
