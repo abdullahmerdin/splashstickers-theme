@@ -379,6 +379,8 @@
 (function() {
   var sid = '{{ section.id }}';
   var wrap = document.getElementById('canvas-wrap-'+sid);
+  CANVAS_W = wrap.clientWidth; CANVAS_H = Math.round(CANVAS_W*400/600);
+  wrap.style.width = CANVAS_W+'px'; wrap.style.height = CANVAS_H+'px';
   var canvas = document.getElementById('canvas-'+sid);
   var hint = document.getElementById('hint-'+sid);
   var fileInput = document.getElementById('file-input-'+sid);
