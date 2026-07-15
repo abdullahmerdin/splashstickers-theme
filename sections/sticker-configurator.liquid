@@ -642,25 +642,7 @@
   }
 
   /* ── Layer panel ── */
-  function updateLayerPanel() {
-    var existing=layerPanel.querySelectorAll('.layer-item:not(.layer-header)');
-    existing.forEach(function(e){e.remove();});
-    if(!layerOpen) return;
-    items.slice().reverse().forEach(function(item){
-      var div=document.createElement('div');
-      div.className='layer-item'+(selectedIds.indexOf(item.id)!==-1?' active':'');
-      var thumb=document.createElement('div'); thumb.className='thumb';
-      var img=item.el.querySelector('img');
-      if(img) {var ti=document.createElement('img');ti.src=img.src;thumb.appendChild(ti);}
-      else thumb.textContent='T';
-      div.appendChild(thumb);
-      var name=document.createElement('span'); name.className='lname';
-      name.textContent=img?'Design #'+item.id:(item.text||'Text');
-      div.appendChild(name);
-      div.onclick=function(){selectedIds=[item.id];updateSelection();};
-      layerPanel.appendChild(div);
-    });
-  }
+
 
   /* ── Mouse events ── */
   function getCanvasXY(e) {
