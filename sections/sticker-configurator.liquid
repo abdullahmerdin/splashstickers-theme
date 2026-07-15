@@ -842,12 +842,12 @@
   function onScroll() {
     if(!ctrlEl) return;
     var cr = ctrlEl.getBoundingClientRect();
-    var shouldFix = cr.top < window.innerHeight && cr.bottom < 0;
-    // Also check: if controls are above viewport, fix to bottom
     var isAbove = cr.bottom < 0;
-    ctrlEl.style.position = isAbove ? 'fixed' : '';
-    ctrlEl.style.bottom = isAbove ? '0' : '';
-    if(isAbove){
+    var sectionRect = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
+    var sectionStillBelow = sectionRect.bottom > window.innerHeight;
+    ctrlEl.style.position = (isAbove && sectionStillBelow) ? 'fixed' : '';
+    ctrlEl.style.bottom = (isAbove && sectionStillBelow) ? '0' : '';
+    if(isAbove && sectionStillBelow){
       var sr = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
       ctrlEl.style.width = sr.width + 'px';
       ctrlEl.style.left = sr.left + 'px';
