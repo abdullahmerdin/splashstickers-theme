@@ -66,7 +66,7 @@
 }
 .sticker-config-{{ section.id }} .canvas-item {
   position: absolute; cursor: grab; user-select: none;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.15s; z-index: 1;
 }
 .sticker-config-{{ section.id }} .canvas-item:hover { box-shadow: 0 0 0 2px #00CEC944; }
 .sticker-config-{{ section.id }} .canvas-item.selected {
@@ -354,14 +354,8 @@
         <span style="font-size:0.7rem;color:#B2BEC3;">mm</span>
       </div>
       <div class="be-row">
-        <span class="be-label">Zoom</span>
-        <button class="be-btn" id="zoom100-btn-{{ section.id }}">100%</button>
-        <button class="be-btn" id="zoomfit-btn-{{ section.id }}">Fit</button>
-        <button class="be-btn" id="zoom200-btn-{{ section.id }}">200%</button>
-        <button class="be-btn" id="auto-btn2-{{ section.id }}">Auto</button>
-        <button class="be-btn" id="export-btn2-{{ section.id }}">PDF</button>
-        <span id="stats-{{ section.id }}" style="font-size:0.75rem;color:#636E72;margin-left:auto;"></span>
-        <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:5px;padding:0;">
+        <span id="stats-{{ section.id }}" style="font-size:0.75rem;color:#636E72;"></span>
+        <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:5px;padding:0;margin-left:auto;">
         <button class="be-btn danger" id="clear-btn-{{ section.id }}" style="padding:2px 8px;font-size:0.7rem;">Clear</button>
       </div>
     </div>
@@ -714,7 +708,7 @@
         var sp=dragState.startPos[id]; if(!sp) return;
         item.x=Math.max(0,Math.min(CANVAS_W-item.w,sp.x+dx));
         item.y=Math.max(0,sp.y+dy);
-        var snap=document.getElementById('snap-toggle-'+sid).checked;
+        var snap=document.getElementById('snap-btm-'+sid).checked;
         var gridPx=snap?Math.round(CANVAS_W/600*5):0;
         if(gridPx>0){item.x=snapVal(item.x,gridPx);item.y=snapVal(item.y,gridPx);}
       });
@@ -992,24 +986,12 @@
   });
   // Bottom panel buttons
   document.getElementById('snap-btm-'+sid).addEventListener('change',function(){
-    document.getElementById('snap-toggle-'+sid).checked = this.checked;
-  });
-  document.getElementById('snap-toggle-'+sid).addEventListener('change',function(){
     document.getElementById('snap-btm-'+sid).checked = this.checked;
   });
+
   document.getElementById('grid-size-'+sid).addEventListener('change',function(){ drawGrid(); });
   document.getElementById('gap-size-'+sid).addEventListener('change',function(){});
-  document.getElementById('zoom100-btn-'+sid).addEventListener('click',function(){zoom=1;panX=0;panY=0;applyZoom();});
-  document.getElementById('zoomfit-btn-'+sid).addEventListener('click',zoomToFit);
-  document.getElementById('zoom200-btn-'+sid).addEventListener('click',function(){zoom=2;panX=0;panY=0;applyZoom();});
-  document.getElementById('auto-btn2-'+sid).addEventListener('click',function(){
-    document.getElementById('auto-btn-'+sid).click();
-  });
-  document.getElementById('export-btn2-'+sid).addEventListener('click',function(){
-    document.getElementById('export-btn-'+sid).click();
-  });
 
-  // Stats
   function updateStats(){
     var el=document.getElementById('stats-'+sid);
     if(!el)return;
