@@ -840,12 +840,13 @@
   function onScroll() {
     if(!ctrlEl) return;
     var cr = ctrlEl.getBoundingClientRect();
-    var isAbove = cr.bottom < 0;
+    var isBelow = cr.top > window.innerHeight;
     var sectionRect = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
     var sectionStillBelow = sectionRect.bottom > window.innerHeight;
-    ctrlEl.style.position = (isAbove && sectionStillBelow) ? 'fixed' : '';
-    ctrlEl.style.bottom = (isAbove && sectionStillBelow) ? '0' : '';
-    if(isAbove && sectionStillBelow){
+    var shouldFix = isBelow && sectionStillBelow;
+    ctrlEl.style.position = shouldFix ? 'fixed' : '';
+    ctrlEl.style.bottom = shouldFix ? '0' : '';
+    if(shouldFix){
       var sr = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
       ctrlEl.style.width = sr.width + 'px';
       ctrlEl.style.left = sr.left + 'px';
