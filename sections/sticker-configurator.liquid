@@ -163,7 +163,7 @@
 .sticker-config-{{ section.id }} .ruler.top { top: 0; left: 20px; right: 0; height: 20px; }
 .sticker-config-{{ section.id }} .ruler.left { left: 0; top: 20px; bottom: 0; width: 20px; }
 .sticker-config-{{ section.id }} .ruler label {
-  position: absolute; font-size: 0.55rem; color: #B2BEC3;
+  position: absolute; font-size: 0.55rem; color: #B2BEC3; white-space: nowrap;
 }
 .sticker-config-{{ section.id }} .ruler.top label { top: 4px; transform: translateX(-50%); }
 .sticker-config-{{ section.id }} .ruler.left label { left: 4px; transform: translateY(50%); }
@@ -478,19 +478,19 @@
   }
   function drawRulers() {
     var step=20, mmStep=10;
-    var cw=canvas.clientWidth/zoom, ch=canvas.clientHeight/zoom;
+    var cw=canvas.clientWidth, ch=canvas.clientHeight;
     rulerTop.innerHTML=''; rulerLeft.innerHTML='';
-    for(var x=0; x<cw; x+=step) {
-      var mm=Math.round(x/cw*600);
-      if(mm%mmStep===0){
-        var l=document.createElement('label'); l.textContent=mm; l.style.left=x*zoom+'px';
+    for(var x=step; x<cw-10; x+=step) {
+      var mm=Math.round((x+panX)/cw*600);
+      if(mm%mmStep===0 && mm>=0 && mm<=600){
+        var l=document.createElement('label'); l.textContent=mm; l.style.left=(x+panX)*zoom+'px';
         rulerTop.appendChild(l);
       }
     }
-    for(var y=0; y<ch; y+=step) {
-      var mm=Math.round(y/ch*600);
-      if(mm%mmStep===0){
-        var l=document.createElement('label'); l.textContent=mm; l.style.top=y*zoom+'px';
+    for(var y=step; y<ch-10; y+=step) {
+      var mm=Math.round((y+panY)/ch*600);
+      if(mm%mmStep===0 && mm>=0 && mm<=600){
+        var l=document.createElement('label'); l.textContent=mm; l.style.top=(y+panY)*zoom+'px';
         rulerLeft.appendChild(l);
       }
     }
@@ -528,6 +528,11 @@
   }
 
   /* ── Mouse events ── */
+  function getCanvasXY(e) {
+    var cr=canvas.getBoundingClientRect();
+    return { x: (e.clientX-cr.left)/zoom-panX, y: (e.clientY-cr.top)/zoom-panY };
+  }
+
   canvas.addEventListener('mousedown',function(e){
     var itemEl=e.target.closest('.canvas-item');
     if(itemEl){
@@ -542,13 +547,13 @@
     if(e.button===1||e.altKey){
       dragState={type:'pan',ox:e.clientX,oy:e.clientY};return;
     }
-    if(textToolActive&&e.target===canvas||e.target.classList.contains('grid-bg')){
-      var cr=wrap.getBoundingClientRect();
-      var cx=(e.clientX-cr.left-20)/zoom-panX, cy=(e.clientY-cr.top-40)/zoom-panY;
+    if(textToolActive&&(e.target===canvas||e.target.classList.contains('grid-bg'))){
+      var xy=getCanvasXY(e);
       addTextItem('Text',16,false);return;
     }
     if(!(e.ctrlKey||e.metaKey)){selectedIds=[];updateSelection();}
-    dragState={type:'selbox',sx:(e.clientX-(wrap.getBoundingClientRect()).left-20)/zoom-panX, sy:(e.clientY-(wrap.getBoundingClientRect()).top-40)/zoom-panY};
+    var xy=getCanvasXY(e);
+    dragState={type:'selbox',sx:xy.x,sy:xy.y};
   });
 
   document.addEventListener('mousemove',function(e){
@@ -589,9 +594,8 @@
       applyTransform(item); return;
     }
     if(dragState.type==='selbox'){
-      var wr=wrap.getBoundingClientRect();
-      var mx=(e.clientX-wr.left-20)/zoom-panX, my=(e.clientY-wr.top-40)/zoom-panY;
-      var l=Math.min(dragState.sx,mx),r=Math.max(dragState.sx,mx),t=Math.min(dragState.sy,my),b=Math.max(dragState.sy,my);
+      var xy=getCanvasXY(e);
+      var l=Math.min(dragState.sx,xy.x),r=Math.max(dragState.sx,xy.x),t=Math.min(dragState.sy,xy.y),b=Math.max(dragState.sy,xy.y);
       selBox.style.display='block';selBox.style.left=l+'px';selBox.style.top=t+'px';
       selBox.style.width=(r-l)+'px';selBox.style.height=(b-t)+'px';
     }
