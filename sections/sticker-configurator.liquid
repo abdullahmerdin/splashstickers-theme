@@ -188,28 +188,7 @@
 .sticker-config-{{ section.id }} .bottom-extra .be-btn.danger:hover {
   background: #FFF0F0;
 }
-.tpl-overlay {
-  position: fixed; inset: 0; z-index: 100000;
-  background: rgba(0,0,0,0.4); display: flex;
-  align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.tpl-box {
-  background: #fff; border-radius: 20px; padding: 24px;
-  max-width: 480px; width: 90%; max-height: 80vh;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden;
-}
-.tpl-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-  border-radius: 10px; cursor: pointer; transition: background 0.12s;
-}
-.tpl-item:hover { background: #f8f9fa; }
-.tpl-thumb {
-  width: 60px; height: 40px; border-radius: 6px; object-fit: cover;
-  flex-shrink: 0; border: 1px solid #eee;
-}
-.tpl-name { font-weight: 600; font-size: 0.85rem; color: var(--cfg-text); }
-.tpl-date { font-size: 0.7rem; color: var(--cfg-muted); }
+
 .sticker-config-{{ section.id }} .cfg-modal {
   position: fixed; inset: 0; z-index: 99999;
   background: rgba(0,0,0,0.4); display: none;
@@ -391,8 +370,7 @@
       <div class="be-row">
         <span class="be-label">Canvas</span>
         <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:32px;height:32px;border:none;cursor:pointer;border-radius:6px;">
-        <button class="be-btn danger" id="clear-btn-{{ section.id }}" style="margin-left:auto;">Clear all</button>
-        <button class="be-btn" id="tpl-btn-{{ section.id }}">Templates</button>
+        <button class="be-btn danger" id="clear-btn-{{ section.id }}" style="">Clear all</button>
         <span id="stats-{{ section.id }}" style="font-size:0.75rem;color:#636E72;margin-left:8px;"></span>
       </div>
     </div>
@@ -978,91 +956,6 @@
     items.length=0; selectedIds=[]; updateSelection(); updateCount(); updatePrice(); saveState();
     hint.style.display='';
   });
-    // Template save/load modal
-  document.getElementById('tpl-btn-'+sid).addEventListener('click', function(){ showTplModal(); });
-  function showTplModal() {
-    var keys = Object.keys(localStorage).filter(function(k){ return k.startsWith('sticker-tpl-'+sid); });
-    var html = '<div class="tpl-overlay" onclick="if(event.target===this)closeTplModal();"><div class="tpl-box"><h3 style="margin:0 0 16px;">Templates</h3>' +
-      '<button class="be-btn" onclick="saveTpl()" style="margin-bottom:12px;">+ Save Current</button>' +
-      '<div id="tpl-list" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;">';
-    if(keys.length===0) html += '<div style="color:#B2BEC3;font-size:0.9rem;padding:20px;text-align:center;">No saved templates yet</div>';
-    keys.sort().reverse().forEach(function(k){
-      try {
-        var t = JSON.parse(localStorage.getItem(k));
-        html += '<div class="tpl-item" onclick="loadTpl(encodeURIComponent(k))">' +
-          (t.thumb ? '<img src="'+t.thumb+'" class="tpl-thumb">' : '<div class="tpl-thumb" style="background:#f0f0f0;"></div>') +
-          '<div style="flex:1;min-width:0;"><div class="tpl-name">'+(t.name||k)+'</div><div class="tpl-date">'+new Date(t.date).toLocaleDateString()+'</div></div>' +
-          '<button class="be-btn danger" onclick="event.stopPropagation();deleteTpl(encodeURIComponent(k))">Delete</button></div>';
-      } catch(e){}
-    });
-    html += '</div></div></div>';
-    var div = document.createElement('div'); div.innerHTML = html;
-    document.body.appendChild(div);
-    window._tplModal = div;
-  }
-  function closeTplModal() {
-    if(window._tplModal){ window._tplModal.remove(); window._tplModal = null; }
-  }
-  function saveTpl() {
-    var name = prompt('Template name:') || 'Template';
-    var data = items.map(function(it){
-      var img=it.el.querySelector('img');
-      return {id:it.id,src:img?img.src:(it.text||''),isText:!!it.text,text:it.text||'',fontSize:it.fontSize||16,
-        x:it.x,y:it.y,w:it.w,h:it.h,rotation:it.rotation,scaleX:it.scaleX,scaleY:it.scaleY};
-    });
-    // Capture thumbnail
-    var thumb = null;
-    try {
-      var c = document.createElement('canvas');
-      c.width = 120; c.height = 80;
-      var ctx = c.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,120,80);
-      var sx=1/0,sy=1/0,ex=-1/0,ey=-1/0;
-      items.forEach(function(it){ if(it.x<sx)sx=it.x;if(it.y<sy)sy=it.y;if(it.x+it.w>ex)ex=it.x+it.w;if(it.y+it.h>ey)ey=it.y+it.h; });
-      var iw=ex-sx||1, ih=ey-sy||1, sc=Math.min(100/iw,60/ih);
-      items.forEach(function(it){
-        ctx.save();
-        ctx.translate((it.x-sx)*sc+10,(it.y-sy)*sc+10);
-        ctx.scale(it.scaleX*sc,it.scaleY*sc);
-        ctx.rotate(it.rotation*Math.PI/180);
-        var img=it.el.querySelector('img');
-        if(img) ctx.drawImage(img,0,0,it.w,it.h);
-        else if(it.text){ ctx.fillStyle='#2D3436'; ctx.font='10px sans-serif'; ctx.textAlign='center'; ctx.fillText(it.text,it.w/2,it.h/2); }
-        ctx.restore();
-      });
-      thumb = c.toDataURL();
-    } catch(e){}
-    var key = 'sticker-tpl-'+sid+'-'+Date.now();
-    localStorage.setItem(key, JSON.stringify({name:name, date:Date.now(), thumb:thumb, items:data}));
-    closeTplModal(); showTplModal();
-  }
-  function loadTpl(ekey) { var key=decodeURIComponent(ekey); 
-    try {
-      var t = JSON.parse(localStorage.getItem(key));
-      if(!t || !t.items) return;
-      if(items.length && !confirm('Replace current designs?')) return;
-      items.slice().forEach(function(it){it.el.remove();});
-      items.length=0; selectedIds=[];
-      t.items.forEach(function(s){
-        if(s.isText) addTextItem(s.text,s.fontSize||16,true);
-        else if(s.src) addImageItem(s.src,true);
-      });
-      t.items.forEach(function(s){
-        var item=items.find(function(i){return i.id===s.id;});
-        if(!item) return;
-        item.x=s.x;item.y=s.y;item.w=s.w;item.h=s.h;item.rotation=s.rotation;item.scaleX=s.scaleX;item.scaleY=s.scaleY;
-        item.el.style.left=s.x+'px';item.el.style.top=s.y+'px';item.el.style.width=s.w+'px';item.el.style.height=s.h+'px';
-        applyTransform(item);updateSizeInfo(item);
-      });
-      saveState(); updateCount(); updatePrice(); hint.style.display='none';
-      closeTplModal();
-    } catch(e){ alert('Failed to load template.'); }
-  }
-  function deleteTpl(key) {
-    if(!confirm('Delete this template?')) return;
-    localStorage.removeItem(key);
-    closeTplModal(); showTplModal();
-  }
   // Stats
   function updateStats(){
     var el=document.getElementById('stats-'+sid);
