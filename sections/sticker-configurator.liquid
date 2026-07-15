@@ -20,10 +20,12 @@
   grid-column: 1 !important; grid-row: 1 !important;
   background: {{ bg_color }};
   border-radius: 20px; padding: 24px; position: sticky; top: 100px;
-  overflow: hidden;
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 130px);
 }
 .sticker-config-{{ section.id }} .editor-wrap {
   display: flex; flex-direction: column; gap: 12px;
+  flex: 1; overflow: hidden;
 }
 .sticker-config-{{ section.id }} .toolbar {
   display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
@@ -43,8 +45,9 @@
   width: 1px; height: 20px; background: #DFE6E9; margin: 0 4px;
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
-  position: relative; width: 100%; overflow: hidden; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff; aspect-ratio: 3 / 2;
+  position: relative; width: 100%; overflow: auto; border-radius: 12px;
+  border: 2px solid #DFE6E9; background: #fff;
+  flex: 1; min-height: 200px;
 }
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
@@ -155,18 +158,14 @@
 }
 
 .sticker-config-{{ section.id }} .sticky-ctrls {
-  position: static; z-index: 50;
   background: {{ bg_color }}; border-radius: 0 0 20px 20px;
   padding: 8px 0; margin-top: -2px;
 }
-.sticker-config-{{ section.id }} .sticky-ctrls.fixed {
-  position: fixed; bottom: 0; z-index: 50;
-  padding: 8px 16px; border-radius: 0;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-  background: {{ bg_color }};
-}
+
 @media (max-width: 768px) {
-  .sticker-config-{{ section.id }} { position: static; padding: 16px; }
+  .sticker-config-{{ section.id }} { position: static; padding: 16px; max-height: none; }
+  .sticker-config-{{ section.id }} .editor-wrap { overflow: visible; }
+  .sticker-config-{{ section.id }} .canvas-wrap { overflow: hidden; }
 }
 .sticker-config-{{ section.id }}.mobile-mode {
   position: fixed !important; inset: 0 !important; z-index: 99998 !important;
@@ -835,28 +834,32 @@
     setTimeout(function(){zoomToFit();},100);
   });
 
-  /* ── Sticky controls vi sentinel ── */
-  var stickyEl = document.querySelector('.sticker-config-'+sid+' .sticky-ctrls');
-  var stickySentinel = null;
-  if(stickyEl){
-    stickySentinel = document.createElement('div');
-    stickySentinel.style.cssText='height:1px;margin:0;width:100%';
-    stickyEl.parentNode.insertBefore(stickySentinel, stickyEl);
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        var shouldFix = entry.boundingClientRect.top < 0;
-        stickyEl.classList.toggle('fixed', shouldFix);
-        if(shouldFix){
-          var sr = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
-          stickyEl.style.width = sr.width + 'px';
-          stickyEl.style.left = sr.left + 'px';
-        } else {
-          stickyEl.style.width = ''; stickyEl.style.left = '';
-        }
-      });
-    }, { root: null, threshold: [0, 1] });
-    io.observe(stickySentinel);
+
+
+  /* ── Sticky controls ── */
+  var ctrlEl = document.querySelector('.sticker-config-'+sid+' .sticky-ctrls');
+  var ctrlPad = 24; // padding of config section
+  function onScroll() {
+    if(!ctrlEl) return;
+    var cr = ctrlEl.getBoundingClientRect();
+    var shouldFix = cr.top < window.innerHeight && cr.bottom < 0;
+    // Also check: if controls are above viewport, fix to bottom
+    var isAbove = cr.bottom < 0;
+    ctrlEl.style.position = isAbove ? 'fixed' : '';
+    ctrlEl.style.bottom = isAbove ? '0' : '';
+    if(isAbove){
+      var sr = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
+      ctrlEl.style.width = sr.width + 'px';
+      ctrlEl.style.left = sr.left + 'px';
+      ctrlEl.style.zIndex = '50';
+    } else {
+      ctrlEl.style.width = '';
+      ctrlEl.style.left = '';
+      ctrlEl.style.zIndex = '';
+    }
   }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
 
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
