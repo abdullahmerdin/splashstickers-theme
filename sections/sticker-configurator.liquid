@@ -934,36 +934,32 @@
   function showEditModal(item, cb){
     var curText=item.text||'', curSize=item.fontSize||16, curColor=item.color||'#2D3436';
     var curBg=item.bgColor||'', curWeight=item.fontWeight||'', curStyle=item.fontStyle||'', curAlign=item.textAlign||'center';
-    var m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
-    m.innerHTML='<div style="background:#fff;border-radius:20px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15);">'+
-      '<h3 style="margin:0 0 16px;font-size:1.05rem;color:#2D3436;">Edit Text</h3>'+
-      '<textarea id="et-text" style="width:100%;padding:10px 12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.9rem;outline:none;resize:vertical;box-sizing:border-box;min-height:60px;">'+curText.replace(/"/g,'&quot;')+'</textarea>'+
-      '<div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;align-items:center;">'+
-        '<label style="font-size:0.75rem;color:#B2BEC3;">Size</label><input id="et-size" type="number" value="'+curSize+'" min="8" max="120" style="width:50px;padding:4px;border:2px solid #DFE6E9;border-radius:6px;font-size:0.8rem;text-align:center;">'+
-        '<label style="font-size:0.75rem;color:#B2BEC3;margin-left:4px;">Color</label><input id="et-color" type="color" value="'+curColor+'" style="width:30px;height:30px;border:none;cursor:pointer;border-radius:4px;padding:0;">'+
-        '<label style="font-size:0.75rem;color:#B2BEC3;margin-left:4px;">BG</label><input id="et-bg" type="color" value="'+(curBg||'#ffffff')+'" style="width:30px;height:30px;border:none;cursor:pointer;border-radius:4px;padding:0;">'+
-        '<button id="et-bold" class="be-btn" style="font-weight:700;width:30px;height:30px;padding:0;">B</button>'+
-        '<button id="et-italic" class="be-btn" style="font-style:italic;width:30px;height:30px;padding:0;">I</button>'+
-        '<button id="et-left" class="be-btn" style="width:30px;height:30px;padding:0;">&#x2190;</button>'+
-        '<button id="et-center" class="be-btn" style="width:30px;height:30px;padding:0;">&#x2194;</button>'+
-        '<button id="et-right" class="be-btn" style="width:30px;height:30px;padding:0;">&#x2192;</button>'+
+    var m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);';
+    m.innerHTML='<div style="background:#fff;border-radius:16px;padding:28px;max-width:440px;width:92%;box-shadow:0 25px 80px rgba(0,0,0,0.2);">'+
+      '<h3 style="margin:0 0 6px;font-size:1.1rem;font-weight:700;color:#2D3436;">Edit Text</h3>'+
+      '<p style="margin:0 0 18px;font-size:0.8rem;color:#B2BEC3;">Format your sticker text</p>'+
+      '<textarea id="et-text" style="width:100%;padding:12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.95rem;outline:none;resize:vertical;box-sizing:border-box;min-height:80px;font-family:inherit;transition:border-color 0.2s;" placeholder="Type your text here...">'+curText.replace(/"/g,'&quot;')+'</textarea>'+
+      '<div style="display:flex;gap:12px;margin:16px 0;flex-wrap:wrap;align-items:center;padding:12px;background:#f8f9fa;border-radius:10px;">'+
+        '<div style="display:flex;align-items:center;gap:4px;"><label style="font-size:0.7rem;font-weight:600;color:#636E72;text-transform:uppercase;letter-spacing:0.5px;">Size</label><input id="et-size" type="number" value="'+curSize+'" min="8" max="120" style="width:48px;padding:4px 6px;border:2px solid #DFE6E9;border-radius:6px;font-size:0.8rem;text-align:center;"></div>'+
+        '<div style="display:flex;align-items:center;gap:4px;"><label style="font-size:0.7rem;font-weight:600;color:#636E72;text-transform:uppercase;letter-spacing:0.5px;">Color</label><input id="et-color" type="color" value="'+curColor+'" style="width:32px;height:32px;border:2px solid #DFE6E9;border-radius:6px;cursor:pointer;padding:0;"></div>'+
+        '<div style="display:flex;align-items:center;gap:4px;"><label style="font-size:0.7rem;font-weight:600;color:#636E72;text-transform:uppercase;letter-spacing:0.5px;">BG</label><input id="et-bg" type="color" value="'+(curBg||'#ffffff')+'" style="width:32px;height:32px;border:2px solid #DFE6E9;border-radius:6px;cursor:pointer;padding:0;"></div>'+
+        '<span style="width:1px;height:24px;background:#DFE6E9;margin:0 4px;"></span>'+
+        '<button id="et-bold" class="be-btn" style="font-weight:700;width:32px;height:32px;padding:0;font-size:0.85rem;border-radius:6px;'+(curWeight==='bold'?'background:#00CEC9;color:#fff;':'')+'">B</button>'+
+        '<button id="et-italic" class="be-btn" style="font-style:italic;width:32px;height:32px;padding:0;font-size:0.85rem;border-radius:6px;'+(curStyle==='italic'?'background:#00CEC9;color:#fff;':'')+'">I</button>'+
+        '<span style="width:1px;height:24px;background:#DFE6E9;margin:0 4px;"></span>'+
+        '<button id="et-left" class="be-btn" style="width:32px;height:32px;padding:0;font-size:0.85rem;border-radius:6px;'+(curAlign==='left'?'background:#00CEC9;color:#fff;':'')+'">\u2190</button>'+
+        '<button id="et-center" class="be-btn" style="width:32px;height:32px;padding:0;font-size:0.85rem;border-radius:6px;'+(curAlign==='center'?'background:#00CEC9;color:#fff;':'')+'">\u2194</button>'+
+        '<button id="et-right" class="be-btn" style="width:32px;height:32px;padding:0;font-size:0.85rem;border-radius:6px;'+(curAlign==='right'?'background:#00CEC9;color:#fff;':'')+'">\u2192</button>'+
       '</div>'+
-      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">'+
-      '<button class="cfg-btn-sec" style="padding:8px 20px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:#f5f5f5;color:#636E72;">Cancel</button>'+
-      '<button class="cfg-btn-pry" style="padding:8px 20px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--cfg-primary,#00CEC9),#00A8A3);color:#fff;">Save</button></div></div>';
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">'+
+      '<button class="cfg-btn-sec" style="padding:10px 24px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:#f1f3f5;color:#636E72;transition:all 0.15s;">Cancel</button>'+
+      '<button class="cfg-btn-pry" style="padding:10px 24px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00CEC9,#00A8A3);color:#fff;transition:all 0.15s;">Save</button></div></div>';
     document.body.appendChild(m);
     var inp=m.querySelector('#et-text');inp.focus();inp.select();
-    // Toggle active state for formatting buttons
-    m.querySelector('#et-bold').classList.toggle('active',curWeight==='bold');
-    m.querySelector('#et-italic').classList.toggle('active',curStyle==='italic');
-    m.querySelector('#et-left').classList.toggle('active',curAlign==='left');
-    m.querySelector('#et-center').classList.toggle('active',curAlign==='center');
-    m.querySelector('#et-right').classList.toggle('active',curAlign==='right');
-    m.querySelector('#et-bold').onclick=function(){this.classList.toggle('active');}
-    m.querySelector('#et-italic').onclick=function(){this.classList.toggle('active');}
-    m.querySelector('#et-left').onclick=function(){['left','center','right'].forEach(function(a){m.querySelector('#et-'+a).classList.remove('active');});this.classList.add('active');}
-    m.querySelector('#et-center').onclick=function(){['left','center','right'].forEach(function(a){m.querySelector('#et-'+a).classList.remove('active');});this.classList.add('active');}
-    m.querySelector('#et-right').onclick=function(){['left','center','right'].forEach(function(a){m.querySelector('#et-'+a).classList.remove('active');});this.classList.add('active');}
+    // Toggle helper
+    function styleBtn(id,prop,vals){var btn=m.querySelector('#'+id);btn.onclick=function(){var active=!this.classList.contains('active');this.classList.toggle('active');if(active&&vals)this.style.cssText+='background:#00CEC9;color:#fff;';else if(vals)this.style.cssText=this.style.cssText.replace(/background:#00CEC9;color:#fff;/g,'');}}
+    styleBtn('et-bold');styleBtn('et-italic');
+    ['left','center','right'].forEach(function(a){var btn=m.querySelector('#et-'+a);btn.onclick=function(){['left','center','right'].forEach(function(x){var b=m.querySelector('#et-'+x);b.classList.remove('active');b.style.cssText=b.style.cssText.replace(/background:#00CEC9;color:#fff;/g,'');});this.classList.add('active');this.style.cssText+='background:#00CEC9;color:#fff;';};});
     m.querySelector('.cfg-btn-pry').onclick=function(){
       var data={
         text: m.querySelector('#et-text').value.trim(),
