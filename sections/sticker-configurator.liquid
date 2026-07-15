@@ -35,7 +35,7 @@
 }
 .sticker-config-{{ section.id }} .editor-wrap {
   display: flex; flex-direction: column; gap: 12px;
-  flex: 1; overflow-y: auto; min-height: 0;
+  flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
 }
 .sticker-config-{{ section.id }} .toolbar {
   display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
@@ -56,14 +56,13 @@
   width: 1px; height: 20px; background: #DFE6E9; margin: 0 4px;
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
-  position: relative; width: 100%; overflow: auto; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff;
-  flex-shrink: 0;
+  position: relative; width: 100%; flex: 1; overflow: auto; border-radius: 12px;
+  border: 2px solid #DFE6E9; background: #fff; min-height: 200px;
 }
 .sticker-config-{{ section.id }} .canvas-area {
-  position: absolute; inset: 0; cursor: default; user-select: none;
+  position: absolute; inset: 0; left: 0; top: 0; width: 600px; right: auto; bottom: 0;
+  cursor: default; user-select: none;
   transform-origin: 0 0; overflow: hidden;
-  width: 600px; height: 400px;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
   position: absolute; inset: 0; pointer-events: none; overflow: hidden;
@@ -380,7 +379,6 @@
 (function() {
   var sid = '{{ section.id }}';
   var wrap = document.getElementById('canvas-wrap-'+sid);
-  wrap.style.height = '400px';
   var canvas = document.getElementById('canvas-'+sid);
   var hint = document.getElementById('hint-'+sid);
   var fileInput = document.getElementById('file-input-'+sid);
