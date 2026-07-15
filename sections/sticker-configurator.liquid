@@ -844,7 +844,7 @@
     stickyEl.parentNode.insertBefore(stickySentinel, stickyEl);
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
-        var shouldFix = !entry.isIntersecting || entry.boundingClientRect.top < 0;
+        var shouldFix = entry.boundingClientRect.top < 0;
         stickyEl.classList.toggle('fixed', shouldFix);
         if(shouldFix){
           var sr = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
