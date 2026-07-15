@@ -34,6 +34,7 @@
   align-items: center; justify-content: center; transition: all 0.12s;
   color: #636E72;
 }
+.sticker-config-{{ section.id }} .toolbar button svg { display: block; }
 .sticker-config-{{ section.id }} .toolbar button:hover { background: #fff; color: #00CEC9; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .sticker-config-{{ section.id }} .toolbar button:disabled { opacity: 0.25; cursor: default; box-shadow: none; background: transparent; }
 .sticker-config-{{ section.id }} .toolbar .toolbar-divider {
@@ -165,17 +166,17 @@
 <div class="sticker-config-{{ section.id }}">
   <div class="editor-wrap">
     <div class="toolbar">
-      <button title="Undo" id="undo-btn-{{ section.id }}" disabled>&#x21A9;&#xFE0F;</button>
-      <button title="Redo" id="redo-btn-{{ section.id }}" disabled>&#x21AA;&#xFE0F;</button>
+      <button title="Undo" id="undo-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
+      <button title="Redo" id="redo-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
       <span class="toolbar-divider"></span>
-      <button title="Auto arrange" id="auto-btn-{{ section.id }}">&#x25A8;&#xFE0F;</button>
-      <button title="Delete selected" id="del-btn-{{ section.id }}" disabled>&#x1F5D1;</button>
-      <button title="Duplicate selected" id="dup-btn-{{ section.id }}" disabled>&#x1F4DD;</button>
+      <button title="Auto arrange" id="auto-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
+      <button title="Delete selected" id="del-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+      <button title="Duplicate selected" id="dup-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
       <span class="toolbar-divider"></span>
-      <button title="Flip horizontal" id="flip-h-{{ section.id }}" disabled>&#x2194;&#xFE0F;</button>
-      <button title="Flip vertical" id="flip-v-{{ section.id }}" disabled>&#x2195;&#xFE0F;</button>
+      <button title="Flip horizontal" id="flip-h-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/></svg></button>
+      <button title="Flip vertical" id="flip-v-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg></button>
       <span class="toolbar-divider"></span>
-      <button title="Mobile mode (full screen canvas)" id="mobile-btn-{{ section.id }}">&#x1F4F1;</button>
+      <button title="Mobile mode (full screen canvas)" id="mobile-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#B2BEC3;">
       <input type="checkbox" id="snap-toggle-{{ section.id }}" style="accent-color:#00CEC9;cursor:pointer;">
@@ -787,7 +788,7 @@
   mobileBtn.addEventListener('click', function() {
     mobile = !mobile;
     document.querySelector('.sticker-config-'+sid).classList.toggle('mobile-mode', mobile);
-    this.innerHTML = mobile ? '&#x1F5A5;' : '&#x1F4F1;';
+    this.innerHTML = mobile ? '<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"/><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"/></svg>' : '<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"2\" width=\"14\" height=\"20\" rx=\"2\" ry=\"2\"/><line x1=\"12\" y1=\"18\" x2=\"12.01\" y2=\"18\"/></svg>';
     if (mobile) {
       document.getElementById('modal-'+sid).querySelector('.modal-box').style.maxWidth = '100%';
       document.getElementById('modal-'+sid).querySelector('.modal-box').style.width = '100%';
