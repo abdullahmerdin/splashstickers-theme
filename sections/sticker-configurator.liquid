@@ -37,7 +37,6 @@
 .sticker-config-{{ section.id }} .toolbar {
   display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
   background: #f8f9fa; border-radius: 12px; padding: 4px;
-  position: sticky; top: 0; z-index: 10;
 }
 .sticker-config-{{ section.id }} .toolbar button {
   width: 34px; height: 34px; border-radius: 8px; border: none;
@@ -1009,7 +1008,7 @@
   /* ── Mobile toggle ── */
   var mobile=false;
   mobileBtn.addEventListener('click',function(){
-    mobile=!mobile;mobile?wrap.requestFullscreen?.():document.fullscreenElement&&document.exitFullscreen?.();
+    mobile=!mobile;
     document.querySelector('.sticker-config-'+sid).classList.toggle('mobile-mode',mobile);
     mobileBtn.innerHTML=mobile?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
     setTimeout(function(){zoomToFit();},100);
