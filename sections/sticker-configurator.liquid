@@ -210,35 +210,7 @@
     </div>
 
     <!-- Modal -->
-    <div class="modal-overlay" id="modal-{{ section.id }}">
-      <div class="modal-box">
-        <h3>Add Design</h3>
-        <div class="modal-upload-zone" id="modal-zone-{{ section.id }}">
-          <div class="icon">&#x1F5BC;</div>
-          <div class="text">Click to choose a design file</div>
-          <div class="modal-file-name" id="modal-fname-{{ section.id }}"></div>
-        </div>
-        <div class="modal-row">
-          <label>Width</label>
-          <input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1">
-          <span class="modal-unit">mm</span>
-        </div>
-        <div class="modal-row">
-          <label>Height</label>
-          <input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1">
-          <span class="modal-unit">mm</span>
-        </div>
-        <div class="modal-row">
-          <label>Copies</label>
-          <input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1">
-          <span class="modal-unit">pcs</span>
-        </div>
-        <div class="modal-actions">
-          <button class="btn-cancel" id="modal-cancel-{{ section.id }}">Cancel</button>
-          <button class="btn-add" id="modal-add-{{ section.id }}" disabled>Add to Canvas</button>
-        </div>
-      </div>
-    </div>
+
     <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" style="display:none;">
     <div class="upload-btn-area">
       <button id="add-btn-{{ section.id }}">&#x2795; Add design</button>
@@ -635,8 +607,27 @@
   });
 
   // ── Modal ──
-  var modalFile = null;
-  var modalEl = document.getElementById('modal-'+sid);
+  // Build modal and append to body
+  var modalEl = document.createElement('div');
+  modalEl.className = 'modal-overlay';
+  modalEl.id = 'modal-'+sid;
+  modalEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  modalEl.innerHTML = '<div class="modal-box" style="background:#fff;border-radius:20px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15);">' +
+    '<h3 style="margin:0 0 20px;font-size:1.1rem;color:#2D3436;">Add Design</h3>' +
+    '<div class="modal-upload-zone" id="modal-zone-'+sid+'" style="border:2px dashed #DFE6E9;border-radius:12px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px;">' +
+      '<div class="icon" style="font-size:2rem;margin-bottom:4px;">&#x1F5BC;</div>' +
+      '<div class="text" style="font-size:0.85rem;color:#636E72;">Click to choose a design file</div>' +
+      '<div class="modal-file-name" id="modal-fname-'+sid+'" style="font-size:0.8rem;color:#00CEC9;margin-top:4px;display:none;"></div>' +
+    '</div>' +
+    '<div class="modal-row" style="display:flex;gap:12px;margin-bottom:16px;align-items:center;"><label style="font-size:0.85rem;font-weight:600;color:#636E72;min-width:50px;">Width</label><input type="number" id="modal-w-'+sid+'" value="50" min="10" max="600" step="1" style="flex:1;padding:10px 12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.9rem;outline:none;"><span style="font-size:0.8rem;color:#B2BEC3;min-width:30px;">mm</span></div>' +
+    '<div class="modal-row" style="display:flex;gap:12px;margin-bottom:16px;align-items:center;"><label style="font-size:0.85rem;font-weight:600;color:#636E72;min-width:50px;">Height</label><input type="number" id="modal-h-'+sid+'" value="50" min="10" max="600" step="1" style="flex:1;padding:10px 12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.9rem;outline:none;"><span style="font-size:0.8rem;color:#B2BEC3;min-width:30px;">mm</span></div>' +
+    '<div class="modal-row" style="display:flex;gap:12px;margin-bottom:16px;align-items:center;"><label style="font-size:0.85rem;font-weight:600;color:#636E72;min-width:50px;">Copies</label><input type="number" id="modal-qty-'+sid+'" value="3" min="1" max="50" step="1" style="flex:1;padding:10px 12px;border:2px solid #DFE6E9;border-radius:10px;font-size:0.9rem;outline:none;"><span style="font-size:0.8rem;color:#B2BEC3;min-width:30px;">pcs</span></div>' +
+    '<div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">' +
+      '<button class="btn-cancel" id="modal-cancel-'+sid+'" style="padding:10px 24px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:#f5f5f5;color:#636E72;">Cancel</button>' +
+      '<button class="btn-add" id="modal-add-'+sid+'" disabled style="padding:10px 24px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00CEC9,#00A8A3);color:#fff;">Add to Canvas</button>' +
+    '</div>' +
+  '</div>';
+  document.body.appendChild(modalEl);
   var modalZone = document.getElementById('modal-zone-'+sid);
   var modalFname = document.getElementById('modal-fname-'+sid);
   var modalW = document.getElementById('modal-w-'+sid);
@@ -644,6 +635,7 @@
   var modalQty = document.getElementById('modal-qty-'+sid);
   var modalAddBtn = document.getElementById('modal-add-'+sid);
   var modalCancel = document.getElementById('modal-cancel-'+sid);
+  var modalFile = null;
 
   document.getElementById('add-btn-'+sid).addEventListener('click', function() {
     modalFile = null;
