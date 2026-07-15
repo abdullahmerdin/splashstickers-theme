@@ -836,14 +836,20 @@
 
   /* ── Sticky controls ── */
   var ctrlEl = document.querySelector('.sticker-config-'+sid+' .sticky-ctrls');
-  var ctrlPad = 24; // padding of config section
+  var sentinel = null; // marker to detect page bottom
+  if(ctrlEl){
+    sentinel = document.createElement('div');
+    sentinel.style.cssText = 'height:1px;width:100%;margin:0';
+    ctrlEl.parentNode.insertBefore(sentinel, ctrlEl.nextSibling);
+  }
   function onScroll() {
-    if(!ctrlEl) return;
+    if(!ctrlEl || !sentinel) return;
+    var sentRect = sentinel.getBoundingClientRect();
     var cr = ctrlEl.getBoundingClientRect();
+    // Sentinel not visible = more content below = fix controls
     var isBelow = cr.top > window.innerHeight;
-    var sectionRect = document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
-    var sectionStillBelow = sectionRect.bottom > window.innerHeight;
-    var shouldFix = isBelow && sectionStillBelow;
+    var bottomNear = sentRect.bottom <= window.innerHeight; // at bottom of page
+    var shouldFix = isBelow && !bottomNear;
     ctrlEl.style.position = shouldFix ? 'fixed' : '';
     ctrlEl.style.bottom = shouldFix ? '0' : '';
     if(shouldFix){
