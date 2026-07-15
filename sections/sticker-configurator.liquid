@@ -35,7 +35,7 @@
 }
 .sticker-config-{{ section.id }} .editor-wrap {
   display: flex; flex-direction: column; gap: 12px;
-  flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
+  flex: 1; overflow: auto; min-height: 0;
 }
 .sticker-config-{{ section.id }} .toolbar {
   display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
@@ -393,6 +393,7 @@
   var dragState = null;
   var basePrice = 2.5;
   var zoom = 1, panX = 0, panY = 0;
+  var dpr = window.devicePixelRatio || 1;
   var textToolActive = false;
 
   var undoBtn = document.getElementById('undo-btn-'+sid);
@@ -662,9 +663,10 @@
     var gc=document.getElementById('grid-canvas-'+sid);
     if(!gc) return;
     var w=CANVAS_W, h=CANVAS_H;
-    gc.width=w; gc.height=h;
+    gc.width=w*dpr; gc.height=h*dpr;
     gc.style.width=w+'px'; gc.style.height=h+'px';
     var ctx=gc.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
     var gs=parseInt((document.getElementById('grid-size-'+sid)||{}).value)||20;
     ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.lineWidth=1;
     ctx.beginPath();
