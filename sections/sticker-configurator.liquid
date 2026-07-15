@@ -31,16 +31,15 @@
   background: {{ bg_color }};
   border-radius: 0; padding: 0 24px 0 24px;
   display: flex; flex-direction: column;
+  position: sticky; top: 100px; max-height: calc(100vh - 100px); overflow: hidden;
 }
 .sticker-config-{{ section.id }} .editor-wrap {
   display: flex; flex-direction: column; gap: 12px;
-  background: #f8f9fa;
+  background: #f8f9fa; flex: 1; overflow: auto; min-height: 0;
 }
 .sticker-config-{{ section.id }} .toolbar {
   display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
   background: #f8f9fa; border-radius: 0; padding: 4px;
-  position: sticky; top: 100px; z-index: 10;
-  box-shadow: 0 -24px 0 0 #f8f9fa;
 }
 .sticker-config-{{ section.id }} .toolbar button {
   width: 34px; height: 34px; border-radius: 8px; border: none;
@@ -230,7 +229,7 @@
 }
 .sticker-config-{{ section.id }} .cfg-btn-pry:disabled { opacity: 0.4; cursor: default; }
 .sticker-config-{{ section.id }} .sticky-ctrls {
-  background: {{ bg_color }}; padding: 8px 0; margin-top: -14px;
+  background: {{ bg_color }}; padding: 8px 0;
   position: sticky; bottom: 0; z-index: 50;
 }
 @media (max-width: 768px) {
