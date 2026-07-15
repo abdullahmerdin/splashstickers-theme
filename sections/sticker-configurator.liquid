@@ -475,13 +475,29 @@
   function snapVal(v,g){return g>0?Math.round(v/g)*g:v;}
 
   /* ── Add items ── */
+  function findNextSlot(w, h) {
+    var colGap=Math.round(CANVAS_W/600*5), rowGap=Math.round(CANVAS_W/600*5), pad=12;
+    // Scan left-to-right, top-to-bottom
+    for(var yy=pad; yy+h<=CANVAS_H; yy+=h+rowGap){
+      for(var xx=pad; xx+w<=CANVAS_W; xx+=w+colGap){
+        var ok=true;
+        for(var mi=0; mi<items.length; mi++){
+          var o=items[mi];
+          if(xx<o.x+o.w+w/2 && xx+w>o.x-w/2 && yy<o.y+o.h+h/2 && yy+h>o.y-h/2){ ok=false; break; }
+        }
+        if(ok) return {x:xx, y:yy};
+      }
+    }
+    return {x:pad, y:CANVAS_H+10}; // below canvas if no fit
+  }
   function addImageItem(src, silent) {
     var id=nextId++;
     var w=80+Math.random()*30, h=w*0.75;
+    var slot=findNextSlot(w, h);
     var el=document.createElement('div');
     el.className='canvas-item'; el.dataset.itemId=id;
-    el.style.left=(20+Math.random()*(CANVAS_W-w-40))+'px';
-    el.style.top=(20+Math.random()*(CANVAS_H-h-40))+'px';
+    el.style.left=slot.x+'px';
+    el.style.top=slot.y+'px';
     el.style.width=w+'px'; el.style.height=h+'px';
     var img=document.createElement('img'); img.src=src; img.draggable=false;
     el.appendChild(img);
@@ -493,9 +509,10 @@
   function addTextItem(text, fontSize, silent) {
     var id=nextId++;
     var w=120, h=40+fontSize;
+    var slot=findNextSlot(w, h);
     var el=document.createElement('div');
     el.className='canvas-item'; el.dataset.itemId=id;
-    el.style.left=((CANVAS_W-w)/2)+'px'; el.style.top=((CANVAS_H-h)/2)+'px';
+    el.style.left=slot.x+'px'; el.style.top=slot.y+'px';
     el.style.width=w+'px'; el.style.height=h+'px';
     var tc=document.createElement('div');
     tc.className='text-content'; tc.textContent=text;
