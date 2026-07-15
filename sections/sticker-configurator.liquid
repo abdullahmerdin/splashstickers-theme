@@ -155,9 +155,14 @@
 }
 
 .sticker-config-{{ section.id }} .sticky-ctrls {
-  position: sticky; bottom: 0; z-index: 50;
+  position: static; z-index: 50;
   background: {{ bg_color }}; border-radius: 0 0 20px 20px;
   padding: 8px 0; margin-top: -2px;
+}
+.sticker-config-{{ section.id }} .sticky-ctrls.fixed {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 8px 16px; border-radius: 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
 }
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} { position: static; padding: 16px; }
@@ -828,6 +833,29 @@
     mobileBtn.innerHTML=mobile?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
     setTimeout(function(){zoomToFit();},100);
   });
+
+  /* ── Sticky controls via scroll ── */
+  var stickyEl = document.querySelector('.sticker-config-'+sid+' .sticky-ctrls');
+  var stickySentinel = document.createElement('div'); // invisible marker above ctrls
+  if(stickyEl){
+    stickySentinel.style.height='1px'; stickySentinel.style.margin='0';
+    stickyEl.parentNode.insertBefore(stickySentinel, stickyEl);
+  }
+  function updateSticky() {
+    if(!stickySentinel)return;
+    var rect=stickySentinel.getBoundingClientRect();
+    var shouldFix=rect.top<0; // sentinel above viewport = controls need fixing
+    stickyEl.classList.toggle('fixed',shouldFix);
+    if(shouldFix){
+      var sectionRect=document.querySelector('.sticker-config-'+sid).getBoundingClientRect();
+      stickyEl.style.width=sectionRect.width+'px';
+      stickyEl.style.left=sectionRect.left+'px';
+    } else {
+      stickyEl.style.width=''; stickyEl.style.left='';
+    }
+  }
+  window.addEventListener('scroll',updateSticky,{passive:true});
+  window.addEventListener('resize',updateSticky,{passive:true});
 
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
