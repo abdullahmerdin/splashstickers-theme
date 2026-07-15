@@ -465,43 +465,7 @@
     zoomDisplay.textContent=Math.round(zoom*100)+'%';
     
   }
-  function  {
-    var cw=canvas.clientWidth, ch=canvas.clientHeight;
-    rulerTop.innerHTML=''; rulerLeft.innerHTML='';
-    var mmStep = zoom<0.3 ? 100 : zoom<0.6 ? 50 : zoom<1 ? 20 : zoom<2 ? 10 : 5;
-    var minorStep = mmStep===100 ? 50 : mmStep/2;
-    for(var mm=mmStep; mm<=600; mm+=mmStep) {
-      var px=mm/600*cw, sx=(px+panX)*zoom;
-      if(sx>10&&sx<wrap.clientWidth-10){
-        var l=document.createElement('label'); l.textContent=mm; l.style.left=sx+'px';
-        rulerTop.appendChild(l);
-      }
-    }
-    // Minor ticks
-    for(var mm=minorStep; mm<=600; mm+=minorStep) {
-      if(mm%mmStep===0) continue;
-      var px=mm/600*cw, sx=(px+panX)*zoom;
-      if(sx>10&&sx<wrap.clientWidth-10){
-        var l=document.createElement('label'); l.textContent=''; l.style.left=sx+'px'; l.style.top='14px'; l.style.fontSize='0.4rem'; l.textContent='|';
-        rulerTop.appendChild(l);
-      }
-    }
-    for(var mm=mmStep; mm<=600; mm+=mmStep) {
-      var py=mm/600*ch, sy=(py+panY)*zoom;
-      if(sy>10&&sy<wrap.clientHeight-10){
-        var l=document.createElement('label'); l.textContent=mm; l.style.top=sy+'px';
-        rulerLeft.appendChild(l);
-      }
-    }
-    for(var mm=minorStep; mm<=600; mm+=minorStep) {
-      if(mm%mmStep===0) continue;
-      var py=mm/600*ch, sy=(py+panY)*zoom;
-      if(sy>10&&sy<wrap.clientHeight-10){
-        var l=document.createElement('label'); l.textContent=''; l.style.top=sy+'px'; l.style.left='14px'; l.style.fontSize='0.4rem'; l.textContent='-';
-        rulerLeft.appendChild(l);
-      }
-    }
-  }
+
   function zoomToFit() {
     if(items.length===0){zoom=1;panX=0;panY=0;applyZoom();return;}
     var minX=1/0,minY=1/0,maxX=-1/0,maxY=-1/0;
