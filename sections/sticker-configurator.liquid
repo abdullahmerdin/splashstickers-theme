@@ -25,16 +25,20 @@
   display: flex; flex-direction: column; gap: 12px;
 }
 .sticker-config-{{ section.id }} .toolbar {
-  display: flex; gap: 4px; flex-wrap: wrap;
+  display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
+  background: #f8f9fa; border-radius: 12px; padding: 4px;
 }
 .sticker-config-{{ section.id }} .toolbar button {
-  width: 36px; height: 36px; border-radius: 8px; border: 1px solid #DFE6E9;
-  background: #fff; cursor: pointer; font-size: 16px; display: flex;
-  align-items: center; justify-content: center; transition: all 0.15s;
+  width: 34px; height: 34px; border-radius: 8px; border: none;
+  background: transparent; cursor: pointer; font-size: 15px; display: flex;
+  align-items: center; justify-content: center; transition: all 0.12s;
   color: #636E72;
 }
-.sticker-config-{{ section.id }} .toolbar button:hover { border-color: #00CEC9; color: #00CEC9; }
-.sticker-config-{{ section.id }} .toolbar button:disabled { opacity: 0.3; cursor: default; }
+.sticker-config-{{ section.id }} .toolbar button:hover { background: #fff; color: #00CEC9; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.sticker-config-{{ section.id }} .toolbar button:disabled { opacity: 0.25; cursor: default; box-shadow: none; background: transparent; }
+.sticker-config-{{ section.id }} .toolbar .toolbar-divider {
+  width: 1px; height: 20px; background: #DFE6E9; margin: 0 4px;
+}
 .sticker-config-{{ section.id }} .canvas-area {
   position: relative; width: 100%; aspect-ratio: 2 / 1;
   background: #fff; border: 2px solid #DFE6E9; border-radius: 12px;
@@ -137,9 +141,13 @@
 <div class="sticker-config-{{ section.id }}">
   <div class="editor-wrap">
     <div class="toolbar">
+      <button title="Undo" id="undo-btn-{{ section.id }}" disabled>&#x21A9;&#xFE0F;</button>
+      <button title="Redo" id="redo-btn-{{ section.id }}" disabled>&#x21AA;&#xFE0F;</button>
+      <span class="toolbar-divider"></span>
       <button title="Auto arrange" id="auto-btn-{{ section.id }}">&#x25A8;&#xFE0F;</button>
       <button title="Delete selected" id="del-btn-{{ section.id }}" disabled>&#x1F5D1;</button>
       <button title="Duplicate selected" id="dup-btn-{{ section.id }}" disabled>&#x1F4DD;</button>
+      <span class="toolbar-divider"></span>
       <button title="Flip horizontal" id="flip-h-{{ section.id }}" disabled>&#x2194;&#xFE0F;</button>
       <button title="Flip vertical" id="flip-v-{{ section.id }}" disabled>&#x2195;&#xFE0F;</button>
     </div>
@@ -195,11 +203,51 @@
   var dragState = null;
   var basePrice = 2.5;
 
+  var undoBtn = document.getElementById('undo-btn-'+sid);
+  var redoBtn = document.getElementById('redo-btn-'+sid);
   var delBtn = document.getElementById('del-btn-'+sid);
   var dupBtn = document.getElementById('dup-btn-'+sid);
   var flipHBtn = document.getElementById('flip-h-'+sid);
   var flipVBtn = document.getElementById('flip-v-'+sid);
   var autoBtn = document.getElementById('auto-btn-'+sid);
+  // Undo/redo history
+  var history = [];
+  var historyIdx = -1;
+  function saveState() {
+    historyIdx++;
+    history.length = historyIdx;
+    history.push(items.map(function(i) { return { id: i.id, x: i.x, y: i.y, w: i.w, h: i.h, rotation: i.rotation, scaleX: i.scaleX, scaleY: i.scaleY }; }));
+    if (history.length > 50) history.shift();
+    updateHistoryBtns();
+  }
+  function restoreState(state) {
+    state.forEach(function(s) {
+      var item = items.find(function(i) { return i.id === s.id; });
+      if (!item) return;
+      item.x = s.x; item.y = s.y; item.w = s.w; item.h = s.h;
+      item.rotation = s.rotation; item.scaleX = s.scaleX; item.scaleY = s.scaleY;
+      item.el.style.left = s.x + 'px'; item.el.style.top = s.y + 'px';
+      item.el.style.width = s.w + 'px'; item.el.style.height = s.h + 'px';
+      applyTransform(item);
+      updateSizeInfo(item);
+    });
+  }
+  function undo() {
+    if (historyIdx <= 0) return;
+    historyIdx--;
+    restoreState(history[historyIdx]);
+    updateHistoryBtns(); updatePrice();
+  }
+  function redo() {
+    if (historyIdx >= history.length - 1) return;
+    historyIdx++;
+    restoreState(history[historyIdx]);
+    updateHistoryBtns(); updatePrice();
+  }
+  function updateHistoryBtns() {
+    undoBtn.disabled = historyIdx <= 0;
+    redoBtn.disabled = historyIdx >= history.length - 1;
+  }
 
   var selBox = document.createElement('div');
   selBox.className = 'sel-box';
@@ -289,6 +337,7 @@
     selectedIds = [id]; updateSelection();
     updateSizeInfo(item);
     updateCount(); updatePrice();
+    saveState();
     return item;
   }
 
@@ -457,8 +506,13 @@
         }
       } else if (dragState.type === 'move') {
         revertOverlaps();
+        saveState();
         var item = items.find(function(i) { return i.id === dragState.ids[0]; });
         if (item) { item.el.style.cursor = 'grab'; item.el.style.opacity = '1'; item.el.style.outline = ''; }
+      } else if (dragState.type === 'resize' || dragState.type === 'rotate') {
+        saveState();
+        var item = items.find(function(i) { return i.id === dragState.id; });
+        if (item) item.el.style.cursor = 'grab';
       } else {
         var item = items.find(function(i) { return i.id === dragState.id; });
         if (item) item.el.style.cursor = 'grab';
@@ -503,12 +557,14 @@
     selectedIds = [];
     updateSelection();
     updateCount(); updatePrice();
+    saveState();
     if (items.length === 0) hint.style.display = '';
   });
 
   dupBtn.addEventListener('click', function() {
     var sel = getSelected();
     if (sel.length === 0) return;
+    saveState();
     sel.forEach(function(src) {
       var img = src.el.querySelector('img');
       if (!img) return;
@@ -521,14 +577,17 @@
   });
 
   flipHBtn.addEventListener('click', function() {
+    saveState();
     getSelected().forEach(function(item) { item.scaleX *= -1; applyTransform(item); });
   });
   flipVBtn.addEventListener('click', function() {
+    saveState();
     getSelected().forEach(function(item) { item.scaleY *= -1; applyTransform(item); });
   });
 
   // ── Auto arrange ──
   autoBtn.addEventListener('click', function() {
+    saveState();
     var cw = canvas.clientWidth, ch = canvas.clientHeight;
     var pad = 12, gap = Math.round(cw / 600 * 3);
     var packed = [], row = [], rowW = 0, maxRowH = 0;
@@ -669,6 +728,7 @@
 
   // ── Size input listeners ──
   document.getElementById('w-input-'+sid).addEventListener('change', function() {
+    saveState();
     var id = parseInt(selectedIds[0]);
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
@@ -677,6 +737,7 @@
     updateSizeInfo(item); updatePrice();
   });
   document.getElementById('h-input-'+sid).addEventListener('change', function() {
+    saveState();
     var id = parseInt(selectedIds[0]);
     var item = items.find(function(i) { return i.id === id; });
     if (!item) return;
@@ -694,6 +755,9 @@
     var count = items.length || 1;
     priceEl.textContent = '$' + (basePrice * count * qty).toFixed(2);
   }
+  saveState();
+  undoBtn.addEventListener('click', undo);
+  redoBtn.addEventListener('click', redo);
   updatePrice(); updateSelection();
 })();
 </script>
