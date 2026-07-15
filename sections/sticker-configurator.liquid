@@ -44,9 +44,8 @@
   width: 1px; height: 20px; background: #DFE6E9; margin: 0 4px;
 }
 .sticker-config-{{ section.id }} .canvas-wrap {
-  position: relative; width: 100%; overflow: auto; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff;
-  flex: 1; min-height: 200px;
+  position: relative; width: 100%; overflow: visible; border-radius: 12px;
+  border: 2px solid #DFE6E9; background: #fff; aspect-ratio: 3 / 2;
 }
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
