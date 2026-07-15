@@ -476,10 +476,10 @@
 
   /* ── Add items ── */
   function findNextSlot(w, h) {
-    var colGap=Math.round(CANVAS_W/600*5), rowGap=Math.round(CANVAS_W/600*5), pad=12;
+    var gi=document.getElementById('gap-size-'+sid), gap=Math.round(CANVAS_W/600*(parseInt(gi?gi.value:0)||3)), pad=12;
     // Scan left-to-right, top-to-bottom
-    for(var yy=pad; yy+h<=CANVAS_H; yy+=h+rowGap){
-      for(var xx=pad; xx+w<=CANVAS_W; xx+=w+colGap){
+    for(var yy=pad; yy+h<=CANVAS_H; yy+=h+gap){
+      for(var xx=pad; xx+w<=CANVAS_W; xx+=w+gap){
         var ok=true;
         for(var mi=0; mi<items.length; mi++){
           var o=items[mi];
