@@ -212,18 +212,18 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
-      // Drop validation: if overlap persists after push-apart, revert to start
+      // Drop validation: if overlap persists, find nearest clear spot
       ds.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
         var overlap = core.collisionEngine.findOverlap(dragged, core.state.items);
         if (overlap) {
-          var sp = ds.startPos[id];
-          if (sp) {
-            dragged.x = sp.x;
-            dragged.y = sp.y;
-            dragged.el.style.left = sp.x + 'px';
-            dragged.el.style.top = sp.y + 'px';
+          var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+          if (next) {
+            dragged.x = next.x;
+            dragged.y = next.y;
+            dragged.el.style.left = next.x + 'px';
+            dragged.el.style.top = next.y + 'px';
           }
         }
         dragged.el.style.opacity = '';
@@ -410,18 +410,18 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
-      // Drop validation: if overlap persists after push-apart, revert to start
+      // Drop validation: if overlap persists, find nearest clear spot
       core.state.dragState.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
         var overlap = core.collisionEngine.findOverlap(dragged, core.state.items);
         if (overlap) {
-          var sp = core.state.dragState.startPos[id];
-          if (sp) {
-            dragged.x = sp.x;
-            dragged.y = sp.y;
-            dragged.el.style.left = sp.x + 'px';
-            dragged.el.style.top = sp.y + 'px';
+          var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+          if (next) {
+            dragged.x = next.x;
+            dragged.y = next.y;
+            dragged.el.style.left = next.x + 'px';
+            dragged.el.style.top = next.y + 'px';
           }
         }
         dragged.el.style.opacity = '';

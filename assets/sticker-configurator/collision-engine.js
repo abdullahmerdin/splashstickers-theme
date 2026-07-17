@@ -203,4 +203,58 @@ class CollisionEngine {
     }
     return null;
   }
+
+  /**
+   * Find the nearest non-overlapping position for an item by spiraling outward.
+   * Tries expanding in all 4 directions, increasing distance each step.
+   * @param {Object} item - The item to reposition (with x, y, w, h)
+   * @param {Array} allItems - All items to check against
+   * @returns {{x: number, y: number}|null} Nearest clear position, or null
+   */
+  findNearestClearSpot(item, allItems) {
+    var core = this.core;
+
+    // Is the current position already clear?
+    if (!this.findOverlap(item, allItems)) {
+      return { x: item.x, y: item.y };
+    }
+
+    // Spiral outward — priority order: right, down, left, up
+    var dirs = [
+      { dx: 1,  dy: 0  },  // right
+      { dx: 0,  dy: 1  },  // down
+      { dx: -1, dy: 0  },  // left
+      { dx: 0,  dy: -1 }   // up
+    ];
+    var MAX_PX = Math.max(core.CANVAS_W, core.CANVAS_H);
+
+    for (var dist = 1; dist < MAX_PX; dist += 2) {
+      for (var di = 0; di < dirs.length; di++) {
+        var cx = item.x + dirs[di].dx * dist;
+        var cy = item.y + dirs[di].dy * dist;
+
+        // Clamp to canvas
+        cx = Math.max(0, Math.min(core.CANVAS_W - item.w, cx));
+        cy = Math.max(0, Math.min(core.CANVAS_H - item.h, cy));
+
+        // Check if any other item overlaps with this candidate
+        var overlaps = false;
+        for (var oi = 0; oi < allItems.length; oi++) {
+          var o = allItems[oi];
+          if (o.id === item.id) continue;
+          // Temp-check: does candidate rect overlap with o?
+          if (cx < o.x + o.w && cx + item.w > o.x &&
+              cy < o.y + o.h && cy + item.h > o.y) {
+            overlaps = true;
+            break;
+          }
+        }
+        if (!overlaps) {
+          return { x: cx, y: cy };
+        }
+      }
+    }
+
+    return null; // No clear spot found (extremely full canvas)
+  }
 }
