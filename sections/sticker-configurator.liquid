@@ -55,7 +55,7 @@
 }
 .sticker-config-{{ section.id }} .canvas-area {
   position: absolute; inset: 0; cursor: default; user-select: none;
-  transform-origin: 0 0; overflow: hidden; z-index: 0;
+  transform-origin: 0 0; overflow: visible; z-index: 0;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
   position: absolute; inset: 0; pointer-events: none; overflow: hidden;
@@ -244,19 +244,19 @@
 .sticker-config-{{ section.id }}.mobile-mode {
   position: fixed !important; inset: 0 !important; z-index: 99998 !important;
   border-radius: 0 !important; padding: 8px !important; top: 0 !important;
-  display: flex !important; flex-direction: column !important; overflow: hidden;
+  display: flex !important; flex-direction: column !important;
   max-height: 100vh;
 }
 }
 .sticker-config-{{ section.id }}.mobile-mode .editor-wrap {
-  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  flex: 1; display: flex; flex-direction: column; overflow: auto;
 }
 .sticker-config-{{ section.id }}.mobile-mode .toolbar {
   padding: 4px; gap: 2px; overflow-x: auto; flex-wrap: wrap;
   justify-content: center; max-height: 120px;
 }
 .sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
-  flex: 1; min-height: 200px; overflow: auto;
+  min-height: 400px; overflow: auto;
 }
 
 
