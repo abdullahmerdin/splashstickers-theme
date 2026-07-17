@@ -101,14 +101,16 @@ class InteractionManager {
       // Push apart overlapping items during drag — also clamps DOM
       core.collisionEngine.resolveOverlaps(core.state.items, ds.ids);
 
-      // Build overlap map among dragged items only (stationary overlaps were resolved)
-      // O(k^2) where k = dragged count vs O(k·n) per-item findOverlap
+      // Build overlap map — dragged items against ALL items (including stationary)
       var overlapMap = {};
       for (var oi = 0; oi < draggedItems.length; oi++) {
-        for (var oj = oi + 1; oj < draggedItems.length; oj++) {
-          if (core.collisionEngine.rectsOverlap(draggedItems[oi], draggedItems[oj])) {
-            overlapMap[draggedItems[oi].id] = true;
-            overlapMap[draggedItems[oj].id] = true;
+        var dItem = draggedItems[oi];
+        for (var sj = 0; sj < core.state.items.length; sj++) {
+          var sItem = core.state.items[sj];
+          if (sItem.id === dItem.id) continue;
+          if (core.collisionEngine.rectsOverlap(dItem, sItem)) {
+            overlapMap[dItem.id] = true;
+            break;
           }
         }
       }
