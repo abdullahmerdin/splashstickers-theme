@@ -290,11 +290,18 @@
       <span class="toolbar-divider"></span>
       <button title="Flip H" id="flip-h-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/></svg></button>
       <button title="Flip V" id="flip-v-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg></button>
+      <button title="Align left" id="align-left-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="10" x2="14" y2="10"/><line x1="4" y1="14" x2="18" y2="14"/><line x1="4" y1="18" x2="10" y2="18"/></svg></button>
+      <button title="Align center H" id="align-h-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="10" y1="18" x2="14" y2="18"/></svg></button>
+      <button title="Align right" id="align-right-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="10" x2="20" y2="10"/><line x1="6" y1="14" x2="20" y2="14"/><line x1="14" y1="18" x2="20" y2="18"/></svg></button>
+      <button title="Align top" id="align-top-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg></button>
+      <button title="Align center V" id="align-v-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg></button>
+      <button title="Align bottom" id="align-bot-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg></button>
       <span class="toolbar-divider"></span>
       <button title="Add text" id="text-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
       <button title="Zoom to fit" id="zoom-fit-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></button>
       <button title="Export PDF" id="export-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <span class="toolbar-divider"></span>
+      <button title="Lock" id="lock-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
       <button title="Mobile" id="mobile-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
       <span class="zoom-display" id="zoom-display-{{ section.id }}" class="cfg-zoom-pct" style="cursor:pointer;border-bottom:1px dotted #B2BEC3;" title="Click to reset zoom to 100%">100%</span>
     </div>
@@ -1193,6 +1200,97 @@
     } else if(dragState&&(dragState.type==='resize'||dragState.type==='rotate')){saveState();growCanvas();}
     dragState=null;touchStarted=null;
   },{passive:true});
+
+  /* ── Clipboard ── */
+  var clipboard = null;
+  document.addEventListener('keydown',function(e){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    if((e.ctrlKey||e.metaKey)&&e.key==='c'&&selectedIds.length){
+      e.preventDefault();
+      var sel=getSelected();
+      clipboard=sel.map(function(it){return {src:it.el.querySelector('img')?it.el.querySelector('img').src:null,isText:!!it.text,text:it.text||'',fontSize:it.fontSize||16,color:it.color||'#2D3436',bgColor:it.bgColor||'',fontWeight:it.fontWeight||'',fontStyle:it.fontStyle||'',textAlign:it.textAlign||'center',w:it.w,h:it.h};});
+    }
+    if((e.ctrlKey||e.metaKey)&&e.key==='v'&&clipboard){
+      e.preventDefault(); saveState();
+      clipboard.forEach(function(cd){
+        var item;
+        if(cd.isText){
+          item=addTextItem(cd.text,cd.fontSize,true,cd.color,cd.bgColor,cd.fontWeight,cd.fontStyle,cd.textAlign);
+        } else if(cd.src){
+          var img=new Image();img.onload=function(){item=addImageItem(cd.src,true);item.w=cd.w;item.h=cd.h;item.el.style.width=cd.w+'px';item.el.style.height=cd.h+'px';if(item.el.querySelector('img')){item.el.querySelector('img').style.width=cd.w+'px';item.el.querySelector('img').style.height=cd.h+'px';}finishItem(item.el,item.id,cd.w,cd.h);};img.src=cd.src;
+          return;
+        }
+        if(item){item.x+=20;item.y+=20;item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
+      });
+      saveState();growCanvas();
+    }
+  });
+
+  /* ── Lock / Unlock ── */
+  var lockBtn=document.getElementById('lock-btn-'+sid);
+  lockBtn.addEventListener('click',function(){
+    var sel=getSelected();
+    if(!sel.length) return;
+    var allLocked=sel.every(function(it){return it.locked;});
+    sel.forEach(function(it){it.locked=!allLocked;it.el.style.opacity=it.locked?'0.6':'1';it.el.style.cursor=it.locked?'default':'grab';});
+    updateSelection();
+  });
+  // Update lock button state on selection
+  var origUpdateSel=updateSelection;
+  updateSelection=function(){
+    origUpdateSel();
+    var sel=getSelected();
+    lockBtn.disabled=sel.length===0;
+    if(sel.length===1){lockBtn.classList.toggle('active',!!sel[0].locked);}
+  };
+
+  /* ── Alignment tools ── */
+  function alignItems(dir){
+    var sel=getSelected(); if(sel.length<1) return;
+    saveState();
+    if(dir==='left'){var mx=Math.min.apply(null,sel.map(function(it){return it.x;}));sel.forEach(function(it){it.x=mx;});}
+    else if(dir==='right'){var mx=Math.max.apply(null,sel.map(function(it){return it.x+it.w;}));sel.forEach(function(it){it.x=mx-it.w;});}
+    else if(dir==='h'){var cx=0;sel.forEach(function(it){cx+=it.x+it.w/2;});cx/=sel.length;sel.forEach(function(it){it.x=cx-it.w/2;});}
+    else if(dir==='top'){var my=Math.min.apply(null,sel.map(function(it){return it.y;}));sel.forEach(function(it){it.y=my;});}
+    else if(dir==='bot'){var my=Math.max.apply(null,sel.map(function(it){return it.y+it.h;}));sel.forEach(function(it){it.y=my-it.h;});}
+    else if(dir==='v'){var cy=0;sel.forEach(function(it){cy+=it.y+it.h/2;});cy/=sel.length;sel.forEach(function(it){it.y=cy-it.h/2;});}
+    else if(dir==='dist-h'&&sel.length>2){
+      var sorted=sel.slice().sort(function(a,b){return a.x-b.x;});
+      var first=sorted[0],last=sorted[sorted.length-1];
+      var totalW=0;sorted.forEach(function(it,i){if(i>0&&i<sorted.length-1)totalW+=it.w;});
+      var gap=(last.x+last.w-first.x-totalW)/(sorted.length-1);
+      var cx=first.x+first.w+gap;
+      for(var i=1;i<sorted.length-1;i++){sorted[i].x=cx;cx+=sorted[i].w+gap;}
+    }
+    else if(dir==='dist-v'&&sel.length>2){
+      var sorted=sel.slice().sort(function(a,b){return a.y-b.y;});
+      var first=sorted[0],last=sorted[sorted.length-1];
+      var totalH=0;sorted.forEach(function(it,i){if(i>0&&i<sorted.length-1)totalH+=it.h;});
+      var gap=(last.y+last.h-first.y-totalH)/(sorted.length-1);
+      var cy=first.y+first.h+gap;
+      for(var i=1;i<sorted.length-1;i++){sorted[i].y=cy;cy+=sorted[i].h+gap;}
+    }
+    sel.forEach(function(it){it.el.style.left=it.x+'px';it.el.style.top=it.y+'px';});
+    saveState();growCanvas();
+  }
+  ['left','right','h','top','bot','v'].forEach(function(d){
+    var btn=document.getElementById('align-'+d+'-'+sid);
+    if(btn) btn.addEventListener('click',function(){alignItems(d);});
+  });
+
+  // Prevent drag/select for locked items
+  var origStartDrag=startDrag;
+  startDrag=function(e,id){
+    var item=items.find(function(i){return i.id===id;});
+    if(item&&item.locked) return;
+    origStartDrag(e,id);
+  };
+  var origStartResize=startResize;
+  startResize=function(e,id,h){
+    var item=items.find(function(i){return i.id===id;});
+    if(item&&item.locked) return;
+    origStartResize(e,id,h);
+  };
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
   canvas.style.cursor = textToolActive ? 'crosshair' : 'default';
