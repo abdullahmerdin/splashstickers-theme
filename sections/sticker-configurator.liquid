@@ -244,7 +244,6 @@
   
 }
 .sticker-config-{{ section.id }}.mobile-mode {
-  position: static !important;
 }
 }
 .sticker-config-{{ section.id }}.mobile-mode .editor-wrap {
@@ -1319,17 +1318,10 @@
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
   canvas.style.cursor = textToolActive ? 'crosshair' : 'default';
-  // Auto-detect mobile: if touch device and small screen, activate mobile mode
+  // Auto-detect mobile: activate mobile mode for touch+small screens
   if(window.innerWidth<768||('ontouchstart' in window&&window.innerWidth<1024)){
     var isMobile=mobileBtn.getAttribute('data-auto')!=='false';
-    if(isMobile){
-      document.querySelector('.sticker-config-'+sid).classList.add('mobile-mode');
-      mobile=true;wrap.style.height='';canvas.style.height='';
-      // Resize canvas to fill available height so grid covers whole area
-      CANVAS_H=Math.max(CANVAS_H,wrap.clientHeight);
-      canvas.style.height=CANVAS_H+'px';wrap.style.height=CANVAS_H+'px';
-      drawGrid();applyZoom();
-    }
+    if(isMobile) mobileBtn.click();
   }
   setInterval(function(){canvas.style.cursor=textToolActive?'crosshair':(selectedIds.length?'default':'default');},200);
 })();
