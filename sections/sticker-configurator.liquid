@@ -55,7 +55,7 @@
   touch-action: manipulation;
 }
 .sticker-config-{{ section.id }} .canvas-area {
-  position: relative; width: 100%; height: 100%; cursor: default; user-select: none; touch-action: none;
+  position: relative; width: 100%; height: 100%; cursor: default; user-select: none; touch-action: manipulation;
   transform-origin: 0 0; overflow: visible; z-index: 0;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
@@ -1126,14 +1126,12 @@
   var touchStarted=null;
   canvas.addEventListener('touchstart',function(te){
     if(te.touches.length!==1) return;
-    te.preventDefault();
     var t=te.touches[0]; updateCanvasWH();
     var itemEl=te.target.closest('.canvas-item');
     if(itemEl){
       var cid=parseInt(itemEl.dataset.itemId);
       if(te.target.classList.contains('resize-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startResize({clientX:t.clientX,clientY:t.clientY},cid,te.target.dataset.handle);return;}
       if(te.target.classList.contains('rot-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startRotate({clientX:t.clientX,clientY:t.clientY},cid);return;}
-      // Tap to select; if already selected, drag it
       if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();touchStarted={ox:t.clientX,oy:t.clientY,type:'pan',sel:true};return;}
       startDrag({clientX:t.clientX,clientY:t.clientY},cid);return;
     }
@@ -1142,10 +1140,12 @@
   canvas.addEventListener('touchmove',function(te){
     if(te.touches.length===2){/* pinch handled elsewhere */return;}
     if(!dragState&&touchStarted&&te.touches.length===1){
-      var t=te.touches[0]; te.preventDefault();
-      // If tapped on an item (touchStarted.sel), a second tap+drag activates move
-      if(touchStarted.sel&&touchStarted.ox===t.clientX&&touchStarted.oy===t.clientY) return;
+      var t=te.touches[0];
+      // Only prevent default (handle pan) if horizontal movement suggests pan, not scroll
+      if(touchStarted.sel) return;
       var dx=t.clientX-touchStarted.ox,dy=t.clientY-touchStarted.oy;
+      if(Math.abs(dx)<Math.abs(dy)*1.5) return; // mostly vertical → let browser scroll
+      te.preventDefault();
       panX+=dx;panY+=dy;touchStarted.ox=t.clientX;touchStarted.oy=t.clientY;applyZoom();return;
     }
     if(!dragState||te.touches.length!==1) return;
