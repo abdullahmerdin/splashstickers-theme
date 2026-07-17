@@ -1238,7 +1238,7 @@
             item.w=cd.w;item.h=cd.h;
             item.el.style.width=cd.w+'px';item.el.style.height=cd.h+'px';
             if(item.el.querySelector('img')){item.el.querySelector('img').style.width=cd.w+'px';item.el.querySelector('img').style.height=cd.h+'px';}
-            finishItem(item.el,item.id,cd.w,cd.h);
+            item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';
             saveState();growCanvas();
             if(autoBtn) autoBtn.click();
           };
