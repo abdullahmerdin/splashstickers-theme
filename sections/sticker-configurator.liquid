@@ -1,9 +1,5 @@
 {%- liquid
-  assign heading = section.settings.heading
-  assign subtext = section.settings.subtext
   assign bg_color = section.settings.bg_color
-  assign padding_top = section.settings.padding_top
-  assign padding_bottom = section.settings.padding_bottom
 -%}
 
 {% style %}
@@ -72,7 +68,7 @@
 .sticker-config-{{ section.id }} .canvas-item.selected {
   box-shadow: inset 0 0 0 2px #00CEC9; z-index: 100 !important;
 }
-.sticker-config-{{ section.id }} .canvas-item img, .canvas-item .text-content {
+.sticker-config-{{ section.id }} .canvas-item img, .sticker-config-{{ section.id }} .canvas-item .text-content {
   width: 100%; height: 100%; object-fit: contain; pointer-events: none;
 }
 .sticker-config-{{ section.id }} .canvas-item .text-content {
@@ -145,6 +141,15 @@
   font-size: 0.7rem; color: #B2BEC3; margin-left: auto; white-space: nowrap;
 }
 
+
+.sticker-config-{{ section.id }} .cfg-text-muted { color: #B2BEC3; font-size: 0.75rem; }
+.sticker-config-{{ section.id }} .cfg-flex-center { display: flex; align-items: center; gap: 6px; }
+.sticker-config-{{ section.id }} .cfg-inline-input { width: 52px; padding: 4px 6px; border: 2px solid #DFE6E9; border-radius: 8px; font-size: 0.8rem; text-align: center; color: #2D3436; font-weight: 600; outline: none; }
+.sticker-config-{{ section.id }} .cfg-inline-input:focus { border-color: #00CEC9; }
+.sticker-config-{{ section.id }} .cfg-inline-sm { width: 36px; padding: 2px 4px; border: 2px solid #DFE6E9; border-radius: 6px; font-size: 0.75rem; text-align: center; }
+.sticker-config-{{ section.id }} .cfg-inline-sm:focus { border-color: #00CEC9; }
+.sticker-config-{{ section.id }} .cfg-badge { font-size: 0.7rem; color: #B2BEC3; }
+.sticker-config-{{ section.id }} .cfg-btn-submit { width: 100%; padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg,var(--cfg-primary),#00A8A3); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 4px; }
 .sticker-config-{{ section.id }} .bottom-extra {
   padding: 8px 12px 20px 12px; display: flex; flex-direction: column; gap: 8px;
   font-size: 0.8rem;
@@ -233,8 +238,8 @@
 }
 @media (max-width: 768px) {
   .sticker-config-{{ section.id }} { position: static; padding: 16px; }
-  .sticker-config-{{ section.id }} .editor-wrap { }
-  .sticker-config-{{ section.id }} .canvas-wrap { }
+  
+  
 }
 .sticker-config-{{ section.id }}.mobile-mode {
   position: fixed !important; inset: 0 !important; z-index: 99998 !important;
@@ -242,9 +247,6 @@
   display: flex !important; flex-direction: column !important; overflow: hidden;
   max-height: 100vh;
 }
-  position: fixed !important; inset: 0 !important; z-index: 99998 !important;
-  border-radius: 0 !important; padding: 8px !important; top: 0 !important;
-  display: flex !important; flex-direction: column !important; overflow: hidden;
 }
 .sticker-config-{{ section.id }}.mobile-mode .editor-wrap {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
@@ -257,10 +259,7 @@
   flex: 1; min-height: 200px; overflow: auto;
 }
 
-.sticker-config-{{ section.id }}.mobile-mode .toolbar {
-  padding: 4px; gap: 2px; overflow-x: auto; flex-wrap: wrap;
-  justify-content: center; max-height: 120px;
-}
+
 .sticker-config-{{ section.id }}.mobile-mode .toolbar button {
   width: 38px; height: 38px; font-size: 16px; flex-shrink: 0;
 }
@@ -298,17 +297,17 @@
       <button title="Export PDF" id="export-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <span class="toolbar-divider"></span>
       <button title="Mobile" id="mobile-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
-      <span class="zoom-display" id="zoom-display-{{ section.id }}" style="cursor:pointer;border-bottom:1px dotted #B2BEC3;" title="Click to reset zoom to 100%">100%</span>
+      <span class="zoom-display" id="zoom-display-{{ section.id }}" class="cfg-zoom-pct" style="cursor:pointer;border-bottom:1px dotted #B2BEC3;" title="Click to reset zoom to 100%">100%</span>
     </div>
 
-    <div style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
+    <div class="cfg-info-bar" style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
       <span id="item-count-{{ section.id }}">0 items</span>
       <span id="sel-size-{{ section.id }}" style="display:none;">&nbsp;</span>
       <span id="hint-text-{{ section.id }}">Middle-click drag to pan | Scroll to zoom | T to add text</span>
     </div>
-    <div class="size-inputs" id="size-inputs-{{ section.id }}" style="visibility:hidden;height:28px;display:flex;gap:8px;align-items:center;font-size:0.75rem;">
-      <label style="color:#B2BEC3;">W:</label><input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1" style="width:52px;padding:4px 6px;border:2px solid #DFE6E9;border-radius:8px;font-size:0.8rem;text-align:center;color:#2D3436;font-weight:600;outline:none;">
-      <label style="color:#B2BEC3;">H:</label><input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1" style="width:52px;padding:4px 6px;border:2px solid #DFE6E9;border-radius:8px;font-size:0.8rem;text-align:center;color:#2D3436;font-weight:600;outline:none;">
+    <div class="size-inputs" id="size-inputs-{{ section.id }}" class="cfg-size-inputs" style="visibility:hidden;height:28px;display:flex;gap:8px;align-items:center;font-size:0.75rem;">
+      <label class="cfg-badge">W:</label><input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
+      <label class="cfg-badge">H:</label><input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
       <label style="color:#B2BEC3;">mm</label>
     </div>
     <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}">
@@ -331,7 +330,7 @@
       </div>
       <span style="font-size:0.8rem;color:#636E72;">pieces</span>
     </div>
-    <button id="submit-{{ section.id }}" style="width:100%;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--cfg-primary),#00A8A3);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;">
+    <button id="submit-{{ section.id }}" class="cfg-btn-submit">
       Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
     </button>
     <div id="modal-{{ section.id }}" class="cfg-modal">
@@ -356,14 +355,14 @@
         <span class="be-label">Snap</span>
         <input type="checkbox" id="snap-btm-{{ section.id }}" checked style="accent-color:var(--cfg-primary);cursor:pointer;">
         <span style="font-size:0.7rem;color:#B2BEC3;">Grid</span>
-        <input type="number" id="grid-size-{{ section.id }}" value="20" min="5" max="100" step="5" style="width:40px;padding:2px 4px;border:2px solid #DFE6E9;border-radius:6px;font-size:0.75rem;text-align:center;">
+        <input type="number" id="grid-size-{{ section.id }}" value="20" min="5" max="100" step="5" class="cfg-inline-sm" style="width:40px;">
         <span style="font-size:0.7rem;color:#B2BEC3;">px</span>
         <span class="be-label" style="margin-left:4px;">Gap</span>
-        <input type="number" id="gap-size-{{ section.id }}" value="3" min="3" max="50" step="1" style="width:36px;padding:2px 4px;border:2px solid #DFE6E9;border-radius:6px;font-size:0.75rem;text-align:center;">
+        <input type="number" id="gap-size-{{ section.id }}" value="3" min="3" max="50" step="1" class="cfg-inline-sm">
         <span style="font-size:0.7rem;color:#B2BEC3;">mm</span>
       </div>
       <div class="be-row">
-        <span id="stats-{{ section.id }}" style="font-size:0.75rem;color:#636E72;"></span>
+        <span id="stats-{{ section.id }}" class="cfg-text-muted" style="color:#636E72;"></span>
         <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:5px;padding:0;margin-left:auto;">
         <button class="be-btn danger" id="clear-btn-{{ section.id }}" style="padding:2px 8px;font-size:0.7rem;">Clear</button>
       </div>
