@@ -1205,6 +1205,9 @@
     if(isMobile){
       document.querySelector('.sticker-config-'+sid).classList.add('mobile-mode');
       mobile=true;wrap.style.height='';canvas.style.height='';
+      // Resize canvas to fill available height so grid covers whole area
+      CANVAS_H=Math.max(CANVAS_H,wrap.clientHeight);
+      canvas.style.height=CANVAS_H+'px';wrap.style.height=CANVAS_H+'px';
       drawGrid();applyZoom();
     }
   }
