@@ -1,0 +1,717 @@
+/* ===========================================
+   Sticker Configurator — Styles
+   Scope: .sticker-configurator
+   CSS Custom Properties: --cfg-*
+   Mobile-first: base = mobile, expanded via min-width
+   =========================================== */
+
+/* ── CSS Custom Properties ── */
+.sticker-configurator {
+  --cfg-primary: #00CEC9;
+  --cfg-primary-rgb: 0, 206, 201;
+  --cfg-accent: #6C5CE7;
+  --cfg-accent-rgb: 108, 92, 231;
+  --cfg-pink: #FD79A8;
+  --cfg-gold: #FDCB6E;
+  --cfg-text: #2D3436;
+  --cfg-text-light: #B2BEC3;
+  --cfg-muted: #636E72;
+  --cfg-border: #DFE6E9;
+  --cfg-bg: #F8F9FA;
+  --cfg-danger: #FF4444;
+  --cfg-danger-rgb: 255, 68, 68;
+  --cfg-sidebar-width: 400px;
+  --cfg-gap: 40px;
+  --cfg-toolbar-btn-size: 34px;
+  --cfg-border-radius: 8px;
+  --cfg-transition-fast: 0.12s;
+  --cfg-canvas-border-width: 2px;
+
+  grid-column: 1;
+  grid-row: 1;
+  border-radius: 0;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 100px;
+}
+
+/* ── Product information layout override (no !important) ── */
+.product-information.product-information {
+  display: grid;
+  grid-template-columns: 1fr min(50vw, var(--cfg-sidebar-width));
+  gap: var(--cfg-gap);
+  align-items: start;
+}
+
+.product-information.product-information .product-information__media {
+  display: none;
+}
+
+.product-information.product-information product-component {
+  grid-column: 2;
+  width: 100%;
+}
+
+/* ── Editor wrap ── */
+.sticker-configurator .editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--cfg-bg);
+}
+
+/* ── Toolbar ── */
+.sticker-configurator .toolbar {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--cfg-bg);
+  border-radius: 0;
+  padding: 4px;
+}
+
+.sticker-configurator .toolbar button {
+  width: var(--cfg-toolbar-btn-size);
+  height: var(--cfg-toolbar-btn-size);
+  border-radius: var(--cfg-border-radius);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--cfg-transition-fast), color var(--cfg-transition-fast), box-shadow var(--cfg-transition-fast);
+  color: var(--cfg-muted);
+}
+
+.sticker-configurator .toolbar button svg {
+  display: block;
+}
+
+.sticker-configurator .toolbar button:hover {
+  background: #fff;
+  color: var(--cfg-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.sticker-configurator .toolbar button:disabled {
+  opacity: 0.25;
+  cursor: default;
+  box-shadow: none;
+  background: transparent;
+}
+
+.sticker-configurator .toolbar button.active {
+  background: rgba(var(--cfg-primary-rgb), 0.06);
+  color: var(--cfg-primary);
+}
+
+.sticker-configurator .toolbar .toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--cfg-border);
+  margin: 0 4px;
+}
+
+/* ── Canvas wrap ── */
+.sticker-configurator .canvas-wrap {
+  position: relative;
+  width: 100%;
+  overflow: auto;
+  border-radius: 12px;
+  border: var(--cfg-canvas-border-width) solid var(--cfg-border);
+  background: #fff;
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+
+/* ── Canvas area ── */
+.sticker-configurator .canvas-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transform-origin: 0 0;
+  overflow: visible;
+  z-index: 0;
+}
+
+.sticker-configurator .canvas-area .grid-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ── Canvas items ── */
+.sticker-configurator .canvas-item {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow 0.15s;
+  z-index: 1;
+}
+
+.sticker-configurator .canvas-item:hover {
+  box-shadow: 0 0 0 2px rgba(var(--cfg-primary-rgb), 0.27);
+}
+
+.sticker-configurator .canvas-item.selected {
+  box-shadow: inset 0 0 0 2px var(--cfg-primary);
+  z-index: 100;
+}
+
+.sticker-configurator .canvas-item img,
+.sticker-configurator .canvas-item .text-content {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.sticker-configurator .canvas-item .text-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--cfg-text);
+  word-break: break-word;
+  text-align: center;
+  padding: 4px;
+}
+
+/* ── Resize handles ── */
+.sticker-configurator .canvas-item .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--cfg-primary);
+  border: 2px solid #fff;
+  display: none;
+  z-index: 10;
+}
+
+.sticker-configurator .canvas-item.selected .resize-handle {
+  display: block;
+}
+
+.sticker-configurator .resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+.sticker-configurator .resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+.sticker-configurator .resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+.sticker-configurator .resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+
+/* ── Rotation handle ── */
+.sticker-configurator .rot-handle {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  margin-left: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cfg-accent);
+  border: 2px solid #fff;
+  cursor: grab;
+  display: none;
+  z-index: 10;
+}
+
+.sticker-configurator .canvas-item.selected .rot-handle {
+  display: block;
+}
+
+/* ── Size info ── */
+.sticker-configurator .size-info {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cfg-text);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  display: none;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.sticker-configurator .canvas-item.selected .size-info {
+  display: block;
+}
+
+/* ── Size inputs ── */
+.sticker-configurator .size-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 24px;
+}
+
+.sticker-configurator .size-inputs input {
+  width: 52px;
+  padding: 4px 6px;
+  border: 2px solid var(--cfg-border);
+  border-radius: var(--cfg-border-radius);
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--cfg-text);
+  font-weight: 600;
+  outline: none;
+}
+
+.sticker-configurator .size-inputs input:focus {
+  border-color: var(--cfg-primary);
+}
+
+.sticker-configurator .size-inputs label {
+  font-size: 0.7rem;
+  color: var(--cfg-text-light);
+}
+
+/* ── Selection box ── */
+.sticker-configurator .sel-box {
+  position: absolute;
+  border: 1px solid var(--cfg-primary);
+  background: rgba(var(--cfg-primary-rgb), 0.08);
+  pointer-events: none;
+  z-index: 999;
+  display: none;
+}
+
+/* ── Quantity group ── */
+.sticker-configurator .qty-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 2px solid var(--cfg-border);
+  border-radius: 12px;
+  padding: 2px;
+}
+
+.sticker-configurator .qty-group button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  color: var(--cfg-muted);
+  font-weight: 600;
+}
+
+.sticker-configurator .qty-group button:hover {
+  background: rgba(var(--cfg-primary-rgb), 0.06);
+  color: var(--cfg-primary);
+}
+
+.sticker-configurator .qty-group .qty-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: center;
+  color: var(--cfg-text);
+}
+
+/* ── Canvas hint ── */
+.sticker-configurator .canvas-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--cfg-border);
+  font-size: 0.9rem;
+  text-align: center;
+  pointer-events: none;
+  font-weight: 500;
+}
+
+/* ── Guide lines ── */
+.sticker-configurator .guide-line {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+  background: var(--cfg-primary);
+}
+
+.sticker-configurator .guide-line.h {
+  height: 1px;
+  left: 0;
+  right: 0;
+}
+
+.sticker-configurator .guide-line.v {
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+
+/* ── Zoom display ── */
+.sticker-configurator .zoom-display {
+  font-size: 0.7rem;
+  color: var(--cfg-text-light);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ── Utility classes ── */
+.sticker-configurator .cfg-text-muted {
+  color: var(--cfg-text-light);
+  font-size: 0.75rem;
+}
+
+.sticker-configurator .cfg-flex-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sticker-configurator .cfg-inline-input {
+  width: 52px;
+  padding: 4px 6px;
+  border: 2px solid var(--cfg-border);
+  border-radius: var(--cfg-border-radius);
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--cfg-text);
+  font-weight: 600;
+  outline: none;
+}
+
+.sticker-configurator .cfg-inline-input:focus {
+  border-color: var(--cfg-primary);
+}
+
+.sticker-configurator .cfg-inline-sm {
+  width: 36px;
+  padding: 2px 4px;
+  border: 2px solid var(--cfg-border);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.sticker-configurator .cfg-inline-sm:focus {
+  border-color: var(--cfg-primary);
+}
+
+.sticker-configurator .cfg-badge {
+  font-size: 0.7rem;
+  color: var(--cfg-text-light);
+}
+
+/* ── Submit button ── */
+.sticker-configurator .cfg-btn-submit {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--cfg-primary), #00A8A3);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+
+.sticker-configurator .cfg-btn-submit:hover {
+  opacity: 0.9;
+}
+
+/* ── Bottom extra ── */
+.sticker-configurator .bottom-extra {
+  padding: 8px 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.sticker-configurator .bottom-extra .be-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sticker-configurator .bottom-extra .be-label {
+  color: var(--cfg-text-light);
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 40px;
+}
+
+.sticker-configurator .bottom-extra .be-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--cfg-border);
+  border-radius: var(--cfg-border-radius);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--cfg-muted);
+  transition: border-color var(--cfg-transition-fast), color var(--cfg-transition-fast), background var(--cfg-transition-fast);
+}
+
+.sticker-configurator .bottom-extra .be-btn:hover {
+  border-color: var(--cfg-primary);
+  color: var(--cfg-primary);
+  background: #f0fdfd;
+}
+
+.sticker-configurator .bottom-extra .be-btn.danger {
+  border-color: var(--cfg-danger);
+  color: var(--cfg-danger);
+}
+
+.sticker-configurator .bottom-extra .be-btn.danger:hover {
+  background: #FFF0F0;
+}
+
+/* ── Modal ── */
+.sticker-configurator .cfg-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.sticker-configurator .cfg-modal-box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.sticker-configurator .cfg-modal-title {
+  margin: 0 0 20px;
+  font-size: 1.1rem;
+  color: var(--cfg-text);
+}
+
+.sticker-configurator .cfg-modal-zone {
+  border: 2px dashed var(--cfg-border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.sticker-configurator .cfg-modal-zone .cfg-modal-icon {
+  font-size: 2rem;
+  margin-bottom: 4px;
+}
+
+.sticker-configurator .cfg-modal-zone .cfg-modal-text {
+  font-size: 0.85rem;
+  color: var(--cfg-muted);
+}
+
+.sticker-configurator .cfg-modal-fname {
+  font-size: 0.8rem;
+  color: var(--cfg-primary);
+  margin-top: 4px;
+  display: none;
+}
+
+.sticker-configurator .cfg-modal-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sticker-configurator .cfg-modal-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cfg-muted);
+  min-width: 50px;
+}
+
+.sticker-configurator .cfg-modal-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid var(--cfg-border);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.sticker-configurator .cfg-modal-row input:focus {
+  border-color: var(--cfg-primary);
+}
+
+.sticker-configurator .cfg-modal-row span {
+  font-size: 0.8rem;
+  color: var(--cfg-text-light);
+}
+
+.sticker-configurator .cfg-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* ── Modal buttons ── */
+.sticker-configurator .cfg-btn-sec {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f5f5f5;
+  color: var(--cfg-muted);
+  transition: background var(--cfg-transition-fast);
+}
+
+.sticker-configurator .cfg-btn-sec:hover {
+  background: #e8e8e8;
+}
+
+.sticker-configurator .cfg-btn-pry {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--cfg-primary), #00A8A3);
+  color: #fff;
+  transition: opacity var(--cfg-transition-fast);
+}
+
+.sticker-configurator .cfg-btn-pry:hover {
+  opacity: 0.9;
+}
+
+.sticker-configurator .cfg-btn-pry:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sticker-configurator .cfg-btn-danger {
+  padding: 8px 20px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--cfg-danger);
+  color: #fff;
+}
+
+/* ── Sticky controls ── */
+.sticker-configurator .sticky-ctrls {
+  padding: 8px 0;
+  margin-top: -14px;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+}
+
+/* ── Upload button area ── */
+.sticker-configurator .upload-btn-area button {
+  padding: 6px 14px;
+  border: 2px dashed var(--cfg-border);
+  border-radius: var(--cfg-border-radius);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--cfg-muted);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.sticker-configurator .upload-btn-area button:hover {
+  border-color: var(--cfg-primary);
+  color: var(--cfg-primary);
+  background: #f0fdfd;
+}
+
+.sticker-configurator .upload-btn-area {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ── Info bar ── */
+.sticker-configurator .cfg-info-bar {
+  font-size: 0.75rem;
+  color: var(--cfg-text-light);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ── Mobile mode ── */
+.sticker-configurator.mobile-mode {
+  position: static;
+  padding: 16px;
+}
+
+.sticker-configurator.mobile-mode .editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sticker-configurator.mobile-mode .toolbar {
+  padding: 4px;
+  gap: 2px;
+  overflow-x: auto;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sticker-configurator.mobile-mode .canvas-wrap {
+  overflow: auto;
+  min-height: 300px;
+}
+
+.sticker-configurator.mobile-mode .toolbar button {
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sticker-configurator.mobile-mode .toolbar .toolbar-divider {
+  display: none;
+}
+
+.sticker-configurator.mobile-mode .zoom-display {
+  display: none;
+}
+
+/* ── Reduced motion (V21 fix: no !important, higher specificity) ── */
+@media (prefers-reduced-motion: reduce) {
+  html.sticker-configurator .sticker-configurator *,
+  html.sticker-configurator .sticker-configurator *::before,
+  html.sticker-configurator .sticker-configurator *::after {
+    animation-duration: 0.01ms;
+    transition-duration: 0.01ms;
+  }
+}

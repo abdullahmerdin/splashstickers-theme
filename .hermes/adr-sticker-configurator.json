@@ -1,0 +1,585 @@
+{
+  "adr_version": "1.0",
+  "project": "SplashStickers - Sticker Configurator Refactor",
+  "scope": "Decompose sections/sticker-configurator.liquid (~1350 lines inline) into a 3-file modular architecture: Liquid shell + Web Component (JS) + Dediacted CSS assets file",
+
+  "file_decomposition": {
+    "overview": "Split the monolithic inline section into three files following Web Component pattern (HTML shell + JS class + CSS module).",
+
+    "sections_sticker_configurator_liquid": {
+      "path": "sections/sticker-configurator.liquid",
+      "purpose": "HTML shell + Liquid schema ONLY. Web Component mount point.",
+      "remaining_lines": "~80 lines (was ~1350)",
+      "contents": [
+        {"type": "Liquid variables", "lines": 1, "detail": "{%- liquid assign bg_color = section.settings.bg_color -%}"},
+        {"type": "HTML shell", "lines": "~43", "detail": "Div.sticker-config-{{ section.id }} wrapper with .editor-wrap > .toolbar > .canvas-wrap > .canvas-area > grid-canvas + .canvas-hint, .guide-lines, .sticky-ctrls with file-input, qty-group, submit-btn, cfg-modal, bottom-extra, upload-btn-area"},
+        {"type": "Web Component mount", "lines": 1, "detail": "<sticker-configurator data-section-id=\"{{ section.id }}\" data-heading=\"{{ section.settings.heading }}\" ...> wrapping the shell"},
+        {"type": "Liquid {% style %}", "lines": 0, "detail": "COMPLETELY REMOVED — only inline vars remain (bg_color in style attr)"},
+        {"type": "Liquid {% schema %}", "lines": "~20", "detail": "Complete schema with settings, presets, and locale strings. Identical to existing but with added locale translations."},
+        {"type": "Inline <script>", "lines": 0, "detail": "COMPLETELY REMOVED — all JS goes to assets/sticker-configurator.js"}
+      ]
+    },
+
+    "assets_sticker_configurator_js": {
+      "path": "assets/sticker-configurator.js",
+      "purpose": "ES6 class StickerConfigurator extends HTMLElement — all behavior extracted from the IIFE",
+      "estimated_lines": "~950",
+      "design": {
+        "class_name": "StickerConfigurator",
+        "extends": "HTMLElement",
+        "lifecycle": [
+          {"method": "constructor()", "detail": "Create shadow root? NO — Light DOM for Shopify theme compatibility. Call super(), no heavy work."},
+          {"method": "connectedCallback()", "detail": "Init sequence: get DOM refs → set CANVAS_W/H → build state → drawGrid() → bindEvents() → saveState() → autoDetectMobile()"},
+          {"method": "disconnectedCallback()", "detail": "Remove all event listeners via AbortController. Clear intervals. Null refs for GC."}
+        ],
+        "observedAttributes": ["section-id"],
+        "attributeChangedCallback(name, oldVal, newVal)": "Re-init on section-id change (edge case for editor changes)"
+      }
+    },
+
+    "assets_sticker_configurator_css": {
+      "path": "assets/sticker-configurator.css",
+      "purpose": "All styles with CSS Custom Properties — zero !important, zero inline styles",
+      "estimated_lines": "~300",
+      "scope": "ALL existing CSS from {% style %} block + layout overrides for product-information",
+      "key_principles": [
+        "Eliminate all 15+ !important occurrences — use higher-specificity selectors or reorganize cascade",
+        "Convert all hardcoded colors to CSS Custom Properties (--cfg-primary, --cfg-accent, etc.)",
+        "Remove all .sticker-config-{{ section.id }} Liquid-scoped selectors — use .sticker-configurator class",
+        "touch-action: manipulation on .canvas-wrap; touch-action: none on .canvas-area for mobile",
+        "Media queries at root level, not nested in Liquid scope",
+        "Mobile mode via .sticker-configurator.mobile-mode class toggle"
+      ]
+    }
+  },
+
+  "component_boundaries_and_contracts": {
+    "bounded_contexts": [
+      {
+        "context": "Canvas Renderer",
+        "owns": ["Canvas2D grid drawing (drawGrid)", "renderToCanvas for PDF export", "DPI-aware setTransform on canvas context"],
+        "data_flow": "Purely driven by internal state (items, zoom, pan, CANVAS_W, CANVAS_H). No external dependencies."
+      },
+      {
+        "context": "Interaction Engine",
+        "owns": ["Mouse events", "Touch events", "Drag/Resize/Rotate/Select box logic", "Alignment guides", "Overlap detection"],
+        "data_flow": "Reads from state (items, selectedIds, dragState, zoom), writes back to DOM positions. Unified dispatch for both mouse and touch."
+      },
+      {
+        "context": "Toolbar Controller",
+        "owns": ["Undo/Redo buttons", "Delete/Duplicate/Flip/Auto/Align/Text/Export/Lock/Mobile toggle"],
+        "data_flow": "Calls internal methods (saveState, restoreState, addItem, etc.). No direct DOM querying — uses component refs."
+      },
+      {
+        "context": "Modal System",
+        "owns": ["Add Design modal (file picker, W/H/Copies inputs)", "Edit Text modal (text, size, color, bg, bold/italic/align)", "Confirm modal (clear canvas)", "Error modal (replaces alert())"],
+        "data_flow": "Created via createModal() helper. Communicates via callback pattern (cb). Focus trap + Escape close in each modal."
+      },
+      {
+        "context": "State Manager",
+        "owns": ["items array", "selectedIds", "history stack (max 50)", "zoom/pan", "dragState", "mobile flag"],
+        "data_flow": "Central state object accessible via `this.state`. Mutations go through saveState() before undo boundary."
+      }
+    ],
+
+    "component_contracts": {
+      "stickerConfigurator_to_DOM": {
+        "mount": "<sticker-configurator data-section-id=\"{{ section.id }}\"></sticker-configurator>",
+        "refs_read_from_DOM": [
+          {"id": "canvas-wrap-{sid}", "property": "this.wrap"},
+          {"id": "canvas-{sid}", "property": "this.canvas"},
+          {"id": "grid-canvas-{sid}", "property": "this.gridCanvas"},
+          {"id": "hint-{sid}", "property": "this.hintEl"},
+          {"id": "file-input-{sid}", "property": "this.fileInput"},
+          {"id": "modal-{sid}", "property": "this.modalEl"},
+          {"id": "undo-btn-{sid}", "property": "this.undoBtn"}
+        ],
+        "data_attributes_read": [
+          {"attr": "data-section-id", "purpose": "Section ID used in all DOM id lookups"}
+        ]
+      }
+    }
+  },
+
+  "complete_schema": {
+    "path": "sections/sticker-configurator.liquid",
+    "schema_type": "{% schema %} JSON (preserved from existing, with locale support added)",
+    "json": {
+      "name": "Sticker Configurator",
+      "tag": "section",
+      "class": "sticker-configurator",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Design Your Sticker Sheet"
+        },
+        {
+          "type": "text",
+          "id": "subtext",
+          "label": "Subtext",
+          "default": "Arrange your stickers on a 60cm workspace"
+        },
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": "Background",
+          "default": "#F8F9FA"
+        },
+        {
+          "type": "range",
+          "id": "padding_top",
+          "label": "Padding top",
+          "min": 0,
+          "max": 100,
+          "step": 4,
+          "unit": "px",
+          "default": 48
+        },
+        {
+          "type": "range",
+          "id": "padding_bottom",
+          "label": "Padding bottom",
+          "min": 0,
+          "max": 100,
+          "step": 4,
+          "unit": "px",
+          "default": 48
+        }
+      ],
+      "presets": [
+        {
+          "name": "Sticker Configurator",
+          "category": "Custom"
+        }
+      ],
+      "locales": {
+        "en": {
+          "heading": "Design Your Sticker Sheet",
+          "subtext": "Arrange your stickers on a 60cm workspace",
+          "undo": "Undo",
+          "redo": "Redo",
+          "auto_arrange": "Auto arrange",
+          "delete_selected": "Delete selected",
+          "duplicate": "Duplicate",
+          "flip_h": "Flip H",
+          "flip_v": "Flip V",
+          "align_left": "Align left",
+          "align_center_h": "Align center H",
+          "align_right": "Align right",
+          "align_top": "Align top",
+          "align_center_v": "Align center V",
+          "align_bottom": "Align bottom",
+          "add_text": "Add text",
+          "zoom_to_fit": "Zoom to fit",
+          "export_pdf": "Export PDF",
+          "lock": "Lock",
+          "mobile": "Mobile",
+          "add_design": "Add design",
+          "pieces": "pieces",
+          "add_to_cart": "Add to Cart",
+          "add_design_modal_title": "Add Design",
+          "cancel": "Cancel",
+          "add_to_canvas": "Add to Canvas",
+          "clear_canvas_confirm": "Clear all designs?",
+          "clear_all": "Clear",
+          "items": "items",
+          "selected": "selected",
+          "items_count": "items",
+          "mm": "mm",
+          "w_label": "W",
+          "h_label": "H",
+          "copies_label": "Copies",
+          "snap_grid": "Grid",
+          "gap": "Gap",
+          "canvas_hint": "Add a design or press T to add text",
+          "hint_text": "Middle-click drag to pan | Scroll to zoom | T to add text",
+          "pdf_load_error": "Could not load PDF library. Check internet connection.",
+          "edit_text_title": "Edit Text",
+          "size_label": "SIZE",
+          "color_label": "COLOR",
+          "bg_label": "BG",
+          "save": "Save"
+        }
+      }
+    }
+  },
+
+  "web_component_state_model": {
+    "internal_state": {
+      "sid": {"type": "string", "source": "data-section-id attribute", "default": null},
+      "CANVAS_W": {"type": "number", "source": "wrap.clientWidth at init", "mutability": "frozen (never changes after init)", "critical": true},
+      "CANVAS_H": {"type": "number", "source": "CANVAS_W * 400 / 600 at init; growCanvas increases", "mutability": "grows via growCanvas()", "critical": true},
+      "items": {"type": "Array<ItemObject>", "source": "Collection of sticker/text items", "mutability": "add, remove, modify"},
+      "selectedIds": {"type": "Array<number>", "source": "IDs of selected items", "mutability": "toggle, clear, set"},
+      "nextId": {"type": "number", "source": "Auto-incrementing ID counter", "mutability": "increments on add"},
+      "history": {"type": "Array<Array>", "source": "Undo/redo snapshots", "mutability": "push on saveState, max 50"},
+      "historyIdx": {"type": "number", "source": "Current position in history", "mutability": "undo decrements, redo increments"},
+      "zoom": {"type": "number", "range": [1, 5], "source": "Zoom level (100%-500%)", "mutability": "wheel, zoomToFit, pinch"},
+      "panX": {"type": "number", "source": "Horizontal pan offset", "mutability": "pan operation"},
+      "panY": {"type": "number", "source": "Vertical pan offset", "mutability": "pan operation"},
+      "dragState": {"type": "Object|null", "source": "Current interaction: move||resize|rotate|pan|selbox|null", "mutability": "set on start, cleared on end"},
+      "dpr": {"type": "number", "source": "window.devicePixelRatio", "mutability": "set once"},
+      "textToolActive": {"type": "boolean", "source": "Text tool toggle", "mutability": "toggle on T key or button click"},
+      "mobile": {"type": "boolean", "source": "Mobile mode active", "mutability": "toggle, auto-detect at init"},
+      "basePrice": {"type": "number", "source": "Base price per item", "mutability": "constant 2.5"},
+      "clipboard": {"type": "Array|null", "source": "Copy/paste buffer", "mutability": "set on Ctrl+C, used on Ctrl+V"},
+      "touchStarted": {"type": "Object|null", "source": "Touch start tracking for pan vs scroll", "mutability": "touch lifecycle"},
+      "lastTouchDist": {"type": "number", "source": "Pinch zoom distance tracking", "mutability": "touch lifecycle"},
+      "abortController": {"type": "AbortController", "source": "Signal for removing event listeners", "mutability": "created in constructor, abort in disconnectedCallback"}
+    },
+
+    "item_object_shape": {
+      "id": {"type": "number", "required": true},
+      "el": {"type": "HTMLElement", "required": true, "note": "The DOM node for this item"},
+      "x": {"type": "number", "description": "Left position in px on canvas"},
+      "y": {"type": "number", "description": "Top position in px on canvas"},
+      "w": {"type": "number", "description": "Width in px"},
+      "h": {"type": "number", "description": "Height in px"},
+      "rotation": {"type": "number", "default": 0, "description": "Rotation in degrees"},
+      "scaleX": {"type": "number", "default": 1, "description": "Horizontal flip (-1 or 1)"},
+      "scaleY": {"type": "number", "default": 1, "description": "Vertical flip (-1 or 1)"},
+      "text": {"type": "string|null", "optional": true, "description": "Text content for text items"},
+      "fontSize": {"type": "number", "optional": true, "default": 16},
+      "color": {"type": "string", "optional": true, "default": "#2D3436"},
+      "bgColor": {"type": "string", "optional": true, "default": ""},
+      "fontWeight": {"type": "string", "optional": true, "default": ""},
+      "fontStyle": {"type": "string", "optional": true, "default": ""},
+      "textAlign": {"type": "string", "optional": true, "default": "center"},
+      "locked": {"type": "boolean", "optional": true, "default": false}
+    }
+  },
+
+  "method_design": {
+    "principles": [
+      "All event handlers are class arrow-function properties (bound to `this` naturally)",
+      "No closures in event listeners — every handler is a named method",
+      "No inline event handlers in HTML — all bound via addEventListener in bindEvents()",
+      "No DOM queries across component boundaries — refs collected in connectedCallback",
+      "All interactivity unified under one dispatch model (both mouse and touch feed same handlers)"
+    ],
+    "class_methods": {
+      "lifecycle": [
+        "constructor()",
+        "connectedCallback()",
+        "disconnectedCallback()",
+        "attributeChangedCallback(name, oldVal, newVal)"
+      ],
+      "initialization": [
+        "init() — DOM ref collection, CANVAS_W/H setup, state init",
+        "bindEvents() — all addEventListener calls via this.abortController.signal",
+        "autoDetectMobile() — width<768 || (touch && width<1024)",
+        "drawGrid() — DPR-aware canvas grid",
+        "growCanvas()"
+      ],
+      "state_management": [
+        "saveState()",
+        "restoreState(state)",
+        "undo()",
+        "redo()",
+        "calculateCanvasWH()",
+        "updateCanvasWH() — STUB (called externally, must exist)"
+      ],
+      "selection": [
+        "toggleSelect(id, add)",
+        "selectAllInRect(x1, y1, x2, y2)",
+        "updateSelection()",
+        "getSelected()"
+      ],
+      "item_operations": [
+        "addImageItem(src, silent)",
+        "addTextItem(text, fontSize, silent, color, bgColor, fontWeight, fontStyle, textAlign)",
+        "addItemHelpers(el, id)",
+        "finishItem(el, id, w, h)",
+        "findNextSlot(w, h)",
+        "deleteSelected()",
+        "duplicateSelected()",
+        "flipH()",
+        "flipV()",
+        "lockSelected()"
+      ],
+      "interaction_handlers": [
+        "onMouseDown(e)",
+        "onMouseMove(e)",
+        "onMouseUp(e)",
+        "onTouchStart(e)",
+        "onTouchMove(e)",
+        "onTouchEnd(e)",
+        "onWheel(e)",
+        "onKeyDown(e)",
+        "startDrag(e, id)",
+        "startResize(e, id, handle)",
+        "startRotate(e, id)",
+        "applyTransform(item)",
+        "updateGuides(item, items)",
+        "clampPan()",
+        "applyZoom()",
+        "zoomToFit()",
+        "getCanvasXY(e)"
+      ],
+      "toolbar_commands": [
+        "onUndoClick()",
+        "onRedoClick()",
+        "onDeleteClick()",
+        "onDuplicateClick()",
+        "onFlipHClick()",
+        "onFlipVClick()",
+        "onAutoArrange()",
+        "onAlignClick(dir)",
+        "onTextToolToggle()",
+        "onZoomFitClick()",
+        "onExportPDF()",
+        "onLockClick()",
+        "onMobileToggle()"
+      ],
+      "modals": [
+        "showAddDesignModal()",
+        "showEditTextModal(item, callback)",
+        "showConfirmModal(msg, callback)",
+        "showErrorModal(msg) — replaces alert()",
+        "createModal(htmlStructure) — shared modal factory",
+        "handleFileSelect(file)",
+        "onModalAddClick()"
+      ],
+      "canvas": [
+        "renderToCanvas() — returns <canvas> for PDF export",
+        "updateCount()",
+        "updatePrice()",
+        "updateStats()",
+        "updateSizeInfo(item)",
+        "updateSizeInputs()",
+        "updateHistoryButtons()"
+      ],
+      "utility": [
+        "pxToMm(px)",
+        "mmToPx(mm)",
+        "snapVal(v, g)",
+        "rectsOverlap(a, b)"
+      ]
+    }
+  },
+
+  "custom_event_protocol": {
+    "principles": "DIP — Web Component dispatches CustomEvent to communicate state changes upward. Parent handlers listen on <sticker-configurator> element.",
+    "dispatched_events": [
+      {
+        "name": "sticker-configurator:update",
+        "bubbles": true,
+        "detail": {"itemCount": "number", "totalAreaCm": "number", "type": "update"},
+        "when": "After any mutation to items array (add/delete/move/resize/undo/redo)"
+      },
+      {
+        "name": "sticker-configurator:selection",
+        "bubbles": true,
+        "detail": {"selectedIds": "number[]", "count": "number", "type": "selection"},
+        "when": "After selection changes"
+      },
+      {
+        "name": "sticker-configurator:price",
+        "bubbles": true,
+        "detail": {"price": "number", "quantity": "number", "basePrice": "number", "type": "price"},
+        "when": "After quantity or item count changes"
+      },
+      {
+        "name": "sticker-configurator:add-to-cart",
+        "bubbles": true,
+        "detail": {"variantId": "string|null", "quantity": "number", "type": "add-to-cart"},
+        "when": "On Add to Cart button click (for future extensibility)"
+      },
+      {
+        "name": "sticker-configurator:export",
+        "bubbles": true,
+        "detail": {"type": "export", "format": "pdf"},
+        "when": "When PDF export is triggered (for analytics tracking)"
+      }
+    ]
+  },
+
+  "css_architecture": {
+    "file": "assets/sticker-configurator.css",
+    "selector_strategy": "Use .sticker-configurator class (from schema) as root scope. Remove all .sticker-config-{{ section.id }} Liquid-scoped selectors.",
+    "custom_properties": {
+      "--cfg-primary": "#00CEC9",
+      "--cfg-accent": "#6C5CE7",
+      "--cfg-pink": "#FD79A8",
+      "--cfg-gold": "#FDCB6E",
+      "--cfg-text": "#2D3436",
+      "--cfg-muted": "#636E72",
+      "--cfg-border": "#DFE6E9",
+      "--cfg-bg": "#F8F9FA",
+      "--cfg-danger": "#FF4444",
+      "--cfg-canvas-w": "auto",
+      "--cfg-canvas-h": "auto",
+      "--cfg-sidebar-width": "400px",
+      "--cfg-gap": "40px"
+    },
+    "critical_invariants": [
+      "canvas.style.height = CANVAS_H (set in JS at init, NEVER cleared on mobile)",
+      "wrap.style.height = CANVAS_H (set in JS at init, cleared on mobile to allow scroll)",
+      "touch-action: manipulation on .canvas-wrap (scroll/pan threshold handled in JS)",
+      "touch-action: none on .canvas-area (drag/resize within canvas)",
+      "Canvas items: position absolute, z-index 1 (selected z-index 100)"
+    ],
+    "media_queries": {
+      "mobile_breakpoint": "768px",
+      "mobile_mode": ".sticker-configurator.mobile-mode class toggle (not media query — user-controlled)"
+    },
+    "layout_overrides_elimination": [
+      {
+        "problem": "15+ !important declarations in .product-information and related layouts",
+        "solution": "Move these layout overrides to a separate CSS block scoped to the parent product page. Use higher specificity via ancestor selector cascade rather than !important, OR move to theme.css with proper theme editor compatibility. Since OCP forbids modifying theme.css, add these as un-scoped overrides in sticker-configurator.css with double-class selectors (e.g., .product-information.product-information) to beat inline styles."
+      }
+    ],
+    "mobile_mode_specific": [
+      ".sticker-configurator.mobile-mode { position: static; padding: 16px; }",
+      ".sticker-configurator.mobile-mode .canvas-wrap { overflow: auto; min-height: 300px; }",
+      ".sticker-configurator.mobile-mode .toolbar { overflow-x: auto; justify-content: center; }",
+      ".sticker-configurator.mobile-mode .toolbar .toolbar-divider { display: none; }",
+      ".sticker-configurator.mobile-mode .zoom-display { display: none; }",
+      ".sticker-configurator.mobile-mode .toolbar button { width: 38px; height: 38px; }"
+    ]
+  },
+
+  "critical_invariants_preserved": [
+    {
+      "id": "CANVAS_W_frozen",
+      "description": "CANVAS_W = wrap.clientWidth at init, NEVER reassigned",
+      "location": "this.init() called once in connectedCallback",
+      "enforcement": "Use const binding in JS. Comment: // FROZEN — do not reassign"
+    },
+    {
+      "id": "mm_conversion",
+      "description": "1mm = CANVAS_W / 600px",
+      "formula": "pxToMm(px) = px / CANVAS_W * 600; mmToPx(mm) = mm / 600 * CANVAS_W",
+      "location": "methods pxToMm() and mmToPx()"
+    },
+    {
+      "id": "CANVAS_H_init",
+      "description": "CANVAS_H = CANVAS_W * 400 / 600 at init",
+      "formula": "CANVAS_H = Math.round(CANVAS_W * 400 / 600)",
+      "location": "this.init()"
+    },
+    {
+      "id": "canvas_style_height_never_cleared_mobile",
+      "description": "canvas.style.height = CANVAS_H + 'px' is set at init and NEVER cleared, even on mobile toggle",
+      "bug_risk": "Current code CAN clear wrap.style.height on mobile but must NOT clear canvas.style.height",
+      "location": "mobileToggle() — clear wrap.style.height only, keep canvas.style.height unchanged"
+    },
+    {
+      "id": "wrap_style_height_grow_only",
+      "description": "wrap.style.height grows via growCanvas() but is NEVER decreased",
+      "location": "growCanvas() — only sets if maxB > CANVAS_H, otherwise leaves unchanged"
+    },
+    {
+      "id": "dpr_grid",
+      "description": "grid canvas uses setTransform(dpr, 0, 0, dpr, 0, 0) for sharp rendering on high-DPI displays",
+      "location": "drawGrid() method"
+    },
+    {
+      "id": "updateCanvasWH_stub",
+      "description": "updateCanvasWH() is called from zoom, drag, and other hot paths — it must exist as a stub even if empty",
+      "location": "Defined as empty method. Called in: applyZoom(), zoomToFit(), onMouseDown, onTouchStart. MUST NOT be removed."
+    },
+    {
+      "id": "mobile_auto_detect",
+      "description": "Auto-detect mobile on init: window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024)",
+      "location": "autoDetectMobile() called in connectedCallback after init and bindEvents"
+    }
+  ],
+
+  "liquid_preserved_variables": {
+    "still_in_liquid_file": [
+      "{{ section.settings.bg_color }} — used in inline style on wrapper div",
+      "{{ section.settings.heading }} — optional heading text",
+      "{{ section.settings.subtext }} — optional subtext",
+      "{{ section.id }} — used in Web Component data-section-id attribute and in all id refs"
+    ],
+    "moved_to_css": [
+      "All CSS is now in assets/sticker-configurator.css",
+      "bg_color is applied via JS reading data-bg-color attribute or inline style"
+    ],
+    "moved_to_js": [
+      "All JavaScript (IIFE body) is now in assets/sticker-configurator.js as class methods"
+    ]
+  },
+
+  "layout_grid_strategy": {
+    "type": "CSS Grid",
+    "approach": "Mobile-first single column, desktop two-column with sticky canvas. The .product-information container uses grid-template-columns: 1fr min(50vw, var(--sidebar-width)). The .sticker-configurator occupies column 1, product-component occupies column 2. This preserves the existing layout without mods to theme files.",
+    "selector": ".sticker-configurator",
+    "grid-column": "1",
+    "grid-row": "1"
+  },
+
+  "html_structure_preserved": {
+    "wrapper_div": "div.sticker-config-{{ section.id }} (changed to .sticker-configurator perhaps, but IDs still use section.id)",
+    "toolbar": "div.toolbar > buttons with SVG icons — PRESERVED exactly",
+    "canvas_area_struct": "div.canvas-wrap > div.canvas-area > canvas.grid-bg + div.canvas-hint",
+    "guide_lines": "div.guide-line.h and .v inside canvas-wrap",
+    "sticky_controls": "input[type=file] + .upload-btn-area + button.cfg-btn-submit + .cfg-modal",
+    "bottom_extra": ".bottom-extra with snap/grid/gap controls, color picker, clear button"
+  },
+
+  "security_and_accessibility": {
+    "wcag_considerations": [
+      "aria-label on all toolbar buttons — preserved from existing SVG title attributes",
+      "Focus trap in modals — implemented in createModal()",
+      "Escape key closes modals — onKeyDown handler",
+      "prefers-reduced-motion — CSS media query for reduced animation durations",
+      "Keyboard navigation: Tab through toolbar commands",
+      "Canvas items get role='img' with aria-label for screen readers"
+    ],
+    "security": [
+      "user-select: none on canvas-area (prevents text selection during drag)",
+      "img.draggable = false (prevents native drag behavior conflicting with custom drag)",
+      "Dynamic script injection for jsPDF is controlled (only triggered on export button click)",
+      "No innerHTML with unsanitized user input — all text content set via textContent"
+    ]
+  },
+
+  "solids_compliance": {
+    "SRP_Single_Responsibility": {
+      "verification": "Liquid → structure only. CSS → presentation only. JS → behavior only. No <style> in .liquid. No <script> in .liquid.",
+      "status": "COMPLIANT"
+    },
+    "OCP_Open_Closed": {
+      "verification": "No modifications to core theme files (theme.js, theme.css, theme.liquid). Everything is self-contained in sections/ and assets/. The Web Component pattern means new features are added via subclassing or composition, not by editing the section file.",
+      "status": "COMPLIANT"
+    },
+    "LSP_Liskov_Substitution": {
+      "verification": "All canvas items (images and text) are position:absolute divs with consistent .canvas-item class. Image items have <img> child, text items have .text-content child. Both follow the same data model (item object). Any item can be substituted for any other in array operations.",
+      "status": "COMPLIANT"
+    },
+    "ISP_Interface_Segregation": {
+      "verification": "All internal methods pass specific parameters, not global/god objects. E.g., startResize(e, id, handle) passes exactly what's needed. updateGuides(item, items) passes both. addTextItem takes explicit font params, not a config object. Modal callbacks provide specific data shapes.",
+      "status": "COMPLIANT"
+    },
+    "DIP_Dependency_Inversion": {
+      "verification": "No direct DOM queries across component boundaries. The Web Component owns its own DOM subtree. Communication upward is via CustomEvent dispatch. No import/require of theme globals. jsPDF is loaded dynamically (no static dependency).",
+      "status": "COMPLIANT"
+    }
+  },
+
+  "adr_metadata": {
+    "created_by": "shopify-architect",
+    "date": "2026-07-17",
+    "source_prd": ".hermes/prd-sticker-configurator-refactor.json",
+    "source_file": "sections/sticker-configurator.liquid (1350 lines)",
+    "target_files": [
+      "sections/sticker-configurator.liquid (~80 lines, HTML shell + schema only)",
+      "assets/sticker-configurator.js (~950 lines, StickerConfigurator Web Component)",
+      "assets/sticker-configurator.css (~300 lines, all styles with CSS Custom Properties)"
+    ],
+    "locales_added": "14 locale keys for English (en) — enables Shopify theme localization",
+    "!important_eliminated": "15 occurrences eliminated via .product-information.product-information double-class selector or parent-specific cascade",
+    "alert_replaced": "1 occurrence (PDF error) replaced with showErrorModal() custom modal",
+    "inline_handlers_removed": "All onclick= attributes in HTML shell removed, replaced with addEventListener in bindEvents()",
+    "critical_stubs_preserved": "updateCanvasWH() as empty method (called in zoom/drag hot paths)",
+    "next_actions": [
+      "Pass this ADR to shopify-auditor for compliance validation",
+      "After audit passes, shopify-constructor implements the 3 files",
+      "After implementation, shopify-optimizer adds lazy loading, performance tuning"
+    ]
+  }
+}

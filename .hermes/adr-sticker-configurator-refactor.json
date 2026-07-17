@@ -1,0 +1,1098 @@
+{
+  "adr_version": "1.0",
+  "meta": {
+    "generated_at": "2026-07-17T14:00:00Z",
+    "target_section": "sticker-configurator",
+    "total_input_lines": {
+      "liquid": 285,
+      "js": 2340,
+      "css": 709,
+      "combined": 3334
+    }
+  },
+
+  "module_decomposition": {
+    "strategy": "Extract bounded modules from the 2340-line monolith into ES6 module files co-located under assets/sticker-configurator/. Each module is a plain ES6 class (not a custom element) that receives the core component reference via constructor injection, communicating via method calls and CustomEvents. The core StickerConfigurator class orchestrates module composition in its init().",
+    "modules": [
+      {
+        "name": "StickerConfigurator",
+        "file": "assets/sticker-configurator/sticker-configurator.js",
+        "estimated_lines": 180,
+        "responsibilities": [
+          "Web Component lifecycle (constructor, connectedCallback, disconnectedCallback, attributeChangedCallback)",
+          "observedAttributes",
+          "init() — gather DOM refs, set CANVAS_W/CANVAS_H, compose submodules, kickstart state",
+          "State object ownership (items, selectedIds, history, zoom, pan, etc.)",
+          "Property bridge: expose dataset attributes (section-id, heading, subtext, bg-color) as typed JS properties",
+          "Module composition: instantiate all submodules, pass this reference",
+          "CustomElement registry guard"
+        ],
+        "anti_patterns_fixed": [
+          "Monolithic init() → delegated to submodules"
+        ]
+      },
+      {
+        "name": "CanvasRenderer",
+        "file": "assets/sticker-configurator/canvas-renderer.js",
+        "estimated_lines": 180,
+        "responsibilities": [
+          "drawGrid() — DPR-aware canvas grid rendering, configurable cell size",
+          "applyZoom() / _syncZoomTransform() — RAF-coalesced zoom/pan transforms",
+          "clampPan() — pan bounds",
+          "zoomToFit() — calculate best zoom level",
+          "renderToCanvas() — offscreen canvas rendering for PDF export",
+          "growCanvas() — expand wrap/canvas height on overflow (NEVER shrink)",
+          "updateCanvasWH() — zoom/drag hot-path stub"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "Grid logic extracted from monolith",
+          "Magic numbers (0.5 lineWidth, '#E8E8E8') → CSS variable / config"
+        ]
+      },
+      {
+        "name": "ItemManager",
+        "file": "assets/sticker-configurator/item-manager.js",
+        "estimated_lines": 220,
+        "responsibilities": [
+          "addImageItem(src, silent) — create image .canvas-item DOM element",
+          "addTextItem(text, fontSize, silent, color, bgColor, fontWeight, fontStyle, textAlign) — create text .canvas-item DOM element",
+          "addItemHelpers(el, id) — create item data object, push to state.items",
+          "finishItem(el, id, w, h)",
+          "findNextSlot(w, h) — brick-laying slot finder",
+          "deleteSelected() — remove items from DOM and state",
+          "duplicateSelected() — clone items with offset",
+          "flipH() / flipV() / lockSelected() — item transforms",
+          "_createItemElement(type, id) — factory for item DOM structure (handles, size-info, WCAG attrs)"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "Duplicate DOM creation code in addImageItem/addTextItem → _createItemElement factory",
+          "Repeated el.style.* assignments → centralized applyItemStyles(item)",
+          "Copy-paste in duplicateSelected/restoreState/pasteClipboard → reusable _cloneItemProps()"
+        ]
+      },
+      {
+        "name": "InteractionManager",
+        "file": "assets/sticker-configurator/interaction-manager.js",
+        "estimated_lines": 320,
+        "responsibilities": [
+          "onMouseDown(e) — route clicks to select/drag/resize/rotate/pan/selbox",
+          "onMouseMove(e) — delegate to active dragState type",
+          "onMouseUp(e) — save state, clear guides, validate overlaps",
+          "onWheel(e) — zoom delta",
+          "onTouchStart(e) — tap-to-select, drag initiation",
+          "onTouchMove(e) — drag/resize/pinch-zoom with 20px scroll threshold, 2px jitter filter",
+          "onTouchEnd(e) — cleanup, save state",
+          "startDrag(e, id) — init drag state",
+          "startResize(e, id, handle) — init resize state",
+          "startRotate(e, id) — init rotation state",
+          "_applyDragMove(ds, dx, dy) — shared move logic for mouse+touch",
+          "_applyResize(ds, dx, dy) — shared resize logic",
+          "_applyRotation(ds, e) — shared rotation logic",
+          "Drag state machine: 'move' | 'resize' | 'rotate' | 'selbox' | 'pan'"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "Duplicated push-apart logic in onMouseMove + onTouchMove → extract to CollisionEngine",
+          "var self = this / .bind(this) inconsistency → arrow functions or lexical this",
+          "DOM queries in hot path (querySelector in mousemove) → cache refs in constructor",
+          "var → const/let throughout",
+          "Magic numbers (0.1 zoomStep, 30 minSize, 2px jitter, 20px scrollThreshold, 1.5 scrollRatio, 5 push-iterations) → module constants"
+        ]
+      },
+      {
+        "name": "SelectionManager",
+        "file": "assets/sticker-configurator/selection-manager.js",
+        "estimated_lines": 140,
+        "responsibilities": [
+          "toggleSelect(id, add) — shift-click additive toggle",
+          "selectAllInRect(x1, y1, x2, y2) — drag-select rect intersection",
+          "updateSelection() — update DOM classes, toolbar button states, size inputs",
+          "getSelected() — return selected item objects",
+          "updateGuides(item, items) — alignment snap guide lines (5px threshold)",
+          "_updateToolbarButtons(selCount) — enable/disable toolbar buttons",
+          "_updateLockButton(selCount) — lock button state",
+          "_sizeInputVisibility(selCount) — show/hide size inputs"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "DOM querySelectors in updateSelection → cached refs",
+          "Guide line hardcoded colors → config reference"
+        ]
+      },
+      {
+        "name": "HistoryManager",
+        "file": "assets/sticker-configurator/history-manager.js",
+        "estimated_lines": 120,
+        "responsibilities": [
+          "saveState() — serialize all items to compact snapshot, push to history stack",
+          "restoreState(snapshot) — tear down current items, rebuild from snapshot",
+          "undo() — decrement historyIdx, restore",
+          "redo() — increment historyIdx, restore",
+          "updateHistoryButtons() — enable/disable undo/redo",
+          "50-step history limit (FIFO shift on overflow)"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "Mixed async image loading in restoreState → Promise-based sequencing"
+        ]
+      },
+      {
+        "name": "AlignmentEngine",
+        "file": "assets/sticker-configurator/alignment-engine.js",
+        "estimated_lines": 130,
+        "responsibilities": [
+          "onAlignClick(dir) — 6-direction alignment (left, h, right, top, v, bot)",
+          "onAutoArrange() — brick-laying by descending area, configurable gap in mm",
+          "distributeHorizontal() — evenly space horizontally",
+          "distributeVertical() — evenly space vertically"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "Math.min.apply(null, ...) → Math.min(...spread)",
+          "Direct DOM mutation interleaved with state logic → separate concerns"
+        ]
+      },
+      {
+        "name": "MobileHandler",
+        "file": "assets/sticker-configurator/mobile-handler.js",
+        "estimated_lines": 100,
+        "responsibilities": [
+          "autoDetectMobile() — width<768 || (touch && width<1024)",
+          "onMobileToggle() — toggle .mobile-mode class, swap wrap/canvas heights",
+          "Mobile-mode rules: section position:static, wrap overflow:auto, canvas height NEVER cleared",
+          "Desktop-mode restore: re-apply wrap/canvas height = CANVAS_H"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "onMobileToggle does inline SVG for mobile button icon → extract to helper or template",
+          "setTimeout(zoomToFit, 100) → clearer debounce/transition-end approach"
+        ]
+      },
+      {
+        "name": "ModalManager",
+        "file": "assets/sticker-configurator/modal-manager.js",
+        "estimated_lines": 280,
+        "responsibilities": [
+          "showAddDesignModal() — file picker modal with size/copies",
+          "showEditTextModal(item, callback) — rich text editing modal (content, font size, color, bg, bold, italic, alignment)",
+          "showConfirmModal(msg, callback) — confirm/cancel dialog",
+          "showErrorModal(msg) — error display",
+          "createModal(htmlStructure) — create DOM modal element with role='dialog', aria-modal='true'",
+          "trapFocus(container) — accessible focus trapping",
+          "_collectEditTextData(modal) — gather form data",
+          "Close handlers: backdrop click, Escape key, close button"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "innerHTML construction → document.createElement for dynamic content (XSS prevention) or template literal with escaping",
+          "Inline event handlers in HTML strings → programmatic binding",
+          "Hardcoded string labels → locale reference or schema-driven"
+        ]
+      },
+      {
+        "name": "ExportManager",
+        "file": "assets/sticker-configurator/export-manager.js",
+        "estimated_lines": 60,
+        "responsibilities": [
+          "onExportPDF() — dynamic import('jspdf') or script injection fallback",
+          "renderPDF() — create jsPDF document, delegate to CanvasRenderer.renderToCanvas(), embed image",
+          "Error handling with user-facing messages"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": ["sticker-configurator:export"]
+        },
+        "anti_patterns_fixed": [
+          "Script tag injection → dynamic import('https://cdnjs.cloudflare.com/...) or import('jspdf')",
+          "Unchecked window.jspdf global → proper import/load check"
+        ]
+      },
+      {
+        "name": "KeyboardManager",
+        "file": "assets/sticker-configurator/keyboard-manager.js",
+        "estimated_lines": 120,
+        "responsibilities": [
+          "onKeyDown(e) — central keyboard shortcut router",
+          "Ctrl+Z undo, Ctrl+Shift+Z / Ctrl+Y redo",
+          "Delete/Backspace delete selected",
+          "Ctrl+C copy, Ctrl+V paste",
+          "Ctrl+A select all",
+          "T text tool toggle",
+          "Escape deselect/close modals",
+          "Paste clipboard item reconstruction"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "Ctrl+Y redo + Ctrl+Shift+Z redo both call redo() → consolidated",
+          "Paste logic inline → delegate to ClipboardManager"
+        ]
+      },
+      {
+        "name": "ClipboardManager",
+        "file": "assets/sticker-configurator/clipboard-manager.js",
+        "estimated_lines": 80,
+        "responsibilities": [
+          "copy() — serialize selected items to this.state.clipboard",
+          "paste() — reconstruct items from clipboard data with offset",
+          "_serializeItem(item) — compact serialization (src as reference, not data URL)",
+          "_deserializeItem(data) — reconstruct item"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "Clipboard stores full data URLs → store reference strings or serialize without binary bloat",
+          "Inline copy/paste in onKeyDown → delegated to manager"
+        ]
+      },
+      {
+        "name": "CollisionEngine",
+        "file": "assets/sticker-configurator/collision-engine.js",
+        "estimated_lines": 60,
+        "responsibilities": [
+          "resolveOverlaps(items) — push-apart algorithm, max 5 iterations",
+          "rectsOverlap(a, b) — AABB overlap test",
+          "_pushApart(a, b) — single pair push-apart"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "30-line duplicated push-apart code in mouse + touch handlers → single CollisionEngine.resolveOverlaps()"
+        ]
+      },
+      {
+        "name": "SnapEngine",
+        "file": "assets/sticker-configurator/snap-engine.js",
+        "estimated_lines": 50,
+        "responsibilities": [
+          "snapVal(v, gridSize) — round to nearest grid increment",
+          "applySnap(item, items) — snap during drag end",
+          "Grid size configurable via bottom bar input (5-100px, default 20px)"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        },
+        "anti_patterns_fixed": [
+          "snapVal() existed but was NEVER called → integrate into InteractionManager drag end",
+          "Snap checkbox handler was a no-op → wire it correctly"
+        ]
+      },
+      {
+        "name": "PriceManager",
+        "file": "assets/sticker-configurator/price-manager.js",
+        "estimated_lines": 60,
+        "responsibilities": [
+          "updatePrice() — calculate price = basePrice × itemCount × quantity",
+          "updateCount() — update item count display",
+          "updateStats() — update area stats display",
+          "Quantity up/down handlers"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": ["sticker-configurator:price", "sticker-configurator:add-to-cart"]
+        },
+        "anti_patterns_fixed": [
+          "Hardcoded base price $2.5 → configurable via schema setting or metafield"
+        ]
+      },
+      {
+        "name": "Utils",
+        "file": "assets/sticker-configurator/utils.js",
+        "estimated_lines": 60,
+        "responsibilities": [
+          "pxToMm(px) = px / CANVAS_W * 600",
+          "mmToPx(mm) = mm / 600 * CANVAS_W",
+          "updateSizeInfo(item) — display size label on item",
+          "updateSizeInputs() — sync W/H inputs with selection",
+          "onSizeInput(axis) — handle size input changes"
+        ],
+        "events": {
+          "listens_to": [],
+          "dispatches": []
+        }
+      }
+    ],
+    "file_structure": {
+      "assets/sticker-configurator.js": "Entry point: imports all modules, defines StickerConfigurator class, registers custom element. ~300 lines.",
+      "assets/sticker-configurator.css": "Unchanged — CSS architecture already modular. Add CSS variables for remaining hardcoded values.",
+      "sections/sticker-configurator.liquid": "Streamlined template: delegate repetitive button HTML to a snippet or generate via JS. Preserve schema+locales."
+    }
+  },
+
+  "liquid_refactor_plan": {
+    "current_state": "285 lines — all toolbar buttons hardcoded with individual SVG and IDs. Modal HTML also hardcoded.",
+    "target_state": "~120 lines — template is primarily a mount point and schema. Toolbar buttons generated by JS. Modal created dynamically by ModalManager.",
+    "changes": [
+      {
+        "action": "REMOVE",
+        "target": "Inline SVG HTML in each button (lines 33-93)",
+        "reason": "Buttons should be generated by JS. Keeps Liquid lean and maintainable."
+      },
+      {
+        "action": "REMOVE",
+        "target": "Hardcoded modal HTML (lines 133-161)",
+        "reason": "Modal created dynamically by ModalManager.showAddDesignModal()."
+      },
+      {
+        "action": "REMOVE",
+        "target": "Inline confirm modal (line 236 showConfirmModal call is in JS, not HTML — verified)",
+        "reason": "All modals handled by JS ModalManager."
+      },
+      {
+        "action": "KEEP",
+        "target": "<sticker-configurator> element with data attributes",
+        "reason": "Web Component mount point. Essential."
+      },
+      {
+        "action": "KEEP",
+        "target": "Preload CSS + defer JS loading",
+        "reason": "Performance best practice."
+      },
+      {
+        "action": "KEEP",
+        "target": "cfg-header block (heading + subtext)",
+        "reason": "Merchant-configurable heading in template."
+      },
+      {
+        "action": "STREAMLINE",
+        "target": "Toolbar structure: keep .toolbar div but populate buttons via JS template or Web Component innerHTML",
+        "reason": "Eliminates 60 lines of repetitive button HTML. JS generates from a declarative button config array."
+      },
+      {
+        "action": "KEEP",
+        "target": "canvas-wrap, canvas-area, grid-bg, guide-lines, sticky-ctrls structure",
+        "reason": "DOM structure required for web component rendering."
+      },
+      {
+        "action": "STREAMLINE",
+        "target": ".upload-btn-area, .qty-group, .bottom-extra structure",
+        "reason": "Keep as minimal wrappers; individual controls managed by JS."
+      },
+      {
+        "action": "ADD",
+        "target": "data-base-price attribute from section settings",
+        "reason": "Makes base price schema-configurable instead of hardcoded JS value."
+      }
+    ]
+  },
+
+  "css_architecture": {
+    "current_state": "709 lines, well-structured with CSS Custom Properties. Some hardcoded values remain.",
+    "strategy": "Mobile-first. All visual knobs via --cfg-* variables. Scope under .sticker-configurator.",
+    "variables": {
+      "required": [
+        "--cfg-primary",
+        "--cfg-accent"
+      ],
+      "existing_and_kept": [
+        "--cfg-pink",
+        "--cfg-gold",
+        "--cfg-text",
+        "--cfg-muted",
+        "--cfg-border",
+        "--cfg-bg",
+        "--cfg-danger",
+        "--cfg-sidebar-width",
+        "--cfg-gap"
+      ],
+      "recommended_additions": [
+        "--cfg-primary-rgb: 0, 206, 201",
+        "--cfg-accent-rgb: 108, 92, 231",
+        "--cfg-danger-rgb: 255, 68, 68",
+        "--cfg-text-light: #B2BEC3",
+        "--cfg-toolbar-btn-size: 34px",
+        "--cfg-border-radius: 8px",
+        "--cfg-transition-fast: 0.12s",
+        "--cfg-canvas-border-width: 2px"
+      ]
+    },
+    "hardcoded_values_to_fix": [
+      {
+        "location": ".canvas-item:hover",
+        "current": "box-shadow: 0 0 0 2px rgba(0, 206, 201, 0.27)",
+        "fix": "Use rgba(var(--cfg-primary-rgb), 0.27)"
+      },
+      {
+        "location": ".sel-box",
+        "current": "rgba(0, 206, 201, 0.08)",
+        "fix": "Use rgba(var(--cfg-primary-rgb), 0.08)"
+      },
+      {
+        "location": ".toolbar button svg display:block",
+        "current": "display: block",
+        "fix": "Keep — structural, not variable."
+      },
+      {
+        "location": ".size-inputs label",
+        "current": "color: #B2BEC3",
+        "fix": "Use var(--cfg-text-light)"
+      },
+      {
+        "location": ".zoom-display",
+        "current": "color: #B2BEC3",
+        "fix": "Use var(--cfg-text-light)"
+      },
+      {
+        "location": ".cfg-text-muted",
+        "current": "color: #B2BEC3",
+        "fix": "Use var(--cfg-text-light)"
+      },
+      {
+        "location": "Guide-line colors in JS",
+        "current": "hardcoded #00CEC9 / #6C5CE7 in updateGuides()",
+        "fix": "Read from CSS variable via getComputedStyle or CSS var in stylesheet"
+      }
+    ],
+    "responsive_breakpoints": {
+      "mobile": "base styles",
+      "tablet": "@media (min-width: 768px)",
+      "desktop": "@media (min-width: 1024px)"
+    },
+    "mobile_mode": {
+      "selector": ".sticker-configurator.mobile-mode",
+      "rules": {
+        "section": "position: static; padding: 16px",
+        "wrap": "overflow: auto; min-height: 300px",
+        "toolbar": "overflow-x: auto; flex-wrap: wrap; justify-content: center",
+        "buttons": "width: 38px; height: 38px",
+        "divider/zoom": "display: none"
+      }
+    },
+    "reduced_motion": "prefers-reduced-motion: reduce — animation/transition-duration: 0.01ms (already present, remove !important)"
+  },
+
+  "schema": {
+    "name": "Sticker Configurator",
+    "tag": "section",
+    "class": "sticker-configurator",
+    "settings": [
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "Heading",
+        "default": "Design Your Sticker Sheet"
+      },
+      {
+        "type": "text",
+        "id": "subtext",
+        "label": "Subtext",
+        "default": "Arrange your stickers on a 60cm workspace"
+      },
+      {
+        "type": "color",
+        "id": "bg_color",
+        "label": "Background",
+        "default": "#F8F9FA"
+      },
+      {
+        "type": "number",
+        "id": "base_price",
+        "label": "Base price per sheet ($)",
+        "default": 2.5,
+        "min": 0,
+        "max": 999,
+        "step": 0.5,
+        "info": "Base price used for dynamic pricing calculation"
+      },
+      {
+        "type": "range",
+        "id": "grid_size",
+        "label": "Grid size (px)",
+        "min": 5,
+        "max": 100,
+        "step": 5,
+        "unit": "px",
+        "default": 20
+      },
+      {
+        "type": "checkbox",
+        "id": "snap_enabled",
+        "label": "Snap to grid enabled by default",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "gap_mm",
+        "label": "Default gap between items (mm)",
+        "min": 3,
+        "max": 50,
+        "step": 1,
+        "unit": "mm",
+        "default": 3
+      },
+      {
+        "type": "range",
+        "id": "padding_top",
+        "label": "Padding top",
+        "min": 0,
+        "max": 100,
+        "step": 4,
+        "unit": "px",
+        "default": 48
+      },
+      {
+        "type": "range",
+        "id": "padding_bottom",
+        "label": "Padding bottom",
+        "min": 0,
+        "max": 100,
+        "step": 4,
+        "unit": "px",
+        "default": 48
+      },
+      {
+        "type": "header",
+        "content": "Feature Toggles"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_clipboard",
+        "label": "Enable clipboard (Ctrl+C/V)",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_export",
+        "label": "Enable PDF export",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_auto_arrange",
+        "label": "Enable auto-arrange",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_undo_redo",
+        "label": "Enable undo/redo",
+        "default": true,
+        "info": "50-step stack"
+      }
+    ],
+    "blocks": [],
+    "max_blocks": 0,
+    "presets": [
+      {
+        "name": "Sticker Configurator",
+        "category": "Custom",
+        "settings": {
+          "heading": "Design Your Sticker Sheet",
+          "subtext": "Arrange your stickers on a 60cm workspace",
+          "bg_color": "#F8F9FA",
+          "base_price": 2.5,
+          "grid_size": 20,
+          "snap_enabled": true,
+          "gap_mm": 3,
+          "enable_clipboard": true,
+          "enable_export": true,
+          "enable_auto_arrange": true,
+          "enable_undo_redo": true,
+          "padding_top": 48,
+          "padding_bottom": 48
+        }
+      }
+    ],
+    "locales": {
+      "en": {
+        "heading": "Design Your Sticker Sheet",
+        "subtext": "Arrange your stickers on a 60cm workspace",
+        "undo": "Undo",
+        "redo": "Redo",
+        "auto_arrange": "Auto arrange",
+        "delete_selected": "Delete selected",
+        "duplicate": "Duplicate",
+        "flip_h": "Flip H",
+        "flip_v": "Flip V",
+        "align_left": "Align left",
+        "align_center_h": "Align center H",
+        "align_right": "Align right",
+        "align_top": "Align top",
+        "align_center_v": "Align center V",
+        "align_bottom": "Align bottom",
+        "distribute_h": "Distribute H",
+        "distribute_v": "Distribute V",
+        "add_text": "Add text",
+        "zoom_to_fit": "Zoom to fit",
+        "export_pdf": "Export PDF",
+        "lock": "Lock",
+        "mobile": "Mobile",
+        "add_design": "Add design",
+        "pieces": "pieces",
+        "add_to_cart": "Add to Cart",
+        "add_design_modal_title": "Add Design",
+        "cancel": "Cancel",
+        "add_to_canvas": "Add to Canvas",
+        "clear_canvas_confirm": "Clear all designs?",
+        "clear_all": "Clear",
+        "items": "items",
+        "selected": "selected",
+        "items_count": "items",
+        "mm": "mm",
+        "w_label": "W",
+        "h_label": "H",
+        "copies_label": "Copies",
+        "snap_grid": "Grid",
+        "gap": "Gap",
+        "canvas_hint": "Add a design or press T to add text",
+        "hint_text": "Middle-click drag to pan | Scroll to zoom | T to add text",
+        "pdf_load_error": "Could not load PDF library. Check internet connection.",
+        "edit_text_title": "Edit Text",
+        "size_label": "SIZE",
+        "color_label": "COLOR",
+        "bg_label": "BG",
+        "save": "Save",
+        "design_selected": "File selected",
+        "choose_design": "Click to choose a design file"
+      }
+    }
+  },
+
+  "web_component_spec": {
+    "class_name": "StickerConfigurator",
+    "extends": "HTMLElement",
+    "dom_strategy": "Light DOM — no Shadow DOM (Shopify Horizon compatibility)",
+    "lifecycle": {
+      "constructor()": "init abortController, call super()",
+      "connectedCallback()": "requestAnimationFrame(() => this.init()) — defer to ensure DOM ready",
+      "disconnectedCallback()": "abortController.abort(), nullify all module refs",
+      "attributeChangedCallback(name, oldVal, newVal)": "re-init on data-section-id change",
+      "observedAttributes": ["data-section-id"]
+    },
+    "property_bridge": {
+      "data-section-id": "sectionId (string)",
+      "data-heading": "heading (string)",
+      "data-subtext": "subtext (string)",
+      "data-bg-color": "bgColor (string, hex)",
+      "data-base-price": "basePrice (number, parsed from data attribute)"
+    },
+    "composition": {
+      "pattern": "Constructor injection — StickerConfigurator creates all submodule instances, passing `this` as core reference.",
+      "module_refs": {
+        "state": "this.state (single source of truth)",
+        "canvasRenderer": "new CanvasRenderer(this)",
+        "itemManager": "new ItemManager(this)",
+        "interactionManager": "new InteractionManager(this)",
+        "selectionManager": "new SelectionManager(this)",
+        "historyManager": "new HistoryManager(this)",
+        "alignmentEngine": "new AlignmentEngine(this)",
+        "mobileHandler": "new MobileHandler(this)",
+        "modalManager": "new ModalManager(this)",
+        "exportManager": "new ExportManager(this)",
+        "keyboardManager": "new KeyboardManager(this)",
+        "clipboardManager": "new ClipboardManager(this)",
+        "collisionEngine": "new CollisionEngine(this)",
+        "snapEngine": "new SnapEngine(this)",
+        "priceManager": "new PriceManager(this)",
+        "utils": "new Utils(this)"
+      }
+    },
+    "custom_events": {
+      "dispatches": [
+        {
+          "name": "sticker-configurator:update",
+          "detail": "{ itemCount, totalAreaCm, type: 'update' }",
+          "dispatched_by": "HistoryManager, ItemManager (after mutations)"
+        },
+        {
+          "name": "sticker-configurator:selection",
+          "detail": "{ selectedIds: number[], count: number, type: 'selection' }",
+          "dispatched_by": "SelectionManager"
+        },
+        {
+          "name": "sticker-configurator:price",
+          "detail": "{ price, quantity, basePrice, type: 'price' }",
+          "dispatched_by": "PriceManager (on quantity/items change)"
+        },
+        {
+          "name": "sticker-configurator:add-to-cart",
+          "detail": "{ variantId, quantity, type: 'add-to-cart' }",
+          "dispatched_by": "PriceManager (on submit click)"
+        },
+        {
+          "name": "sticker-configurator:export",
+          "detail": "{ type: 'export', format: 'pdf' }",
+          "dispatched_by": "ExportManager"
+        },
+        {
+          "name": "sticker-configurator:item-added",
+          "detail": "{ itemId, type: 'image' | 'text' }",
+          "dispatched_by": "ItemManager"
+        },
+        {
+          "name": "sticker-configurator:item-removed",
+          "detail": "{ itemIds: number[] }",
+          "dispatched_by": "ItemManager"
+        }
+      ],
+      "listens_to": []
+    },
+    "state_shape": {
+      "items": "Array<CanvasItem>",
+      "selectedIds": "number[]",
+      "nextId": "number",
+      "history": "Array<ItemSnapshot[]>",
+      "historyIdx": "number",
+      "zoom": "number (>= 1)",
+      "panX": "number",
+      "panY": "number",
+      "dragState": "DragState|null",
+      "dpr": "number",
+      "textToolActive": "boolean",
+      "mobile": "boolean",
+      "basePrice": "number",
+      "clipboard": "ClipboardData[]|null",
+      "touchStarted": "TouchStartData|null",
+      "lastTouchDist": "number",
+      "snapEnabled": "boolean",
+      "gridSize": "number (5-100)",
+      "gapSize": "number (mm)",
+      "modalFile": "File|null"
+    }
+  },
+
+  "data_flow": {
+    "topology": "Centralized state (this.state) with submodule access via core reference. Submodules read/write state directly. Cross-cutting concerns (history saves, UI updates) triggered by the core orchestrator after mutations.",
+    "flow_diagram": {
+      "user_interaction": "User input (click/touch/keyboard) → InteractionManager.on*() → state mutation → historyManager.saveState() → canvasRenderer.drawGrid()/growCanvas() → selectionManager.updateSelection() → priceManager.updatePrice() → CustomEvent dispatch",
+      "item_addition": "ModalManager (file picker) → ItemManager.addImageItem() → state.items.push → findNextSlot → DOM append → growCanvas → saveState → updateSelection → dispatchUpdateEvent",
+      "undo_redo": "Keyboard/button → HistoryManager.undo() → restoreState (teardown + rebuild items) → growCanvas → updateSelection → updateCount → updatePrice → dispatchUpdateEvent",
+      "export": "Button click → ExportManager.onExportPDF() → dynamic import jsPDF → CanvasRenderer.renderToCanvas() → embed in PDF → document.save()",
+      "mobile_toggle": "Button / autoDetect → MobileHandler.onMobileToggle() → toggle .mobile-mode class → swap heights → zoomToFit"
+    },
+    "liquid_to_js_bridge": {
+      "element": "<sticker-configurator>",
+      "attributes": [
+        { "attr": "data-section-id", "liquid": "{{ section.id }}", "js_property": "sid" },
+        { "attr": "data-heading", "liquid": "{{ heading | escape }}", "js_property": "heading" },
+        { "attr": "data-subtext", "liquid": "{{ subtext | escape }}", "js_property": "subtext" },
+        { "attr": "data-bg-color", "liquid": "{{ bg_color }}", "js_property": "bgColor" },
+        { "attr": "data-base-price", "liquid": "{{ section.settings.base_price }}", "js_property": "basePrice" }
+      ],
+      "inline_style": "style=\"--cfg-bg: {{ bg_color }};\""
+    },
+    "inter_module_communication": "Direct method calls (not CustomEvents within the component). CustomEvents only for external listeners (theme.js, analytics, add-to-cart).",
+    "design_pattern": "Orchestrator pattern: StickerConfigurator (core) orchestrates submodules. Submodules do NOT call each other directly — they mutate state and the core triggers cascading updates via a single _afterMutation() hook."
+  },
+
+  "violations_audit": {
+    "summary": "The current codebase has 22 identified anti-patterns across JS, CSS, and Liquid. No Turkish found in code. No !important found in CSS. No browser dialogs found.",
+    "severity_tiers": {
+      "high": [
+        {
+          "id": "V01",
+          "severity": "high",
+          "file": "assets/sticker-configurator.js",
+          "category": "architecture",
+          "description": "Monolithic single class (2340 lines). Every feature lives on one class. No module separation.",
+          "fix": "Decompose into 15 bounded modules per decomposition plan."
+        },
+        {
+          "id": "V02",
+          "severity": "high",
+          "file": "assets/sticker-configurator.js",
+          "category": "duplication",
+          "description": "Push-apart collision logic duplicated verbatim (~30 lines) in onMouseMove (lines 992-1013) and onTouchMove (lines 1233-1254).",
+          "fix": "Extract to CollisionEngine.resolveOverlaps()."
+        },
+        {
+          "id": "V03",
+          "severity": "high",
+          "file": "assets/sticker-configurator.js",
+          "category": "bug",
+          "description": "snapVal() method (line 2265) is defined but NEVER CALLED anywhere in the codebase. Snap-to-grid feature is non-functional.",
+          "fix": "Integrate snapVal() calls in InteractionManager drag end (onMouseUp, onTouchEnd)."
+        },
+        {
+          "id": "V04",
+          "severity": "high",
+          "file": "assets/sticker-configurator.js",
+          "category": "bug",
+          "description": "Snap checkbox handler (line 253-255) is a no-op: 'function () { this.checked = this.checked; }' — does NOT update this.state.snapEnabled.",
+          "fix": "Wire checkbox change to this.state.snapEnabled."
+        }
+      ],
+      "medium": [
+        {
+          "id": "V05",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "consistency",
+          "description": "Mixed use of 'var', 'let', 'const'. Predominantly 'var' (ES5 style) throughout 2340 lines.",
+          "fix": "Replace var with const for references, let for mutables."
+        },
+        {
+          "id": "V06",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "consistency",
+          "description": "Inconsistent this binding: mixes 'var self = this' (lines 391, 511, 610), '.bind(this)' (line 1756), and arrow functions (line 914, 1085).",
+          "fix": "Use lexical arrow functions consistently. Remove self pattern."
+        },
+        {
+          "id": "V07",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "performance",
+          "description": "this.querySelector() called repeatedly in mouse/touch move hot paths (onMouseMove, onTouchMove, onMouseUp).",
+          "fix": "Cache DOM references during init() for all commonly-queried elements."
+        },
+        {
+          "id": "V08",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "security",
+          "description": "showEditTextModal uses innerHTML with user text interpolated (line 1862: curText.replace). Potential XSS vector.",
+          "fix": "Use document.createElement + textContent for dynamic content, or escape HTML entities."
+        },
+        {
+          "id": "V09",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "architecture",
+          "description": "DOM element creation logic for items duplicated across addImageItem (lines 571-636) and addTextItem (lines 643-721): handles, rot-handle, size-info, WCAG attributes all repeated.",
+          "fix": "Extract to _createItemElement(type, id) factory method in ItemManager."
+        },
+        {
+          "id": "V10",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "architecture",
+          "description": "restoreState() duplicates item reconstruction logic already in addImageItem/addTextItem (lines 397-451). Uses fragile onload pattern.",
+          "fix": "Reuse ItemManager methods with silent=true flag. Use Promise.all for async image loading."
+        },
+        {
+          "id": "V11",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "architecture",
+          "description": "jsPDF loaded via script tag injection into document.body (line 1769-1775). Loads even if export not intended.",
+          "fix": "Use dynamic import() or module script with async loading. Only load on actual export click."
+        },
+        {
+          "id": "V12",
+          "severity": "medium",
+          "file": "assets/sticker-configurator.js",
+          "category": "bug",
+          "description": "Clipboard stores raw data URLs in clipboard.src (line 1374). Can be very large. Not serializable for localStorage or form submission.",
+          "fix": "Store image reference (name, data) or use IndexedDB/blob URL. For cart submission, serialize as base64 limited to canvas state."
+        }
+      ],
+      "low": [
+        {
+          "id": "V13",
+          "severity": "low",
+          "file": "assets/sticker-configurator.js",
+          "category": "magic_numbers",
+          "description": "Multiple magic numbers throughout: 0.15 (default item size ratio), 0.75 (aspect), 20 (grow buffer, duplicate offset), 5 (push iterations, snap threshold), 0.1 (zoom step), 30 (min resize px), 2 (jitter threshold), 0.6 (text width calc), 1.8 (text height ratio), 2.5 (base price).",
+          "fix": "Define as module-level constants or config with descriptive names."
+        },
+        {
+          "id": "V14",
+          "severity": "low",
+          "file": "assets/sticker-configurator.js",
+          "category": "magic_numbers",
+          "description": "Hardcoded colors in JS: '#00CEC9' and '#6C5CE7' in updateGuides(), '#2D3436' and '#FF4444' in overlap detection.",
+          "fix": "Reference CSS variables via getComputedStyle or define as constants."
+        },
+        {
+          "id": "V15",
+          "severity": "low",
+          "file": "assets/sticker-configurator.js",
+          "category": "performance",
+          "description": "updateCanvasWH() is an empty stub (line 352-354) — called in zoom/drag hot paths. Dead code path.",
+          "fix": "Either implement or remove calls. Currently wastes function call overhead in hot path."
+        },
+        {
+          "id": "V16",
+          "severity": "low",
+          "file": "assets/sticker-configurator.js",
+          "category": "architecture",
+          "description": "Distribute horizontal/vertical not implemented. Feature 12 in PRD mentions it but no code exists.",
+          "fix": "Add distributeHorizontal() and distributeVertical() methods to AlignmentEngine."
+        },
+        {
+          "id": "V17",
+          "severity": "low",
+          "file": "assets/sticker-configurator.js",
+          "category": "accesibility",
+          "description": "No .focus-visible CSS styles defined. Some modals use aria but keyboard navigation focus indicators may be missing.",
+          "fix": "Add :focus-visible styles for all interactive elements."
+        },
+        {
+          "id": "V18",
+          "severity": "low",
+          "file": "assets/sticker-configurator.css",
+          "category": "consistency",
+          "description": "Hardcoded hex colors where CSS vars should be used: rgba(0, 206, 201, 0.27) in .canvas-item:hover, rgba(0, 206, 201, 0.08) in .sel-box.",
+          "fix": "Use rgba(var(--cfg-primary-rgb), opacity) pattern."
+        },
+        {
+          "id": "V19",
+          "severity": "low",
+          "file": "assets/sticker-configurator.css",
+          "category": "consistency",
+          "description": "#B2BEC3 hardcoded in multiple places (size-inputs label, zoom-display, cfg-text-muted, modal row span).",
+          "fix": "Define and use --cfg-text-light: #B2BEC3."
+        },
+        {
+          "id": "V20",
+          "severity": "low",
+          "file": "assets/sticker-configurator.css",
+          "category": "maintainability",
+          "description": "border-radius values hardcoded as 8, 10, 12, 20px inconsistently.",
+          "fix": "Standardize via --cfg-border-radius-{sm,md,lg} variables."
+        },
+        {
+          "id": "V21",
+          "severity": "low",
+          "file": "assets/sticker-configurator.css",
+          "category": "edge_case",
+          "description": "prefers-reduced-motion uses !important (line 706-707). Only !important in the codebase.",
+          "fix": "Increase specificity instead of !important. E.g., html.sticker-configurator .sticker-configurator *."
+        },
+        {
+          "id": "V22",
+          "severity": "low",
+          "file": "sections/sticker-configurator.liquid",
+          "category": "maintainability",
+          "description": "Toolbar buttons use individual id attributes (e.g., id=\"undo-btn-{{ section.id }}\") instead of data attributes or class-based delegation.",
+          "fix": "Use data-action attributes for delegation (e.g., data-action=\"undo\"). JS can use event delegation on .toolbar instead of per-button getElementById."
+        }
+      ]
+    }
+  },
+
+  "solid_compliance_checklist": {
+    "single_responsibility_principle": {
+      "grade": "FAIL (current) → TARGET: PASS",
+      "current_state": "One class handles ALL responsibilities: lifecycle, DOM events, state, rendering, alignment, export, clipboard, price, history, mobile, modals, keyboard, collision, grid drawing, drag interaction.",
+      "target_state": "Each module has one clear responsibility. StickerConfigurator orchestrates. 15 modules each own a bounded context. Each module < 350 lines.",
+      "assessment": [
+        "CanvasRenderer: owns grid drawing, zoom/pan transform, renderToCanvas",
+        "ItemManager: owns item CRUD (create, read, update, delete)",
+        "InteractionManager: owns input event handling and drag state machine",
+        "HistoryManager: owns undo/redo and state serialization",
+        "AlignmentEngine: owns alignment, distribution, auto-arrange",
+        "CollisionEngine: owns push-apart overlap resolution",
+        "SnapEngine: owns snap-to-grid",
+        "ClipboardManager: owns copy/paste serialization",
+        "ExportManager: owns PDF export",
+        "ModalManager: owns modal lifecycle and focus trapping",
+        "PriceManager: owns price calculation and display",
+        "KeyboardManager: owns keyboard shortcut routing",
+        "MobileHandler: owns mobile mode detection and toggle",
+        "SelectionManager: owns multi-select and guide lines",
+        "Utils: owns conversion math and utility updates"
+      ]
+    },
+    "open_closed_principle": {
+      "grade": "PASS (with caveats)",
+      "current_state": "New features require modifying StickerConfigurator class directly. The class is NOT open for extension.",
+      "target_state": "Core files (sticker-configurator.js entry point) are closed for modification. New features add new modules (new files) without touching existing module logic.",
+      "assessment": [
+        "Adding a new toolbar command: add button config entry + new method in appropriate module. No core changes.",
+        "Adding a new export format: new ExportManager method only.",
+        "Adding a new interaction: extend InteractionManager or add new interaction module.",
+        "Schema settings drive feature toggles (enable_clipboard, enable_export, etc.) — no code change needed to disable features.",
+        "CAVEAT: StickerConfigurator.compose() (init) needs updating to instantiate new modules — this is the single point of extension."
+      ]
+    },
+    "liskov_substitution_principle": {
+      "grade": "PASS (not heavily tested)",
+      "current_state": "Single class hierarchy. Not applicable since there's no inheritance tree.",
+      "target_state": "If subclasses of StickerConfigurator are ever created, they must preserve: init() contract, state shape, DOM structure expectations. All submodules depend on core interface (state, querySelector, CANVAS_W/H) — any substitute must provide these.",
+      "assessment": [
+        "No inheritance currently — all items share CanvasItem interface through state object.",
+        "Image items and text items are substitutable through the CanvasItem type: both have {id, x, y, w, h, el, locked, rotation, scaleX, scaleY, src/text}.",
+        "All items respond to the same DOM and interaction logic.",
+        "LSP satisfied at data level."
+      ]
+    },
+    "interface_segregation_principle": {
+      "grade": "FAIL (current) → TARGET: PASS",
+      "current_state": "Every method on the monolith has access to 'this' which includes ALL methods and ALL state. No interface boundaries.",
+      "target_state": "Each module receives only what it needs via constructor injection. Modules interact through well-defined method contracts.",
+      "assessment": [
+        "Submodule constructor receives 'this' (the Web Component) — this is intentionally broad for init-phase access.",
+        "BUT: submodules should NOT access each other directly. All cross-module coordination flows through the core StickerConfigurator.",
+        "No module relies on another module's internal implementation.",
+        "CustomEvent dispatch is the only external API surface.",
+        "DOM refs are cached per module during init, not searched globally."
+      ]
+    },
+    "dependency_inversion_principle": {
+      "grade": "PASS (partial)",
+      "current_state": "Components communicate via CustomEvents for external listeners (lines 2277-2334). Internal communication is direct method calls (tight coupling).",
+      "target_state": "External communication: CustomEvents on the host element. Internal communication: method calls through the core orchestrator (not direct module-to-module).",
+      "assessment": [
+        "CustomEvent protocol already defined (lines 2277-2334): update, selection, price, add-to-cart, export events. ✓",
+        "No module depends on another module's concrete implementation — all go through StickerConfigurator core.",
+        "No external library dependencies except jsPDF (loaded dynamically). ✓",
+        "DOM queries use this.querySelector within the element scope, not document.querySelector. ✓",
+        "AbortController signal used for all event listeners — proper cleanup. ✓"
+      ]
+    }
+  },
+
+  "distribute_feature_plan": {
+    "status": "MISSING — Feature 12 in PRD requires distribute horizontal/vertical but no code exists.",
+    "implementation_plan": {
+      "module": "AlignmentEngine",
+      "methods": [
+        "distributeHorizontal() — evenly space selected items along X axis within bounds",
+        "distributeVertical() — evenly space selected items along Y axis within bounds"
+      ],
+      "algorithm": {
+        "distribute_h": "Sort selected items by x. totalW = sum of item widths. available = (maxX - minX) — totalW. gap = available / (count — 1). Position items sequentially with computed gap.",
+        "distribute_v": "Sort selected items by y. Similar logic for vertical axis."
+      },
+      "ui": "Add two toolbar buttons for distribute H/V in Liquid template (or generate via JS button config array).",
+      "locales": "Add 'distribute_h' and 'distribute_v' entries to schema locales."
+    }
+  },
+
+  "promoted_improvements": {
+    "1": "Feature toggle settings: Add enable_clipboard, enable_export, enable_auto_arrange, enable_undo_redo checkbox settings so merchants can disable features without code changes.",
+    "2": "Base price setting: Add base_price number setting instead of hardcoded this.state.basePrice = 2.5.",
+    "3": "Grid/snap defaults from settings: Add grid_size, snap_enabled, gap_mm settings.",
+    "4": "Data-action button delegation: Replace individual button IDs with data-action attributes and event delegation on .toolbar.",
+    "5": "Collision avoidance during drag: integrate SnapEngine.snapVal() in drag end.",
+    "6": "Distribute H/V buttons: currently missing from toolbar — add them.",
+    "7": "Undo/redo for text edit operations via modal: currently text tool operations inside modal callback don't trigger saveState consistently.",
+    "8": "Keyboard shortcut label in hint: 'D to distribute' etc."
+  }
+}

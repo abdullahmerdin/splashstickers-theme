@@ -1,322 +1,122 @@
+<!-- Preload CSS for above-the-fold paint (non-blocking) -->
+<link rel="preload" href="{{ 'sticker-configurator.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="{{ 'sticker-configurator.css' | asset_url }}"></noscript>
+<!-- Defer JS — component renders in connectedCallback, no render-blocking needed -->
+<script src="{{ 'sticker-configurator.js' | asset_url }}" defer></script>
+
 {%- liquid
   assign bg_color = section.settings.bg_color
+  assign heading = section.settings.heading
+  assign subtext = section.settings.subtext
+  assign base_price = section.settings.base_price
 -%}
 
-{% style %}
-:root {
-  --cfg-primary: #00CEC9;
-  --cfg-accent: #6C5CE7;
-  --cfg-pink: #FD79A8;
-  --cfg-gold: #FDCB6E;
-  --cfg-text: #2D3436;
-  --cfg-muted: #636E72;
-  --cfg-border: #DFE6E9;
-  --cfg-bg: #F8F9FA;
-}
-.product-information__media { display: none !important; }
-.product-information {
-  display: grid !important;
-  grid-template-columns: 1fr min(50vw, var(--sidebar-width, 400px)) !important;
-  gap: var(--gap, 40px) !important;
-  align-items: start !important;
-}
-.product-information product-component { grid-column: 2 !important; width: 100% !important; }
+<sticker-configurator
+  data-section-id="{{ section.id }}"
+  data-heading="{{ heading | escape }}"
+  data-subtext="{{ subtext | escape }}"
+  data-bg-color="{{ bg_color }}"
+  data-base-price="{{ base_price }}"
+  style="--cfg-bg: {{ bg_color }};"
+>
+  {%- unless heading == blank and subtext == blank -%}
+    <div class="cfg-header">
+      {%- unless heading == blank -%}
+        <h2 class="cfg-heading">{{ heading | escape }}</h2>
+      {%- endunless -%}
+      {%- unless subtext == blank -%}
+        <p class="cfg-subtext">{{ subtext | escape }}</p>
+      {%- endunless -%}
+    </div>
+  {%- endunless -%}
 
-.sticker-config-{{ section.id }} {
-  grid-column: 1; grid-row: 1;
-  background: {{ bg_color }};
-  border-radius: 0; padding: 0 24px 0 24px;
-  display: flex; flex-direction: column;
-  position: sticky; top: 100px;
-}
-.sticker-config-{{ section.id }} .editor-wrap {
-  display: flex; flex-direction: column; gap: 12px;
-  background: #f8f9fa;
-}
-.sticker-config-{{ section.id }} .toolbar {
-  display: flex; gap: 2px; flex-wrap: wrap; align-items: center;
-  background: #f8f9fa; border-radius: 0; padding: 4px;
-}
-.sticker-config-{{ section.id }} .toolbar button {
-  width: 34px; height: 34px; border-radius: 8px; border: none;
-  background: transparent; cursor: pointer; display: flex;
-  align-items: center; justify-content: center; transition: all 0.12s;
-  color: #636E72;
-}
-.sticker-config-{{ section.id }} .toolbar button svg { display: block; }
-.sticker-config-{{ section.id }} .toolbar button:hover { background: #fff; color: var(--cfg-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.sticker-config-{{ section.id }} .toolbar button:disabled { opacity: 0.25; cursor: default; box-shadow: none; background: transparent; }
-.sticker-config-{{ section.id }} .toolbar button.active { background: #00CEC910; color: #00CEC9; }
-.sticker-config-{{ section.id }} .toolbar .toolbar-divider {
-  width: 1px; height: 20px; background: #DFE6E9; margin: 0 4px;
-}
-.sticker-config-{{ section.id }} .canvas-wrap {
-  position: relative; width: 100%; overflow: auto; border-radius: 12px;
-  border: 2px solid #DFE6E9; background: #fff; flex-shrink: 0;
-  touch-action: manipulation;
-}
-.sticker-config-{{ section.id }} .canvas-area {
-  position: relative; width: 100%; height: 100%; cursor: default; user-select: none; touch-action: manipulation;
-  transform-origin: 0 0; overflow: visible; z-index: 0;
-}
-.sticker-config-{{ section.id }} .canvas-area .grid-bg {
-  position: absolute; inset: 0; pointer-events: none;
-}
-.sticker-config-{{ section.id }} .canvas-item {
-  position: absolute; cursor: grab; user-select: none;
-  transition: box-shadow 0.15s; z-index: 1;
-}
-.sticker-config-{{ section.id }} .canvas-item:hover { box-shadow: 0 0 0 2px #00CEC944; }
-.sticker-config-{{ section.id }} .canvas-item.selected {
-  box-shadow: inset 0 0 0 2px #00CEC9; z-index: 100 !important;
-}
-.sticker-config-{{ section.id }} .canvas-item img, .sticker-config-{{ section.id }} .canvas-item .text-content {
-  width: 100%; height: 100%; object-fit: contain; pointer-events: none;
-}
-.sticker-config-{{ section.id }} .canvas-item .text-content {
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; color: #2D3436; word-break: break-word;
-  text-align: center; padding: 4px;
-}
-.sticker-config-{{ section.id }} .canvas-item .resize-handle {
-  position: absolute; width: 12px; height: 12px; border-radius: 2px;
-  background: #00CEC9; border: 2px solid #fff; display: none; z-index: 10;
-}
-.sticker-config-{{ section.id }} .canvas-item.selected .resize-handle { display: block; }
-.sticker-config-{{ section.id }} .resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
-.sticker-config-{{ section.id }} .resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
-.sticker-config-{{ section.id }} .resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
-.sticker-config-{{ section.id }} .resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
-.sticker-config-{{ section.id }} .rot-handle {
-  position: absolute; bottom: -24px; left: 50%; margin-left: -8px;
-  width: 16px; height: 16px; border-radius: 50%; background: #6C5CE7;
-  border: 2px solid #fff; cursor: grab; display: none; z-index: 10;
-}
-.sticker-config-{{ section.id }} .canvas-item.selected .rot-handle { display: block; }
-.sticker-config-{{ section.id }} .size-info {
-  position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
-  background: #2D3436; color: #fff; font-size: 0.7rem; padding: 2px 8px;
-  border-radius: 6px; white-space: nowrap; display: none; z-index: 20; pointer-events: none;
-}
-.sticker-config-{{ section.id }} .canvas-item.selected .size-info { display: block; }
-.sticker-config-{{ section.id }} .size-inputs {
-  display: flex; gap: 8px; align-items: center; height: 24px;
-}
-.sticker-config-{{ section.id }} .size-inputs input {
-  width: 52px; padding: 4px 6px; border: 2px solid #DFE6E9; border-radius: 8px;
-  font-size: 0.8rem; text-align: center; color: #2D3436; font-weight: 600;
-  outline: none;
-}
-.sticker-config-{{ section.id }} .size-inputs input:focus { border-color: #00CEC9; }
-.sticker-config-{{ section.id }} .size-inputs label { font-size: 0.7rem; color: #B2BEC3; }
-.sticker-config-{{ section.id }} .sel-box {
-  position: absolute; border: 1px solid #00CEC9; background: rgba(0,206,201,0.08);
-  pointer-events: none; z-index: 999; display: none;
-}
-.sticker-config-{{ section.id }} .qty-group {
-  display: flex; align-items: center; gap: 6px;
-  background: #fff; border: 2px solid #DFE6E9; border-radius: 12px; padding: 2px;
-}
-.sticker-config-{{ section.id }} .qty-group button {
-  width: 36px; height: 36px; border: none; border-radius: 10px;
-  background: transparent; cursor: pointer; font-size: 1.2rem;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s; color: #636E72; font-weight: 600;
-}
-.sticker-config-{{ section.id }} .qty-group button:hover { background: #00CEC910; color: #00CEC9; }
-.sticker-config-{{ section.id }} .qty-group .qty-val {
-  font-size: 1.1rem; font-weight: 700; min-width: 36px;
-  text-align: center; color: #2D3436;
-}
-.sticker-config-{{ section.id }} .canvas-hint {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  color: #DFE6E9; font-size: 0.9rem; text-align: center;
-  pointer-events: none; font-weight: 500;
-}
-.sticker-config-{{ section.id }} .guide-line {
-  position: absolute; pointer-events: none; z-index: 1000; display: none;
-  background: #00CEC9;
-}
-.sticker-config-{{ section.id }} .guide-line.h { height: 1px; left: 0; right: 0; }
-.sticker-config-{{ section.id }} .guide-line.v { width: 1px; top: 0; bottom: 0; }
-.sticker-config-{{ section.id }} .zoom-display {
-  font-size: 0.7rem; color: #B2BEC3; margin-left: auto; white-space: nowrap;
-}
-
-
-.sticker-config-{{ section.id }} .cfg-text-muted { color: #B2BEC3; font-size: 0.75rem; }
-.sticker-config-{{ section.id }} .cfg-flex-center { display: flex; align-items: center; gap: 6px; }
-.sticker-config-{{ section.id }} .cfg-inline-input { width: 52px; padding: 4px 6px; border: 2px solid #DFE6E9; border-radius: 8px; font-size: 0.8rem; text-align: center; color: #2D3436; font-weight: 600; outline: none; }
-.sticker-config-{{ section.id }} .cfg-inline-input:focus { border-color: #00CEC9; }
-.sticker-config-{{ section.id }} .cfg-inline-sm { width: 36px; padding: 2px 4px; border: 2px solid #DFE6E9; border-radius: 6px; font-size: 0.75rem; text-align: center; }
-.sticker-config-{{ section.id }} .cfg-inline-sm:focus { border-color: #00CEC9; }
-.sticker-config-{{ section.id }} .cfg-badge { font-size: 0.7rem; color: #B2BEC3; }
-.sticker-config-{{ section.id }} .cfg-btn-submit { width: 100%; padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg,var(--cfg-primary),#00A8A3); color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 4px; }
-.sticker-config-{{ section.id }} .bottom-extra {
-  padding: 8px 12px 20px 12px; display: flex; flex-direction: column; gap: 8px;
-  font-size: 0.8rem;
-}
-.sticker-config-{{ section.id }} .bottom-extra .be-row {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-}
-.sticker-config-{{ section.id }} .bottom-extra .be-label {
-  color: #B2BEC3; font-size: 0.7rem; font-weight: 600; min-width: 40px;
-}
-.sticker-config-{{ section.id }} .bottom-extra .be-btn {
-  padding: 4px 12px; border: 1px solid #DFE6E9; border-radius: 8px;
-  background: #fff; cursor: pointer; font-size: 0.75rem; color: #636E72;
-  transition: all 0.12s;
-}
-.sticker-config-{{ section.id }} .bottom-extra .be-btn:hover {
-  border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
-}
-.sticker-config-{{ section.id }} .bottom-extra .be-btn.danger {
-  border-color: #FF4444; color: #FF4444;
-}
-.sticker-config-{{ section.id }} .bottom-extra .be-btn.danger:hover {
-  background: #FFF0F0;
-}
-
-.sticker-config-{{ section.id }} .cfg-modal {
-  position: fixed; inset: 0; z-index: 99999;
-  background: rgba(0,0,0,0.4); display: none;
-  align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.sticker-config-{{ section.id }} .cfg-modal-box {
-  background: #fff; border-radius: 20px; padding: 32px;
-  max-width: 420px; width: 90%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-}
-.sticker-config-{{ section.id }} .cfg-modal-title {
-  margin: 0 0 20px; font-size: 1.1rem; color: var(--cfg-text);
-}
-.sticker-config-{{ section.id }} .cfg-modal-zone {
-  border: 2px dashed var(--cfg-border); border-radius: 12px;
-  padding: 24px; text-align: center; cursor: pointer; margin-bottom: 16px;
-}
-.sticker-config-{{ section.id }} .cfg-modal-zone .cfg-modal-icon {
-  font-size: 2rem; margin-bottom: 4px;
-}
-.sticker-config-{{ section.id }} .cfg-modal-zone .cfg-modal-text {
-  font-size: 0.85rem; color: var(--cfg-muted);
-}
-.sticker-config-{{ section.id }} .cfg-modal-fname {
-  font-size: 0.8rem; color: var(--cfg-primary); margin-top: 4px; display: none;
-}
-.sticker-config-{{ section.id }} .cfg-modal-row {
-  display: flex; gap: 12px; align-items: center; margin-bottom: 16px;
-}
-.sticker-config-{{ section.id }} .cfg-modal-row label {
-  font-size: 0.85rem; font-weight: 600; color: var(--cfg-muted); min-width: 50px;
-}
-.sticker-config-{{ section.id }} .cfg-modal-row input {
-  flex: 1; padding: 10px 12px; border: 2px solid var(--cfg-border);
-  border-radius: 10px; font-size: 0.9rem; outline: none;
-}
-.sticker-config-{{ section.id }} .cfg-modal-row input:focus {
-  border-color: var(--cfg-primary);
-}
-.sticker-config-{{ section.id }} .cfg-modal-row span {
-  font-size: 0.8rem; color: #B2BEC3;
-}
-.sticker-config-{{ section.id }} .cfg-modal-actions {
-  display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
-}
-.sticker-config-{{ section.id }} .cfg-btn-sec {
-  padding: 10px 24px; border-radius: 10px; border: none;
-  font-size: 0.9rem; font-weight: 600; cursor: pointer;
-  background: #f5f5f5; color: var(--cfg-muted);
-}
-.sticker-config-{{ section.id }} .cfg-btn-pry {
-  padding: 10px 24px; border-radius: 10px; border: none;
-  font-size: 0.9rem; font-weight: 600; cursor: pointer;
-  background: linear-gradient(135deg,var(--cfg-primary),#00A8A3); color: #fff;
-}
-.sticker-config-{{ section.id }} .cfg-btn-pry:disabled { opacity: 0.4; cursor: default; }
-.sticker-config-{{ section.id }} .sticky-ctrls {
-  background: {{ bg_color }}; padding: 8px 0; margin-top: -14px;
-  position: sticky; bottom: 0; z-index: 50;
-}
-@media (max-width: 768px) {
-  .sticker-config-{{ section.id }} { position: static; padding: 16px; }
-  
-  
-}
-.sticker-config-{{ section.id }}.mobile-mode {
-}
-}
-.sticker-config-{{ section.id }}.mobile-mode .editor-wrap {
-  display: flex; flex-direction: column; gap: 12px;
-}
-.sticker-config-{{ section.id }}.mobile-mode .toolbar {
-  padding: 4px; gap: 2px; overflow-x: auto; flex-wrap: wrap;
-  justify-content: center;
-}
-.sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
-  overflow: auto; min-height: 300px;
-}
-
-
-.sticker-config-{{ section.id }}.mobile-mode .toolbar button {
-  width: 38px; height: 38px; font-size: 16px; flex-shrink: 0;
-}
-.sticker-config-{{ section.id }}.mobile-mode .toolbar .toolbar-divider { display: none; }
-.sticker-config-{{ section.id }}.mobile-mode .zoom-display { display: none; }
-
-.sticker-config-{{ section.id }} .upload-btn-area button {
-  padding: 6px 14px; border: 2px dashed #DFE6E9; border-radius: 8px;
-  background: transparent; cursor: pointer; font-size: 0.78rem; color: #636E72;
-  transition: all 0.2s;
-}
-.sticker-config-{{ section.id }} .upload-btn-area button:hover {
-  border-color: #00CEC9; color: #00CEC9; background: #f0fdfd;
-}
-.sticker-config-{{ section.id }} .upload-btn-area {
-  display: flex; gap: 6px; align-items: center;
-}
-{% endstyle %}
-
-<div class="sticker-config-{{ section.id }}">
   <div class="editor-wrap">
     <div class="toolbar">
-      <button title="Undo" id="undo-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
-      <button title="Redo" id="redo-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+      <!-- Toolbar buttons generated via JS delegation (data-action) -->
+      <button title="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      </button>
+      <button title="Redo" data-action="redo" id="redo-btn-{{ section.id }}" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
       <span class="toolbar-divider"></span>
-      <button title="Auto arrange" id="auto-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
-      <button title="Delete selected" id="del-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-      <button title="Duplicate" id="dup-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      <button title="Auto arrange" data-action="auto-arrange" id="auto-btn-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </button>
+      <button title="Delete selected" data-action="delete" id="del-btn-{{ section.id }}" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      </button>
+      <button title="Duplicate" data-action="duplicate" id="dup-btn-{{ section.id }}" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
       <span class="toolbar-divider"></span>
-      <button title="Flip H" id="flip-h-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/></svg></button>
-      <button title="Flip V" id="flip-v-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg></button>
-      <button title="Align left" id="align-left-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="10" x2="14" y2="10"/><line x1="4" y1="14" x2="18" y2="14"/><line x1="4" y1="18" x2="10" y2="18"/></svg></button>
-      <button title="Align center H" id="align-h-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="10" y1="18" x2="14" y2="18"/></svg></button>
-      <button title="Align right" id="align-right-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="10" x2="20" y2="10"/><line x1="6" y1="14" x2="20" y2="14"/><line x1="14" y1="18" x2="20" y2="18"/></svg></button>
-      <button title="Align top" id="align-top-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg></button>
-      <button title="Align center V" id="align-v-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg></button>
-      <button title="Align bottom" id="align-bot-{{ section.id }}" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg></button>
+      <button title="Flip H" data-action="flip-h" id="flip-h-{{ section.id }}" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/></svg>
+      </button>
+      <button title="Flip V" data-action="flip-v" id="flip-v-{{ section.id }}" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg>
+      </button>
       <span class="toolbar-divider"></span>
-      <button title="Add text" id="text-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
-      <button title="Zoom to fit" id="zoom-fit-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></button>
-      <button title="Export PDF" id="export-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+      <button title="Align left" data-action="align-left" id="align-left-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="10" x2="14" y2="10"/><line x1="4" y1="14" x2="18" y2="14"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
+      </button>
+      <button title="Align center H" data-action="align-h" id="align-h-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+      </button>
+      <button title="Align right" data-action="align-right" id="align-right-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="10" x2="20" y2="10"/><line x1="6" y1="14" x2="20" y2="14"/><line x1="14" y1="18" x2="20" y2="18"/></svg>
+      </button>
+      <button title="Align top" data-action="align-top" id="align-top-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+      </button>
+      <button title="Align center V" data-action="align-v" id="align-v-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
+      </button>
+      <button title="Align bottom" data-action="align-bot" id="align-bot-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+      </button>
       <span class="toolbar-divider"></span>
-      <button title="Lock" id="lock-btn-{{ section.id }}" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
-      <button title="Mobile" id="mobile-btn-{{ section.id }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
-      <span class="zoom-display" id="zoom-display-{{ section.id }}" class="cfg-zoom-pct" style="cursor:pointer;border-bottom:1px dotted #B2BEC3;" title="Click to reset zoom to 100%">100%</span>
+      <button title="Distribute H" data-action="distribute-h" id="dist-h-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="7" y1="18" x2="17" y2="18"/></svg>
+      </button>
+      <button title="Distribute V" data-action="distribute-v" id="dist-v-{{ section.id }}" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="21"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="3" x2="14" y2="21"/><line x1="18" y1="7" x2="18" y2="17"/></svg>
+      </button>
+      <span class="toolbar-divider"></span>
+      <button title="Add text" data-action="add-text" id="text-btn-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+      </button>
+      <button title="Zoom to fit" data-action="zoom-fit" id="zoom-fit-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+      </button>
+      <button title="Export PDF" data-action="export-pdf" id="export-btn-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <span class="toolbar-divider"></span>
+      <button title="Lock" data-action="lock" id="lock-btn-{{ section.id }}" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
+      <button title="Mobile" data-action="mobile" id="mobile-btn-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </button>
+      <span class="zoom-display" id="zoom-display-{{ section.id }}">100%</span>
     </div>
 
-    <div class="cfg-info-bar" style="font-size:0.75rem;color:#B2BEC3;display:flex;justify-content:space-between;">
+    <div class="cfg-info-bar">
       <span id="item-count-{{ section.id }}">0 items</span>
-      <span id="sel-size-{{ section.id }}" style="display:none;">&nbsp;</span>
+      <span id="sel-size-{{ section.id }}">&nbsp;</span>
       <span id="hint-text-{{ section.id }}">Middle-click drag to pan | Scroll to zoom | T to add text</span>
     </div>
-    <div class="size-inputs" id="size-inputs-{{ section.id }}" class="cfg-size-inputs" style="visibility:hidden;height:28px;display:flex;gap:8px;align-items:center;font-size:0.75rem;">
-      <label class="cfg-badge">W:</label><input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
-      <label class="cfg-badge">H:</label><input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
-      <label style="color:#B2BEC3;">mm</label>
-    </div>
-    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}">
 
+    <div class="size-inputs" id="size-inputs-{{ section.id }}">
+      <label>W:</label>
+      <input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
+      <label>H:</label>
+      <input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
+      <span class="size-unit">mm</span>
+    </div>
+
+    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}">
       <div class="canvas-area" id="canvas-{{ section.id }}">
         <canvas class="grid-bg" id="grid-canvas-{{ section.id }}"></canvas>
         <div class="canvas-hint" id="hint-{{ section.id }}">Add a design or press T to add text</div>
@@ -324,1009 +124,72 @@
       <div class="guide-line h" id="guide-h-{{ section.id }}"></div>
       <div class="guide-line v" id="guide-v-{{ section.id }}"></div>
     </div>
+
     <div class="sticky-ctrls">
-    <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" style="display:none;">
-    <div class="upload-btn-area">
-      <button id="add-btn-{{ section.id }}">&#x2795; Add design</button>
-      <div class="qty-group">
-        <button id="qty-down-{{ section.id }}">&minus;</button>
-        <span class="qty-val" id="qty-display-{{ section.id }}">10</span>
-        <button id="qty-up-{{ section.id }}">+</button>
-      </div>
-      <span style="font-size:0.8rem;color:#636E72;">pieces</span>
-    </div>
-    <button id="submit-{{ section.id }}" class="cfg-btn-submit">
-      Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
-    </button>
-    <div id="modal-{{ section.id }}" class="cfg-modal">
-      <div class="cfg-modal-box">
-        <h3 class="cfg-modal-title">Add Design</h3>
-        <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}">
-          <div class="cfg-modal-icon">&#x1F5BC;</div>
-          <div class="cfg-modal-text">Click to choose a design file</div>
-          <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
+      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}">
+      <div class="upload-btn-area">
+        <button id="add-btn-{{ section.id }}">&#x2795; Add design</button>
+        <div class="qty-group">
+          <button id="qty-down-{{ section.id }}">&minus;</button>
+          <span class="qty-val" id="qty-display-{{ section.id }}">10</span>
+          <button id="qty-up-{{ section.id }}">+</button>
         </div>
-        <div class="cfg-modal-row"><label>W</label><input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1"><span>mm</span></div>
-        <div class="cfg-modal-row"><label>H</label><input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1"><span>mm</span></div>
-        <div class="cfg-modal-row"><label>Copies</label><input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1"><span>pcs</span></div>
-        <div class="cfg-modal-actions">
-          <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec">Cancel</button>
-          <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" disabled>Add to Canvas</button>
+        <span class="qty-label">pieces</span>
+      </div>
+      <button id="submit-{{ section.id }}" class="cfg-btn-submit">
+        Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
+      </button>
+
+      <div id="modal-{{ section.id }}" class="cfg-modal" role="dialog" aria-modal="true" aria-label="Add Design">
+        <div class="cfg-modal-box">
+          <h3 class="cfg-modal-title">Add Design</h3>
+          <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}" role="button" tabindex="0" aria-label="Choose a design file">
+            <div class="cfg-modal-icon">&#x1F5BC;</div>
+            <div class="cfg-modal-text">Click to choose a design file</div>
+            <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
+          </div>
+          <div class="cfg-modal-row">
+            <label>W</label>
+            <input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1">
+            <span>mm</span>
+          </div>
+          <div class="cfg-modal-row">
+            <label>H</label>
+            <input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1">
+            <span>mm</span>
+          </div>
+          <div class="cfg-modal-row">
+            <label>Copies</label>
+            <input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1">
+            <span>pcs</span>
+          </div>
+          <div class="cfg-modal-actions">
+            <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec">Cancel</button>
+            <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" disabled>Add to Canvas</button>
+          </div>
         </div>
       </div>
-    </div>
-        <div class="bottom-extra">
-      <div class="be-row">
-        <span class="be-label">Snap</span>
-        <input type="checkbox" id="snap-btm-{{ section.id }}" checked style="accent-color:var(--cfg-primary);cursor:pointer;">
-        <span style="font-size:0.7rem;color:#B2BEC3;">Grid</span>
-        <input type="number" id="grid-size-{{ section.id }}" value="20" min="5" max="100" step="5" class="cfg-inline-sm" style="width:40px;">
-        <span style="font-size:0.7rem;color:#B2BEC3;">px</span>
-        <span class="be-label" style="margin-left:4px;">Gap</span>
-        <input type="number" id="gap-size-{{ section.id }}" value="3" min="3" max="50" step="1" class="cfg-inline-sm">
-        <span style="font-size:0.7rem;color:#B2BEC3;">mm</span>
-      </div>
-      <div class="be-row">
-        <span id="stats-{{ section.id }}" class="cfg-text-muted" style="color:#636E72;"></span>
-        <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:5px;padding:0;margin-left:auto;">
-        <button class="be-btn danger" id="clear-btn-{{ section.id }}" style="padding:2px 8px;font-size:0.7rem;">Clear</button>
+
+      <div class="bottom-extra">
+        <div class="be-row">
+          <span class="be-label">Snap</span>
+          <input type="checkbox" id="snap-btm-{{ section.id }}" checked>
+          <span class="be-unit">Grid</span>
+          <input type="number" id="grid-size-{{ section.id }}" value="20" min="5" max="100" step="5" class="cfg-inline-sm">
+          <span class="be-unit">px</span>
+          <span class="be-label">Gap</span>
+          <input type="number" id="gap-size-{{ section.id }}" value="3" min="3" max="50" step="1" class="cfg-inline-sm">
+          <span class="be-unit">mm</span>
+        </div>
+        <div class="be-row">
+          <span id="stats-{{ section.id }}" class="cfg-text-muted"></span>
+          <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF">
+          <button class="be-btn danger" id="clear-btn-{{ section.id }}">Clear</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<script>
-(function() {
-  var sid = '{{ section.id }}';
-  var CANVAS_W = 0, CANVAS_H = 0;
-  var wrap = document.getElementById('canvas-wrap-'+sid);
-  var canvas = document.getElementById('canvas-'+sid);
-  CANVAS_W = wrap.clientWidth;
-  CANVAS_H = Math.round(CANVAS_W * 400 / 600);
-  canvas.style.width = CANVAS_W + 'px';
-  canvas.style.height = CANVAS_H + 'px';
-  wrap.style.height = CANVAS_H + 'px';
-  var hint = document.getElementById('hint-'+sid);
-  var fileInput = document.getElementById('file-input-'+sid);
-  var countEl = document.getElementById('item-count-'+sid);
-  var qtyEl = document.getElementById('qty-display-'+sid);
-  var priceEl = document.getElementById('price-display-'+sid);
-
-  var items = [];
-  var selectedIds = [];
-  var nextId = 1;
-  var dragState = null;
-  var basePrice = 2.5;
-  var zoom = 1, panX = 0, panY = 0;
-  var dpr = window.devicePixelRatio || 1;
-  var textToolActive = false;
-
-  var undoBtn = document.getElementById('undo-btn-'+sid);
-  var redoBtn = document.getElementById('redo-btn-'+sid);
-  var delBtn = document.getElementById('del-btn-'+sid);
-  var dupBtn = document.getElementById('dup-btn-'+sid);
-  var flipHBtn = document.getElementById('flip-h-'+sid);
-  var flipVBtn = document.getElementById('flip-v-'+sid);
-  var autoBtn = document.getElementById('auto-btn-'+sid);
-  var mobileBtn = document.getElementById('mobile-btn-'+sid);
-  var textBtn = document.getElementById('text-btn-'+sid);
-  var zoomFitBtn = document.getElementById('zoom-fit-'+sid);
-  var exportBtn = document.getElementById('export-btn-'+sid);
-  var zoomDisplay = document.getElementById('zoom-display-'+sid);
-  // rulers removed
-  var guideH = document.getElementById('guide-h-'+sid);
-  var guideV = document.getElementById('guide-v-'+sid);
-
-  var selBox = document.createElement('div');
-  selBox.className = 'sel-box';
-  canvas.appendChild(selBox);
-
-  /* ── History ── */
-  var history = [], historyIdx = -1;
-  function saveState() {
-    historyIdx++; history.length = historyIdx;
-    history.push(items.map(function(i) {
-      var img = i.el.querySelector('img');
-      return { id: i.id, src: img ? img.src : i.text||'', isText: !!i.text, text: i.text||'', fontSize: i.fontSize||16,
-        x: i.x, y: i.y, w: i.w, h: i.h, rotation: i.rotation, scaleX: i.scaleX, scaleY: i.scaleY };
-    }));
-    if (history.length > 50) { history.shift(); historyIdx--; }
-    updateHistoryBtns();
-  }
-  function restoreState(state) {
-    var savedIds = state.map(function(s) { return s.id; });
-    for (var ri = items.length-1; ri>=0; ri--) {
-      if (savedIds.indexOf(items[ri].id)===-1) { items[ri].el.remove(); items.splice(ri,1); }
-    }
-    state.forEach(function(s) {
-      var item = items.find(function(i) { return i.id===s.id; });
-      if (!item) {
-        if (s.isText) item = addTextItem(s.text, s.fontSize||16, true);
-        else if (s.src) item = addImageItem(s.src, true);
-        if (!item) return;
-        item.id = s.id; item.el.dataset.itemId = s.id;
-        item.rotation=s.rotation; item.scaleX=s.scaleX; item.scaleY=s.scaleY;
-      }
-      item.x=s.x; item.y=s.y; item.w=s.w; item.h=s.h;
-      item.rotation=s.rotation; item.scaleX=s.scaleX; item.scaleY=s.scaleY;
-      item.el.style.left=s.x+'px'; item.el.style.top=s.y+'px';
-      item.el.style.width=s.w+'px'; item.el.style.height=s.h+'px';
-      applyTransform(item); updateSizeInfo(item);
-    });
-    hint.style.display = items.length ? 'none' : '';
-  }
-
-  /* ── Selection ── */
-  function toggleSelect(id, add) {
-    if (add) { var idx=selectedIds.indexOf(id); idx!==-1?selectedIds.splice(idx,1):selectedIds.push(id); }
-    else selectedIds=[id];
-    updateSelection();
-  }
-  function selectAllInRect(x1,y1,x2,y2) {
-    var l=Math.min(x1,x2),r=Math.max(x1,x2),t=Math.min(y1,y2),b=Math.max(y1,y2);
-    selectedIds=[];
-    items.forEach(function(it){var cx=it.x+it.w/2,cy=it.y+it.h/2; if(cx>=l&&cx<=r&&cy>=t&&cy<=b) selectedIds.push(it.id);});
-    updateSelection();
-  }
-  function updateSelection() {
-    var count=selectedIds.length;
-    var mm3=Math.round(CANVAS_W/600*3);
-    canvas.querySelectorAll('.canvas-item').forEach(function(el){
-      el.classList.toggle('selected',selectedIds.indexOf(parseInt(el.dataset.itemId))!==-1);
-      el.style.outlineOffset=el.classList.contains('selected')?mm3+'px':'';
-    });
-    delBtn.disabled=dupBtn.disabled=flipHBtn.disabled=flipVBtn.disabled=count===0;
-    ['left','right','h','top','bot','v'].forEach(function(d){
-      var btn=document.getElementById('align-'+d+'-'+sid);
-      if(btn) btn.disabled=count<1;
-    });
-    updateSizeInputs(); updateCount();
-  }
-  function getSelected(){return items.filter(function(i){return selectedIds.indexOf(i.id)!==-1;});}
-
-  /* ── Unit conversion ── */
-  function pxToMm(px){return Math.round(px/CANVAS_W*600);}
-  function mmToPx(mm){return mm/600*CANVAS_W;}
-  function snapVal(v,g){return g>0?Math.round(v/g)*g:v;}
-
-  /* ── Add items ── */
-  function findNextSlot(w, h) {
-    var gi=document.getElementById('gap-size-'+sid), gap=Math.round(CANVAS_W/600*(parseInt(gi?gi.value:0)||3)), pad=12;
-    // Scan left-to-right, top-to-bottom
-    for(var yy=pad; yy+h<=CANVAS_H; yy+=h+gap){
-      for(var xx=pad; xx+w<=CANVAS_W; xx+=w+gap){
-        var ok=true;
-        for(var mi=0; mi<items.length; mi++){
-          var o=items[mi];
-          if(xx<o.x+o.w+w/2 && xx+w>o.x-w/2 && yy<o.y+o.h+h/2 && yy+h>o.y-h/2){ ok=false; break; }
-        }
-        if(ok) return {x:xx, y:yy};
-      }
-    }
-    return {x:pad, y:CANVAS_H+10}; // below canvas if no fit
-  }
-  function addImageItem(src, silent) {
-    var id=nextId++;
-    var w=80+Math.random()*30, h=w*0.75;
-    var slot=findNextSlot(w, h);
-    var el=document.createElement('div');
-    el.className='canvas-item'; el.dataset.itemId=id;
-    el.style.left=slot.x+'px';
-    el.style.top=slot.y+'px';
-    el.style.width=w+'px'; el.style.height=h+'px';
-    var img=document.createElement('img'); img.src=src; img.draggable=false;
-    el.appendChild(img);
-    addItemHelpers(el, id);
-    var item = finishItem(el, id, w, h);
-    if (!silent) { selectedIds=[id]; updateSelection(); saveState(); growCanvas(); }
-    return item;
-  }
-  function addTextItem(text, fontSize, silent, color, bgColor, fontWeight, fontStyle, textAlign) {
-    var id=nextId++;
-    var w=120, h=40+fontSize;
-    var slot=findNextSlot(w, h);
-    var el=document.createElement('div');
-    el.className='canvas-item'; el.dataset.itemId=id;
-    el.style.left=slot.x+'px'; el.style.top=slot.y+'px';
-    el.style.width=w+'px'; el.style.height=h+'px';
-    var tc=document.createElement('div');
-    tc.className='text-content'; tc.textContent=text;
-    tc.style.fontSize=fontSize+'px';
-    tc.style.color=color||'#2D3436';
-    tc.style.fontWeight=fontWeight||'';
-    tc.style.fontStyle=fontStyle||'';
-    tc.style.textAlign=textAlign||'center';
-    if(bgColor) tc.style.background=bgColor;
-    el.appendChild(tc);
-    addItemHelpers(el, id);
-    var item = finishItem(el, id, w, h);
-    item.text=text; item.fontSize=fontSize; item.color=color||'#2D3436';
-    item.bgColor=bgColor||''; item.fontWeight=fontWeight||'';
-    item.fontStyle=fontStyle||''; item.textAlign=textAlign||'center';
-    if (!silent) { selectedIds=[id]; updateSelection(); saveState(); growCanvas(); }
-    return item;
-  }
-  function addItemHelpers(el, id) {
-    var si=document.createElement('div'); si.className='size-info'; si.id='size-info-'+id; el.appendChild(si);
-    ['nw','ne','sw','se'].forEach(function(p){var h=document.createElement('div');h.className='resize-handle '+p;h.dataset.handle=p;el.appendChild(h);});
-    var rot=document.createElement('div'); rot.className='rot-handle'; el.appendChild(rot);
-    canvas.appendChild(el);
-    hint.style.display='none';
-  }
-  function finishItem(el, id, w, h) {
-    var item = {id:id,el:el,x:parseFloat(el.style.left),y:parseFloat(el.style.top),w:w,h:h,rotation:0,scaleX:1,scaleY:1};
-    items.push(item);
-    updateSizeInfo(item); updateCount(); updatePrice();
-    return item;
-  }
-
-  function updateSizeInfo(item) {
-    var si=document.getElementById('size-info-'+item.id);
-    if(si) si.textContent=pxToMm(item.w)+'\u00D7'+pxToMm(item.h)+' mm';
-  }
-  function updateSizeInputs() {
-    var sel=selectedIds.length===1, inputs=document.getElementById('size-inputs-'+sid), sl=document.getElementById('sel-size-'+sid);
-    if(sel&&selectedIds.length>0){var id=parseInt(selectedIds[0]),item=items.find(function(i){return i.id===id;});
-      if(item){inputs.style.visibility='visible';sl.style.display='none';
-        document.getElementById('w-input-'+sid).value=pxToMm(item.w);
-        document.getElementById('h-input-'+sid).value=pxToMm(item.h);return;}}
-    inputs.style.visibility='hidden';sl.style.display='none';
-  }
-
-  /* ── Interaction ── */
-  function startDrag(e, id) {
-    var item=items.find(function(i){return i.id===id;}); if(!item) return;
-    dragState={type:'move',ids:selectedIds.slice(),ox:e.clientX,oy:e.clientY,startPos:{},guides:{}};
-    getSelected().forEach(function(i){dragState.startPos[i.id]={x:i.x,y:i.y};});
-    item.el.style.cursor='grabbing'; e.preventDefault();
-  }
-  function startResize(e,id,handle){
-    var item=items.find(function(i){return i.id===id;}); if(!item) return;
-    dragState={type:'resize',id:id,handle:handle,ox:e.clientX,oy:e.clientY,sw:item.w,sh:item.h,sx:item.x,sy:item.y};
-    e.preventDefault();
-  }
-  function startRotate(e,id){
-    var item=items.find(function(i){return i.id===id;}); if(!item) return;
-    var r=item.el.getBoundingClientRect();
-    dragState={type:'rotate',id:id,cx:r.left+r.width/2,cy:r.top+r.height/2,
-      startAngle:Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))-item.rotation*Math.PI/180};
-    e.preventDefault();
-  }
-  function applyTransform(item) {
-    item.el.style.transform='rotate('+item.rotation+'deg) scaleX('+item.scaleX+') scaleY('+item.scaleY+')';
-  }
-  function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
-
-  /* ── Alignment guides + pan/zoom ── */
-  function updateGuides(item, items) {
-    var gH=guideH, gV=guideV;
-    gH.style.display='none'; gV.style.display='none';
-    if (!item) return;
-    var SNAP_DIST = 6;
-    var edges = ['t','b','c','l','r','m'];
-    var ie = { t: item.y, b: item.y+item.h, c: item.y+item.h/2, l: item.x, r: item.x+item.w, m: item.x+item.w/2 };
-    items.forEach(function(other) {
-      if (other.id===item.id) return;
-      var oe = { t: other.y, b: other.y+other.h, c: other.y+other.h/2, l: other.x, r: other.x+other.w, m: other.x+other.w/2 };
-      edges.forEach(function(iee) { edges.forEach(function(oee) {
-        if ((iee==='t'||iee==='b'||iee==='c') && (oee==='t'||oee==='b'||oee==='c')) {
-          var d = Math.abs(ie[iee]-oe[oee]);
-          if (d < SNAP_DIST) {
-            var snapY = oe[oee];
-            if (dragState && dragState.type==='move') {
-              dragState.ids.forEach(function(did) {
-                var di = items.find(function(i){return i.id==did;});
-                if (di) { var sp=dragState.startPos[did]; if(sp) di.y = sp.y + (snapY - ie[iee]); }
-              });
-            }
-            var wrapRect = wrap.getBoundingClientRect();
-            gH.style.display='block'; gH.style.top=snapY+'px';
-          }
-        }
-        if ((iee==='l'||iee==='r'||iee==='m') && (oee==='l'||oee==='r'||oee==='m')) {
-          var d = Math.abs(ie[iee]-oe[oee]);
-          if (d < SNAP_DIST) {
-            var snapX = oe[oee];
-            if (dragState && dragState.type==='move') {
-              dragState.ids.forEach(function(did) {
-                var di = items.find(function(i){return i.id==did;});
-                if (di) { var sp=dragState.startPos[did]; if(sp) di.x = sp.x + (snapX - ie[iee]); }
-              });
-            }
-            gV.style.display='block'; gV.style.left=snapX+'px';
-          }
-        }
-      });});
-    });
-  }
-
-  /* ── Zoom / Pan ── */
-  // CANVAS_W/H already set at init (wrap.clientWidth based)
-  function clampPan() {
-    var vw=CANVAS_W, vh=CANVAS_H;
-    var maxX=CANVAS_W - vw/zoom;
-    panX=Math.min(0,Math.max(-maxX,panX));
-    panY=Math.min(0,Math.max(-(CANVAS_H - vh/zoom),panY));
-  }
-  function updateCanvasWH(){}
-  
-  function growCanvas() {
-    var maxB=0;
-    items.forEach(function(i){var b=i.y+i.h;if(b>maxB)maxB=b;});
-    maxB=Math.max(maxB, CANVAS_H);
-    if(maxB>CANVAS_H){
-      CANVAS_H=maxB+40;
-      canvas.style.height=CANVAS_H+'px';
-      wrap.style.height=CANVAS_H+'px';
-      drawGrid();
-    }
-  }
-  function applyZoom() {
-    zoom=Math.max(1,Math.min(5,zoom));
-    updateCanvasWH();
-    clampPan();
-    canvas.style.transform='scale('+zoom+') translate('+panX+'px,'+panY+'px)';
-    zoomDisplay.textContent=Math.round(zoom*100)+'%';
-    drawGrid();
-  }
-  function drawGrid() {
-    var gc=document.getElementById('grid-canvas-'+sid);
-    if(!gc) return;
-    var w=CANVAS_W, h=CANVAS_H;
-    gc.width=w*dpr; gc.height=h*dpr;
-    gc.style.width=w+'px'; gc.style.height=h+'px';
-    var ctx=gc.getContext('2d');
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    var gs=parseInt((document.getElementById('grid-size-'+sid)||{}).value)||20;
-    ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.lineWidth=1;
-    ctx.beginPath();
-    for(var x=0; x<w; x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,CANVAS_H);}
-    for(var y=0; y<h; y+=gs){ctx.moveTo(0,y);ctx.lineTo(CANVAS_W,y);}
-    ctx.stroke();
-  }
-
-  function zoomToFit() {
-    if(items.length===0){zoom=1;panX=0;panY=0;applyZoom();return;}
-    updateCanvasWH();
-    var minX=1/0,minY=1/0,maxX=-1/0,maxY=-1/0;
-    items.forEach(function(i){if(i.x<minX)minX=i.x;if(i.y<minY)minY=i.y;if(i.x+i.w>maxX)maxX=i.x+i.w;if(i.y+i.h>maxY)maxY=i.y+i.h;});
-    var zw=CANVAS_W/(maxX-minX+40), zh=CANVAS_H/(maxY-minY+40);
-    zoom=Math.min(zw,zh,2); zoom=Math.max(zoom,1);
-    var cx=(minX+maxX)/2, cy=(minY+maxY)/2;
-    panX=CANVAS_W/2/zoom-cx; panY=CANVAS_H/2/zoom-cy;
-    applyZoom();
-  }
-
-  /* ── Layer panel ── */
-
-
-  /* ── Mouse events ── */
-  function getCanvasXY(e) {
-    var cr=canvas.getBoundingClientRect();
-    return { x: (e.clientX-cr.left)/zoom, y: (e.clientY-cr.top)/zoom };
-  }
-
-  canvas.addEventListener('mousedown',function(e){updateCanvasWH();
-    var itemEl=e.target.closest('.canvas-item');
-
-    if(itemEl){
-      var cid=parseInt(itemEl.dataset.itemId);
-      if(e.target.classList.contains('resize-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startResize(e,cid,e.target.dataset.handle);return;}
-      if(e.target.classList.contains('rot-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startRotate(e,cid);return;}
-      if(e.ctrlKey||e.metaKey){toggleSelect(cid,true);return;}
-      selectedIds=[cid];updateSelection();
-      if(e.button===1){panX+=e.clientX;panY+=e.clientY;dragState={type:'pan',ox:e.clientX,oy:e.clientY};return;}
-      startDrag(e,cid);return;
-    }
-    if(e.button===1||e.altKey){
-      dragState={type:'pan',ox:e.clientX,oy:e.clientY};return;
-    }
-    if(textToolActive&&(e.target===canvas||e.target.classList.contains('grid-bg'))){
-      var xy=getCanvasXY(e);
-      addTextItem('Text',16,false);return;
-    }
-    if(!(e.ctrlKey||e.metaKey)){selectedIds=[];updateSelection();}
-    var xy=getCanvasXY(e);
-    dragState={type:'selbox',sx:xy.x,sy:xy.y};
-  });
-
-  document.addEventListener('mousemove',function(e){
-    if(!dragState) return;
-  document.addEventListener('touchmove',function(te){
-    if(!dragState||te.touches.length!==1) return;
-    var t=te.touches[0];
-    var e={clientX:t.clientX,clientY:t.clientY,ctrlKey:false,metaKey:false,altKey:false,button:0,target:te.target};
-    var handled=true;
-    if(dragState.type==='pan'){var dx=t.clientX-dragState.ox,dy=t.clientY-dragState.oy;panX+=dx;panY+=dy;dragState.ox=t.clientX;dragState.oy=t.clientY;applyZoom();}
-    else if(dragState.type==='move'){
-      var dx2=(t.clientX-(dragState._touchOx||t.clientX))/zoom, dy2=(t.clientY-(dragState._touchOy||t.clientY))/zoom;
-      if(!dragState._touchOx){dragState._touchOx=t.clientX;dragState._touchOy=t.clientY;}
-      e.clientX=t.clientX; e.clientY=t.clientY;
-      // re-dispatch to existing move logic below
-      handled=false;
-    }
-    else if(dragState.type==='resize'){
-      var item=items.find(function(i){return i.id===dragState.id;}); if(!item) return;
-      var dx3=(t.clientX-dragState.ox)/zoom, dy3=(t.clientY-dragState.oy)/zoom;
-      if(dragState.handle.includes('e')) item.w=Math.max(30,dragState.sw+dx3);
-      if(dragState.handle.includes('w')){var nw=Math.max(30,dragState.sw-dx3);item.x=dragState.sx+dragState.sw-nw;item.w=nw;}
-      if(dragState.handle.includes('s')) item.h=Math.max(30,dragState.sh+dy3);
-      if(dragState.handle.includes('n')){var nh=Math.max(30,dragState.sh-dy3);item.y=dragState.sy+dragState.sh-nh;item.h=nh;}
-      item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
-      item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';
-      updateSizeInfo(item);return;
-    }
-    else if(dragState.type==='rotate'){
-      var item=items.find(function(i){return i.id===dragState.id;});if(!item)return;
-      var dx4=(t.clientX-dragState.ox)/zoom,dy4=(t.clientY-dragState.oy)/zoom;
-      item.rotation=Math.round(Math.atan2(dy4,dx4)*180/Math.PI);
-      item.el.style.transform='translate(-50%,-50%) rotate('+item.rotation+'deg) scale('+item.scaleX+','+item.scaleY+')';return;
-    }
-    if(handled) te.preventDefault();
-  },{passive:false});
-    if(dragState.type==='pan'){var dx=e.clientX-dragState.ox,dy=e.clientY-dragState.oy;panX+=dx;panY+=dy;dragState.ox=e.clientX;dragState.oy=e.clientY;applyZoom();return;}
-    if(dragState.type==='move'){
-      var dx=(e.clientX-dragState.ox)/zoom, dy=(e.clientY-dragState.oy)/zoom;
-      // First pass: compute positions
-      dragState.ids.forEach(function(id){
-        var item=items.find(function(i){return i.id==id;}); if(!item) return;
-        var sp=dragState.startPos[id]; if(!sp) return;
-        item.x=Math.max(0,Math.min(CANVAS_W-item.w,sp.x+dx));
-        item.y=Math.max(0,sp.y+dy);
-        var snap=document.getElementById('snap-btm-'+sid).checked;
-        var gridPx=snap?Math.round(CANVAS_W/600*5):0;
-        if(gridPx>0){item.x=snapVal(item.x,gridPx);item.y=snapVal(item.y,gridPx);}
-      });
-      // Second pass: push apart overlapping items
-      for(var p=0;p<5;p++){var ov=false;
-        for(var ai=0;ai<items.length;ai++){for(var bi=ai+1;bi<items.length;bi++){
-          var a=items[ai],b=items[bi];
-          if(rectsOverlap(a,b)){ov=true;
-            var dx2=(a.x+a.w/2)-(b.x+b.w/2),dy2=(a.y+a.h/2)-(b.y+b.h/2);
-            if(Math.abs(dx2)>Math.abs(dy2)){var push=dx2>0?4:-4;a.x+=push;b.x-=push;}
-            else{var push=dy2>0?4:-4;a.y+=push;b.y-=push;}
-          }
-        }}
-        if(!ov)break;
-      }
-      // Render
-      dragState.ids.forEach(function(id){
-        var item=items.find(function(i){return i.id==id;}); if(!item) return;
-        item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
-        item.el.style.left=item.x+'px'; item.el.style.top=item.y+'px';
-        var valid=items.every(function(o){return o.id==id||!rectsOverlap(item,o);});
-        item.el.style.opacity=valid?'':'0.4';item.el.style.outline=valid?'':'2px solid #FF4444';
-      });
-      guideH.style.display='none';guideV.style.display='none';
-      var primary=items.find(function(i){return i.id==dragState.ids[0];}); if(primary) updateGuides(primary,items);
-      return;
-    }
-    if(dragState.type==='resize'){
-      var item=items.find(function(i){return i.id===dragState.id;}); if(!item) return;
-      var dx=(e.clientX-dragState.ox)/zoom, dy=(e.clientY-dragState.oy)/zoom, h=dragState.handle, minS=30, cw=CANVAS_W, ch=CANVAS_H;
-      if(h.includes('e')) item.w=Math.max(minS,dragState.sw+dx);
-      if(h.includes('w')){var nw=Math.max(minS,dragState.sw-dx);item.x=dragState.sx+dragState.sw-nw;item.w=nw;}
-      if(h.includes('s')) item.h=Math.max(minS,dragState.sh+dy);
-      if(h.includes('n')){var nh=Math.max(minS,dragState.sh-dy);item.y=dragState.sy+dragState.sh-nh;item.h=nh;}
-      item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
-      item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';
-      item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';
-      updateSizeInfo(item); return;
-    }
-    if(dragState.type==='rotate'){
-      var item=items.find(function(i){return i.id===dragState.id;}); if(!item) return;
-      item.rotation=(Math.atan2(e.clientY-dragState.cy,e.clientX-dragState.cx)-dragState.startAngle)*180/Math.PI;
-      applyTransform(item); return;
-    }
-    if(dragState.type==='selbox'){
-      var xy=getCanvasXY(e);
-      var l=Math.min(dragState.sx,xy.x),r=Math.max(dragState.sx,xy.x),t=Math.min(dragState.sy,xy.y),b=Math.max(dragState.sy,xy.y);
-      selBox.style.display='block';selBox.style.left=l+'px';selBox.style.top=t+'px';
-      selBox.style.width=(r-l)+'px';selBox.style.height=(b-t)+'px';
-    }
-  });
-
-  document.addEventListener('mouseup',function(){
-    if(!dragState) return;
-    if(dragState.type==='selbox'){
-      selBox.style.display='none';
-      var sw=parseFloat(selBox.style.width)||0, sh=parseFloat(selBox.style.height)||0;
-      selBox.style.width='0px';selBox.style.height='0px';
-      if(sw>3||sh>3) selectAllInRect(parseFloat(selBox.style.left),parseFloat(selBox.style.top),parseFloat(selBox.style.left)+sw,parseFloat(selBox.style.top)+sh);
-    } else if(dragState.type==='move'){guideH.style.display='none';guideV.style.display='none';
-      // Revert to last valid position if still overlapping
-      dragState.ids.forEach(function(id){
-        var dragged=items.find(function(i){return i.id===id;}); if(!dragged)return;
-        var valid=items.every(function(o){return o.id===id||!rectsOverlap(dragged,o);});
-        if(!valid){
-          var sp=dragState.startPos[id]; if(!sp)return;
-          dragged.x=sp.x; dragged.y=sp.y;
-          dragged.el.style.left=sp.x+'px'; dragged.el.style.top=sp.y+'px';
-          dragged.el.style.opacity=''; dragged.el.style.outline='';
-        } else {
-          dragged.el.style.opacity=''; dragged.el.style.outline='';
-        }
-      });
-      saveState();growCanvas();
-      var item=items.find(function(i){return i.id===dragState.ids[0];}); if(item){item.el.style.cursor='grab';}
-    } else if(dragState.type==='resize'||dragState.type==='rotate'){saveState();growCanvas();
-      var item=items.find(function(i){return i.id===dragState.id;}); if(item) item.el.style.cursor='grab';
-    }
-    dragState=null;
-  });
-
-  /* ── Zoom / Pan via wheel ── */
-  // Handle pinch zoom on touch devices
-  var lastTouchDist=0;
-  wrap.addEventListener('touchmove',function(e){
-    if(e.touches.length===2){
-      e.preventDefault();
-      var dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
-      var dist=Math.sqrt(dx*dx+dy*dy);
-      if(lastTouchDist){var factor=dist/lastTouchDist;zoom=Math.max(1,Math.min(5,zoom*factor));applyZoom();}
-      lastTouchDist=dist;
-    }
-  },{passive:false});
-  wrap.addEventListener('touchend',function(){lastTouchDist=0;});
-  wrap.addEventListener('wheel',function(e){
-    if(!e.ctrlKey&&!e.metaKey) return;
-    e.preventDefault();
-    var rect=wrap.getBoundingClientRect();
-    var mx=(e.clientX-rect.left-20)/zoom-panX, my=(e.clientY-rect.top-40)/zoom-panY;
-    var f=e.deltaY>0?0.9:1.1;
-    zoom*=f; zoom=Math.max(1,Math.min(5,zoom));
-    panX=mx-mx*zoom/(zoom/f); panY=my-my*zoom/(zoom/f);
-    updateCanvasWH();clampPan(); applyZoom();
-  },{passive:false});
-
-  /* ── Toolbar ── */
-  delBtn.addEventListener('click',function(){var sel=getSelected();sel.forEach(function(it){it.el.remove();var idx=items.indexOf(it);if(idx!==-1)items.splice(idx,1);});selectedIds=[];updateSelection();updateCount();updatePrice();saveState();growCanvas();if(items.length===0)hint.style.display='';});
-  dupBtn.addEventListener('click',function(){var sel=getSelected();if(!sel.length)return;saveState();sel.forEach(function(src){var img=src.el.querySelector('img');if(img){var n=addImageItem(img.src,true);n.x=src.x+25;n.y=src.y+25;n.w=src.w;n.h=src.h;n.el.style.left=n.x+'px';n.el.style.top=n.y+'px';n.el.style.width=n.w+'px';n.el.style.height=n.h+'px';}else if(src.text){addTextItem(src.text,src.fontSize||16,true);}});growCanvas();});
-  flipHBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleX*=-1;applyTransform(it);});growCanvas();});
-  flipVBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleY*=-1;applyTransform(it);});});
-  autoBtn.addEventListener('click',function(){
-      saveState(); var cw=CANVAS_W,ch=CANVAS_H,pad=12; var gapInput=document.getElementById('gap-size-'+sid); var gap=gapInput?Math.round(cw/600*parseInt(gapInput.value)||3):Math.round(cw/600*3);
-      if(!items.length){saveState();return;}
-      // Brick-laying: sequential order, fit items into rows
-      var rows=[];
-      items.forEach(function(it){
-        var placed=false;
-        for(var ri=0;ri<rows.length;ri++){
-          var r=rows[ri];
-          if(r.w+gap+it.w<=cw-pad*2){
-            r.items.push(it);r.w+=gap+it.w;r.h=Math.max(r.h,it.h);
-            placed=true;break;
-          }
-        }
-        if(!placed){rows.push({items:[it],w:it.w,h:it.h});}
-      });
-      var yy=pad; rows.forEach(function(r){var xx=pad; r.items.forEach(function(it){it.x=xx;it.y=yy;it.rotation=0;it.el.style.left=xx+'px';it.el.style.top=yy+'px';applyTransform(it);updateSizeInfo(it);xx+=it.w+gap;});yy+=r.h+gap;});
-      saveState();growCanvas();
-    });
-
-  /* ── Text tool ── */
-  textBtn.addEventListener('click',function(){textToolActive=!textToolActive;textBtn.classList.toggle('active',textToolActive);});
-  document.addEventListener('keydown',function(e){
-    if(e.key==='t'||e.key==='T'){textToolActive=!textToolActive;textBtn.classList.toggle('active',textToolActive);}
-    if((e.ctrlKey||e.metaKey)&&e.key==='z'){if(e.shiftKey) redo(); else undo(); e.preventDefault();}
-    if(e.key==='Delete'||e.key==='Backspace'){if(selectedIds.length){delBtn.click();e.preventDefault();}}
-    if(e.key==='Escape'){selectedIds=[];updateSelection();}
-  });
-
-  /* ── Undo/Redo ── */
-  function undo(){if(historyIdx<=0)return;historyIdx--;restoreState(history[historyIdx]);updateHistoryBtns();updateCount();updatePrice();}
-  function redo(){if(historyIdx>=history.length-1)return;historyIdx++;restoreState(history[historyIdx]);updateHistoryBtns();updateCount();updatePrice();}
-  function updateHistoryBtns(){undoBtn.disabled=historyIdx<=0;redoBtn.disabled=historyIdx>=history.length-1;}
-
-  undoBtn.addEventListener('click',undo);
-  redoBtn.addEventListener('click',redo);
-
-  /* ── Zoom fit ── */
-  zoomFitBtn.addEventListener('click',zoomToFit);
-  zoomDisplay.addEventListener('click',function(){zoom=1;panX=0;panY=0;applyZoom();});
-
-  /* ── Layers ── */
-
-  /* ── Export ── */
-  function renderToCanvas() {
-    var cw=CANVAS_W, ch=CANVAS_H;
-    var c = document.createElement('canvas');
-    c.width=cw*2; c.height=ch*2;
-    var ctx=c.getContext('2d');
-    ctx.scale(2,2);
-    ctx.fillStyle='#fff'; ctx.fillRect(0,0,cw,ch);
-    items.forEach(function(it){
-      ctx.save();
-      ctx.translate(it.x+it.w/2,it.y+it.h/2);
-      ctx.rotate(it.rotation*Math.PI/180);
-      ctx.scale(it.scaleX,it.scaleY);
-      ctx.translate(-it.w/2,-it.h/2);
-      var img=it.el.querySelector('img');
-      if(img) ctx.drawImage(img,0,0,it.w,it.h);
-      else if(it.text){
-        ctx.fillStyle=it.color||'#2D3436'; ctx.font=(it.fontStyle||'')+' '+(it.fontWeight||'')+' '+(it.fontSize||16)+'px sans-serif';
-        ctx.textAlign=it.textAlign||'center'; ctx.textBaseline='middle';
-        if(it.bgColor){ctx.fillStyle=it.bgColor;ctx.fillRect(0,0,it.w,it.h);ctx.fillStyle=it.color||'#2D3436';}
-        ctx.fillText(it.text,it.w/2,it.h/2);
-      }
-      ctx.restore();
-    });
-    return c;
-  }
-  exportBtn.addEventListener('click',function(){
-    var expCanvas=renderToCanvas();
-    expCanvas.toBlob(function(blob){
-      if(!blob) return;
-      var fr=new FileReader();
-      fr.onload=function(){
-        var imgData=fr.result;
-        var script=document.createElement('script');
-        script.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script.onload=function(){
-          var doc=new jspdf.jsPDF({orientation:'landscape',unit:'mm',format:[297,210]});
-          var mmPerPx=210/ch;
-          doc.addImage(imgData,'PNG',0,0,cw*mmPerPx,ch*mmPerPx);
-          doc.save('sticker-sheet.pdf');
-        };
-        script.onerror=function(){alert('Could not load PDF library. Check internet connection.');};
-        document.head.appendChild(script);
-      };
-      fr.readAsDataURL(blob);
-    },'image/png');
-  });
-
-  /* ── Text edit on double-click ── */
-  canvas.addEventListener('dblclick',function(e){
-    var itemEl=e.target.closest('.canvas-item');
-    if(!itemEl) return;
-    var tid=parseInt(itemEl.dataset.itemId);
-    var item=items.find(function(i){return i.id===tid;});
-    if(!item||!item.text) return;
-    showEditModal(item,function(data){
-      saveState();
-      item.text=data.text; item.fontSize=data.fontSize; item.color=data.color;
-      item.bgColor=data.bgColor; item.fontWeight=data.fontWeight;
-      item.fontStyle=data.fontStyle; item.textAlign=data.textAlign;
-      var tc=item.el.querySelector('.text-content');
-      tc.textContent=data.text; tc.style.fontSize=data.fontSize+'px';
-      tc.style.color=data.color; tc.style.fontWeight=data.fontWeight;
-      tc.style.fontStyle=data.fontStyle; tc.style.textAlign=data.textAlign;
-      tc.style.background=data.bgColor||'transparent';
-      item.el.style.height=(40+data.fontSize)+'px';
-    });
-  });
-  function showEditModal(item, cb){
-    var curText=item.text||'', curSize=item.fontSize||16, curColor=item.color||'#2D3436';
-    var curBg=item.bgColor||'', curWeight=item.fontWeight||'', curStyle=item.fontStyle||'', curAlign=item.textAlign||'center';
-    var m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;';
-    m.innerHTML='<div style="background:#fff;border-radius:14px;padding:20px;max-width:380px;width:88%;box-shadow:0 20px 60px rgba(0,0,0,0.18);">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'+
-      '<h3 style="margin:0;font-size:0.95rem;font-weight:700;color:#2D3436;">Edit Text</h3>'+
-      '<button id="et-close" style="width:26px;height:26px;border:none;border-radius:5px;background:transparent;cursor:pointer;font-size:1rem;color:#B2BEC3;display:flex;align-items:center;justify-content:center;line-height:1;">\u2715</button></div>'+
-      '<textarea id="et-text" style="width:100%;padding:8px 10px;border:2px solid #DFE6E9;border-radius:8px;font-size:0.85rem;outline:none;resize:none;box-sizing:border-box;min-height:60px;font-family:inherit;">'+curText.replace(/"/g,'&quot;')+'</textarea>'+
-      '<div style="display:flex;gap:6px;margin:10px 0;">'+
-        '<div style="flex:1;"><label style="display:block;font-size:0.65rem;font-weight:600;color:#636E72;margin-bottom:3px;">SIZE</label><input id="et-size" type="number" value="'+curSize+'" min="8" max="120" style="width:100%;padding:5px 6px;border:2px solid #DFE6E9;border-radius:6px;font-size:0.8rem;text-align:center;box-sizing:border-box;outline:none;"></div>'+
-        '<div style="flex:1;"><label style="display:block;font-size:0.65rem;font-weight:600;color:#636E72;margin-bottom:3px;">COLOR</label><input id="et-color" type="color" value="'+curColor+'" style="width:100%;height:32px;border:2px solid #DFE6E9;border-radius:6px;cursor:pointer;padding:1px;box-sizing:border-box;"></div>'+
-        '<div style="flex:1;"><label style="display:block;font-size:0.65rem;font-weight:600;color:#636E72;margin-bottom:3px;">BG</label><input id="et-bg" type="color" value="'+(curBg||'#ffffff')+'" style="width:100%;height:32px;border:2px solid #DFE6E9;border-radius:6px;cursor:pointer;padding:1px;box-sizing:border-box;"></div>'+
-      '</div>'+
-      '<div style="display:flex;gap:4px;margin-bottom:10px;">'+
-        '<button id="et-bold" style="width:36px;height:32px;border:2px solid #DFE6E9;border-radius:6px;background:'+(curWeight==='bold'?'#00CEC9':'#fff')+';color:'+(curWeight==='bold'?'#fff':'#2D3436')+';cursor:pointer;font-weight:700;font-size:0.85rem;transition:all 0.12s;">B</button>'+
-        '<button id="et-italic" style="width:36px;height:32px;border:2px solid #DFE6E9;border-radius:6px;background:'+(curStyle==='italic'?'#00CEC9':'#fff')+';color:'+(curStyle==='italic'?'#fff':'#2D3436')+';cursor:pointer;font-style:italic;font-size:0.85rem;transition:all 0.12s;">I</button>'+
-        '<span style="width:1px;height:20px;background:#DFE6E9;margin:6px 4px;"></span>'+
-        '<button id="et-left" style="width:36px;height:32px;border:2px solid #DFE6E9;border-radius:6px;background:'+(curAlign==='left'?'#00CEC9':'#fff')+';color:'+(curAlign==='left'?'#fff':'#2D3436')+';cursor:pointer;transition:all 0.12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;margin:0 auto;"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="10" x2="14" y2="10"/><line x1="4" y1="14" x2="18" y2="14"/><line x1="4" y1="18" x2="10" y2="18"/></svg></button>'+
-        '<button id="et-center" style="width:36px;height:32px;border:2px solid #DFE6E9;border-radius:6px;background:'+(curAlign==='center'?'#00CEC9':'#fff')+';color:'+(curAlign==='center'?'#fff':'#2D3436')+';cursor:pointer;transition:all 0.12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;margin:0 auto;"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="10" y1="18" x2="14" y2="18"/></svg></button>'+
-        '<button id="et-right" style="width:36px;height:32px;border:2px solid #DFE6E9;border-radius:6px;background:'+(curAlign==='right'?'#00CEC9':'#fff')+';color:'+(curAlign==='right'?'#fff':'#2D3436')+';cursor:pointer;transition:all 0.12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;margin:0 auto;"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="10" x2="20" y2="10"/><line x1="6" y1="14" x2="20" y2="14"/><line x1="12" y1="18" x2="20" y2="18"/></svg></button>'+
-      '</div>'+
-      '<div style="display:flex;gap:6px;">'+
-      '<button class="cfg-btn-sec" style="flex:1;padding:8px;border-radius:8px;border:none;font-size:0.85rem;font-weight:600;cursor:pointer;background:#f1f3f5;color:#636E72;">Cancel</button>'+
-      '<button class="cfg-btn-pry" style="flex:1;padding:8px;border-radius:8px;border:none;font-size:0.85rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00CEC9,#00A8A3);color:#fff;">Save</button></div></div>';
-    document.body.appendChild(m);
-    var inp=m.querySelector('#et-text');inp.focus();inp.select();
-    m.querySelector('#et-bold').classList.toggle('active',curWeight==='bold');
-    m.querySelector('#et-italic').classList.toggle('active',curStyle==='italic');
-    m.querySelector('#et-left').classList.toggle('active',curAlign==='left');
-    m.querySelector('#et-center').classList.toggle('active',curAlign==='center');
-    m.querySelector('#et-right').classList.toggle('active',curAlign==='right');
-    ['bold','italic'].forEach(function(id){var btn=m.querySelector('#et-'+id);btn.onclick=function(){var a=!this.classList.contains('active');this.classList.toggle('active');this.style.background=a?'#00CEC9':'#fff';this.style.color=a?'#fff':'#2D3436';};});
-    ['left','center','right'].forEach(function(a){var btn=m.querySelector('#et-'+a);btn.onclick=function(){['left','center','right'].forEach(function(x){var b=m.querySelector('#et-'+x);b.classList.remove('active');b.style.background='#fff';b.style.color='#2D3436';});this.classList.add('active');this.style.background='#00CEC9';this.style.color='#fff';};});
-    m.querySelector('#et-close').onclick=function(){m.remove();}
-    m.querySelector('.cfg-btn-pry').onclick=function(){
-      var data={
-        text: m.querySelector('#et-text').value.trim(),
-        fontSize: parseInt(m.querySelector('#et-size').value)||16,
-        color: m.querySelector('#et-color').value,
-        bgColor: m.querySelector('#et-bg').value,
-        fontWeight: m.querySelector('#et-bold').classList.contains('active')?'bold':'',
-        fontStyle: m.querySelector('#et-italic').classList.contains('active')?'italic':'',
-        textAlign: ['left','center','right'].find(function(a){return m.querySelector('#et-'+a).classList.contains('active');})||'center'
-      };
-      if(data.text){cb(data);m.remove();}
-    }
-    m.querySelector('.cfg-btn-sec').onclick=function(){m.remove();}
-    m.onclick=function(e){if(e.target===m)m.remove();}
-    inp.onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey){m.querySelector('.cfg-btn-pry').click();}if(e.key==='Escape')m.remove();}
-  }
-  function showConfirmModal(msg, cb){
-    var m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
-    m.innerHTML='<div style="background:#fff;border-radius:20px;padding:24px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.15);">'+
-      '<p style="margin:0 0 20px;font-size:0.95rem;color:var(--cfg-text,#2D3436);line-height:1.4;">'+msg+'</p>'+
-      '<div style="display:flex;gap:8px;justify-content:flex-end;">'+
-      '<button class="cfg-btn-sec" style="padding:8px 20px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:#f5f5f5;color:#636E72;">Cancel</button>'+
-      '<button class="cfg-btn-danger" style="padding:8px 20px;border-radius:10px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;background:#FF4444;color:#fff;">OK</button></div></div>';
-    document.body.appendChild(m);
-    m.querySelector('.cfg-btn-danger').onclick=function(){cb();m.remove();}
-    m.querySelector('.cfg-btn-sec').onclick=function(){m.remove();}
-    m.onclick=function(e){if(e.target===m)m.remove();}
-  }
-
-  /* ── Modal ── */
-  var modalFile=null;
-  var modalEl = document.getElementById('modal-{{ section.id }}');
-  var modalZone=document.getElementById('modal-zone-'+sid),modalFname=document.getElementById('modal-fname-'+sid);
-  var modalW=document.getElementById('modal-w-'+sid),modalH=document.getElementById('modal-h-'+sid);
-  var modalQty=document.getElementById('modal-qty-'+sid),modalAddBtn=document.getElementById('modal-add-'+sid),modalCancel=document.getElementById('modal-cancel-'+sid);
-
-  document.getElementById('add-btn-'+sid).addEventListener('click',function(){modalFile=null;modalW.value=50;modalH.value=50;modalQty.value=3;modalAddBtn.disabled=true;modalFname.style.display='none';modalZone.querySelector('.cfg-modal-text').textContent='Click to choose a design file';modalZone.querySelector('.cfg-modal-icon').innerHTML='&#x1F5BC;';modalEl.style.display='flex';fileInput.value='';});
-  modalZone.addEventListener('click',function(){fileInput.click();});
-  modalCancel.addEventListener('click',function(){modalEl.style.display='none';});
-  fileInput.addEventListener('change',function(){if(this.files.length){modalFile=this.files[0];modalFname.textContent=modalFile.name;modalFname.style.display='block';modalZone.querySelector('.cfg-modal-text').textContent='File selected';modalZone.querySelector('.cfg-modal-icon').innerHTML='&#x2705;';modalAddBtn.disabled=false;}});
-  modalAddBtn.addEventListener('click',function(){if(!modalFile)return;var reader=new FileReader(),qty=parseInt(modalQty.value)||1,wMm=parseInt(modalW.value)||50,hMm=parseInt(modalH.value)||50;modalEl.style.display='none';reader.onload=function(e){for(var i=0;i<qty;i++){var item=addImageItem(e.target.result,false);item.w=wMm/600*(CANVAS_W);item.h=hMm/600*(CANVAS_W);item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';}growCanvas();saveState();document.getElementById('auto-btn-'+sid).click();};reader.readAsDataURL(modalFile);});
-  function handleFile(f){if(!f.type.match('image.*'))return;modalFile=f;modalFname.textContent=f.name;modalFname.style.display='block';modalZone.querySelector('.cfg-modal-text').textContent='File selected';modalZone.querySelector('.cfg-modal-icon').innerHTML='&#x2705;';modalAddBtn.disabled=false;if(modalEl)modalEl.style.display='flex';}
-
-  canvas.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);});
-  canvas.addEventListener('dragover',function(e){e.preventDefault();});
-
-  /* ── Quantity ── */
-  document.getElementById('qty-down-'+sid).addEventListener('click',function(){var q=parseInt(qtyEl.textContent)||1;if(q>1)qtyEl.textContent=q-1;updatePrice();});
-  document.getElementById('qty-up-'+sid).addEventListener('click',function(){qtyEl.textContent=(parseInt(qtyEl.textContent)||1)+1;updatePrice();});
-
-  /* ── Size inputs ── */
-  document.getElementById('w-input-'+sid).addEventListener('input',function(){var id=parseInt(selectedIds[0]),item=items.find(function(i){return i.id===id;});if(!item)return;item.w=Math.max(20,mmToPx(parseInt(this.value)||50));item.el.style.width=item.w+'px';updateSizeInfo(item);updatePrice();});
-  document.getElementById('h-input-'+sid).addEventListener('input',function(){var id=parseInt(selectedIds[0]),item=items.find(function(i){return i.id===id;});if(!item)return;item.h=Math.max(20,mmToPx(parseInt(this.value)||50));item.el.style.height=item.h+'px';updateSizeInfo(item);updatePrice();});
-  document.getElementById('w-input-'+sid).addEventListener('change',function(){saveState();growCanvas();});
-  document.getElementById('h-input-'+sid).addEventListener('change',function(){saveState();growCanvas();});
-
-  function updateCount(){var sel=selectedIds.length;countEl.textContent=items.length+' items'+(sel?' ('+sel+' selected)':'');}
-  function updatePrice(){var qty=parseInt(qtyEl.textContent)||1;priceEl.textContent='$'+(basePrice*(items.length||1)*qty).toFixed(2);}
-
-  /* ── Mobile toggle ── */
-  var mobile=false;
-  mobileBtn.addEventListener('click',function(){
-    mobile=!mobile;
-    document.querySelector('.sticker-config-'+sid).classList.toggle('mobile-mode',mobile);
-    if(mobile){wrap.style.height='';}
-    else{canvas.style.height=CANVAS_H+'px';wrap.style.height=CANVAS_H+'px';}
-    mobileBtn.innerHTML=mobile?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
-    setTimeout(function(){zoomToFit();},100);
-  });
-
-
-
-
-
-  /* ── Bottom panel ── */
-
-  // Background color
-  document.getElementById('bg-color-'+sid).addEventListener('input',function(){
-    document.querySelector('.sticker-config-'+sid+' .grid-bg').style.background=this.value;
-    canvas.style.background=this.value;
-  });
-
-  // Clear all
-  document.getElementById('clear-btn-'+sid).addEventListener('click',function(){
-    if(items.length===0)return;
-    showConfirmModal('Clear all designs?',function(){
-      saveState();
-      items.slice().forEach(function(it){it.el.remove();});
-      items.length=0; selectedIds=[]; updateSelection(); updateCount(); updatePrice(); saveState();
-      hint.style.display='';
-    });
-  });
-  // Bottom panel buttons
-  document.getElementById('snap-btm-'+sid).addEventListener('change',function(){
-    document.getElementById('snap-btm-'+sid).checked = this.checked;
-  });
-
-  document.getElementById('grid-size-'+sid).addEventListener('change',function(){ drawGrid(); });
-  document.getElementById('gap-size-'+sid).addEventListener('change',function(){});
-
-  function updateStats(){
-    var el=document.getElementById('stats-'+sid);
-    if(!el)return;
-    var area=0; items.forEach(function(it){area+=it.w*it.h;});
-    var areaCm=Math.round(area/CANVAS_W*600/CANVAS_W*600/100);
-    el.textContent=items.length+' items · '+areaCm+' cm²';
-  }
-  // Patch updateCount/updatePrice to also call updateStats
-  var origUC=updateCount; updateCount=function(){origUC();updateStats();};
-
-
-  /* ── Touch events (mobile) ── */
-  var touchStarted=null;
-  canvas.addEventListener('touchstart',function(te){
-    if(te.touches.length!==1) return;
-    var t=te.touches[0]; updateCanvasWH();
-    var itemEl=te.target.closest('.canvas-item');
-    if(itemEl){
-      var cid=parseInt(itemEl.dataset.itemId);
-      if(te.target.classList.contains('resize-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startResize({clientX:t.clientX,clientY:t.clientY},cid,te.target.dataset.handle);return;}
-      if(te.target.classList.contains('rot-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startRotate({clientX:t.clientX,clientY:t.clientY},cid);return;}
-      if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();touchStarted={ox:t.clientX,oy:t.clientY,type:'pan',sel:true};return;}
-      startDrag({clientX:t.clientX,clientY:t.clientY},cid);return;
-    }
-    selectedIds=[];updateSelection();touchStarted={ox:t.clientX,oy:t.clientY,type:'pan'};
-  },{passive:false});
-  canvas.addEventListener('touchmove',function(te){
-    if(te.touches.length===2){/* pinch handled elsewhere */return;}
-    if(!dragState&&touchStarted&&te.touches.length===1){
-      var t=te.touches[0];
-      if(touchStarted.sel) return;
-      var dx=t.clientX-touchStarted.ox,dy=t.clientY-touchStarted.oy;
-      // Only pan if horizontal movement is significant AND the container can't scroll
-      if(Math.abs(dx)<20) return; // let browser handle vertical/light movement
-      if(Math.abs(dx)<Math.abs(dy)*1.5) return; // mostly vertical → let browser scroll
-      te.preventDefault();
-      panX+=dx;panY+=dy;touchStarted.ox=t.clientX;touchStarted.oy=t.clientY;touchStarted.oy=t.clientY;applyZoom();return;
-    }
-    if(!dragState||te.touches.length!==1) return;
-    te.preventDefault();
-    var t=te.touches[0];
-    if(dragState.type==='move'){
-      // Movement threshold to reduce jitter
-      var mx=t.clientX-(dragState._lastX||dragState.ox), my=t.clientY-(dragState._lastY||dragState.oy);
-      if(Math.abs(mx)<2&&Math.abs(my)<2){dragState._lastX=t.clientX;dragState._lastY=t.clientY;return;}
-      dragState._lastX=t.clientX;dragState._lastY=t.clientY;
-      var dx=(t.clientX-dragState.ox)/zoom, dy=(t.clientY-dragState.oy)/zoom;
-      dragState.ids.forEach(function(id){
-        var item=items.find(function(i){return i.id==id;});if(!item)return;
-        var sp=dragState.startPos[id];if(!sp)return;
-        item.x=Math.max(0,Math.min(CANVAS_W-item.w,sp.x+dx));item.y=Math.max(0,sp.y+dy);
-      });
-      for(var p=0;p<5;p++){var ov=false;for(var ai=0;ai<items.length;ai++){for(var bi=ai+1;bi<items.length;bi++){var a=items[ai],b=items[bi];if(rectsOverlap(a,b)){ov=true;var dx2=(a.x+a.w/2)-(b.x+b.w/2),dy2=(a.y+a.h/2)-(b.y+b.h/2);if(Math.abs(dx2)>Math.abs(dy2)){var push=dx2>0?4:-4;a.x+=push;b.x-=push;}else{var push=dy2>0?4:-4;a.y+=push;b.y-=push;}}}}if(!ov)break;}
-      dragState.ids.forEach(function(id){
-        var item=items.find(function(i){return i.id==id;});if(!item)return;
-        item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
-        item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';
-        var valid=items.every(function(o){return o.id==id||!rectsOverlap(item,o);});
-        item.el.style.opacity=valid?'':'0.4';item.el.style.outline=valid?'':'2px solid #FF4444';
-      });
-    } else if(dragState.type==='resize'){
-      var item=items.find(function(i){return i.id===dragState.id;});if(!item)return;
-      var dx=(t.clientX-dragState.ox)/zoom,dy=(t.clientY-dragState.oy)/zoom;
-      if(dragState.handle.includes('e')) item.w=Math.max(30,dragState.sw+dx);
-      if(dragState.handle.includes('w')){var nw=Math.max(30,dragState.sw-dx);item.x=dragState.sx+dragState.sw-nw;item.w=nw;}
-      if(dragState.handle.includes('s')) item.h=Math.max(30,dragState.sh+dy);
-      if(dragState.handle.includes('n')){var nh=Math.max(30,dragState.sh-dy);item.y=dragState.sy+dragState.sh-nh;item.h=nh;}
-      item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
-      item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';
-      updateSizeInfo(item);
-    }
-  },{passive:false});
-  canvas.addEventListener('touchend',function(te){
-    if(dragState&&dragState.type==='move'){
-      guideH.style.display='none';guideV.style.display='none';
-      dragState.ids.forEach(function(id){
-        var dragged=items.find(function(i){return i.id===id;});if(!dragged)return;
-        var valid=items.every(function(o){return o.id===id||!rectsOverlap(dragged,o);});
-        if(!valid){var sp=dragState.startPos[id];if(sp){dragged.x=sp.x;dragged.y=sp.y;dragged.el.style.left=sp.x+'px';dragged.el.style.top=sp.y+'px';}}
-        dragged.el.style.opacity='';dragged.el.style.outline='';
-      });
-      saveState();growCanvas();
-    } else if(dragState&&(dragState.type==='resize'||dragState.type==='rotate')){saveState();growCanvas();}
-    dragState=null;touchStarted=null;
-  },{passive:true});
-
-  /* ── Clipboard ── */
-  var clipboard = null;
-  document.addEventListener('keydown',function(e){
-    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
-    if((e.ctrlKey||e.metaKey)&&e.key==='c'&&selectedIds.length){
-      e.preventDefault();
-      var sel=getSelected();
-      clipboard=sel.map(function(it){return {src:it.el.querySelector('img')?it.el.querySelector('img').src:null,isText:!!it.text,text:it.text||'',fontSize:it.fontSize||16,color:it.color||'#2D3436',bgColor:it.bgColor||'',fontWeight:it.fontWeight||'',fontStyle:it.fontStyle||'',textAlign:it.textAlign||'center',w:it.w,h:it.h};});
-    }
-    if((e.ctrlKey||e.metaKey)&&e.key==='v'&&clipboard){
-      e.preventDefault(); saveState(); var autoBtn=document.getElementById('auto-btn-'+sid);
-      clipboard.forEach(function(cd){
-        if(cd.isText){
-          var item=addTextItem(cd.text,cd.fontSize,true,cd.color,cd.bgColor,cd.fontWeight,cd.fontStyle,cd.textAlign);
-          if(item){item.x+=20;item.y+=20;item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
-        } else if(cd.src){
-          var img=new Image();
-          img.onload=function(){
-            var item=addImageItem(cd.src,true);
-            item.w=cd.w;item.h=cd.h;
-            item.el.style.width=cd.w+'px';item.el.style.height=cd.h+'px';
-            if(item.el.querySelector('img')){item.el.querySelector('img').style.width=cd.w+'px';item.el.querySelector('img').style.height=cd.h+'px';}
-            item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';
-            saveState();growCanvas();
-            if(autoBtn) autoBtn.click();
-          };
-          img.src=cd.src;
-          return;
-        }
-      });
-      saveState();growCanvas();
-      if(autoBtn) autoBtn.click();
-    }
-  });
-
-  /* ── Lock / Unlock ── */
-  var lockBtn=document.getElementById('lock-btn-'+sid);
-  lockBtn.addEventListener('click',function(){
-    var sel=getSelected();
-    if(!sel.length) return;
-    var allLocked=sel.every(function(it){return it.locked;});
-    sel.forEach(function(it){it.locked=!allLocked;it.el.style.opacity=it.locked?'0.6':'1';it.el.style.cursor=it.locked?'default':'grab';});
-    updateSelection();
-  });
-  // Update lock button state on selection
-  var origUpdateSel=updateSelection;
-  updateSelection=function(){
-    origUpdateSel();
-    var sel=getSelected();
-    lockBtn.disabled=sel.length===0;
-    if(sel.length===1){lockBtn.classList.toggle('active',!!sel[0].locked);}
-  };
-
-  /* ── Alignment tools ── */
-  function alignItems(dir){
-    var sel=getSelected(); if(sel.length<1) return;
-    saveState();
-    if(dir==='left'){var mx=Math.min.apply(null,sel.map(function(it){return it.x;}));sel.forEach(function(it){it.x=mx;});}
-    else if(dir==='right'){var mx=Math.max.apply(null,sel.map(function(it){return it.x+it.w;}));sel.forEach(function(it){it.x=mx-it.w;});}
-    else if(dir==='h'){var cx=0;sel.forEach(function(it){cx+=it.x+it.w/2;});cx/=sel.length;sel.forEach(function(it){it.x=cx-it.w/2;});}
-    else if(dir==='top'){var my=Math.min.apply(null,sel.map(function(it){return it.y;}));sel.forEach(function(it){it.y=my;});}
-    else if(dir==='bot'){var my=Math.max.apply(null,sel.map(function(it){return it.y+it.h;}));sel.forEach(function(it){it.y=my-it.h;});}
-    else if(dir==='v'){var cy=0;sel.forEach(function(it){cy+=it.y+it.h/2;});cy/=sel.length;sel.forEach(function(it){it.y=cy-it.h/2;});}
-    else if(dir==='dist-h'&&sel.length>2){
-      var sorted=sel.slice().sort(function(a,b){return a.x-b.x;});
-      var first=sorted[0],last=sorted[sorted.length-1];
-      var totalW=0;sorted.forEach(function(it,i){if(i>0&&i<sorted.length-1)totalW+=it.w;});
-      var gap=(last.x+last.w-first.x-totalW)/(sorted.length-1);
-      var cx=first.x+first.w+gap;
-      for(var i=1;i<sorted.length-1;i++){sorted[i].x=cx;cx+=sorted[i].w+gap;}
-    }
-    else if(dir==='dist-v'&&sel.length>2){
-      var sorted=sel.slice().sort(function(a,b){return a.y-b.y;});
-      var first=sorted[0],last=sorted[sorted.length-1];
-      var totalH=0;sorted.forEach(function(it,i){if(i>0&&i<sorted.length-1)totalH+=it.h;});
-      var gap=(last.y+last.h-first.y-totalH)/(sorted.length-1);
-      var cy=first.y+first.h+gap;
-      for(var i=1;i<sorted.length-1;i++){sorted[i].y=cy;cy+=sorted[i].h+gap;}
-    }
-    sel.forEach(function(it){it.el.style.left=it.x+'px';it.el.style.top=it.y+'px';});
-    saveState();growCanvas();
-  }
-  ['left','right','h','top','bot','v'].forEach(function(d){
-    var btn=document.getElementById('align-'+d+'-'+sid);
-    if(btn) btn.addEventListener('click',function(){alignItems(d);});
-  });
-
-  // Prevent drag/select for locked items
-  var origStartDrag=startDrag;
-  startDrag=function(e,id){
-    var item=items.find(function(i){return i.id===id;});
-    if(item&&item.locked) return;
-    origStartDrag(e,id);
-  };
-  var origStartResize=startResize;
-  startResize=function(e,id,h){
-    var item=items.find(function(i){return i.id===id;});
-    if(item&&item.locked) return;
-    origStartResize(e,id,h);
-  };
-  /* ── Init ── */
-  saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
-  canvas.style.cursor = textToolActive ? 'crosshair' : 'default';
-  // Auto-detect mobile: activate mobile mode for touch+small screens
-  if(window.innerWidth<768||('ontouchstart' in window&&window.innerWidth<1024)){
-    var isMobile=mobileBtn.getAttribute('data-auto')!=='false';
-    if(isMobile) mobileBtn.click();
-  }
-  setInterval(function(){canvas.style.cursor=textToolActive?'crosshair':(selectedIds.length?'default':'default');},200);
-})();
-</script>
+</sticker-configurator>
 
 {% schema %}
 {
@@ -1334,17 +197,185 @@
   "tag": "section",
   "class": "sticker-configurator",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Design Your Sticker Sheet" },
-    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Arrange your stickers on a 60cm workspace" },
-    { "type": "color", "id": "bg_color", "label": "Background", "default": "#F8F9FA" },
-    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 100, "step": 4, "default": 48 },
-    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 100, "step": 4, "default": 48 }
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Design Your Sticker Sheet"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "Arrange your stickers on a 60cm workspace"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background",
+      "default": "#F8F9FA"
+    },
+    {
+      "type": "number",
+      "id": "base_price",
+      "label": "Base price per sheet ($)",
+      "default": 2.5,
+      "min": 0,
+      "max": 999,
+      "step": 0.5,
+      "info": "Base price used for dynamic pricing calculation"
+    },
+    {
+      "type": "range",
+      "id": "grid_size",
+      "label": "Grid size (px)",
+      "min": 5,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "checkbox",
+      "id": "snap_enabled",
+      "label": "Snap to grid enabled by default",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "gap_mm",
+      "label": "Default gap between items (mm)",
+      "min": 3,
+      "max": 50,
+      "step": 1,
+      "unit": "mm",
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "header",
+      "content": "Feature Toggles"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_clipboard",
+      "label": "Enable clipboard (Ctrl+C/V)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_export",
+      "label": "Enable PDF export",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_auto_arrange",
+      "label": "Enable auto-arrange",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_undo_redo",
+      "label": "Enable undo/redo",
+      "default": true,
+      "info": "50-step stack"
+    }
   ],
+  "blocks": [],
+  "max_blocks": 0,
   "presets": [
     {
       "name": "Sticker Configurator",
-      "category": "Custom"
+      "category": "Custom",
+      "settings": {
+        "heading": "Design Your Sticker Sheet",
+        "subtext": "Arrange your stickers on a 60cm workspace",
+        "bg_color": "#F8F9FA",
+        "base_price": 2.5,
+        "grid_size": 20,
+        "snap_enabled": true,
+        "gap_mm": 3,
+        "enable_clipboard": true,
+        "enable_export": true,
+        "enable_auto_arrange": true,
+        "enable_undo_redo": true,
+        "padding_top": 48,
+        "padding_bottom": 48
+      }
     }
-  ]
+  ],
+  "locales": {
+    "en": {
+      "heading": "Design Your Sticker Sheet",
+      "subtext": "Arrange your stickers on a 60cm workspace",
+      "undo": "Undo",
+      "redo": "Redo",
+      "auto_arrange": "Auto arrange",
+      "delete_selected": "Delete selected",
+      "duplicate": "Duplicate",
+      "flip_h": "Flip H",
+      "flip_v": "Flip V",
+      "align_left": "Align left",
+      "align_center_h": "Align center H",
+      "align_right": "Align right",
+      "align_top": "Align top",
+      "align_center_v": "Align center V",
+      "align_bottom": "Align bottom",
+      "distribute_h": "Distribute H",
+      "distribute_v": "Distribute V",
+      "add_text": "Add text",
+      "zoom_to_fit": "Zoom to fit",
+      "export_pdf": "Export PDF",
+      "lock": "Lock",
+      "mobile": "Mobile",
+      "add_design": "Add design",
+      "pieces": "pieces",
+      "add_to_cart": "Add to Cart",
+      "add_design_modal_title": "Add Design",
+      "cancel": "Cancel",
+      "add_to_canvas": "Add to Canvas",
+      "clear_canvas_confirm": "Clear all designs?",
+      "clear_all": "Clear",
+      "items": "items",
+      "selected": "selected",
+      "items_count": "items",
+      "mm": "mm",
+      "w_label": "W",
+      "h_label": "H",
+      "copies_label": "Copies",
+      "snap_grid": "Grid",
+      "gap": "Gap",
+      "canvas_hint": "Add a design or press T to add text",
+      "hint_text": "Middle-click drag to pan | Scroll to zoom | T to add text",
+      "pdf_load_error": "Could not load PDF library. Check internet connection.",
+      "edit_text_title": "Edit Text",
+      "size_label": "SIZE",
+      "color_label": "COLOR",
+      "bg_label": "BG",
+      "save": "Save",
+      "design_selected": "File selected",
+      "choose_design": "Click to choose a design file"
+    }
+  }
 }
 {% endschema %}

@@ -1,0 +1,243 @@
+{
+  "schema_version": "1.0",
+  "project_scope": "Complete refactor of the SplashStickers sticker-configurator section (3 files: 285 lines Liquid, 2340 lines JS, 709 lines CSS = 3334 total). Modernize to Horizon OS 2.0 standards with SOLID principles, Web Component encapsulation, and 25 features across a 600mm canvas workspace.",
+  "business_deliverables": [
+    "Working sticker configurator with add design/text, drag/resize, multi-select, delete/duplicate/flip/lock operations",
+    "6-direction alignment + distribute, brick-laying auto-arrange, snap-to-grid, DPR-aware grid rendering",
+    "Push-apart collision avoidance, grow canvas, 50-step undo/redo, zoom (min 100%), pan",
+    "Clipboard (Ctrl+C/V), export PDF (jsPDF), mobile mode with body scroll, auto-detect mobile",
+    "Touch handlers (drag/resize/pinch-zoom), SVG Lucide-style icons, custom modals, quantity/price display",
+    "Clean architecture: Web Component (ES6 class) with bounded contexts, CSS Custom Properties, schema-driven settings",
+    "No Turkish in code, no !important, no browser dialogs, no deprecated Liquid patterns"
+  ],
+  "shopify_primitives": {
+    "sections": [
+      {
+        "name": "sticker-configurator",
+        "type": "section",
+        "purpose": "Main sticker configurator: canvas workspace with drag/resize/edit for sticker designs and text items. Includes toolbar, info bar, size inputs, canvas area with grid, sticky controls (upload, quantity, price, add-to-cart), and custom modals."
+      }
+    ],
+    "blocks": [],
+    "metafields": [
+      {
+        "namespace": "custom",
+        "key": "sticker_base_price",
+        "type": "number_decimal",
+        "owner": "product",
+        "purpose": "Base price per sticker sheet for dynamic pricing calculation"
+      }
+    ]
+  },
+  "file_manifest": {
+    "sections/sticker-configurator.liquid": "285 lines — Liquid template with schema, presets, locales, and Web Component mount point. Must remain lean; heavy logic lives in JS.",
+    "assets/sticker-configurator.js": "2340 lines — ES6 Web Component class (StickerConfigurator extends HTMLElement). Target: refactor into bounded modules, reduce monolith size, extract helper functions.",
+    "assets/sticker-configurator.css": "709 lines — Scoped styles under .sticker-configurator. CSS Custom Properties architecture. Mobile-first."
+  },
+  "design_language": {
+    "brand_colors": {
+      "primary": "#00CEC9",
+      "accent": "#6C5CE7",
+      "pink": "#FD79A8",
+      "gold": "#FDCB6E",
+      "text": "#2D3436",
+      "muted": "#636E72",
+      "border": "#DFE6E9",
+      "background": "#F8F9FA",
+      "danger": "#FF4444"
+    },
+    "typography": {
+      "font_family": "Inter",
+      "base_size": "16px"
+    },
+    "interaction_patterns": [
+      "Hover states on toolbar buttons (bg #fff, color var(--cfg-primary))",
+      "Disabled buttons: opacity 0.25, no hover effect",
+      "Transition: 0.12s on background/color/box-shadow",
+      "SVG Lucide-style inline icons (14-16px, stroke)",
+      "Custom modals with backdrop, no browser dialogs",
+      "Focus-visible outlines on all interactive elements"
+    ],
+    "css_variables": {
+      "required": [
+        "--cfg-primary",
+        "--cfg-accent"
+      ],
+      "recommended": [
+        "--cfg-pink",
+        "--cfg-gold",
+        "--cfg-text",
+        "--cfg-muted",
+        "--cfg-border",
+        "--cfg-bg",
+        "--cfg-danger",
+        "--cfg-sidebar-width",
+        "--cfg-gap"
+      ]
+    }
+  },
+  "critical_layout_rules": {
+    "desktop": {
+      "section": "position:sticky; top:100px",
+      "product_grid": "grid-template-columns: 1fr min(50vw, 400px); gap: 40px",
+      "sidebar_content": "grid-column: 2"
+    },
+    "mobile": {
+      "body": "overflow:auto (scrollable)",
+      "section": "position:static (body scrolls naturally)",
+      "canvas_wrap.height": "set at init via CANVAS_H, NEVER cleared on mobile",
+      "canvas.style.height": "set at init via CANVAS_H, NEVER cleared on mobile"
+    },
+    "canvas": {
+      "canvas_wrap": "position:relative; overflow:hidden",
+      "canvas_area": "position:absolute; inset:0; overflow:visible",
+      "grid_bg": "overflow:hidden",
+      "CANVAS_W": "wrap.clientWidth (frozen at init)",
+      "CANVAS_H": "CANVAS_W * 400 / 600 (rounded)",
+      "1mm": "CANVAS_W / 600px (pixels per mm)"
+    },
+    "sticky_controls": {
+      "sticky-ctrls": "position:sticky; bottom:0; z-index:50"
+    },
+    "grid": {
+      "dpr_aware": "use devicePixelRatio for canvas rendering",
+      "grid_size_default": "20px",
+      "snap_default": "enabled",
+      "gap_default": "3mm"
+    }
+  },
+  "feature_matrix": {
+    "canvas_features": [
+      "600mm virtual workspace",
+      "DPR-aware grid rendering (canvas)",
+      "Snap-to-grid (configurable cell size 5-100px)",
+      "Push-apart collision avoidance",
+      "Grow canvas on overflow",
+      "Zoom (minimum 100%, no zoom-out)",
+      "Pan (middle-click drag)"
+    ],
+    "item_operations": [
+      "Add design from file upload (PNG, JPEG, SVG, WebP)",
+      "Add text items (T key or button)",
+      "Drag to position on canvas",
+      "Resize via corner handles",
+      "Multi-select (Shift+click or drag-select)",
+      "Delete selected",
+      "Duplicate selected",
+      "Flip horizontal / vertical",
+      "Lock/unlock items"
+    ],
+    "alignment": [
+      "Align left / center H / right",
+      "Align top / center V / bottom",
+      "Distribute horizontally / vertically"
+    ],
+    "arrangement": [
+      "Auto-arrange (brick-laying sequential)",
+      "Manual drag placement"
+    ],
+    "history": [
+      "Undo/redo with 50-step limit",
+      "History tracks: add, delete, move, resize, flip, text edit, duplicate, lock"
+    ],
+    "export": [
+      "PDF export (jsPDF library)",
+      "Canvas state serialization for cart"
+    ],
+    "mobile": [
+      "Auto-detect: width<768 OR (touch device AND width<1024)",
+      "Body scroll mode (section not sticky)",
+      "Tap-to-select first, then drag on second touch",
+      "Touch handlers for drag/resize",
+      "Pinch-zoom on canvas",
+      "touch-action: manipulation on both layers"
+    ],
+    "ui_components": [
+      "SVG Lucide-style icons (no external icon library)",
+      "Custom modal for adding designs (file picker + size + copies)",
+      "Custom modal for text editing (content, font size, color, background)",
+      "Quantity selector (+/- buttons)",
+      "Price display (dynamic, based on item count × base price)",
+      "Info bar (item count, selection size, hint text)",
+      "Snap/grid/color controls in bottom bar"
+    ],
+    "clipboard": [
+      "Ctrl+C / Ctrl+V for copy/paste items",
+      "Preserves item properties (size, rotation, flip state)"
+    ]
+  },
+  "architecture_constraints": {
+    "pattern": "ES6 Web Component (class extends HTMLElement, Light DOM)",
+    "state_management": "Single this.state object (no external state library)",
+    "event_communication": "CustomEvent dispatching for inter-component communication",
+    "schema": "JSON schema in {% schema %} with settings, presets, and locales",
+    "template_engine": "Liquid {% render %} only — no {% include %}",
+    "jquery_banned": true,
+    "framework_banned": true,
+    "no_turkish_in_code": true,
+    "no_browser_dialogs": "All confirm/alert/prompt replaced with custom modals",
+    "minimize_important": true
+  },
+  "accessibility": {
+    "wcag_level": "AA",
+    "requirements": [
+      "aria-label on all toolbar buttons (from schema locales)",
+      "aria-modal='true' on dialog elements",
+      "role='dialog' on modals",
+      "Focus-visible outlines on all interactive elements",
+      "Semantic HTML structure (button, input, h2, p)",
+      "Color contrast ratio >= 4.5:1",
+      "Prefers-reduced-motion support",
+      "Keyboard navigation: Tab between controls, Enter/Space to activate",
+      "Disabled state styling for buttons (opacity change)"
+    ]
+  },
+  "performance_targets": {
+    "pagespeed_score": 85,
+    "lcp_target": "<2.5s",
+    "cls_target": "<0.1",
+    "fid_target": "<100ms",
+    "strategies": [
+      "Preload CSS in Liquid (already: <link rel='preload'>)",
+      "Defer JS with 'defer' attribute (already present)",
+      "Canvas rendering uses requestAnimationFrame",
+      "Grid canvas redraws only on zoom/resize/pan — not on every frame",
+      "No external library for icons (inline SVG)",
+      "jsPDF loaded on demand for export only"
+    ]
+  },
+  "dependencies": {
+    "external_libraries": [
+      {
+        "name": "jsPDF",
+        "version": "latest",
+        "purpose": "PDF export of canvas state",
+        "loading": "dynamic import on export button click"
+      }
+    ],
+    "note": "Hard bias against any non-vanilla frameworks. jsPDF is the only allowed external dependency."
+  },
+  "web_components_required": true,
+  "web_component_spec": {
+    "class_name": "StickerConfigurator",
+    "extends": "HTMLElement",
+    "dom_strategy": "Light DOM (no Shadow DOM — Shopify theme compatibility)",
+    "lifecycle_methods": [
+      "constructor() — init abortController, empty state",
+      "connectedCallback() — requestAnimationFrame → init()",
+      "disconnectedCallback() — abortController.abort(), null all refs",
+      "attributeChangedCallback() — re-init on section-id change"
+    ],
+    "custom_events": {
+      "dispatches": [
+        "sticker-configurator:item-added",
+        "sticker-configurator:item-removed",
+        "sticker-configurator:selection-changed",
+        "sticker-configurator:state-changed",
+        "sticker-configurator:add-to-cart"
+      ]
+    }
+  },
+  "estimated_complexity": "high",
+  "pipeline_sequence_notes": "Refactor existing codebase, not new build. Architect must analyze current code, audit violations, propose clean boundary extraction (helper modules), and produce ADR. Constructor implements the refactor preserving all features. Optimizer handles performance. Auditor validates final output."
+}
