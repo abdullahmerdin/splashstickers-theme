@@ -87,6 +87,7 @@ class InteractionManager {
     if (ds.type === 'move') {
       var dx = (e.clientX - ds.ox) / core.state.zoom;
       var dy = (e.clientY - ds.oy) / core.state.zoom;
+      var draggedItems = [];
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
@@ -94,19 +95,29 @@ class InteractionManager {
         if (!sp) return;
         item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, sp.x + dx));
         item.y = Math.max(0, sp.y + dy);
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-
-        // Overlap detection
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.collisionEngine.rectsOverlap(item, o);
-        });
-        item.el.style.opacity = valid ? '' : '0.4';
-        item.el.style.outline = valid ? '' : '2px solid #FF4444';
+        draggedItems.push(item);
       });
 
-      // Push apart overlapping items during drag
+      // Push apart overlapping items during drag — also clamps DOM
       core.collisionEngine.resolveOverlaps(core.state.items, ds.ids);
+
+      // Build overlap map among dragged items only (stationary overlaps were resolved)
+      // O(k^2) where k = dragged count vs O(k·n) per-item findOverlap
+      var overlapMap = {};
+      for (var oi = 0; oi < draggedItems.length; oi++) {
+        for (var oj = oi + 1; oj < draggedItems.length; oj++) {
+          if (core.collisionEngine.rectsOverlap(draggedItems[oi], draggedItems[oj])) {
+            overlapMap[draggedItems[oi].id] = true;
+            overlapMap[draggedItems[oj].id] = true;
+          }
+        }
+      }
+      for (var oi = 0; oi < draggedItems.length; oi++) {
+        var item = draggedItems[oi];
+        var overlap = !!overlapMap[item.id];
+        item.el.style.opacity = overlap ? '0.4' : '';
+        item.el.style.outline = overlap ? '2px solid #FF4444' : '';
+      }
 
       core.selectionManager.updateGuides(
         core.state.items.find(function (i) { return i.id === ds.ids[0]; }),
@@ -199,13 +210,12 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
+      // Drop validation: if overlap persists after push-apart, revert to start
       ds.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.collisionEngine.rectsOverlap(dragged, o);
-        });
-        if (!valid) {
+        var overlap = core.collisionEngine.findOverlap(dragged, core.state.items);
+        if (overlap) {
           var sp = ds.startPos[id];
           if (sp) {
             dragged.x = sp.x;
@@ -322,6 +332,7 @@ class InteractionManager {
 
       var dx = (t.clientX - ds.ox) / core.state.zoom;
       var dy = (t.clientY - ds.oy) / core.state.zoom;
+      var draggedItems = [];
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
@@ -329,24 +340,28 @@ class InteractionManager {
         if (!sp) return;
         item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, sp.x + dx));
         item.y = Math.max(0, sp.y + dy);
+        draggedItems.push(item);
       });
 
-      // Push apart overlapping (extracted to CollisionEngine)
+      // Push apart overlapping (extracted to CollisionEngine — also clamps DOM)
       core.collisionEngine.resolveOverlaps(core.state.items, ds.ids);
 
-      ds.ids.forEach(function (id) {
-        var item = core.state.items.find(function (i) { return i.id === id; });
-        if (!item) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x));
-        item.y = Math.max(0, item.y);
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.collisionEngine.rectsOverlap(item, o);
-        });
-        item.el.style.opacity = valid ? '' : '0.4';
-        item.el.style.outline = valid ? '' : '2px solid #FF4444';
-      });
+      // Drag overlap map among dragged items only (see onMouseMove for rationale)
+      var overlapMap = {};
+      for (var oi = 0; oi < draggedItems.length; oi++) {
+        for (var oj = oi + 1; oj < draggedItems.length; oj++) {
+          if (core.collisionEngine.rectsOverlap(draggedItems[oi], draggedItems[oj])) {
+            overlapMap[draggedItems[oi].id] = true;
+            overlapMap[draggedItems[oj].id] = true;
+          }
+        }
+      }
+      for (var oi = 0; oi < draggedItems.length; oi++) {
+        var item = draggedItems[oi];
+        var overlap = !!overlapMap[item.id];
+        item.el.style.opacity = overlap ? '0.4' : '';
+        item.el.style.outline = overlap ? '2px solid #FF4444' : '';
+      }
     } else if (ds.type === 'resize') {
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
@@ -390,13 +405,12 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
+      // Drop validation: if overlap persists after push-apart, revert to start
       core.state.dragState.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.collisionEngine.rectsOverlap(dragged, o);
-        });
-        if (!valid) {
+        var overlap = core.collisionEngine.findOverlap(dragged, core.state.items);
+        if (overlap) {
           var sp = core.state.dragState.startPos[id];
           if (sp) {
             dragged.x = sp.x;
