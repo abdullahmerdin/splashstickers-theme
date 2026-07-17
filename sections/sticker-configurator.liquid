@@ -820,7 +820,7 @@
 
   document.addEventListener('mouseup',function(){
     if(!dragState) return;
-
+    if(dragState.type==='selbox'){
       selBox.style.display='none';
       var sw=parseFloat(selBox.style.width)||0, sh=parseFloat(selBox.style.height)||0;
       selBox.style.width='0px';selBox.style.height='0px';
