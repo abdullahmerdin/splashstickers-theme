@@ -1190,6 +1190,11 @@
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
   canvas.style.cursor = textToolActive ? 'crosshair' : 'default';
+  // Auto-detect mobile: if touch device and small screen, activate mobile mode
+  if(window.innerWidth<768||('ontouchstart' in window&&window.innerWidth<1024)){
+    var isMobile=mobileBtn.getAttribute('data-auto')!=='false';
+    if(isMobile){mobileBtn.click();}
+  }
   setInterval(function(){canvas.style.cursor=textToolActive?'crosshair':(selectedIds.length?'default':'default');},200);
 })();
 </script>
