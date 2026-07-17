@@ -55,7 +55,7 @@
   touch-action: manipulation;
 }
 .sticker-config-{{ section.id }} .canvas-area {
-  position: relative; width: 100%; height: 100%; cursor: default; user-select: none;
+  position: relative; width: 100%; height: 100%; cursor: default; user-select: none; touch-action: none;
   transform-origin: 0 0; overflow: visible; z-index: 0;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
@@ -700,6 +700,7 @@
 
   canvas.addEventListener('mousedown',function(e){updateCanvasWH();
     var itemEl=e.target.closest('.canvas-item');
+
     if(itemEl){
       var cid=parseInt(itemEl.dataset.itemId);
       if(e.target.classList.contains('resize-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startResize(e,cid,e.target.dataset.handle);return;}
@@ -723,6 +724,38 @@
 
   document.addEventListener('mousemove',function(e){
     if(!dragState) return;
+  document.addEventListener('touchmove',function(te){
+    if(!dragState||te.touches.length!==1) return;
+    var t=te.touches[0];
+    var e={clientX:t.clientX,clientY:t.clientY,ctrlKey:false,metaKey:false,altKey:false,button:0,target:te.target};
+    var handled=true;
+    if(dragState.type==='pan'){var dx=t.clientX-dragState.ox,dy=t.clientY-dragState.oy;panX+=dx;panY+=dy;dragState.ox=t.clientX;dragState.oy=t.clientY;applyZoom();}
+    else if(dragState.type==='move'){
+      var dx2=(t.clientX-(dragState._touchOx||t.clientX))/zoom, dy2=(t.clientY-(dragState._touchOy||t.clientY))/zoom;
+      if(!dragState._touchOx){dragState._touchOx=t.clientX;dragState._touchOy=t.clientY;}
+      e.clientX=t.clientX; e.clientY=t.clientY;
+      // re-dispatch to existing move logic below
+      handled=false;
+    }
+    else if(dragState.type==='resize'){
+      var item=items.find(function(i){return i.id===dragState.id;}); if(!item) return;
+      var dx3=(t.clientX-dragState.ox)/zoom, dy3=(t.clientY-dragState.oy)/zoom;
+      if(dragState.handle.includes('e')) item.w=Math.max(30,dragState.sw+dx3);
+      if(dragState.handle.includes('w')){var nw=Math.max(30,dragState.sw-dx3);item.x=dragState.sx+dragState.sw-nw;item.w=nw;}
+      if(dragState.handle.includes('s')) item.h=Math.max(30,dragState.sh+dy3);
+      if(dragState.handle.includes('n')){var nh=Math.max(30,dragState.sh-dy3);item.y=dragState.sy+dragState.sh-nh;item.h=nh;}
+      item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
+      item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';
+      updateSizeInfo(item);return;
+    }
+    else if(dragState.type==='rotate'){
+      var item=items.find(function(i){return i.id===dragState.id;});if(!item)return;
+      var dx4=(t.clientX-dragState.ox)/zoom,dy4=(t.clientY-dragState.oy)/zoom;
+      item.rotation=Math.round(Math.atan2(dy4,dx4)*180/Math.PI);
+      item.el.style.transform='translate(-50%,-50%) rotate('+item.rotation+'deg) scale('+item.scaleX+','+item.scaleY+')';return;
+    }
+    if(handled) te.preventDefault();
+  },{passive:false});
     if(dragState.type==='pan'){var dx=e.clientX-dragState.ox,dy=e.clientY-dragState.oy;panX+=dx;panY+=dy;dragState.ox=e.clientX;dragState.oy=e.clientY;applyZoom();return;}
     if(dragState.type==='move'){
       var dx=(e.clientX-dragState.ox)/zoom, dy=(e.clientY-dragState.oy)/zoom;
@@ -787,7 +820,7 @@
 
   document.addEventListener('mouseup',function(){
     if(!dragState) return;
-    if(dragState.type==='selbox'){
+
       selBox.style.display='none';
       var sw=parseFloat(selBox.style.width)||0, sh=parseFloat(selBox.style.height)||0;
       selBox.style.width='0px';selBox.style.height='0px';
@@ -1088,6 +1121,72 @@
   // Patch updateCount/updatePrice to also call updateStats
   var origUC=updateCount; updateCount=function(){origUC();updateStats();};
 
+
+  /* ── Touch events (mobile) ── */
+  var touchStarted=null;
+  canvas.addEventListener('touchstart',function(te){
+    if(te.touches.length!==1) return;
+    te.preventDefault();
+    var t=te.touches[0]; updateCanvasWH();
+    var itemEl=te.target.closest('.canvas-item');
+    if(itemEl){
+      var cid=parseInt(itemEl.dataset.itemId);
+      if(te.target.classList.contains('resize-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startResize({clientX:t.clientX,clientY:t.clientY},cid,te.target.dataset.handle);return;}
+      if(te.target.classList.contains('rot-handle')){if(selectedIds.indexOf(cid)===-1){selectedIds=[cid];updateSelection();}startRotate({clientX:t.clientX,clientY:t.clientY},cid);return;}
+      selectedIds=[cid];updateSelection();startDrag({clientX:t.clientX,clientY:t.clientY},cid);return;
+    }
+    if(te.target===canvas||te.target.closest('.grid-bg')){selectedIds=[];updateSelection();touchStarted={ox:t.clientX,oy:t.clientY,type:'pan'};}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(te){
+    if(te.touches.length===2){/* pinch handled elsewhere */return;}
+    if(!dragState&&touchStarted&&te.touches.length===1){
+      var t=te.touches[0]; te.preventDefault();
+      var dx=t.clientX-touchStarted.ox,dy=t.clientY-touchStarted.oy;
+      panX+=dx;panY+=dy;touchStarted.ox=t.clientX;touchStarted.oy=t.clientY;applyZoom();return;
+    }
+    if(!dragState||te.touches.length!==1) return;
+    te.preventDefault();
+    var t=te.touches[0];
+    if(dragState.type==='move'){
+      var dx=(t.clientX-dragState.ox)/zoom, dy=(t.clientY-dragState.oy)/zoom;
+      dragState.ids.forEach(function(id){
+        var item=items.find(function(i){return i.id==id;});if(!item)return;
+        var sp=dragState.startPos[id];if(!sp)return;
+        item.x=Math.max(0,Math.min(CANVAS_W-item.w,sp.x+dx));item.y=Math.max(0,sp.y+dy);
+      });
+      for(var p=0;p<5;p++){var ov=false;for(var ai=0;ai<items.length;ai++){for(var bi=ai+1;bi<items.length;bi++){var a=items[ai],b=items[bi];if(rectsOverlap(a,b)){ov=true;var dx2=(a.x+a.w/2)-(b.x+b.w/2),dy2=(a.y+a.h/2)-(b.y+b.h/2);if(Math.abs(dx2)>Math.abs(dy2)){var push=dx2>0?4:-4;a.x+=push;b.x-=push;}else{var push=dy2>0?4:-4;a.y+=push;b.y-=push;}}}}if(!ov)break;}
+      dragState.ids.forEach(function(id){
+        var item=items.find(function(i){return i.id==id;});if(!item)return;
+        item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
+        item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';
+        var valid=items.every(function(o){return o.id==id||!rectsOverlap(item,o);});
+        item.el.style.opacity=valid?'':'0.4';item.el.style.outline=valid?'':'2px solid #FF4444';
+      });
+    } else if(dragState.type==='resize'){
+      var item=items.find(function(i){return i.id===dragState.id;});if(!item)return;
+      var dx=(t.clientX-dragState.ox)/zoom,dy=(t.clientY-dragState.oy)/zoom;
+      if(dragState.handle.includes('e')) item.w=Math.max(30,dragState.sw+dx);
+      if(dragState.handle.includes('w')){var nw=Math.max(30,dragState.sw-dx);item.x=dragState.sx+dragState.sw-nw;item.w=nw;}
+      if(dragState.handle.includes('s')) item.h=Math.max(30,dragState.sh+dy);
+      if(dragState.handle.includes('n')){var nh=Math.max(30,dragState.sh-dy);item.y=dragState.sy+dragState.sh-nh;item.h=nh;}
+      item.x=Math.max(0,Math.min(CANVAS_W-item.w,item.x));item.y=Math.max(0,item.y);
+      item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';item.el.style.width=item.w+'px';item.el.style.height=item.h+'px';
+      updateSizeInfo(item);
+    }
+  },{passive:false});
+  canvas.addEventListener('touchend',function(te){
+    if(dragState&&dragState.type==='move'){
+      guideH.style.display='none';guideV.style.display='none';
+      dragState.ids.forEach(function(id){
+        var dragged=items.find(function(i){return i.id===id;});if(!dragged)return;
+        var valid=items.every(function(o){return o.id===id||!rectsOverlap(dragged,o);});
+        if(!valid){var sp=dragState.startPos[id];if(sp){dragged.x=sp.x;dragged.y=sp.y;dragged.el.style.left=sp.x+'px';dragged.el.style.top=sp.y+'px';}}
+        dragged.el.style.opacity='';dragged.el.style.outline='';
+      });
+      saveState();growCanvas();
+    } else if(dragState&&(dragState.type==='resize'||dragState.type==='rotate')){saveState();growCanvas();}
+    dragState=null;touchStarted=null;
+  },{passive:true});
   /* ── Init ── */
   saveState(); zoomToFit(); drawGrid(); updatePrice(); updateSelection();
   canvas.style.cursor = textToolActive ? 'crosshair' : 'default';
