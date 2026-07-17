@@ -99,7 +99,7 @@ class InteractionManager {
 
         // Overlap detection
         var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(item, o);
+          return o.id === id || !core.collisionEngine.rectsOverlap(item, o);
         });
         item.el.style.opacity = valid ? '' : '0.4';
         item.el.style.outline = valid ? '' : '2px solid #FF4444';
@@ -203,7 +203,7 @@ class InteractionManager {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
         var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(dragged, o);
+          return o.id === id || !core.collisionEngine.rectsOverlap(dragged, o);
         });
         if (!valid) {
           var sp = ds.startPos[id];
@@ -342,7 +342,7 @@ class InteractionManager {
         item.el.style.left = item.x + 'px';
         item.el.style.top = item.y + 'px';
         var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(item, o);
+          return o.id === id || !core.collisionEngine.rectsOverlap(item, o);
         });
         item.el.style.opacity = valid ? '' : '0.4';
         item.el.style.outline = valid ? '' : '2px solid #FF4444';
@@ -394,7 +394,7 @@ class InteractionManager {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
         var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(dragged, o);
+          return o.id === id || !core.collisionEngine.rectsOverlap(dragged, o);
         });
         if (!valid) {
           var sp = core.state.dragState.startPos[id];
