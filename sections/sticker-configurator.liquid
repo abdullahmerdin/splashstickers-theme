@@ -476,6 +476,10 @@
       el.style.outlineOffset=el.classList.contains('selected')?mm3+'px':'';
     });
     delBtn.disabled=dupBtn.disabled=flipHBtn.disabled=flipVBtn.disabled=count===0;
+    ['left','right','h','top','bot','v'].forEach(function(d){
+      var btn=document.getElementById('align-'+d+'-'+sid);
+      if(btn) btn.disabled=count<1;
+    });
     updateSizeInputs(); updateCount();
   }
   function getSelected(){return items.filter(function(i){return selectedIds.indexOf(i.id)!==-1;});}
