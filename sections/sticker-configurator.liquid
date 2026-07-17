@@ -882,10 +882,23 @@
   flipVBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleY*=-1;applyTransform(it);});});
   autoBtn.addEventListener('click',function(){
     saveState(); var cw=CANVAS_W,ch=CANVAS_H,pad=12; var gapInput=document.getElementById('gap-size-'+sid); var gap=gapInput?Math.round(cw/600*parseInt(gapInput.value)||3):Math.round(cw/600*3);
-    var packed=[],row=[],rowW=0,maxRowH=0;
-    items.forEach(function(it,idx){if(row.length&&rowW+gap+it.w>cw-pad*2){packed.push({items:row,h:maxRowH});row=[];rowW=0;maxRowH=0;}row.push(idx);rowW+=gap+it.w;maxRowH=Math.max(maxRowH,it.h);});
-    if(row.length) packed.push({items:row,h:maxRowH});
-    var yy=pad; packed.forEach(function(p){var xx=pad; p.items.forEach(function(idx){var it=items[idx];it.x=xx;it.y=yy;it.rotation=0;it.el.style.left=xx+'px';it.el.style.top=yy+'px';applyTransform(it);updateSizeInfo(it);xx+=it.w+gap;});yy+=p.h+gap;});
+    if(!items.length){saveState();return;}
+    // Sort by longest edge descending (best packing)
+    var order=items.map(function(it,i){return i;}).sort(function(a,b){var ha=Math.max(items[a].w,items[a].h),hb=Math.max(items[b].w,items[b].h);return hb-ha;});
+    // Brick-laying: try to place each item in existing rows, else new row
+    var rows=[];
+    order.forEach(function(idx){
+      var it=items[idx],placed=false;
+      for(var ri=0;ri<rows.length;ri++){
+        var r=rows[ri];
+        if(r.w+gap+it.w<=cw-pad*2){
+          r.items.push(idx);r.w+=gap+it.w;r.h=Math.max(r.h,it.h);
+          placed=true;break;
+        }
+      }
+      if(!placed){rows.push({items:[idx],w:it.w,h:it.h});}
+    });
+    var yy=pad; rows.forEach(function(r){var xx=pad; r.items.forEach(function(idx){var it=items[idx];it.x=xx;it.y=yy;it.rotation=0;it.el.style.left=xx+'px';it.el.style.top=yy+'px';applyTransform(it);updateSizeInfo(it);xx+=it.w+gap;});yy+=r.h+gap;});
     saveState();growCanvas();
   });
 
