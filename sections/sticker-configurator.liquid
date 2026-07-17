@@ -885,26 +885,24 @@
   flipHBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleX*=-1;applyTransform(it);});growCanvas();});
   flipVBtn.addEventListener('click',function(){saveState();getSelected().forEach(function(it){it.scaleY*=-1;applyTransform(it);});});
   autoBtn.addEventListener('click',function(){
-    saveState(); var cw=CANVAS_W,ch=CANVAS_H,pad=12; var gapInput=document.getElementById('gap-size-'+sid); var gap=gapInput?Math.round(cw/600*parseInt(gapInput.value)||3):Math.round(cw/600*3);
-    if(!items.length){saveState();return;}
-    // Sort by longest edge descending (best packing)
-    var order=items.map(function(it,i){return i;}).sort(function(a,b){var ha=Math.max(items[a].w,items[a].h),hb=Math.max(items[b].w,items[b].h);return hb-ha;});
-    // Brick-laying: try to place each item in existing rows, else new row
-    var rows=[];
-    order.forEach(function(idx){
-      var it=items[idx],placed=false;
-      for(var ri=0;ri<rows.length;ri++){
-        var r=rows[ri];
-        if(r.w+gap+it.w<=cw-pad*2){
-          r.items.push(idx);r.w+=gap+it.w;r.h=Math.max(r.h,it.h);
-          placed=true;break;
+      saveState(); var cw=CANVAS_W,ch=CANVAS_H,pad=12; var gapInput=document.getElementById('gap-size-'+sid); var gap=gapInput?Math.round(cw/600*parseInt(gapInput.value)||3):Math.round(cw/600*3);
+      if(!items.length){saveState();return;}
+      // Brick-laying: sequential order, fit items into rows
+      var rows=[];
+      items.forEach(function(it){
+        var placed=false;
+        for(var ri=0;ri<rows.length;ri++){
+          var r=rows[ri];
+          if(r.w+gap+it.w<=cw-pad*2){
+            r.items.push(it);r.w+=gap+it.w;r.h=Math.max(r.h,it.h);
+            placed=true;break;
+          }
         }
-      }
-      if(!placed){rows.push({items:[idx],w:it.w,h:it.h});}
+        if(!placed){rows.push({items:[it],w:it.w,h:it.h});}
+      });
+      var yy=pad; rows.forEach(function(r){var xx=pad; r.items.forEach(function(it){it.x=xx;it.y=yy;it.rotation=0;it.el.style.left=xx+'px';it.el.style.top=yy+'px';applyTransform(it);updateSizeInfo(it);xx+=it.w+gap;});yy+=r.h+gap;});
+      saveState();growCanvas();
     });
-    var yy=pad; rows.forEach(function(r){var xx=pad; r.items.forEach(function(idx){var it=items[idx];it.x=xx;it.y=yy;it.rotation=0;it.el.style.left=xx+'px';it.el.style.top=yy+'px';applyTransform(it);updateSizeInfo(it);xx+=it.w+gap;});yy+=r.h+gap;});
-    saveState();growCanvas();
-  });
 
   /* ── Text tool ── */
   textBtn.addEventListener('click',function(){textToolActive=!textToolActive;textBtn.classList.toggle('active',textToolActive);});
