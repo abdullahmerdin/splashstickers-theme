@@ -257,7 +257,7 @@
   justify-content: center; max-height: 120px;
 }
 .sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
-  flex: 1; overflow: auto; min-height: 100vh;
+  flex: 1; overflow: auto;
 }
 
 
@@ -1141,12 +1141,13 @@
     if(te.touches.length===2){/* pinch handled elsewhere */return;}
     if(!dragState&&touchStarted&&te.touches.length===1){
       var t=te.touches[0];
-      // Only prevent default (handle pan) if horizontal movement suggests pan, not scroll
       if(touchStarted.sel) return;
       var dx=t.clientX-touchStarted.ox,dy=t.clientY-touchStarted.oy;
+      // Only pan if horizontal movement is significant AND the container can't scroll
+      if(Math.abs(dx)<20) return; // let browser handle vertical/light movement
       if(Math.abs(dx)<Math.abs(dy)*1.5) return; // mostly vertical → let browser scroll
       te.preventDefault();
-      panX+=dx;panY+=dy;touchStarted.ox=t.clientX;touchStarted.oy=t.clientY;applyZoom();return;
+      panX+=dx;panY+=dy;touchStarted.ox=t.clientX;touchStarted.oy=t.clientY;touchStarted.oy=t.clientY;applyZoom();return;
     }
     if(!dragState||te.touches.length!==1) return;
     te.preventDefault();
