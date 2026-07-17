@@ -1152,6 +1152,10 @@
     te.preventDefault();
     var t=te.touches[0];
     if(dragState.type==='move'){
+      // Movement threshold to reduce jitter
+      var mx=t.clientX-(dragState._lastX||dragState.ox), my=t.clientY-(dragState._lastY||dragState.oy);
+      if(Math.abs(mx)<2&&Math.abs(my)<2){dragState._lastX=t.clientX;dragState._lastY=t.clientY;return;}
+      dragState._lastX=t.clientX;dragState._lastY=t.clientY;
       var dx=(t.clientX-dragState.ox)/zoom, dy=(t.clientY-dragState.oy)/zoom;
       dragState.ids.forEach(function(id){
         var item=items.find(function(i){return i.id==id;});if(!item)return;
