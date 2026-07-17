@@ -54,7 +54,7 @@
   border: 2px solid #DFE6E9; background: #fff; min-height: 400px;
 }
 .sticker-config-{{ section.id }} .canvas-area {
-  position: absolute; inset: 0; cursor: default; user-select: none;
+  position: relative; cursor: default; user-select: none;
   transform-origin: 0 0; overflow: visible; z-index: 0;
 }
 .sticker-config-{{ section.id }} .canvas-area .grid-bg {
@@ -379,6 +379,7 @@
   CANVAS_W = wrap.clientWidth;
   CANVAS_H = Math.round(CANVAS_W * 400 / 600);
   canvas.style.width = CANVAS_W + 'px';
+  canvas.style.height = CANVAS_H + 'px';
   wrap.style.height = CANVAS_H + 'px';
   var hint = document.getElementById('hint-'+sid);
   var fileInput = document.getElementById('file-input-'+sid);
