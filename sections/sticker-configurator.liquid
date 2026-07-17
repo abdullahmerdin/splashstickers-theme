@@ -1226,18 +1226,28 @@
       clipboard=sel.map(function(it){return {src:it.el.querySelector('img')?it.el.querySelector('img').src:null,isText:!!it.text,text:it.text||'',fontSize:it.fontSize||16,color:it.color||'#2D3436',bgColor:it.bgColor||'',fontWeight:it.fontWeight||'',fontStyle:it.fontStyle||'',textAlign:it.textAlign||'center',w:it.w,h:it.h};});
     }
     if((e.ctrlKey||e.metaKey)&&e.key==='v'&&clipboard){
-      e.preventDefault(); saveState();
+      e.preventDefault(); saveState(); var autoBtn=document.getElementById('auto-btn-'+sid);
       clipboard.forEach(function(cd){
-        var item;
         if(cd.isText){
-          item=addTextItem(cd.text,cd.fontSize,true,cd.color,cd.bgColor,cd.fontWeight,cd.fontStyle,cd.textAlign);
+          var item=addTextItem(cd.text,cd.fontSize,true,cd.color,cd.bgColor,cd.fontWeight,cd.fontStyle,cd.textAlign);
+          if(item){item.x+=20;item.y+=20;item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         } else if(cd.src){
-          var img=new Image();img.onload=function(){item=addImageItem(cd.src,true);item.w=cd.w;item.h=cd.h;item.el.style.width=cd.w+'px';item.el.style.height=cd.h+'px';if(item.el.querySelector('img')){item.el.querySelector('img').style.width=cd.w+'px';item.el.querySelector('img').style.height=cd.h+'px';}finishItem(item.el,item.id,cd.w,cd.h);};img.src=cd.src;
+          var img=new Image();
+          img.onload=function(){
+            var item=addImageItem(cd.src,true);
+            item.w=cd.w;item.h=cd.h;
+            item.el.style.width=cd.w+'px';item.el.style.height=cd.h+'px';
+            if(item.el.querySelector('img')){item.el.querySelector('img').style.width=cd.w+'px';item.el.querySelector('img').style.height=cd.h+'px';}
+            finishItem(item.el,item.id,cd.w,cd.h);
+            saveState();growCanvas();
+            if(autoBtn) autoBtn.click();
+          };
+          img.src=cd.src;
           return;
         }
-        if(item){item.x+=20;item.y+=20;item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
       });
       saveState();growCanvas();
+      if(autoBtn) autoBtn.click();
     }
   });
 
