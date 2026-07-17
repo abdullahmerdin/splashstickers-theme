@@ -1202,7 +1202,11 @@
   // Auto-detect mobile: if touch device and small screen, activate mobile mode
   if(window.innerWidth<768||('ontouchstart' in window&&window.innerWidth<1024)){
     var isMobile=mobileBtn.getAttribute('data-auto')!=='false';
-    if(isMobile){mobileBtn.click();}
+    if(isMobile){
+      document.querySelector('.sticker-config-'+sid).classList.add('mobile-mode');
+      mobile=true;wrap.style.height='';canvas.style.height='';
+      drawGrid();applyZoom();
+    }
   }
   setInterval(function(){canvas.style.cursor=textToolActive?'crosshair':(selectedIds.length?'default':'default');},200);
 })();
