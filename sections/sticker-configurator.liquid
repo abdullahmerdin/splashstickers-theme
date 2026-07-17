@@ -257,7 +257,7 @@
   justify-content: center; max-height: 120px;
 }
 .sticker-config-{{ section.id }}.mobile-mode .canvas-wrap {
-  flex: 1; min-height: 100vh;
+  flex: 1; overflow: auto;
 }
 
 
@@ -648,9 +648,13 @@
     maxB=Math.max(maxB, CANVAS_H);
     if(maxB>CANVAS_H){
       CANVAS_H=maxB+40;
-      canvas.style.height=CANVAS_H+'px';
-      wrap.style.height=CANVAS_H+'px';
+      if(mobile){var cur=parseInt(canvas.style.height)||0;canvas.style.height=Math.max(cur,CANVAS_H)+'px';}
+      else canvas.style.height=CANVAS_H+'px';
+      if(!mobile) wrap.style.height=CANVAS_H+'px';
       drawGrid();
+    } else if(mobile&&canvas.style.height){
+      var cur=parseInt(canvas.style.height)||0;
+      if(cur<window.innerHeight) canvas.style.height=window.innerHeight+'px';
     }
   }
   function applyZoom() {
@@ -1075,7 +1079,7 @@
   mobileBtn.addEventListener('click',function(){
     mobile=!mobile;
     document.querySelector('.sticker-config-'+sid).classList.toggle('mobile-mode',mobile);
-    if(mobile){wrap.style.height='';canvas.style.height='100vh';document.body.style.overflow='hidden';}
+    if(mobile){wrap.style.height='';canvas.style.height=window.innerHeight+'px';document.body.style.overflow='hidden';}
     else{wrap.style.height=CANVAS_H+'px';canvas.style.height=CANVAS_H+'px';document.body.style.overflow='';}
     mobileBtn.innerHTML=mobile?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
     setTimeout(function(){zoomToFit();},100);
