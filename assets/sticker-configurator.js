@@ -114,7 +114,117 @@ class CollisionEngine {
   }
 
   constrainPosition(cx, cy, draggedItem, allItems, draggedIds, sx, sy) {
-    return {x: cx, y: cy};
+    var dx = cx - (sx != null ? sx : cx);
+    var dy = cy - (sy != null ? sy : cy);
+    return this.moveAndSlide(draggedItem, dx, dy, allItems, draggedIds);
+  }
+
+  // Continuous Swept AABB Collision detection against a static obstacle B
+  sweep(a, dx, dy, b) {
+    var b_x = b.x - this.GAP;
+    var b_y = b.y - this.GAP;
+    var b_w = b.w + 2 * this.GAP;
+    var b_h = b.h + 2 * this.GAP;
+
+    var overlapX = (a.x + a.w > b_x) && (a.x < b_x + b_w);
+    var overlapY = (a.y + a.h > b_y) && (a.y < b_y + b_h);
+
+    if (overlapX && overlapY) {
+      return { time: 0, normalX: 0, normalY: 0 };
+    }
+
+    var xEntry, yEntry;
+    var xExit, yExit;
+
+    if (dx > 0) {
+      xEntry = b_x - (a.x + a.w);
+      xExit = (b_x + b_w) - a.x;
+    } else {
+      xEntry = (b_x + b_w) - a.x;
+      xExit = b_x - (a.x + a.w);
+    }
+
+    if (dy > 0) {
+      yEntry = b_y - (a.y + a.h);
+      yExit = (b_y + b_h) - a.y;
+    } else {
+      yEntry = (b_y + b_h) - a.y;
+      yExit = b_y - (a.y + a.h);
+    }
+
+    var xEntryTime = dx === 0 ? -Infinity : xEntry / dx;
+    var xExitTime = dx === 0 ? Infinity : xExit / dx;
+    var yEntryTime = dy === 0 ? -Infinity : yEntry / dy;
+    var yExitTime = dy === 0 ? Infinity : yExit / dy;
+
+    var entryTime = Math.max(xEntryTime, yEntryTime);
+    var exitTime = Math.min(xExitTime, yExitTime);
+
+    if (entryTime > exitTime || (xEntryTime < 0 && yEntryTime < 0) || entryTime > 1 || entryTime < 0) {
+      return { time: 1 };
+    }
+
+    var normalX = 0, normalY = 0;
+    if (xEntryTime > yEntryTime) {
+      normalX = dx > 0 ? -1 : 1;
+    } else {
+      normalY = dy > 0 ? -1 : 1;
+    }
+
+    return { time: entryTime, normalX: normalX, normalY: normalY };
+  }
+
+  // Slide response: try moving, if hitting obstacle, zero hit axis and slide the remainder
+  moveAndSlide(a, dx, dy, obstacles, draggedIds) {
+    var ds = {};
+    if (draggedIds) {
+      for (var i = 0; i < draggedIds.length; i++) ds[draggedIds[i]] = true;
+    }
+
+    var currX = a.x;
+    var currY = a.y;
+    var core = this.core;
+
+    for (var pass = 0; pass < 3; pass++) {
+      if (dx === 0 && dy === 0) break;
+
+      var minTime = 1;
+      var hitNormalX = 0;
+      var hitNormalY = 0;
+
+      for (var i = 0; i < obstacles.length; i++) {
+        var o = obstacles[i];
+        if (o.id === a.id || ds[o.id]) continue;
+
+        var tempA = { x: currX, y: currY, w: a.w, h: a.h };
+        var result = this.sweep(tempA, dx, dy, o);
+        if (result.time < minTime) {
+          minTime = result.time;
+          hitNormalX = result.normalX || 0;
+          hitNormalY = result.normalY || 0;
+        }
+      }
+
+      currX += dx * minTime;
+      currY += dy * minTime;
+
+      if (minTime === 1) {
+        break;
+      }
+
+      var remainingTime = 1.0 - minTime;
+      if (hitNormalX !== 0) {
+        dx = 0;
+        dy = dy * remainingTime;
+      } else if (hitNormalY !== 0) {
+        dx = dx * remainingTime;
+        dy = 0;
+      }
+    }
+
+    currX = Math.max(0, Math.min(core.CANVAS_W - a.w, currX));
+    currY = Math.max(0, Math.min(core.CANVAS_H - a.h, currY));
+    return { x: currX, y: currY };
   }
 
   findOverlap(item, allItems) {
@@ -1943,9 +2053,17 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
+      // On drop, if there are any overlaps, gently resolve them to clear spots
       ds.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
+        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+        if (next) {
+          dragged.x = next.x;
+          dragged.y = next.y;
+          dragged.el.style.left = next.x + 'px';
+          dragged.el.style.top = next.y + 'px';
+        }
       });
       core.historyManager.saveState();
       core.growCanvas();
@@ -2111,9 +2229,17 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
+      // On drop, if there are any overlaps, gently resolve them to clear spots
       core.state.dragState.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
+        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+        if (next) {
+          dragged.x = next.x;
+          dragged.y = next.y;
+          dragged.el.style.left = next.x + 'px';
+          dragged.el.style.top = next.y + 'px';
+        }
       });
       core.historyManager.saveState();
       core.growCanvas();
