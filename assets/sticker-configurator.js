@@ -1943,19 +1943,9 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
-      // Use nearest clear spot if overlap persists
       ds.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
-        if (next) {
-          dragged.x = next.x;
-          dragged.y = next.y;
-          dragged.el.style.left = next.x + 'px';
-          dragged.el.style.top = next.y + 'px';
-        }
-        dragged.el.style.opacity = '';
-        dragged.el.style.outline = '';
       });
       core.historyManager.saveState();
       core.growCanvas();
@@ -2124,15 +2114,6 @@ class InteractionManager {
       core.state.dragState.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
-        if (next) {
-          dragged.x = next.x;
-          dragged.y = next.y;
-          dragged.el.style.left = next.x + 'px';
-          dragged.el.style.top = next.y + 'px';
-        }
-        dragged.el.style.opacity = '';
-        dragged.el.style.outline = '';
       });
       core.historyManager.saveState();
       core.growCanvas();
