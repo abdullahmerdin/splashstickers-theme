@@ -80,14 +80,28 @@
         for (var i = 0; i < all.length; i++) {
           var o = all[i];
           if (o.id === dragged.id || ds[o.id]) continue;
-          if (!((cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
-                (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01))) continue;
-          // Determine approach direction from start → candidate
+          // Check each axis independently
+          var xHit = (cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01);
+          var yHit = (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01);
+          if (!xHit || !yHit) {
+            // One axis barely clear (touching) — still push on the overlapping axis
+            if (xHit) {
+              var dirX = (cx - (sx != null ? sx : cx));
+              cx = dirX > 0 ? o.x - w : o.x + o.w;
+              ok = false; break;
+            }
+            if (yHit) {
+              var dirY = (cy - (sy != null ? sy : cy));
+              cy = dirY > 0 ? o.y - h : o.y + o.h;
+              ok = false; break;
+            }
+            continue;
+          }
+          // Both axes overlap — push on direction axis
           var fromX = sx != null ? sx : cx;
           var fromY = sy != null ? sy : cy;
           var dirX = cx - fromX;
           var dirY = cy - fromY;
-          // Push on the axis with the most movement
           if (Math.abs(dirX) >= Math.abs(dirY)) {
             cx = dirX > 0 ? o.x - w : o.x + o.w;
           } else {
@@ -96,7 +110,6 @@
           ok = false; break;
         }
       } while (!ok);
-      // Clamp
       return {x: cx, y: cy};
     }
   };

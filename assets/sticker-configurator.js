@@ -113,7 +113,6 @@ class CollisionEngine {
     return { x: overlapX, y: overlapY };
   }
 
-  /** Wall-collision via direction-aware edge push */
   constrainPosition(cx, cy, draggedItem, allItems, draggedIds, sx, sy) {
     var w = draggedItem.w, h = draggedItem.h;
     var core = this.core;
@@ -127,8 +126,13 @@ class CollisionEngine {
       for (var i = 0; i < allItems.length; i++) {
         var o = allItems[i];
         if (o.id === draggedItem.id || ds[o.id]) continue;
-        if (!((cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
-              (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01))) continue;
+        var xHit = (cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01);
+        var yHit = (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01);
+        if (!xHit || !yHit) {
+          if (xHit) { var d = cx - (sx != null ? sx : cx); cx = d > 0 ? o.x - w : o.x + o.w; ok = false; break; }
+          if (yHit) { var d = cy - (sy != null ? sy : cy); cy = d > 0 ? o.y - h : o.y + o.h; ok = false; break; }
+          continue;
+        }
         var fromX = sx != null ? sx : cx;
         var fromY = sy != null ? sy : cy;
         var dirX = cx - fromX;
