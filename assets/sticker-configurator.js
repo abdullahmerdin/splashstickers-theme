@@ -1990,20 +1990,16 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
+      // Use nearest clear spot if overlap persists
       ds.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(dragged, o);
-        });
-        if (!valid) {
-          var sp = ds.startPos[id];
-          if (sp) {
-            dragged.x = sp.x;
-            dragged.y = sp.y;
-            dragged.el.style.left = sp.x + 'px';
-            dragged.el.style.top = sp.y + 'px';
-          }
+        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+        if (next) {
+          dragged.x = next.x;
+          dragged.y = next.y;
+          dragged.el.style.left = next.x + 'px';
+          dragged.el.style.top = next.y + 'px';
         }
         dragged.el.style.opacity = '';
         dragged.el.style.outline = '';
@@ -2116,28 +2112,18 @@ class InteractionManager {
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
-        var sp = ds.startPos[id];
-        if (!sp) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, sp.x + dx));
-        item.y = Math.max(0, sp.y + dy);
-      });
-
-      // Push apart overlapping (extracted to CollisionEngine)
-      core.collisionEngine.resolveOverlaps(core.state.items, ds.ids);
-
-      ds.ids.forEach(function (id) {
-        var item = core.state.items.find(function (i) { return i.id === id; });
-        if (!item) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x));
-        item.y = Math.max(0, item.y);
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(item, o);
-        });
-        item.el.style.opacity = valid ? '' : '0.4';
-        item.el.style.outline = valid ? '' : '2px solid #FF4444';
-      });
+        var candidateX = item.x + dx;
+        var candidateY = item.y + dy;
+        candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
+        candidateY = Math.max(0, candidateY);
+        var result = core.collisionEngine.constrainPosition(
+          candidateX, candidateY, item, core.state.items, ds.ids,
+          item.x, item.y
+        );
+        item.x = result.x;
+        item.y = result.y;
+        item.el.style.left = result.x + 'px';
+        item.el.style.top = result.y + 'px';
     } else if (ds.type === 'resize') {
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
@@ -2184,17 +2170,12 @@ class InteractionManager {
       core.state.dragState.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(dragged, o);
-        });
-        if (!valid) {
-          var sp = core.state.dragState.startPos[id];
-          if (sp) {
-            dragged.x = sp.x;
-            dragged.y = sp.y;
-            dragged.el.style.left = sp.x + 'px';
-            dragged.el.style.top = sp.y + 'px';
-          }
+        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+        if (next) {
+          dragged.x = next.x;
+          dragged.y = next.y;
+          dragged.el.style.left = next.x + 'px';
+          dragged.el.style.top = next.y + 'px';
         }
         dragged.el.style.opacity = '';
         dragged.el.style.outline = '';
