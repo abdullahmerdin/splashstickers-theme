@@ -75,11 +75,13 @@
     },
     constrainPosition: function(cx, cy, dragged, all, ids, sx, sy) {
       var w = dragged.w, h = dragged.h;
+      var SKIN = 2; // px buffer around each item for early collision
       var ds = {}; for (var i = 0; i < (ids||[]).length; i++) ds[ids[i]] = true;
-      // Standard AABB overlap: items must intersect on BOTH axes
       function hit(cx, cy, o) {
-        return (cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
-               (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01);
+        return (cx - SKIN + 0.01) < (o.x + o.w + SKIN - 0.01) &&
+               (o.x - SKIN + 0.01) < (cx + w + SKIN - 0.01) &&
+               (cy - SKIN + 0.01) < (o.y + o.h + SKIN - 0.01) &&
+               (o.y - SKIN + 0.01) < (cy + h + SKIN - 0.01);
       }
       if (!hit(cx, cy, all.find(function(o){return o.id!==dragged.id&&!ds[o.id];})||{})) {
         return {x:cx, y:cy}; // no overlap at all
@@ -152,9 +154,18 @@
     box1.el.style.top = result.y + 'px';
 
     var overlap = ce.rectsOverlap(box1, box2);
-    dragEl.classList.toggle('overlap', overlap);
-    infoEl.textContent = 'Box1: (' + Math.round(box1.x) + ', ' + Math.round(box1.y) + ') ' +
-      (overlap ? '❌ OVERLAP!' : '✅ Clear') + ' | Obstacle: (' + box2.x + ', ' + box2.y + ')';
+    var touching = false;
+    if (!overlap) {
+      // Check if within skin distance (items are touching/close)
+      var xGap = Math.max(0, Math.max(box2.x - (box1.x + box1.w), box1.x - (box2.x + box2.w)));
+      var yGap = Math.max(0, Math.max(box2.y - (box1.y + box1.h), box1.y - (box2.y + box2.h)));
+      touching = (xGap === 0 && yGap === 0) || (xGap <= 2 && yGap <= 2);
+    }
+    dragEl.classList.toggle('overlap', overlap || touching);
+    infoEl.textContent =
+      (overlap ? '❌ OVERLAP!' : touching ? '⚠️ TOUCHING' : '✅ Clear') +
+      ' | Box1: (' + Math.round(box1.x) + ', ' + Math.round(box1.y) + ')' +
+      ' | Obstacle: (' + box2.x + ', ' + box2.y + ')';
 
     var dbg = document.getElementById('ct-debug-{{ section.id }}');
     if (dbg) dbg.textContent =

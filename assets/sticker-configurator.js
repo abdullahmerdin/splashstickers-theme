@@ -116,13 +116,16 @@ class CollisionEngine {
   constrainPosition(cx, cy, draggedItem, allItems, draggedIds, sx, sy) {
     var w = draggedItem.w, h = draggedItem.h;
     var core = this.core;
+    var SKIN = 2;
     var ds = {};
     if (draggedIds) {
       for (var di = 0; di < draggedIds.length; di++) ds[draggedIds[di]] = true;
     }
     function hit(cx, cy, o) {
-      return (cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
-             (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01);
+      return (cx - SKIN + 0.01) < (o.x + o.w + SKIN - 0.01) &&
+             (o.x - SKIN + 0.01) < (cx + w + SKIN - 0.01) &&
+             (cy - SKIN + 0.01) < (o.y + o.h + SKIN - 0.01) &&
+             (o.y - SKIN + 0.01) < (cy + h + SKIN - 0.01);
     }
     if (!hit(cx, cy, allItems.find(function(o){return o.id!==draggedItem.id&&!ds[o.id];})||{})) {
       return {x:cx, y:cy};
