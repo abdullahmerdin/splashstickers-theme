@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "project_scope": "Refactor the sticker configurator canvas collision system from push-apart to constrained drag — items follow the mouse but are wall-collided against other items so they can never enter an overlapping position. Remove all push-apart logic entirely.",
+  "business_deliverables": [
+    "Constrained drag: dragged item's position is clamped to stay outside all other item rects + GAP — it can never overlap during movement",
+    "Collision resolution via overlap depth + GAP push (not spiral search) for post-drop, paste, resize, and alignment operations",
+    "No push-apart at any stage — the system prevents overlap, not repairs it",
+    "findNearestClearSpot v2: linear nudge along axis of least overlap depth, not spiral",
+    "Overlap validation after all structural operations (paste, duplicate, resize, align, distribute, auto-arrange)"
+  ],
+  "shopify_primitives": {
+    "sections": [],
+    "blocks": [],
+    "metafields": [],
+    "metaobjects": []
+  },
+  "design_language": {
+    "brand_colors": {},
+    "typography": {},
+    "interaction_patterns": [
+      "Constrained drag — item wall-collides against other items, never enters overlap",
+      "No push-apart vibration during drag (item stays at mouse position, not rubber-banding)",
+      "Red outline + opacity only appears if overlap is INTENTIONALLY forced (paste, align, or extreme resize)",
+      "Post-overlap resolution: single linear nudge (overlap + GAP), not spiral search"
+    ]
+  },
+  "accessibility": {
+    "wcag_level": "AA",
+    "requirements": [
+      "Focus-visible outlines on interactive elements",
+      "Aria-labels on canvas items preserved",
+      "Red outline for overlap state uses high contrast (#FF4444 against any background)",
+      "Reduced-motion: overlap resolution snaps instantly, no animation"
+    ]
+  },
+  "performance_targets": {
+    "pagespeed_score": 95,
+    "lcp_target": "<1.5s",
+    "cls_target": "<0.05",
+    "fid_target": "<50ms"
+  },
+  "dependencies": {
+    "external_libraries": [],
+    "note": "Vanilla JS only. All files are ES6 classes within assets/sticker-configurator/. No framework."
+  },
+  "web_components_required": false,
+  "estimated_complexity": "high",
+  "pipeline_sequence_notes": "This is a pure JavaScript refactor of 4 files in assets/sticker-configurator/. No Liquid or CSS changes needed. The Architect must produce an ADR specifying the exact collision math, constrained drag algorithm, and per-file change specifications. The Auditor must verify no edge cases (multi-drag, resize-into-overlap, paste-then-overlap). The Constructor implements the JS changes. The Optimizer should skip this pass or only verify no regressions."
+}

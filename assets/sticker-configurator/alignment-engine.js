@@ -41,6 +41,18 @@ class AlignmentEngine {
       it.el.style.left = it.x + 'px';
       it.el.style.top = it.y + 'px';
     });
+
+    // Check for overlaps created by alignment
+    var allOverlapsResolved = core.collisionEngine.resolveAllOverlaps(core.state.items);
+    if (!allOverlapsResolved && core.debug) {
+      console.warn('Alignment created unresolvable overlap');
+    }
+    // Re-render positions for items that were nudged
+    core.state.items.forEach(function (it) {
+      it.el.style.left = it.x + 'px';
+      it.el.style.top = it.y + 'px';
+    });
+
     core.historyManager.saveState();
     core.growCanvas();
   }
@@ -74,15 +86,22 @@ class AlignmentEngine {
       col++;
       if (it.h > rowH) rowH = it.h;
     });
+    core.collisionEngine.resolveAllOverlaps(core.state.items);
+    // Re-render positions for nudged items
+    core.state.items.forEach(function (it) {
+      it.el.style.left = it.x + 'px';
+      it.el.style.top = it.y + 'px';
+    });
     core.historyManager.saveState();
     core.growCanvas();
     core.dispatchUpdateEvent();
   }
 
   distributeHorizontal() {
-    var sel = this.core.selectionManager.getSelected();
+    var core = this.core;
+    var sel = core.selectionManager.getSelected();
     if (sel.length < 3) return;
-    this.core.historyManager.saveState();
+    core.historyManager.saveState();
 
     // Sort by x position
     sel.sort(function (a, b) { return a.x - b.x; });
@@ -102,14 +121,22 @@ class AlignmentEngine {
       curX += sel[j].w + gap;
     }
 
+    core.collisionEngine.resolveAllOverlaps(core.state.items);
+    // Re-render positions for nudged items
+    core.state.items.forEach(function (it) {
+      it.el.style.left = it.x + 'px';
+      it.el.style.top = it.y + 'px';
+    });
+
     this.core.historyManager.saveState();
     this.core.growCanvas();
   }
 
   distributeVertical() {
-    var sel = this.core.selectionManager.getSelected();
+    var core = this.core;
+    var sel = core.selectionManager.getSelected();
     if (sel.length < 3) return;
-    this.core.historyManager.saveState();
+    core.historyManager.saveState();
 
     // Sort by y position
     sel.sort(function (a, b) { return a.y - b.y; });
@@ -128,6 +155,13 @@ class AlignmentEngine {
       sel[j].el.style.top = curY + 'px';
       curY += sel[j].h + gap;
     }
+
+    core.collisionEngine.resolveAllOverlaps(core.state.items);
+    // Re-render positions for nudged items
+    core.state.items.forEach(function (it) {
+      it.el.style.left = it.x + 'px';
+      it.el.style.top = it.y + 'px';
+    });
 
     this.core.historyManager.saveState();
     this.core.growCanvas();

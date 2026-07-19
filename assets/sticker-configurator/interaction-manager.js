@@ -98,28 +98,16 @@ class InteractionManager {
         draggedItems.push(item);
       });
 
-      // Push apart overlapping items during drag — also clamps DOM
-      core.collisionEngine.resolveOverlaps(core.state.items, ds.ids);
-
-      // Build overlap map — dragged items against ALL items (including stationary)
-      var overlapMap = {};
-      for (var oi = 0; oi < draggedItems.length; oi++) {
-        var dItem = draggedItems[oi];
-        for (var sj = 0; sj < core.state.items.length; sj++) {
-          var sItem = core.state.items[sj];
-          if (sItem.id === dItem.id) continue;
-          if (core.collisionEngine.rectsOverlap(dItem, sItem)) {
-            overlapMap[dItem.id] = true;
-            break;
-          }
-        }
-      }
-      for (var oi = 0; oi < draggedItems.length; oi++) {
-        var item = draggedItems[oi];
-        var overlap = !!overlapMap[item.id];
-        item.el.style.opacity = overlap ? '0.4' : '';
-        item.el.style.outline = overlap ? '2px solid #FF4444' : '';
-      }
+      // Wall-collision: constrain each dragged item against stationary items
+      draggedItems.forEach(function (item) {
+        var result = core.collisionEngine.constrainPosition(
+          item.x, item.y, item, core.state.items, ds.ids
+        );
+        item.x = result.x;
+        item.y = result.y;
+        item.el.style.left = result.x + 'px';
+        item.el.style.top = result.y + 'px';
+      });
 
       core.selectionManager.updateGuides(
         core.state.items.find(function (i) { return i.id === ds.ids[0]; }),
@@ -226,7 +214,6 @@ class InteractionManager {
             dragged.el.style.top = next.y + 'px';
           }
         }
-        dragged.el.style.opacity = '';
         dragged.el.style.outline = '';
       });
       core.historyManager.saveState();
@@ -234,7 +221,27 @@ class InteractionManager {
       core.dispatchUpdateEvent();
     }
 
-    if (ds.type === 'resize' || ds.type === 'rotate') {
+    if (ds.type === 'resize') {
+      // Overlap check: nudge item to clear position before saving state
+      var resizedItem = core.state.items.find(function (i) { return i.id === ds.id; });
+      if (resizedItem) {
+        var resOverlap = core.collisionEngine.findOverlap(resizedItem, core.state.items);
+        if (resOverlap) {
+          var resNext = core.collisionEngine.findNearestClearSpot(resizedItem, core.state.items);
+          if (resNext) {
+            resizedItem.x = resNext.x;
+            resizedItem.y = resNext.y;
+            resizedItem.el.style.left = resNext.x + 'px';
+            resizedItem.el.style.top = resNext.y + 'px';
+          }
+        }
+      }
+      core.historyManager.saveState();
+      core.growCanvas();
+      core.dispatchUpdateEvent();
+    }
+
+    if (ds.type === 'rotate') {
       core.historyManager.saveState();
       core.growCanvas();
       core.dispatchUpdateEvent();
@@ -345,28 +352,16 @@ class InteractionManager {
         draggedItems.push(item);
       });
 
-      // Push apart overlapping (extracted to CollisionEngine — also clamps DOM)
-      core.collisionEngine.resolveOverlaps(core.state.items, ds.ids);
-
-      // Drag overlap map — dragged against ALL items
-      var overlapMap = {};
-      for (var oi = 0; oi < draggedItems.length; oi++) {
-        var dItem = draggedItems[oi];
-        for (var sj = 0; sj < core.state.items.length; sj++) {
-          var sItem = core.state.items[sj];
-          if (sItem.id === dItem.id) continue;
-          if (core.collisionEngine.rectsOverlap(dItem, sItem)) {
-            overlapMap[dItem.id] = true;
-            break;
-          }
-        }
-      }
-      for (var oi = 0; oi < draggedItems.length; oi++) {
-        var item = draggedItems[oi];
-        var overlap = !!overlapMap[item.id];
-        item.el.style.opacity = overlap ? '0.4' : '';
-        item.el.style.outline = overlap ? '2px solid #FF4444' : '';
-      }
+      // Wall-collision: constrain each dragged item against stationary items
+      draggedItems.forEach(function (item) {
+        var result = core.collisionEngine.constrainPosition(
+          item.x, item.y, item, core.state.items, ds.ids
+        );
+        item.x = result.x;
+        item.y = result.y;
+        item.el.style.left = result.x + 'px';
+        item.el.style.top = result.y + 'px';
+      });
     } else if (ds.type === 'resize') {
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
@@ -424,13 +419,28 @@ class InteractionManager {
             dragged.el.style.top = next.y + 'px';
           }
         }
-        dragged.el.style.opacity = '';
         dragged.el.style.outline = '';
       });
       core.historyManager.saveState();
       core.growCanvas();
-    } else if (core.state.dragState &&
-      (core.state.dragState.type === 'resize' || core.state.dragState.type === 'rotate')) {
+    } else if (core.state.dragState && core.state.dragState.type === 'resize') {
+      // Overlap check: nudge item to clear position before saving state
+      var resizedItem = core.state.items.find(function (i) { return i.id === core.state.dragState.id; });
+      if (resizedItem) {
+        var resOverlap = core.collisionEngine.findOverlap(resizedItem, core.state.items);
+        if (resOverlap) {
+          var resNext = core.collisionEngine.findNearestClearSpot(resizedItem, core.state.items);
+          if (resNext) {
+            resizedItem.x = resNext.x;
+            resizedItem.y = resNext.y;
+            resizedItem.el.style.left = resNext.x + 'px';
+            resizedItem.el.style.top = resNext.y + 'px';
+          }
+        }
+      }
+      core.historyManager.saveState();
+      core.growCanvas();
+    } else if (core.state.dragState && core.state.dragState.type === 'rotate') {
       core.historyManager.saveState();
       core.growCanvas();
     }

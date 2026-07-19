@@ -260,6 +260,15 @@ class ItemManager {
           dup.el.style.width = dup.w + 'px';
           dup.el.style.height = dup.h + 'px';
           core.applyTransform(dup);
+
+          // Nudge duplicate to clear position if overlap detected
+          var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
+          if (clearSpot) {
+            dup.x = clearSpot.x;
+            dup.y = clearSpot.y;
+            dup.el.style.left = clearSpot.x + 'px';
+            dup.el.style.top = clearSpot.y + 'px';
+          }
         }
       } else if (it.src) {
         var img = new Image();
@@ -282,6 +291,16 @@ class ItemManager {
               dup.el.querySelector('img').style.height = dup.h + 'px';
             }
             core.applyTransform(dup);
+
+            // Nudge duplicate to clear position if overlap detected
+            var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
+            if (clearSpot) {
+              dup.x = clearSpot.x;
+              dup.y = clearSpot.y;
+              dup.el.style.left = clearSpot.x + 'px';
+              dup.el.style.top = clearSpot.y + 'px';
+            }
+
             core.historyManager.saveState();
             core.growCanvas();
           }

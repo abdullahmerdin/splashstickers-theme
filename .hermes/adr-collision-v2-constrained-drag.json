@@ -1,0 +1,544 @@
+{
+  "adr_version": "2.0",
+  "title": "Collision System v2 — Constrained Drag Refactor",
+  "status": "approved",
+  "date": "2026-07-17",
+  "project_scope": "Refactor sticker configurator canvas collision system from push-apart (resolveOverlaps with MAX_ITERATIONS=8) to constrained drag wall-collision. Items follow the mouse but are clamped at the boundary of other item rects so they can never enter overlap. All push-apart logic is removed entirely.",
+  "architecture_decisions": [
+    {
+      "id": "ADR-001",
+      "title": "Replace push-apart with constrained drag wall-collision",
+      "context": "Current resolveOverlaps pushes dragged items away from stationary items on every mousemove. The next mousemove resets the item to the mouse position, causing rubber-banding. The item vibrates between mouse position and push-back position.",
+      "decision": "During drag, the candidate position (mouse) is clamped to stay outside all stationary item rects + GAP (2px). The item can never enter an overlapping position. No push occurs — it is prevented before it happens.",
+      "consequences": "Zero rubber-banding. Red overlap outline during drag is never needed (item cannot overlap). Simpler mental model: items are physical walls, not repelling magnets."
+    },
+    {
+      "id": "ADR-002",
+      "title": "Replace spiral search with linear nudge for findNearestClearSpot",
+      "context": "Current findNearestClearSpot spirals outward in 2px increments up to MAX_PX (canvas diagonal). O(n * MAX_PX) worst case. No diagonal search — can miss close positions.",
+      "decision": "For each overlapping item, calculate push = overlapDepth + GAP on each axis. Sum pushes per axis. Apply combined push. Validate result. Max 2 iterations. No spiral search.",
+      "consequences": "O(n * k) where k = overlapping items (typically 1-4), not O(n * MAX_PX). Deterministic — always finds the clear position if one exists within 2 push iterations. May fail on extreme overlap clusters (8+ items); fallback is canvas edge clamp."
+    },
+    {
+      "id": "ADR-003",
+      "title": "Remove overlap map + opacity/outline during drag",
+      "context": "Current code builds an overlapMap for every dragged item after resolveOverlaps, setting opacity:0.4 and outline:2px solid #FF4444 on overlapping items. This fires every mousemove.",
+      "decision": "Since constrained drag prevents overlap during movement, the overlap map and opacity/outline code during mousemove/mousemove-touch is removed entirely. Red outline + opacity remains only for post-drop safety checks and structural operations (paste, align, resize).",
+      "consequences": "Less DOM thrashing per frame. Cleaner drag visuals — no flickering red outlines. Overlap indication is only shown when overlap is intentionally forced (paste into tight space, align to same edge)."
+    },
+    {
+      "id": "ADR-004",
+      "title": "DIP: Separate query methods from resolution methods in CollisionEngine",
+      "context": "Current CollisionEngine has mixed methods: some query (findOverlap, hasAnyOverlap, rectsOverlap) and some mutation (resolveOverlaps, _pushDraggedAway, _pushBothApart, findNearestClearSpot).",
+      "decision": "CollisionEngine provides two method categories: (1) Query (pure, no side-effects): rectsOverlap, findOverlap, findAllOverlaps, hasAnyOverlap. (2) Resolution (returns new position, does NOT mutate items): constrainPosition, findNearestClearSpot, resolveAllOverlaps. Callers apply the returned position to items themselves.",
+      "consequences": "Callers own mutation — CollisionEngine is stateless within a frame. Easier to test (pure functions). Clear contract: 'what position is safe?' vs 'put item there'. No need to clone items before calling."
+    },
+    {
+      "id": "ADR-005",
+      "title": "Multi-drag: dragged items do not collide with each other",
+      "context": "Current code has _pushBothApart for two dragged items overlapping each other. This creates visual noise during multi-drag.",
+      "decision": "During multi-drag, dragged items only collide with stationary items. Other dragged items are invisible to the wall-collision. Drop validation (findNearestClearSpot v2) resolves overlaps among dragged items at drop time.",
+      "consequences": "Multi-drag feels smooth — group stays together. If group lands overlapping internally, drop validation resolves at mouse-up. Consistent with UX expectation: 'I'm moving this group, it stays as-is'."
+    }
+  ],
+  "constrained_drag_math": {
+    "algorithm": "Wall-collision per axis, minimum displacement per stationary item, accumulated across all stationary items",
+    "pseudocode": {
+      "function_constrainPosition": {
+        "inputs": ["candidateX: number", "candidateY: number", "draggedItem: {x,y,w,h,id}", "allItems: Array<Item>", "draggedIds: Array<number>"],
+        "behavior": [
+          "let cx = candidateX, cy = candidateY",
+          "let itemW = draggedItem.w, itemH = draggedItem.h",
+          "let draggedSet = new Set(draggedIds)",
+          "",
+          "for iter in [0, 1]:  // max 2 iterations for cascading overlap",
+          "  let totalPushX = 0, totalPushY = 0",
+          "  for each other in allItems:",
+          "    if other.id === draggedItem.id or draggedSet.has(other.id): continue",
+          "    if NOT rectsOverlap(cx, cy, itemW, itemH, other): continue",
+          "",
+          "    // AABB overlap depths at candidate position",
+          "    let overlapX = min(cx + itemW, other.x + other.w) - max(cx, other.x)",
+          "    let overlapY = min(cy + itemH, other.y + other.h) - max(cy, other.y)",
+          "    if overlapX <= 0 or overlapY <= 0: continue  // edge-touching, no overlap",
+          "",
+          "    // Push direction: centre-to-centre delta on each axis",
+          "    let dCenterX = (cx + itemW/2) - (other.x + other.w/2)",
+          "    let dCenterY = (cy + itemH/2) - (other.y + other.h/2)",
+          "    let pushDirX = dCenterX >= 0 ? 1 : -1",
+          "    let pushDirY = dCenterY >= 0 ? 1 : -1",
+          "    // If centres exactly aligned, push right/down",
+          "    if dCenterX === 0: pushDirX = 1",
+          "    if dCenterY === 0: pushDirY = 1",
+          "",
+          "    let pushDistX = overlapX + GAP",
+          "    let pushDistY = overlapY + GAP",
+          "",
+          "    // Choose axis with SMALLER displacement (closer to mouse)",
+          "    // Apply the smaller push, zero the other axis",
+          "    if pushDistX <= pushDistY:",
+          "      totalPushX += pushDirX * pushDistX",
+          "    else:",
+          "      totalPushY += pushDirY * pushDistY",
+          "",
+          "  if totalPushX === 0 and totalPushY === 0: break  // resolved",
+          "  cx += totalPushX",
+          "  cy += totalPushY",
+          "",
+          "// Final clamp to canvas bounds",
+          "cx = clamp(cx, 0, CANVAS_W - itemW)",
+          "cy = clamp(cy, 0, CANVAS_H - itemH)",
+          "",
+          "return { x: cx, y: cy }"
+        ],
+        "key_property": "The SMALLEST axis push per stationary item is applied, so the dragged item takes the shortest exit from each overlap. Across multiple stationary items, pushes accumulate. Max 2 iterations handles edge cases where pushing from one item causes overlap with another."
+      },
+      "function_findNearestClearSpot_v2": {
+        "inputs": ["item: {x,y,w,h,id}", "allItems: Array<Item>"],
+        "behavior": [
+          "// 1. Check if current position is already clear",
+          "if NOT findAllOverlaps(item, allItems).length:",
+          "  return { x: item.x, y: item.y }",
+          "",
+          "// 2. Find ALL overlapping items, calculate combined push",
+          "let overlaps = findAllOverlaps(item, allItems)",
+          "let pushX = 0, pushY = 0",
+          "",
+          "for each overlap in overlaps:",
+          "  let other = overlap.other",
+          "  let depths = overlap.depths  // { x: overlapX, y: overlapY }",
+          "",
+          "  let dCenterX = (item.x + item.w/2) - (other.x + other.w/2)",
+          "  let dCenterY = (item.y + item.h/2) - (other.y + other.h/2)",
+          "  let dirX = dCenterX >= 0 ? 1 : -1",
+          "  let dirY = dCenterY >= 0 ? 1 : -1",
+          "  if dCenterX === 0: dirX = 1",
+          "  if dCenterY === 0: dirY = 1",
+          "",
+          "  pushX += dirX * (depths.x + GAP)",
+          "  pushY += dirY * (depths.y + GAP)",
+          "",
+          "// 3. Apply combined push on BOTH axes",
+          "let newX = item.x + pushX",
+          "let newY = item.y + pushY",
+          "newX = clamp(newX, 0, CANVAS_W - item.w)",
+          "newY = clamp(newY, 0, CANVAS_H - item.h)",
+          "",
+          "// 4. Validate — check if new position overlaps any OTHER item",
+          "if NOT findAllOverlaps({...item, x:newX, y:newY}, allItems).length:",
+          "  return { x: newX, y: newY }",
+          "",
+          "// 5. One more iteration (repeat once, not spiral)",
+          "// (same logic, from new position)",
+          "...",
+          "",
+          "// 6. If still overlapping after 2 iterations, fallback to canvas edge",
+          "return null"
+        ],
+        "note": "Unlike constrainPosition which per-item chooses the SMALLER axis, findNearestClearSpot v2 applies BOTH axes summed. This gives a stronger push to escape a multi-item cluster. Constrain during drag uses minimal axis per item to stay as close to mouse as possible."
+      }
+    }
+  },
+  "per_file_changes": {
+    "assets/sticker-configurator/collision-engine.js": {
+      "action": "COMPLETE REWRITE",
+      "old_code": "260 lines — resolveOverlaps (push-apart with MAX_ITERATIONS=8, _pushDraggedAway, _pushBothApart), findNearestClearSpot (spiral O(n*MAX_PX)), _overlapDepths, rectsOverlap, findOverlap, hasAnyOverlap, _clampToCanvas",
+      "new_methods": [
+        {
+          "name": "rectsOverlap(a, b) -> boolean",
+          "behavior": "Unchanged — standard AABB with EPSILON tolerance. Pure query."
+        },
+        {
+          "name": "_overlapDepths(a, b) -> {x: number, y: number}",
+          "behavior": "Unchanged — returns overlap depth on each axis. Positive = overlapping. Pure query."
+        },
+        {
+          "name": "findOverlap(item, allItems) -> {overlappingItem, depths}|null",
+          "behavior": "Unchanged — returns first overlapping item + depths. Pure query."
+        },
+        {
+          "name": "findAllOverlaps(item, allItems) -> Array<{other, depths}>",
+          "behavior": "NEW. Returns ALL items that overlap with the given item, with depths for each. Replaces single-result findOverlap in contexts where multiple overlaps matter."
+        },
+        {
+          "name": "hasAnyOverlap(items, excludeIds) -> boolean",
+          "behavior": "Unchanged — boolean check. Pure query."
+        },
+        {
+          "name": "constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds) -> {x, y}",
+          "behavior": "NEW. Wall-collision algorithm. Takes candidate mouse position + dragged item + all items. Returns the closest non-overlapping position to the candidate. Does NOT mutate any item. Core replacement for resolveOverlaps during drag."
+        },
+        {
+          "name": "findNearestClearSpot(item, allItems) -> {x, y}|null",
+          "behavior": "REWRITTEN. Replaces spiral with linear nudge v2 algorithm. Returns nearest clear position or null if completely stuck."
+        },
+        {
+          "name": "resolveAllOverlaps(items) -> boolean",
+          "behavior": "NEW. Iterates ALL items and applies findNearestClearSpot on any that overlap. Returns true if all overlaps resolved. For use by alignment-engine and item-manager (paste/duplicate post-processing). Returns false if any item could not be resolved."
+        },
+        {
+          "name": "_clampToCanvas(item) -> void",
+          "behavior": "Simplified — only clamps to bounds, does NOT update DOM. Callers set DOM after deciding position. Used internally by constrainPosition / findNearestClearSpot for validation."
+        }
+      ],
+      "removed_methods": [
+        "resolveOverlaps(items, draggedIds) — entire push-apart loop removed",
+        "_pushDraggedAway(dragged, stationary) — removed",
+        "_pushBothApart(a, b) — removed"
+      ],
+      "note": "GAP constant remains 2. EPSILON remains 0.01. MAX_ITERATIONS is no longer needed (max 2 hardcoded in findNearestClearSpot v2)."
+    },
+    "assets/sticker-configurator/interaction-manager.js": {
+      "action": "MODIFY — 3 specific change zones",
+      "changes": [
+        {
+          "zone": "onMouseMove — 'move' type (lines 87-128)",
+          "old_code": [
+            "Lines 96-97: item position set to clamped mouse position",
+            "Line 102: core.collisionEngine.resolveOverlaps(core.state.items, ds.ids)",
+            "Lines 105-122: overlapMap build + opacity/outline per dragged item"
+          ],
+          "new_code": [
+            "Lines 96-97: item position stays as clamped mouse position (no change)",
+            "NEW: after setting item position, call constrainPosition for each dragged item:",
+            "  let result = core.collisionEngine.constrainPosition(item.x, item.y, item, core.state.items, ds.ids)",
+            "  item.x = result.x; item.y = result.y;",
+            "  item.el.style.left = result.x + 'px'; item.el.style.top = result.y + 'px';",
+            "DELETE: core.collisionEngine.resolveOverlaps(...) call (line 102)",
+            "DELETE: Entire overlapMap + opacity/outline block (lines 104-122)"
+          ],
+          "result": "Item follows mouse but is wall-clamped at every stationary item boundary. No push-apart, no overlap, no red outline during drag."
+        },
+        {
+          "zone": "onTouchMove — 'move' type (lines 335-369)",
+          "old_code": [
+            "Lines 343-344: item position set to clamped mouse position",
+            "Line 349: core.collisionEngine.resolveOverlaps(core.state.items, ds.ids)",
+            "Lines 351-369: overlapMap build + opacity/outline per dragged item"
+          ],
+          "new_code": [
+            "SAME as onMouseMove: after setting item position, call constrainPosition",
+            "DELETE: resolveOverlaps call (line 349)",
+            "DELETE: overlapMap + opacity/outline block (lines 351-369)"
+          ],
+          "result": "Same wall-collision behavior for touch drag."
+        },
+        {
+          "zone": "onMouseUp — 'move' drop (lines 214-231)",
+          "old_code": [
+            "Lines 215-231: findOverlap → if overlap, findNearestClearSpot (spiral) → apply position → clear opacity/outline"
+          ],
+          "new_code": [
+            "Keep snap-to-grid (unchanged, lines 206-213)",
+            "Keep drop validation but use new findNearestClearSpot (v2):",
+            "  let overlap = core.collisionEngine.findOverlap(dragged, core.state.items);",
+            "  if (overlap) {",
+            "    let next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);",
+            "    if (next) {",
+            "      dragged.x = next.x; dragged.y = next.y;",
+            "      dragged.el.style.left = next.x + 'px'; dragged.el.style.top = next.y + 'px';",
+            "    }",
+            "  }",
+            "Delete: dragged.el.style.opacity = '' (line 229) — already no opacity set during drag",
+            "Keep: dragged.el.style.outline = '' (line 230)"
+          ],
+          "result": "Same check but uses O(k) linear nudge instead of O(MAX_PX) spiral."
+        },
+        {
+          "zone": "onTouchEnd — 'move' drop (lines 413-429)",
+          "old_code": [
+            "Lines 413-429: Same pattern as onMouseUp — findNearestClearSpot (spiral) → apply"
+          ],
+          "new_code": [
+            "Same changes as onMouseUp: use findNearestClearSpot v2. Remove opacity clear."
+          ],
+          "result": "Same touch-path drop fix."
+        }
+      ]
+    },
+    "assets/sticker-configurator/item-manager.js": {
+      "action": "MODIFY — duplicateSelected only",
+      "changes": [
+        {
+          "zone": "duplicateSelected() (lines 239-295)",
+          "old_code": [
+            "Creates clone at offset+20 from original. No overlap check. Clone can land overlapping existing items."
+          ],
+          "new_code": [
+            "After setting clone position (dup.x = it.x + 20; dup.y = it.y + 20):",
+            "  let result = core.collisionEngine.findNearestClearSpot(dup, core.state.items);",
+            "  if (result) {",
+            "    dup.x = result.x; dup.y = result.y;",
+            "    dup.el.style.left = result.x + 'px'; dup.el.style.top = result.y + 'px';",
+            "  }",
+            "Apply to BOTH text duplicate (line 251) and image duplicate (line 269) paths."
+          ],
+          "result": "Duplicates never overlap existing items. If offset+20 causes overlap, clone is nudged to the nearest clear position."
+        }
+      ]
+    },
+    "assets/sticker-configurator/alignment-engine.js": {
+      "action": "MODIFY — 4 functions gain overlap check",
+      "changes": [
+        {
+          "zone": "onAlignClick(dir) (lines 10-46)",
+          "old_code": [
+            "Repositions all selected items to align edge/center. Updates DOM. No overlap check after placement."
+          ],
+          "new_code": [
+            "After repositioning and DOM update (after line 43):",
+            "  // Check for overlaps created by alignment",
+            "  let allOverlapsResolved = core.collisionEngine.resolveAllOverlaps(core.state.items);",
+            "  if (!allOverlapsResolved && core.debug) {",
+            "    console.warn('Alignment created unresolvable overlap');",
+            "  }"
+          ],
+          "result": "Items that end up overlapping after alignment are nudged to clear positions."
+        },
+        {
+          "zone": "onAutoArrange() (lines 48-80)",
+          "old_code": [
+            "Grid layout with gap. No overlap check after placement."
+          ],
+          "new_code": [
+            "After grid layout loop (after line 76):",
+            "  core.collisionEngine.resolveAllOverlaps(core.state.items);",
+            "  // Re-render positions that were nudged",
+            "  core.state.items.forEach(function(it) {",
+            "    it.el.style.left = it.x + 'px';",
+            "    it.el.style.top = it.y + 'px';",
+            "  });"
+          ],
+          "result": "Auto-arranged grid items that land overlapping are corrected."
+        },
+        {
+          "zone": "distributeHorizontal() (lines 82-107)",
+          "old_code": [
+            "Even spacing by x. No overlap check."
+          ],
+          "new_code": [
+            "After distribution (after line 103):",
+            "  core.collisionEngine.resolveAllOverlaps(core.state.items);",
+            "  // Re-render nudged items",
+            "  core.state.items.forEach(function(it) {",
+            "    it.el.style.left = it.x + 'px';",
+            "    it.el.style.top = it.y + 'px';",
+            "  });"
+          ],
+          "result": "Distributed items that overlap after equal-gap math are corrected."
+        },
+        {
+          "zone": "distributeVertical() (lines 109-134)",
+          "old_code": [
+            "Even spacing by y. No overlap check."
+          ],
+          "new_code": [
+            "After distribution (after line 130):",
+            "  core.collisionEngine.resolveAllOverlaps(core.state.items);",
+            "  // Re-render nudged items",
+            "  core.state.items.forEach(function(it) {",
+            "    it.el.style.left = it.x + 'px';",
+            "    it.el.style.top = it.y + 'px';",
+            "  });"
+          ],
+          "result": "Distributed items that overlap after equal-gap math are corrected."
+        }
+      ]
+    }
+  },
+  "event_flow": {
+    "drag_lifecycle": {
+      "startDrag": {
+        "trigger": "onMouseDown/onTouchStart on non-locked item",
+        "action": "Record startPos for each dragged item. Set dragState = {type:'move', ox, oy, ids, startPos}",
+        "output": "Drag state initialized. Items maintain their current positions."
+      },
+      "mousemove_drag": {
+        "trigger": "onMouseMove/onTouchMove while dragState.type === 'move'",
+        "steps": [
+          "1. Calculate dx, dy from mouse delta / zoom",
+          "2. For each dragged item: item.x = clamp(sp.x + dx, 0, CANVAS_W - item.w); item.y = max(0, sp.y + dy)",
+          "3. For each dragged item: result = collisionEngine.constrainPosition(item.x, item.y, item, allItems, draggedIds)",
+          "4. For each dragged item: item.x = result.x; item.y = result.y; item.el.style.left = result.x + 'px'; item.el.style.top = result.y + 'px'",
+          "5. Update alignment guides",
+          "6. NO push-apart. NO overlap map. NO red outline/opacity."
+        ],
+        "constraints": [
+          "Dragged items only collide with stationary items (draggedSet excludes other dragged items)",
+          "Wall-collision per axis: for each overlapping stationary item, push on the axis requiring LESS displacement",
+          "Pushes accumulate across all stationary items",
+          "Max 2 iterations for cascading overlaps (one pass may push into another item)"
+        ]
+      },
+      "resize_drag": {
+        "trigger": "onMouseMove/onTouchMove while dragState.type === 'resize'",
+        "note": "Resize does NOT use constrained drag. The resize handle moves edges freely. After resize completes (onMouseUp), a post-resize overlap check runs."
+      },
+      "drop": {
+        "trigger": "onMouseUp/onTouchEnd while dragState.type === 'move'",
+        "steps": [
+          "1. Snap to grid if snapEnabled",
+          "2. For each dropped item: check findOverlap",
+          "3. If overlapping: findNearestClearSpot v2 → apply position",
+          "4. Clear outline",
+          "5. saveState, growCanvas, dispatchUpdateEvent"
+        ]
+      },
+      "resize_end": {
+        "trigger": "onMouseUp/onTouchEnd while dragState.type === 'resize'",
+        "new_step": "After resize completes, add overlap check via findNearestClearSpot (same as drop validation for 'move'). This catches resize-into-overlap."
+      }
+    },
+    "structural_operations": {
+      "duplicate": {
+        "trigger": "itemManager.duplicateSelected()",
+        "flow": "Create clone at offset+20 → findNearestClearSpot v2 → apply nudged position",
+        "overlap_check": "findNearestClearSpot v2 on each duplicate"
+      },
+      "add_image_item": {
+        "trigger": "itemManager.addImageItem()",
+        "note": "Uses existing findNextSlot grid-scan for initial placement. No need for collision check — slot finder already avoids overlap.",
+        "overlap_check": "None needed (findNextSlot already prevents overlap at placement time)"
+      },
+      "add_text_item": {
+        "trigger": "itemManager.addTextItem()",
+        "note": "Same as addImageItem — findNextSlot handles it.",
+        "overlap_check": "None needed"
+      },
+      "align": {
+        "trigger": "alignmentEngine.onAlignClick(dir)",
+        "flow": "Align all selected items → resolveAllOverlaps → re-render DOM positions",
+        "overlap_check": "resolveAllOverlaps after repositioning"
+      },
+      "auto_arrange": {
+        "trigger": "alignmentEngine.onAutoArrange()",
+        "flow": "Grid layout all items → resolveAllOverlaps → re-render DOM positions",
+        "overlap_check": "resolveAllOverlaps after grid layout"
+      },
+      "distribute": {
+        "trigger": "alignmentEngine.distributeHorizontal() / distributeVertical()",
+        "flow": "Even spacing → resolveAllOverlaps → re-render DOM positions",
+        "overlap_check": "resolveAllOverlaps after distribution"
+      }
+    }
+  },
+  "edge_cases": {
+    "multi_drag": {
+      "scenario": "User drags 3+ items simultaneously (multi-selection drag)",
+      "behavior": "Each dragged item only collides with stationary items. Dragged items pass through each other. At drop, findNearestClearSpot v2 resolves any overlaps among dropped items.",
+      "why": "During drag, the group should stay together. Post-drop cleanup handles any internal overlaps."
+    },
+    "resize_into_overlap": {
+      "scenario": "User resizes an item so it overlaps a neighbour",
+      "behavior": "Resize does NOT use constrained drag (resize allows free shape change). After resize ends (onMouseUp), run findNearestClearSpot v2 on the resized item if it overlaps anything.",
+      "change_needed": "In onMouseUp (type 'resize'), add overlap check after the existing saveState/growCanvas. Currently no overlap check for resize.",
+      "priority": "HIGH — missing in current code too"
+    },
+    "paste_into_full_canvas": {
+      "scenario": "Canvas is nearly full; duplicate offset+20 lands inside another item",
+      "behavior": "findNearestClearSpot v2 nudges the clone to the nearest clear position. If no clear position exists within 2 iterations, return null and keep the position (item overlaps).",
+      "fallback": "Return null → caller may highlight the item with red outline to show overlap state."
+    },
+    "text_item_overlap": {
+      "scenario": "Two text items with rotation — collision uses AABB of bounding box",
+      "behavior": "rectsOverlap uses axis-aligned bounding box regardless of rotation. This is consistent with current behavior. Items with rotation have slightly larger apparent collision box.",
+      "note": "Rotated items' AABB is their CSS bounding box, which may extend past the visual text. This is acceptable — AABB collision with GAP is the standard in drag-based editors."
+    },
+    "align_overlap": {
+      "scenario": "User aligns 10 items to 'left' — all snap to same x, creating vertical stack overlap",
+      "behavior": "resolveAllOverlaps fires after alignment. Each overlapping item gets nudged findNearestClearSpot v2. Items spread horizontally to nearest clear positions.",
+      "visual": "Items appear to 'fan out' from the alignment line to their original x positions or slightly past."
+    },
+    "cascading_constraint": {
+      "scenario": "Drag item toward a gap that's too narrow; wall-collision pushes it past one item but into another",
+      "behavior": "Max 2 iterations in constrainPosition. First iteration pushes from item A, but lands inside item B. Second iteration pushes from item B. If still overlapping after 2, the current (overlapping) position is accepted.",
+      "rare_case": "Extremely rare on normal canvas. Only occurs with items tightly packed. Canvas edge clamp provides final boundary."
+    },
+    "single_item_on_canvas": {
+      "scenario": "Only 1 item on canvas; drag it anywhere",
+      "behavior": "constrainPosition iterates allItems but finds no overlapping stationary items (only self). Returns candidate position unchanged. Item follows mouse freely.",
+      "performance": "Zero push calculations, zero overlap checks on stationary items."
+    },
+    "locked_item_collision": {
+      "scenario": "Drag item past a locked item",
+      "behavior": "Locked items are treated as stationary walls — they are in allItems and not in draggedSet. Wall-collision works the same. Locked items cannot be pushed or moved.",
+      "note": "Same as current behavior (locked items never in draggedSet)."
+    }
+  },
+  "solid_compliance": {
+    "srp": "CollisionEngine: only collision queries and position resolution. No DOM manipulation, no state mutation beyond its own internal calculation.",
+    "ocp": "CollisionEngine is extended by adding new resolution methods (constrainPosition, resolveAllOverlaps, findAllOverlaps). Existing callers that used resolveOverlaps switch to constrainPosition (drag) or resolveAllOverlaps (structural ops).",
+    "lsp": "All resolution methods return {x,y} or boolean — interchangeable. Query methods return pure data — no side effects.",
+    "isp": "constrainPosition receives only the candidate coordinate + the specific dragged item + all items + dragged IDs. No entire app state. findNearestClearSpot receives item + allItems only. Consumers call only the method they need.",
+    "dip": "CollisionEngine provides abstract resolution contracts. interaction-manager, item-manager, and alignment-engine depend on the interface, not internal implementation. Event-based: core.collisionEngine is injected via constructor."
+  },
+  "test_boundaries": {
+    "unit_tests": [
+      "constrainPosition: single stationary item, drag from right into it → x clamped to item.x + item.w + GAP",
+      "constrainPosition: single stationary item, drag from left into it → x clamped to item.x - dragged.w - GAP",
+      "constrainPosition: single stationary item, drag from top into it → y clamped to item.y - dragged.h - GAP",
+      "constrainPosition: single stationary item, drag from bottom into it → y clamped to item.y + item.h + GAP",
+      "constrainPosition: multi-drag (2 dragged, 1 stationary) → only stationary constrains, dragged items pass through each other",
+      "constrainPosition: drag into corner between 2 stationary items → pushed along axis with least overlap",
+      "constrainPosition: candidate already clear → returned unchanged",
+      "constrainPosition: canvas edge + stationary item → clamped to canvas bounds",
+      "findNearestClearSpot: 2 overlapping items, offset+20 → nudged clear in 1 iteration",
+      "findNearestClearSpot: position already clear → returned unchanged",
+      "findNearestClearSpot: 3 items forming a pocket → resolved in 2 iterations or returns null",
+      "findAllOverlaps: item overlaps N others → returns N results",
+      "findAllOverlaps: item overlaps 0 others → returns []",
+      "resolveAllOverlaps: 3 items, all clear → returns true, no position changes",
+      "resolveAllOverlaps: 3 items, 2 overlapping → both nudged, returns true if resolved"
+    ],
+    "integration_scenarios": [
+      "Drag item into another → item wall-collides, never overlaps, no red outline shown",
+      "Multi-drag 2 items over a 3rd → dragged items pass through each other, 3rd acts as wall",
+      "Duplicate overlapping item → clone nudged to nearest clear spot",
+      "Align 5 items to left → overlap resolved, items fan out",
+      "Resize item into neighbor → after mouse-up, item nudged clear",
+      "Auto-arrange with items very close → grid layout + overlap resolution"
+    ],
+    "regression_guards": [
+      "Single item drag still works (no other items to collide with)",
+      "Multi-select drag of all items still works (all items in draggedSet, no stationary items = no collision)",
+      "Drag on empty canvas still works (no items = no collision)",
+      "Resize still works (no collision during resize; overlap check only on mouseup)",
+      "Rotation still works (no collision check needed for rotation)"
+    ]
+  },
+  "rejected_alternatives": [
+    {
+      "alternative": "Keep push-apart but reduce MAX_ITERATIONS",
+      "rejected_reason": "Fixes rubber-banding symptom but not root cause. The fundamental issue is the two-phase 'mouse sets position then push fixes it'. Only constrained drag (prevent not repair) eliminates the problem."
+    },
+    {
+      "alternative": "CSS pointer-events: none on items during drag",
+      "rejected_reason": "Doesn't prevent visual overlap. Items would still overlap visually even if mouse can't target them. Also prevents item-on-item collision detection needed for drop validation."
+    },
+    {
+      "alternative": "Snap-to-grid only (no collision system)",
+      "rejected_reason": "Eliminates rubber-banding but prevents organic (non-grid-aligned) layouts critical for sticker design. Users need to place stickers freely without snapping to grid."
+    },
+    {
+      "alternative": "Use collision containment via CSS Grid positioning",
+      "rejected_reason": "CSS Grid cannot handle absolute-positioned dragged items. The system uses absolute positioning for canvas items — CSS Grid is incompatible."
+    },
+    {
+      "alternative": "Keep spiral findNearestClearSpot but optimize step",
+      "rejected_reason": "Even with 4px steps, worst case remains O(n*MAX_PX/4). Linear nudge is O(k) where k = overlapping items (1-8 typical). Deterministic, predictable, and faster."
+    }
+  ],
+  "performance_impact": {
+    "before": "resolveOverlaps: O(n² * MAX_ITERATIONS=8) per mousemove + DOM thrashing from overlapMap + opacity/outline",
+    "after": "constrainPosition: O(n * k) per mousemove where k = overlapping stationary items (typically 0-3). No DOM thrashing from overlapMap. Zero opacity/outline writes during drag.",
+    "savings": "~80% reduction in JS work per mousemove frame. DOM writes reduced from 2N+2 per frame (position update + overlap outline) to N+1 per frame (position update only)."
+  },
+  "schema_requirements": {
+    "note": "No Liquid schema changes needed. This is a pure JavaScript refactor of 4 files under assets/sticker-configurator/. No Shopify schema, no CSS Grid, no Liquid template changes."
+  },
+  "dip_event_protocol": {
+    "dispatched_events": [],
+    "listened_events": [],
+    "note": "All CollisionEngine interaction is direct method call via core.collisionEngine reference. No CustomEvent protocol needed — this is an internal refactor within the existing module system."
+  }
+}
