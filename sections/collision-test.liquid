@@ -1,0 +1,155 @@
+{%- comment -%}
+  Collision Test Section — barebones box drag overlap test
+  Renders two draggable boxes. Orange box should NEVER enter the blue box area.
+  ============================================
+{%- endcomment -%}
+
+{%- liquid
+  assign bg = section.settings.bg | default: '#1a1a2e'
+  assign accent = section.settings.accent | default: '#00cec9'
+-%}
+
+<style>
+  .collision-test-{{ section.id }} {
+    position: relative; width: 100%; max-width: 900px; margin: 40px auto;
+    background: {{ bg }}; border: 1px solid {{ accent }}33; overflow: hidden;
+    font-family: monospace; min-height: 500px;
+  }
+  .collision-test-{{ section.id }} .ct-box {
+    position: absolute; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff; cursor: grab; user-select: none;
+    border: 2px solid; background: rgba(255,255,255,0.08);
+    transition: opacity 0.05s; border-radius: 4px;
+  }
+  .collision-test-{{ section.id }} .ct-box.dragging { cursor: grabbing; z-index: 100; }
+  .collision-test-{{ section.id }} .ct-box.overlap { border-color: #ff4444 !important; background: rgba(255,68,68,0.2) !important; opacity: 0.4; }
+  .collision-test-{{ section.id }} .ct-info {
+    padding: 10px; color: #667; font-size: 13px; text-align: center;
+    position: absolute; bottom: 0; left: 0; right: 0; background: {{ bg }};
+    border-top: 1px solid {{ accent }}22;
+  }
+</style>
+
+<div class="collision-test-{{ section.id }}" id="ct-{{ section.id }}">
+  <div class="ct-box" id="ct-drag-{{ section.id }}" style="left:50px;top:200px;width:100px;height:100px;border-color:#e17055;">DRAG ME</div>
+  <div class="ct-box" id="ct-obs-{{ section.id }}" style="left:400px;top:200px;width:100px;height:100px;border-color:{{ accent }};">OBSTACLE</div>
+  <div class="ct-info" id="ct-info-{{ section.id }}">Drag ORANGE box → BLUE box. It should STOP at the edge.</div>
+</div>
+
+<script>
+(function() {
+  var container = document.getElementById('ct-{{ section.id }}');
+  if (!container || container.dataset.initialized) return;
+  container.dataset.initialized = '1';
+
+  var dragEl = document.getElementById('ct-drag-{{ section.id }}');
+  var obsEl = document.getElementById('ct-obs-{{ section.id }}');
+  var infoEl = document.getElementById('ct-info-{{ section.id }}');
+
+  function getBox(el) {
+    return {
+      id: el === dragEl ? 1 : 2,
+      x: parseInt(el.style.left),
+      y: parseInt(el.style.top),
+      w: el.offsetWidth,
+      h: el.offsetHeight,
+      el: el
+    };
+  }
+
+  var box1 = getBox(dragEl);
+  var box2 = getBox(obsEl);
+  var allItems = [box1, box2];
+  var dragState = null;
+
+  // CollisionEngine (inline)
+  var ce = {
+    EPSILON: 0.01,
+    rectsOverlap: function(a, b) {
+      return (a.x + 0.01) < (b.x + b.w - 0.01) &&
+             (b.x + 0.01) < (a.x + a.w - 0.01) &&
+             (a.y + 0.01) < (b.y + b.h - 0.01) &&
+             (b.y + 0.01) < (a.y + a.h - 0.01);
+    },
+    constrainPosition: function(cx, cy, dragged, all, ids, sx, sy) {
+      var w = dragged.w, h = dragged.h;
+      var ds = {}; for (var i = 0; i < (ids||[]).length; i++) ds[ids[i]] = true;
+      function any(cx, cy) {
+        for (var i = 0; i < all.length; i++) {
+          var o = all[i];
+          if (o.id === dragged.id || ds[o.id]) continue;
+          if ((cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
+              (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01)) return true;
+        }
+        return false;
+      }
+      if (!any(cx, cy)) return {x:cx, y:cy};
+      var lx=sx||cx, ly=sy||cy, hx=cx, hy=cy;
+      for (var i=0; i<14; i++) {
+        var mx=(lx+hx)/2, my=(ly+hy)/2;
+        if (any(mx, my)) { hx=mx; hy=my; } else { lx=mx; ly=my; }
+      }
+      return {x:lx, y:ly};
+    }
+  };
+
+  dragEl.addEventListener('mousedown', function(e) {
+    dragState = { ox: e.clientX, oy: e.clientY, lx: e.clientX, ly: e.clientY };
+    dragEl.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!dragState) return;
+    var dx = (e.clientX - dragState.lx);
+    var dy = (e.clientY - dragState.ly);
+    dragState.lx = e.clientX;
+    dragState.ly = e.clientY;
+
+    // Re-read positions (box2 might have moved if we're dragging box1, but it won't)
+    box1.x = parseInt(dragEl.style.left) || 0;
+    box1.y = parseInt(dragEl.style.top) || 0;
+    box1.w = dragEl.offsetWidth;
+    box1.h = dragEl.offsetHeight;
+    box2.x = parseInt(obsEl.style.left) || 0;
+    box2.y = parseInt(obsEl.style.top) || 0;
+    box2.w = obsEl.offsetWidth;
+    box2.h = obsEl.offsetHeight;
+
+    var rect = container.getBoundingClientRect();
+    var maxX = rect.width - box1.w;
+    var maxY = rect.height - box1.h - 40;
+
+    var candX = box1.x + dx;
+    var candY = box1.y + dy;
+    candX = Math.max(0, Math.min(maxX, candX));
+    candY = Math.max(0, Math.min(maxY, candY));
+
+    var result = ce.constrainPosition(candX, candY, box1, allItems, [1], box1.x, box1.y);
+    box1.x = result.x;
+    box1.y = result.y;
+    box1.el.style.left = result.x + 'px';
+    box1.el.style.top = result.y + 'px';
+
+    var overlap = ce.rectsOverlap(box1, box2);
+    dragEl.classList.toggle('overlap', overlap);
+    infoEl.textContent = 'Box1: (' + Math.round(box1.x) + ', ' + Math.round(box1.y) + ') ' +
+      (overlap ? '❌ OVERLAP!' : '✅ Clear') + ' | Obstacle: (' + box2.x + ', ' + box2.y + ')';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (dragState) { dragEl.classList.remove('dragging'); dragState = null; }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Collision Test",
+  "settings": [
+    { "type": "color", "id": "bg", "label": "Background", "default": "#1a1a2e" },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#00cec9" }
+  ],
+  "presets": [{ "name": "Collision Test" }]
+}
+{% endschema %}
