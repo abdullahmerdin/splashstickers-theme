@@ -85,16 +85,19 @@ class InteractionManager {
     }
 
     if (ds.type === 'move') {
-      var dx = (e.clientX - ds.ox) / core.state.zoom;
-      var dy = (e.clientY - ds.oy) / core.state.zoom;
+      // Use previous position delta (not from start) so constrained position persists
+      var prevX = ds._lastX != null ? ds._lastX : ds.ox;
+      var prevY = ds._lastY != null ? ds._lastY : ds.oy;
+      var dx = (e.clientX - prevX) / core.state.zoom;
+      var dy = (e.clientY - prevY) / core.state.zoom;
+      ds._lastX = e.clientX;
+      ds._lastY = e.clientY;
       var draggedItems = [];
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
-        var sp = ds.startPos[id];
-        if (!sp) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, sp.x + dx));
-        item.y = Math.max(0, sp.y + dy);
+        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x + dx));
+        item.y = Math.max(0, item.y + dy);
         draggedItems.push(item);
       });
 
@@ -336,19 +339,19 @@ class InteractionManager {
         ds._lastY = t.clientY;
         return;
       }
+      ds._lastPrevX = ds._lastX || ds.ox;
+      ds._lastPrevY = ds._lastY || ds.oy;
       ds._lastX = t.clientX;
       ds._lastY = t.clientY;
 
-      var dx = (t.clientX - ds.ox) / core.state.zoom;
-      var dy = (t.clientY - ds.oy) / core.state.zoom;
+      var dx = (t.clientX - ds._lastPrevX) / core.state.zoom;
+      var dy = (t.clientY - ds._lastPrevY) / core.state.zoom;
       var draggedItems = [];
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
-        var sp = ds.startPos[id];
-        if (!sp) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, sp.x + dx));
-        item.y = Math.max(0, sp.y + dy);
+        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x + dx));
+        item.y = Math.max(0, item.y + dy);
         draggedItems.push(item);
       });
 
