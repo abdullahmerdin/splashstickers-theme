@@ -2124,6 +2124,7 @@ class InteractionManager {
         item.y = result.y;
         item.el.style.left = result.x + 'px';
         item.el.style.top = result.y + 'px';
+      });
     } else if (ds.type === 'resize') {
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
