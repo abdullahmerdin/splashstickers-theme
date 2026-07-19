@@ -127,9 +127,6 @@ class CollisionEngine {
              (cy - SKIN + 0.01) < (o.y + o.h + SKIN - 0.01) &&
              (o.y - SKIN + 0.01) < (cy + h + SKIN - 0.01);
     }
-    if (!hit(cx, cy, allItems.find(function(o){return o.id!==draggedItem.id&&!ds[o.id];})||{})) {
-      return {x:cx, y:cy};
-    }
     for (var i = 0; i < allItems.length; i++) {
       var o = allItems[i];
       if (o.id === draggedItem.id || ds[o.id]) continue;

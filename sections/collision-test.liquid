@@ -83,10 +83,6 @@
                (cy - SKIN + 0.01) < (o.y + o.h + SKIN - 0.01) &&
                (o.y - SKIN + 0.01) < (cy + h + SKIN - 0.01);
       }
-      if (!hit(cx, cy, all.find(function(o){return o.id!==dragged.id&&!ds[o.id];})||{})) {
-        return {x:cx, y:cy}; // no overlap at all
-      }
-      // Overlap detected: push on the approach direction axis
       for (var i = 0; i < all.length; i++) {
         var o = all[i];
         if (o.id === dragged.id || ds[o.id]) continue;
