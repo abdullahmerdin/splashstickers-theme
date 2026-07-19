@@ -58,7 +58,6 @@ class CollisionEngine {
    * @returns {{x: number, y: number}} Closest non-overlapping position
    */
   constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds) {
-    var cx = candidateX, cy = candidateY;
     var itemW = draggedItem.w, itemH = draggedItem.h;
     var GAP = this.GAP;
     var core = this.core;
@@ -71,59 +70,81 @@ class CollisionEngine {
       }
     }
 
-    // Helper: AABB overlap test at a specific candidate position
-    function overlapsAt(cx, cy, w, h, other) {
-      var self = { x: cx, y: cy, w: w, h: h };
-      return (self.x + 0.01) < (other.x + other.w - 0.01) &&
-             (other.x + 0.01) < (self.x + self.w - 0.01) &&
-             (self.y + 0.01) < (other.y + other.h - 0.01) &&
-             (other.y + 0.01) < (self.y + self.h - 0.01);
+    // Helper: does candidate (cx,cy) overlap with a specific other item?
+    function overlapsWith(cx, cy, other) {
+      return (cx + 0.01) < (other.x + other.w - 0.01) &&
+             (other.x + 0.01) < (cx + itemW - 0.01) &&
+             (cy + 0.01) < (other.y + other.h - 0.01) &&
+             (other.y + 0.01) < (cy + itemH - 0.01);
     }
 
-    for (var iter = 0; iter < 2; iter++) {
-      var totalPushX = 0, totalPushY = 0;
+    // Helper: does candidate (cx,cy) overlap with ANY stationary item (excluding draggedIds)?
+    function overlapsAny(cx, cy) {
+      for (var i = 0; i < allItems.length; i++) {
+        var o = allItems[i];
+        if (o.id === draggedItem.id || draggedSet[o.id]) continue;
+        if (overlapsWith(cx, cy, o)) return true;
+      }
+      return false;
+    }
 
-      for (var si = 0; si < allItems.length; si++) {
-        var other = allItems[si];
-        // Skip self and other dragged items (multi-drag pass-through)
-        if (other.id === draggedItem.id || draggedSet[other.id]) continue;
-        if (!overlapsAt(cx, cy, itemW, itemH, other)) continue;
+    // 1. If candidate position is already clear, return it
+    if (!overlapsAny(candidateX, candidateY)) {
+      return { x: candidateX, y: candidateY };
+    }
 
-        // AABB overlap depths at candidate position
-        var overlapX = Math.min(cx + itemW, other.x + other.w) - Math.max(cx, other.x);
-        var overlapY = Math.min(cy + itemH, other.y + other.h) - Math.max(cy, other.y);
-        if (overlapX <= 0 || overlapY <= 0) continue;
+    // 2. Collect ALL overlapping stationary items at candidate position
+    var blockers = [];
+    for (var i = 0; i < allItems.length; i++) {
+      var o = allItems[i];
+      if (o.id === draggedItem.id || draggedSet[o.id]) continue;
+      if (overlapsWith(candidateX, candidateY, o)) {
+        blockers.push(o);
+      }
+    }
 
-        // Push direction: centre-to-centre delta on each axis
-        var dCenterX = (cx + itemW / 2) - (other.x + other.w / 2);
-        var dCenterY = (cy + itemH / 2) - (other.y + other.h / 2);
-        var pushDirX = dCenterX >= 0 ? 1 : -1;
-        var pushDirY = dCenterY >= 0 ? 1 : -1;
-        // If centres exactly aligned, push right/down
-        if (dCenterX === 0) pushDirX = 1;
-        if (dCenterY === 0) pushDirY = 1;
+    // 3. For each blocker compute the 4 escape positions and pick the best
+    //    that also doesn't cause new overlaps
+    var bestX = candidateX, bestY = candidateY;
+    var bestDist = Infinity;
 
-        var pushDistX = overlapX + GAP;
-        var pushDistY = overlapY + GAP;
+    for (var b = 0; b < blockers.length; b++) {
+      var blk = blockers[b];
+      var escapes = [
+        // Right edge: place item to the right of blocker + GAP
+        { x: blk.x + blk.w + GAP, y: candidateY },
+        // Left edge: place item to the left of blocker - itemW - GAP
+        { x: blk.x - itemW - GAP, y: candidateY },
+        // Bottom edge: place item below blocker + GAP
+        { x: candidateX, y: blk.y + blk.h + GAP },
+        // Top edge: place item above blocker - itemH - GAP
+        { x: candidateX, y: blk.y - itemH - GAP }
+      ];
 
-        // Choose axis with SMALLER displacement (closer to mouse)
-        if (pushDistX <= pushDistY) {
-          totalPushX += pushDirX * pushDistX;
-        } else {
-          totalPushY += pushDirY * pushDistY;
+      for (var e = 0; e < escapes.length; e++) {
+        var ex = escapes[e].x, ey = escapes[e].y;
+        // Clamp to canvas
+        ex = Math.max(0, Math.min(core.CANVAS_W - itemW, ex));
+        ey = Math.max(0, Math.min(core.CANVAS_H - itemH, ey));
+        // Skip if this escape overlaps with anything
+        if (overlapsAny(ex, ey)) continue;
+        // Distance from candidate
+        var dist = Math.abs(ex - candidateX) + Math.abs(ey - candidateY);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestX = ex;
+          bestY = ey;
         }
       }
-
-      if (totalPushX === 0 && totalPushY === 0) break;
-      cx += totalPushX;
-      cy += totalPushY;
     }
 
-    // Final clamp to canvas bounds
-    cx = Math.max(0, Math.min(core.CANVAS_W - itemW, cx));
-    cy = Math.max(0, Math.min(core.CANVAS_H - itemH, cy));
+    // 4. If bestDist is still Infinity, all escapes failed — clamp to canvas and return
+    if (bestDist === Infinity) {
+      bestX = Math.max(0, Math.min(core.CANVAS_W - itemW, candidateX));
+      bestY = Math.max(0, Math.min(core.CANVAS_H - itemH, candidateY));
+    }
 
-    return { x: cx, y: cy };
+    return { x: bestX, y: bestY };
   }
 
   /**
