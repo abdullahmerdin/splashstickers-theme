@@ -97,7 +97,7 @@ class SnapEngine {
    - Resolution methods (return position, do NOT mutate items): constrainPosition, findNearestClearSpot, resolveAllOverlaps
    - Canvas clamping is inlined in constrainPosition and findNearestClearSpot
    - GAP = 2px minimum gap between items
-   - MAX_CASCADE_ITERATIONS = 3 iterations for axis feedback loop
+   - MAX_CASCADE_ITERATIONS = 10 iterations for axis feedback loop
    - MAX_SPIRAL_RADIUS_FINE = 20px fine-search radius
    - MAX_SPIRAL_COARSE_STEPS = 20 coarse-search outer steps
    =========================================== */
@@ -107,7 +107,7 @@ class CollisionEngine {
     this.core = core;
     this.GAP = 2;
     this.EPSILON = 0.01;
-    this.MAX_CASCADE_ITERATIONS = 3;
+    this.MAX_CASCADE_ITERATIONS = 10;
     this.MAX_SPIRAL_RADIUS_FINE = 20;
     this.MAX_SPIRAL_COARSE_STEPS = 20;
   }
@@ -132,34 +132,25 @@ class CollisionEngine {
     return { x: overlapX, y: overlapY };
   }
 
-  /** Clamp a single item to canvas bounds — does NOT update DOM */
-  // (removed: _clampToCanvas was dead code — clamping is inlined in constrainPosition and findNearestClearSpot)
-
   /**
    * Axis-separated AABB clamping response.
-   *
-   * Replaces v2 binary search with per-axis resolution cascade:
-   *   1. Resolve X with current Y position
-   *   2. Resolve Y with resolved X position
-   *   3. Repeat up to MAX_CASCADE_ITERATIONS until stable
+   * Resolves overlaps iteratively by finding the axis requiring MINIMUM displacement.
+   * Uses relative center-to-center positions to determine push directions.
+   * Includes a fail-safe to revert to starting position if unresolvable.
    *
    * @param {number} candidateX - Mouse candidate X
    * @param {number} candidateY - Mouse candidate Y
    * @param {Object} draggedItem - The item being dragged
    * @param {Array} allItems - All items on canvas
    * @param {Array} draggedIds - IDs of all items currently being dragged
-   * @param {number} [startX] - Unused in v3 (kept for backward compat)
-   * @param {number} [startY] - Unused in v3 (kept for backward compat)
    * @returns {{x: number, y: number}} Closest non-overlapping position
    */
-  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds, startX, startY) {
-    // Cache hot references to avoid repeated property chain lookups
-    var rectsOverlap = this.rectsOverlap;
+  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds) {
+    var rectsOverlap = this.rectsOverlap.bind(this);
     var GAP = this.GAP;
     var CANVAS_W = this.core.CANVAS_W;
     var CANVAS_H = this.core.CANVAS_H;
 
-    // Build dragged set for O(1) lookup
     var draggedSet = {};
     if (draggedIds) {
       for (var di = 0; di < draggedIds.length; di++) {
@@ -167,7 +158,6 @@ class CollisionEngine {
       }
     }
 
-    // Filter stationary items once (exclude self + co-dragged)
     var stationary = [];
     for (var si = 0; si < allItems.length; si++) {
       var s = allItems[si];
@@ -175,8 +165,14 @@ class CollisionEngine {
       stationary.push(s);
     }
 
-    // Candidate already clear — return early
-    var candidateRect = { x: candidateX, y: candidateY, w: draggedItem.w, h: draggedItem.h };
+    var rx = candidateX, ry = candidateY;
+    var dw = draggedItem.w, dh = draggedItem.h;
+
+    // Initial boundary clamp
+    rx = Math.max(0, Math.min(CANVAS_W - dw, rx));
+    ry = Math.max(0, Math.min(CANVAS_H - dh, ry));
+
+    var candidateRect = { x: rx, y: ry, w: dw, h: dh };
     var anyOverlap = false;
     for (var z = 0; z < stationary.length; z++) {
       if (rectsOverlap(candidateRect, stationary[z])) {
@@ -185,52 +181,68 @@ class CollisionEngine {
       }
     }
     if (!anyOverlap) {
-      return { x: candidateX, y: candidateY };
+      return { x: rx, y: ry };
     }
 
-    // Axis-separated clamping with cascade iteration
-    var rx = candidateX, ry = candidateY;
-    var prevX = null, prevY = null;
-    var dw = draggedItem.w, dh = draggedItem.h;
-    var dx0 = candidateX, dy0 = candidateY;
-    var dix = draggedItem.x, diy = draggedItem.y;
-
-    for (var iter = 0; iter < this.MAX_CASCADE_ITERATIONS; iter++) {
-      if (rx === prevX && ry === prevY) break;
-      prevX = rx; prevY = ry;
-
-      // Resolve X with current Y
+    // Cascade resolver using minimum displacement push
+    var adjusted = true;
+    for (var iter = 0; iter < this.MAX_CASCADE_ITERATIONS && adjusted; iter++) {
+      adjusted = false;
       for (var i = 0; i < stationary.length; i++) {
-        var sX = stationary[i];
-        if (rectsOverlap({ x: rx, y: ry, w: dw, h: dh }, sX)) {
-          if (dx0 > dix) {
-            // Moving right — clamp right edge to left edge of blocker
-            rx = Math.min(rx, sX.x - dw - GAP);
-          } else {
-            // Moving left — clamp left edge to right edge of blocker
-            rx = Math.max(rx, sX.x + sX.w + GAP);
-          }
-        }
-      }
-
-      // Resolve Y with resolved X
-      for (var j = 0; j < stationary.length; j++) {
-        var sY = stationary[j];
-        if (rectsOverlap({ x: rx, y: ry, w: dw, h: dh }, sY)) {
-          if (dy0 > diy) {
-            // Moving down — clamp bottom edge to top edge of blocker
-            ry = Math.min(ry, sY.y - dh - GAP);
-          } else {
-            // Moving up — clamp top edge to bottom edge of blocker
-            ry = Math.max(ry, sY.y + sY.h + GAP);
+        var s = stationary[i];
+        var itemRect = { x: rx, y: ry, w: dw, h: dh };
+        if (rectsOverlap(itemRect, s)) {
+          var overlapX = Math.min(rx + dw, s.x + s.w) - Math.max(rx, s.x);
+          var overlapY = Math.min(ry + dh, s.y + s.h) - Math.max(ry, s.y);
+          
+          if (overlapX > 0 && overlapY > 0) {
+            if (overlapX < overlapY) {
+              // Push horizontally based on relative centers
+              if (rx + dw / 2 > s.x + s.w / 2) {
+                rx = s.x + s.w + GAP;
+              } else {
+                rx = s.x - dw - GAP;
+              }
+            } else {
+              // Push vertically based on relative centers
+              if (ry + dh / 2 > s.y + s.h / 2) {
+                ry = s.y + s.h + GAP;
+              } else {
+                ry = s.y - dh - GAP;
+              }
+            }
+            // Clamp to canvas after each push
+            rx = Math.max(0, Math.min(CANVAS_W - dw, rx));
+            ry = Math.max(0, Math.min(CANVAS_H - dh, ry));
+            adjusted = true;
           }
         }
       }
     }
 
-    // Canvas boundary clamp
-    rx = Math.max(0, Math.min(CANVAS_W - dw, rx));
-    ry = Math.max(0, Math.min(CANVAS_H - dh, ry));
+    // Fail-safe check: if still overlapping after cascade, revert to start position
+    var finalRect = { x: rx, y: ry, w: dw, h: dh };
+    var stillOverlaps = false;
+    for (var j = 0; j < stationary.length; j++) {
+      if (rectsOverlap(finalRect, stationary[j])) {
+        stillOverlaps = true;
+        break;
+      }
+    }
+
+    if (stillOverlaps) {
+      var startRect = { x: draggedItem.x, y: draggedItem.y, w: dw, h: dh };
+      var startIsClear = true;
+      for (var k = 0; k < stationary.length; k++) {
+        if (rectsOverlap(startRect, stationary[k])) {
+          startIsClear = false;
+          break;
+        }
+      }
+      if (startIsClear) {
+        return { x: draggedItem.x, y: draggedItem.y };
+      }
+    }
 
     return { x: rx, y: ry };
   }
@@ -243,7 +255,7 @@ class CollisionEngine {
    */
   findAllOverlaps(item, allItems) {
     var results = [];
-    var rectsOverlap = this.rectsOverlap;
+    var rectsOverlap = this.rectsOverlap.bind(this);
     for (var i = 0; i < allItems.length; i++) {
       var other = allItems[i];
       if (other.id === item.id) continue;
@@ -274,7 +286,7 @@ class CollisionEngine {
     var core = this.core;
     var GAP = this.GAP;
     var w = item.w, h = item.h;
-    var findAllOverlaps = this.findAllOverlaps;
+    var findAllOverlaps = this.findAllOverlaps.bind(this);
 
     // Check if current position is already clear
     if (findAllOverlaps(item, allItems).length === 0) {
@@ -353,11 +365,10 @@ class CollisionEngine {
         excludeSet[excludeIds[ei]] = true;
       }
     }
-    var rectsOverlap = this.rectsOverlap;
+    var rectsOverlap = this.rectsOverlap.bind(this);
     for (var i = 0; i < items.length; i++) {
       for (var j = i + 1; j < items.length; j++) {
         var a = items[i], b = items[j];
-        // Only skip pairs where BOTH items are dragged
         if (excludeSet[a.id] && excludeSet[b.id]) continue;
         if (rectsOverlap(a, b)) return true;
       }
@@ -372,7 +383,7 @@ class CollisionEngine {
    * @returns {Object|null} { overlappingItem, depths } or null if no overlap
    */
   findOverlap(item, allItems) {
-    var rectsOverlap = this.rectsOverlap;
+    var rectsOverlap = this.rectsOverlap.bind(this);
     for (var i = 0; i < allItems.length; i++) {
       var o = allItems[i];
       if (o.id === item.id) continue;
@@ -2241,7 +2252,15 @@ class InteractionManager {
         candidate.h = candidateH;
       }
 
-      // Re-check minimums after clamping
+      // Re-check minimums after clamping — if less than 30, revert to previous size/position to avoid overlap
+      if (candidateW < 30) {
+        candidateX = item.x;
+        candidateW = item.w;
+      }
+      if (candidateH < 30) {
+        candidateY = item.y;
+        candidateH = item.h;
+      }
       candidateW = Math.max(30, candidateW);
       candidateH = Math.max(30, candidateH);
 
@@ -2367,6 +2386,15 @@ class InteractionManager {
             dragged.y = next.y;
             dragged.el.style.left = next.x + 'px';
             dragged.el.style.top = next.y + 'px';
+          } else {
+            // Revert snap to pre-drag position to guarantee zero overlap
+            var prev = ds.startPos[id];
+            if (prev) {
+              dragged.x = prev.x;
+              dragged.y = prev.y;
+              dragged.el.style.left = prev.x + 'px';
+              dragged.el.style.top = prev.y + 'px';
+            }
           }
         }
         dragged.el.style.outline = '';
@@ -2580,7 +2608,15 @@ class InteractionManager {
         candidate.h = candidateH;
       }
 
-      // Re-check minimums after clamping
+      // Re-check minimums after clamping — if less than 30, revert to previous size/position to avoid overlap
+      if (candidateW < 30) {
+        candidateX = item.x;
+        candidateW = item.w;
+      }
+      if (candidateH < 30) {
+        candidateY = item.y;
+        candidateH = item.h;
+      }
       candidateW = Math.max(30, candidateW);
       candidateH = Math.max(30, candidateH);
 
@@ -2673,6 +2709,15 @@ class InteractionManager {
             dragged.y = next.y;
             dragged.el.style.left = next.x + 'px';
             dragged.el.style.top = next.y + 'px';
+          } else {
+            // Revert snap to pre-drag position to guarantee zero overlap
+            var prev = core.state.dragState.startPos[id];
+            if (prev) {
+              dragged.x = prev.x;
+              dragged.y = prev.y;
+              dragged.el.style.left = prev.x + 'px';
+              dragged.el.style.top = prev.y + 'px';
+            }
           }
         }
         dragged.el.style.outline = '';

@@ -202,7 +202,15 @@ class InteractionManager {
         candidate.h = candidateH;
       }
 
-      // Re-check minimums after clamping
+      // Re-check minimums after clamping — if less than 30, revert to previous size/position to avoid overlap
+      if (candidateW < 30) {
+        candidateX = item.x;
+        candidateW = item.w;
+      }
+      if (candidateH < 30) {
+        candidateY = item.y;
+        candidateH = item.h;
+      }
       candidateW = Math.max(30, candidateW);
       candidateH = Math.max(30, candidateH);
 
@@ -328,6 +336,15 @@ class InteractionManager {
             dragged.y = next.y;
             dragged.el.style.left = next.x + 'px';
             dragged.el.style.top = next.y + 'px';
+          } else {
+            // Revert snap to pre-drag position to guarantee zero overlap
+            var prev = ds.startPos[id];
+            if (prev) {
+              dragged.x = prev.x;
+              dragged.y = prev.y;
+              dragged.el.style.left = prev.x + 'px';
+              dragged.el.style.top = prev.y + 'px';
+            }
           }
         }
         dragged.el.style.outline = '';
@@ -541,7 +558,15 @@ class InteractionManager {
         candidate.h = candidateH;
       }
 
-      // Re-check minimums after clamping
+      // Re-check minimums after clamping — if less than 30, revert to previous size/position to avoid overlap
+      if (candidateW < 30) {
+        candidateX = item.x;
+        candidateW = item.w;
+      }
+      if (candidateH < 30) {
+        candidateY = item.y;
+        candidateH = item.h;
+      }
       candidateW = Math.max(30, candidateW);
       candidateH = Math.max(30, candidateH);
 
@@ -634,6 +659,15 @@ class InteractionManager {
             dragged.y = next.y;
             dragged.el.style.left = next.x + 'px';
             dragged.el.style.top = next.y + 'px';
+          } else {
+            // Revert snap to pre-drag position to guarantee zero overlap
+            var prev = core.state.dragState.startPos[id];
+            if (prev) {
+              dragged.x = prev.x;
+              dragged.y = prev.y;
+              dragged.el.style.left = prev.x + 'px';
+              dragged.el.style.top = prev.y + 'px';
+            }
           }
         }
         dragged.el.style.outline = '';
