@@ -74,22 +74,30 @@
     constrainPosition: function(cx, cy, dragged, all, ids, sx, sy) {
       var w = dragged.w, h = dragged.h;
       var ds = {}; for (var i = 0; i < (ids||[]).length; i++) ds[ids[i]] = true;
-      function any(cx, cy) {
+      var ok = true;
+      do {
+        ok = true;
         for (var i = 0; i < all.length; i++) {
           var o = all[i];
           if (o.id === dragged.id || ds[o.id]) continue;
-          if ((cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
-              (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01)) return true;
+          if (!((cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
+                (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01))) continue;
+          // Overlap: push to nearest edge using start direction (or center-based)
+          var fromX = sx != null ? sx : cx;
+          var fromY = sy != null ? sy : cy;
+          var rightDist = Math.abs((o.x + o.w) - fromX);
+          var leftDist = Math.abs(fromX - (o.x - w));
+          var downDist = Math.abs((o.y + o.h) - fromY);
+          var upDist = Math.abs(fromY - (o.y - h));
+          var bestX = rightDist <= leftDist ? o.x + o.w : o.x - w;
+          var bestY = downDist <= upDist ? o.y + o.h : o.y - h;
+          var distX = Math.abs(bestX - fromX);
+          var distY = Math.abs(bestY - fromY);
+          if (distX <= distY) cx = bestX; else cy = bestY;
+          ok = false; break;
         }
-        return false;
-      }
-      if (!any(cx, cy)) return {x:cx, y:cy};
-      var lx=sx||cx, ly=sy||cy, hx=cx, hy=cy;
-      for (var i=0; i<14; i++) {
-        var mx=(lx+hx)/2, my=(ly+hy)/2;
-        if (any(mx, my)) { hx=mx; hy=my; } else { lx=mx; ly=my; }
-      }
-      return {x:lx, y:ly};
+      } while (!ok);
+      return {x: cx, y: cy};
     }
   };
 
