@@ -90,58 +90,160 @@ class SnapEngine {
   }
 }
 /* ===========================================
-   CollisionEngine — Push-apart overlap resolution
+   CollisionEngine v5 — Binary search wall-collision
    =========================================== */
 
 class CollisionEngine {
   constructor(core) {
     this.core = core;
+    this.GAP = 2;
+    this.EPSILON = 0.01;
   }
 
   rectsOverlap(a, b) {
-    return a.x < b.x + b.w && a.x + a.w > b.x &&
-           a.y < b.y + b.h && a.y + a.h > b.y;
+    return (a.x + this.EPSILON) < (b.x + b.w - this.EPSILON) &&
+           (b.x + this.EPSILON) < (a.x + a.w - this.EPSILON) &&
+           (a.y + this.EPSILON) < (b.y + b.h - this.EPSILON) &&
+           (b.y + this.EPSILON) < (a.y + a.h - this.EPSILON);
   }
 
-  _pushApart(a, b) {
-    var dx2 = (a.x + a.w / 2) - (b.x + b.w / 2);
-    var dy2 = (a.y + a.h / 2) - (b.y + b.h / 2);
-    if (Math.abs(dx2) > Math.abs(dy2)) {
-      var push = dx2 > 0 ? 4 : -4;
-      a.x += push; b.x -= push;
-    } else {
-      var push = dy2 > 0 ? 4 : -4;
-      a.y += push; b.y -= push;
-    }
+  _overlapDepths(a, b) {
+    var overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+    var overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+    return { x: overlapX, y: overlapY };
   }
 
-  resolveOverlaps(items, draggedIds) {
+  /**
+   * Wall-collision via binary search.
+   * Searches from start (known non-overlapping) to candidate (might overlap)
+   * to find the LAST non-overlapping position.
+   */
+  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds, startX, startY) {
+    var itemW = draggedItem.w, itemH = draggedItem.h;
     var core = this.core;
-    for (var p = 0; p < 5; p++) {
-      var ov = false;
-      for (var ai = 0; ai < items.length; ai++) {
-        for (var bi = ai + 1; bi < items.length; bi++) {
-          var a = items[ai], b = items[bi];
-          if (this.rectsOverlap(a, b)) {
-            ov = true;
-            this._pushApart(a, b);
-          }
+
+    var draggedSet = {};
+    if (draggedIds) {
+      for (var di = 0; di < draggedIds.length; di++) {
+        draggedSet[draggedIds[di]] = true;
+      }
+    }
+
+    function overlapsAny(cx, cy) {
+      for (var i = 0; i < allItems.length; i++) {
+        var o = allItems[i];
+        if (o.id === draggedItem.id || draggedSet[o.id]) continue;
+        if ((cx + 0.01) < (o.x + o.w - 0.01) &&
+            (o.x + 0.01) < (cx + itemW - 0.01) &&
+            (cy + 0.01) < (o.y + o.h - 0.01) &&
+            (o.y + 0.01) < (cy + itemH - 0.01)) return true;
+      }
+      return false;
+    }
+
+    if (!overlapsAny(candidateX, candidateY)) {
+      return { x: candidateX, y: candidateY };
+    }
+
+    var loX = startX != null ? startX : candidateX;
+    var loY = startY != null ? startY : candidateY;
+    var hiX = candidateX, hiY = candidateY;
+
+    for (var iter = 0; iter < 14; iter++) {
+      var midX = (loX + hiX) / 2;
+      var midY = (loY + hiY) / 2;
+      if (overlapsAny(midX, midY)) {
+        hiX = midX; hiY = midY;
+      } else {
+        loX = midX; loY = midY;
+      }
+    }
+
+    loX = Math.max(0, Math.min(core.CANVAS_W - itemW, loX));
+    loY = Math.max(0, Math.min(core.CANVAS_H - itemH, loY));
+    return { x: loX, y: loY };
+  }
+
+  findOverlap(item, allItems) {
+    for (var i = 0; i < allItems.length; i++) {
+      var o = allItems[i];
+      if (o.id === item.id) continue;
+      if (this.rectsOverlap(item, o)) {
+        return { overlappingItem: o, depths: this._overlapDepths(item, o) };
+      }
+    }
+    return null;
+  }
+
+  findAllOverlaps(item, allItems) {
+    var results = [];
+    for (var i = 0; i < allItems.length; i++) {
+      var other = allItems[i];
+      if (other.id === item.id) continue;
+      if (this.rectsOverlap(item, other)) {
+        results.push({ other: other, depths: this._overlapDepths(item, other) });
+      }
+    }
+    return results;
+  }
+
+  hasAnyOverlap(items, excludeIds) {
+    var excludeSet = {};
+    if (excludeIds) {
+      for (var ei = 0; ei < excludeIds.length; ei++) {
+        excludeSet[excludeIds[ei]] = true;
+      }
+    }
+    for (var i = 0; i < items.length; i++) {
+      for (var j = i + 1; j < items.length; j++) {
+        if (excludeSet[items[i].id] && excludeSet[items[j].id]) continue;
+        if (this.rectsOverlap(items[i], items[j])) return true;
+      }
+    }
+    return false;
+  }
+
+  findNearestClearSpot(item, allItems) {
+    var core = this.core;
+    var GAP = this.GAP;
+    var w = item.w, h = item.h;
+    if (this.findAllOverlaps(item, allItems).length === 0) {
+      return { x: item.x, y: item.y };
+    }
+    var bestX = item.x, bestY = item.y;
+    var bestDist = Infinity;
+    for (var i = 0; i < allItems.length; i++) {
+      var other = allItems[i];
+      if (other.id === item.id) continue;
+      if (!this.rectsOverlap(item, other)) continue;
+      var escapes = [
+        { x: other.x + other.w + GAP, y: item.y },
+        { x: other.x - w - GAP, y: item.y },
+        { x: item.x, y: other.y + other.h + GAP },
+        { x: item.x, y: other.y - h - GAP },
+        { x: other.x + other.w + GAP, y: other.y + other.h + GAP },
+        { x: other.x + other.w + GAP, y: other.y - h - GAP },
+        { x: other.x - w - GAP, y: other.y + other.h + GAP },
+        { x: other.x - w - GAP, y: other.y - h - GAP }
+      ];
+      for (var e = 0; e < escapes.length; e++) {
+        var ex = escapes[e].x, ey = escapes[e].y;
+        ex = Math.max(0, Math.min(core.CANVAS_W - w, ex));
+        ey = Math.max(0, Math.min(core.CANVAS_H - h, ey));
+        if (this.findAllOverlaps(
+          { id: item.id, x: ex, y: ey, w: w, h: h },
+          allItems
+        ).length > 0) continue;
+        var dist = Math.abs(ex - item.x) + Math.abs(ey - item.y);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestX = ex;
+          bestY = ey;
         }
       }
-      if (!ov) break;
     }
-
-    // Clamp and update positions
-    if (draggedIds) {
-      draggedIds.forEach(function (id) {
-        var item = core.state.items.find(function (i) { return i.id === id; });
-        if (!item) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x));
-        item.y = Math.max(0, item.y);
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-      });
-    }
+    if (bestDist === Infinity) return null;
+    return { x: bestX, y: bestY };
   }
 }
 /* ===========================================
@@ -1774,28 +1876,28 @@ class InteractionManager {
     }
 
     if (ds.type === 'move') {
-      var dx = (e.clientX - ds.ox) / core.state.zoom;
-      var dy = (e.clientY - ds.oy) / core.state.zoom;
+      var prevX = ds._lastX != null ? ds._lastX : ds.ox;
+      var prevY = ds._lastY != null ? ds._lastY : ds.oy;
+      var dx = (e.clientX - prevX) / core.state.zoom;
+      var dy = (e.clientY - prevY) / core.state.zoom;
+      ds._lastX = e.clientX;
+      ds._lastY = e.clientY;
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
-        var sp = ds.startPos[id];
-        if (!sp) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, sp.x + dx));
-        item.y = Math.max(0, sp.y + dy);
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-
-        // Overlap detection
-        var valid = core.state.items.every(function (o) {
-          return o.id === id || !core.utils.rectsOverlap(item, o);
-        });
-        item.el.style.opacity = valid ? '' : '0.4';
-        item.el.style.outline = valid ? '' : '2px solid #FF4444';
+        var candidateX = item.x + dx;
+        var candidateY = item.y + dy;
+        candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
+        candidateY = Math.max(0, candidateY);
+        var result = core.collisionEngine.constrainPosition(
+          candidateX, candidateY, item, core.state.items, ds.ids,
+          item.x, item.y
+        );
+        item.x = result.x;
+        item.y = result.y;
+        item.el.style.left = result.x + 'px';
+        item.el.style.top = result.y + 'px';
       });
-
-      // Push apart overlapping items during drag
-      core.collisionEngine.resolveOverlaps(core.state.items, ds.ids);
 
       core.selectionManager.updateGuides(
         core.state.items.find(function (i) { return i.id === ds.ids[0]; }),
