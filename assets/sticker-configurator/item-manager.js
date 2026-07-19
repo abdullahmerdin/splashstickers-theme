@@ -37,6 +37,14 @@ class ItemManager {
     var slot = this.findNextSlot(defaultW, defaultH);
     item.x = slot.x;
     item.y = slot.y;
+
+    // V3: Collision check before DOM render
+    var clearSpot = core.collisionEngine.findNearestClearSpot(item, core.state.items);
+    if (clearSpot) {
+      item.x = clearSpot.x;
+      item.y = clearSpot.y;
+    }
+
     el.style.left = item.x + 'px';
     el.style.top = item.y + 'px';
 
@@ -102,6 +110,14 @@ class ItemManager {
     var slot = this.findNextSlot(item.w, item.h);
     item.x = slot.x;
     item.y = slot.y;
+
+    // V3: Collision check before DOM render
+    var clearSpot = core.collisionEngine.findNearestClearSpot(item, core.state.items);
+    if (clearSpot) {
+      item.x = clearSpot.x;
+      item.y = clearSpot.y;
+    }
+
     el.style.left = item.x + 'px';
     el.style.top = item.y + 'px';
 
@@ -255,20 +271,19 @@ class ItemManager {
           dup.rotation = it.rotation || 0;
           dup.scaleX = it.scaleX || 1;
           dup.scaleY = it.scaleY || 1;
+
+          // V3: Collision check BEFORE DOM render (no flash)
+          var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
+          if (clearSpot) {
+            dup.x = clearSpot.x;
+            dup.y = clearSpot.y;
+          }
+
           dup.el.style.left = dup.x + 'px';
           dup.el.style.top = dup.y + 'px';
           dup.el.style.width = dup.w + 'px';
           dup.el.style.height = dup.h + 'px';
           core.applyTransform(dup);
-
-          // Nudge duplicate to clear position if overlap detected
-          var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
-          if (clearSpot) {
-            dup.x = clearSpot.x;
-            dup.y = clearSpot.y;
-            dup.el.style.left = clearSpot.x + 'px';
-            dup.el.style.top = clearSpot.y + 'px';
-          }
         }
       } else if (it.src) {
         var img = new Image();
@@ -282,6 +297,14 @@ class ItemManager {
             dup.rotation = it.rotation || 0;
             dup.scaleX = it.scaleX || 1;
             dup.scaleY = it.scaleY || 1;
+
+            // V3: Collision check BEFORE DOM render (no flash)
+            var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
+            if (clearSpot) {
+              dup.x = clearSpot.x;
+              dup.y = clearSpot.y;
+            }
+
             dup.el.style.left = dup.x + 'px';
             dup.el.style.top = dup.y + 'px';
             dup.el.style.width = dup.w + 'px';
@@ -291,15 +314,6 @@ class ItemManager {
               dup.el.querySelector('img').style.height = dup.h + 'px';
             }
             core.applyTransform(dup);
-
-            // Nudge duplicate to clear position if overlap detected
-            var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
-            if (clearSpot) {
-              dup.x = clearSpot.x;
-              dup.y = clearSpot.y;
-              dup.el.style.left = clearSpot.x + 'px';
-              dup.el.style.top = clearSpot.y + 'px';
-            }
 
             core.historyManager.saveState();
             core.growCanvas();

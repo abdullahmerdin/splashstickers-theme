@@ -37,11 +37,6 @@ class AlignmentEngine {
       sel.forEach(function (it) { it.y = cy - it.h / 2; });
     }
 
-    sel.forEach(function (it) {
-      it.el.style.left = it.x + 'px';
-      it.el.style.top = it.y + 'px';
-    });
-
     // Check for overlaps created by alignment
     var allOverlapsResolved = core.collisionEngine.resolveAllOverlaps(core.state.items);
     if (!allOverlapsResolved && core.debug) {
@@ -80,8 +75,6 @@ class AlignmentEngine {
       }
       it.x = x;
       it.y = y;
-      it.el.style.left = x + 'px';
-      it.el.style.top = y + 'px';
       x += it.w + gapPx;
       col++;
       if (it.h > rowH) rowH = it.h;
@@ -117,7 +110,6 @@ class AlignmentEngine {
     var curX = first.x;
     for (var j = 0; j < sel.length; j++) {
       sel[j].x = curX;
-      sel[j].el.style.left = curX + 'px';
       curX += sel[j].w + gap;
     }
 
@@ -152,7 +144,6 @@ class AlignmentEngine {
     var curY = first.y;
     for (var j = 0; j < sel.length; j++) {
       sel[j].y = curY;
-      sel[j].el.style.top = curY + 'px';
       curY += sel[j].h + gap;
     }
 

@@ -90,7 +90,16 @@ class SnapEngine {
   }
 }
 /* ===========================================
-   CollisionEngine v5 — Binary search wall-collision
+   CollisionEngine v3 — Axis-Separated AABB Clamping + Spiral Search
+
+   Principles:
+   - Query methods (pure): rectsOverlap, _overlapDepths, findOverlap, findAllOverlaps, hasAnyOverlap
+   - Resolution methods (return position, do NOT mutate items): constrainPosition, findNearestClearSpot, resolveAllOverlaps
+   - Canvas clamping is inlined in constrainPosition and findNearestClearSpot
+   - GAP = 2px minimum gap between items
+   - MAX_CASCADE_ITERATIONS = 3 iterations for axis feedback loop
+   - MAX_SPIRAL_RADIUS_FINE = 20px fine-search radius
+   - MAX_SPIRAL_COARSE_STEPS = 20 coarse-search outer steps
    =========================================== */
 
 class CollisionEngine {
@@ -98,8 +107,17 @@ class CollisionEngine {
     this.core = core;
     this.GAP = 2;
     this.EPSILON = 0.01;
+    this.MAX_CASCADE_ITERATIONS = 3;
+    this.MAX_SPIRAL_RADIUS_FINE = 20;
+    this.MAX_SPIRAL_COARSE_STEPS = 20;
   }
 
+  /**
+   * Standard AABB overlap test with epsilon tolerance.
+   * @param {Object} a - Item with {x, y, w, h}
+   * @param {Object} b - Item with {x, y, w, h}
+   * @returns {boolean}
+   */
   rectsOverlap(a, b) {
     return (a.x + this.EPSILON) < (b.x + b.w - this.EPSILON) &&
            (b.x + this.EPSILON) < (a.x + a.w - this.EPSILON) &&
@@ -107,149 +125,227 @@ class CollisionEngine {
            (b.y + this.EPSILON) < (a.y + a.h - this.EPSILON);
   }
 
+  /** Calculate overlap depths per axis (positive = overlapping) */
   _overlapDepths(a, b) {
     var overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
     var overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
     return { x: overlapX, y: overlapY };
   }
 
-  constrainPosition(cx, cy, draggedItem, allItems, draggedIds, sx, sy) {
-    var dx = cx - (sx != null ? sx : cx);
-    var dy = cy - (sy != null ? sy : cy);
-    return this.moveAndSlide(draggedItem, dx, dy, allItems, draggedIds);
-  }
+  /** Clamp a single item to canvas bounds — does NOT update DOM */
+  // (removed: _clampToCanvas was dead code — clamping is inlined in constrainPosition and findNearestClearSpot)
 
-  // Continuous Swept AABB Collision detection against a static obstacle B
-  sweep(a, dx, dy, b) {
-    var b_x = b.x - this.GAP;
-    var b_y = b.y - this.GAP;
-    var b_w = b.w + 2 * this.GAP;
-    var b_h = b.h + 2 * this.GAP;
+  /**
+   * Axis-separated AABB clamping response.
+   *
+   * Replaces v2 binary search with per-axis resolution cascade:
+   *   1. Resolve X with current Y position
+   *   2. Resolve Y with resolved X position
+   *   3. Repeat up to MAX_CASCADE_ITERATIONS until stable
+   *
+   * @param {number} candidateX - Mouse candidate X
+   * @param {number} candidateY - Mouse candidate Y
+   * @param {Object} draggedItem - The item being dragged
+   * @param {Array} allItems - All items on canvas
+   * @param {Array} draggedIds - IDs of all items currently being dragged
+   * @param {number} [startX] - Unused in v3 (kept for backward compat)
+   * @param {number} [startY] - Unused in v3 (kept for backward compat)
+   * @returns {{x: number, y: number}} Closest non-overlapping position
+   */
+  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds, startX, startY) {
+    // Cache hot references to avoid repeated property chain lookups
+    var rectsOverlap = this.rectsOverlap;
+    var GAP = this.GAP;
+    var CANVAS_W = this.core.CANVAS_W;
+    var CANVAS_H = this.core.CANVAS_H;
 
-    var overlapX = (a.x + a.w > b_x) && (a.x < b_x + b_w);
-    var overlapY = (a.y + a.h > b_y) && (a.y < b_y + b_h);
-
-    if (overlapX && overlapY) {
-      return { time: 0, normalX: 0, normalY: 0 };
-    }
-
-    var xEntry, yEntry;
-    var xExit, yExit;
-
-    if (dx > 0) {
-      xEntry = b_x - (a.x + a.w);
-      xExit = (b_x + b_w) - a.x;
-    } else {
-      xEntry = (b_x + b_w) - a.x;
-      xExit = b_x - (a.x + a.w);
-    }
-
-    if (dy > 0) {
-      yEntry = b_y - (a.y + a.h);
-      yExit = (b_y + b_h) - a.y;
-    } else {
-      yEntry = (b_y + b_h) - a.y;
-      yExit = b_y - (a.y + a.h);
-    }
-
-    var xEntryTime = dx === 0 ? -Infinity : xEntry / dx;
-    var xExitTime = dx === 0 ? Infinity : xExit / dx;
-    var yEntryTime = dy === 0 ? -Infinity : yEntry / dy;
-    var yExitTime = dy === 0 ? Infinity : yExit / dy;
-
-    var entryTime = Math.max(xEntryTime, yEntryTime);
-    var exitTime = Math.min(xExitTime, yExitTime);
-
-    if (entryTime > exitTime || (xEntryTime < 0 && yEntryTime < 0) || entryTime > 1 || entryTime < 0) {
-      return { time: 1 };
-    }
-
-    var normalX = 0, normalY = 0;
-    if (xEntryTime > yEntryTime) {
-      normalX = dx > 0 ? -1 : 1;
-    } else {
-      normalY = dy > 0 ? -1 : 1;
-    }
-
-    return { time: entryTime, normalX: normalX, normalY: normalY };
-  }
-
-  // Slide response: try moving, if hitting obstacle, zero hit axis and slide the remainder
-  moveAndSlide(a, dx, dy, obstacles, draggedIds) {
-    var ds = {};
+    // Build dragged set for O(1) lookup
+    var draggedSet = {};
     if (draggedIds) {
-      for (var i = 0; i < draggedIds.length; i++) ds[draggedIds[i]] = true;
+      for (var di = 0; di < draggedIds.length; di++) {
+        draggedSet[draggedIds[di]] = true;
+      }
     }
 
-    var currX = a.x;
-    var currY = a.y;
-    var core = this.core;
+    // Filter stationary items once (exclude self + co-dragged)
+    var stationary = [];
+    for (var si = 0; si < allItems.length; si++) {
+      var s = allItems[si];
+      if (s.id === draggedItem.id || draggedSet[s.id]) continue;
+      stationary.push(s);
+    }
 
-    for (var pass = 0; pass < 3; pass++) {
-      if (dx === 0 && dy === 0) break;
+    // Candidate already clear — return early
+    var candidateRect = { x: candidateX, y: candidateY, w: draggedItem.w, h: draggedItem.h };
+    var anyOverlap = false;
+    for (var z = 0; z < stationary.length; z++) {
+      if (rectsOverlap(candidateRect, stationary[z])) {
+        anyOverlap = true;
+        break;
+      }
+    }
+    if (!anyOverlap) {
+      return { x: candidateX, y: candidateY };
+    }
 
-      var minTime = 1;
-      var hitNormalX = 0;
-      var hitNormalY = 0;
+    // Axis-separated clamping with cascade iteration
+    var rx = candidateX, ry = candidateY;
+    var prevX = null, prevY = null;
+    var dw = draggedItem.w, dh = draggedItem.h;
+    var dx0 = candidateX, dy0 = candidateY;
+    var dix = draggedItem.x, diy = draggedItem.y;
 
-      for (var i = 0; i < obstacles.length; i++) {
-        var o = obstacles[i];
-        if (o.id === a.id || ds[o.id]) continue;
+    for (var iter = 0; iter < this.MAX_CASCADE_ITERATIONS; iter++) {
+      if (rx === prevX && ry === prevY) break;
+      prevX = rx; prevY = ry;
 
-        var tempA = { x: currX, y: currY, w: a.w, h: a.h };
-        var result = this.sweep(tempA, dx, dy, o);
-        if (result.time < minTime) {
-          minTime = result.time;
-          hitNormalX = result.normalX || 0;
-          hitNormalY = result.normalY || 0;
+      // Resolve X with current Y
+      for (var i = 0; i < stationary.length; i++) {
+        var sX = stationary[i];
+        if (rectsOverlap({ x: rx, y: ry, w: dw, h: dh }, sX)) {
+          if (dx0 > dix) {
+            // Moving right — clamp right edge to left edge of blocker
+            rx = Math.min(rx, sX.x - dw - GAP);
+          } else {
+            // Moving left — clamp left edge to right edge of blocker
+            rx = Math.max(rx, sX.x + sX.w + GAP);
+          }
         }
       }
 
-      currX += dx * minTime;
-      currY += dy * minTime;
-
-      if (minTime === 1) {
-        break;
-      }
-
-      var remainingTime = 1.0 - minTime;
-      if (hitNormalX !== 0) {
-        dx = 0;
-        dy = dy * remainingTime;
-      } else if (hitNormalY !== 0) {
-        dx = dx * remainingTime;
-        dy = 0;
+      // Resolve Y with resolved X
+      for (var j = 0; j < stationary.length; j++) {
+        var sY = stationary[j];
+        if (rectsOverlap({ x: rx, y: ry, w: dw, h: dh }, sY)) {
+          if (dy0 > diy) {
+            // Moving down — clamp bottom edge to top edge of blocker
+            ry = Math.min(ry, sY.y - dh - GAP);
+          } else {
+            // Moving up — clamp top edge to bottom edge of blocker
+            ry = Math.max(ry, sY.y + sY.h + GAP);
+          }
+        }
       }
     }
 
-    currX = Math.max(0, Math.min(core.CANVAS_W - a.w, currX));
-    currY = Math.max(0, Math.min(core.CANVAS_H - a.h, currY));
-    return { x: currX, y: currY };
+    // Canvas boundary clamp
+    rx = Math.max(0, Math.min(CANVAS_W - dw, rx));
+    ry = Math.max(0, Math.min(CANVAS_H - dh, ry));
+
+    return { x: rx, y: ry };
   }
 
-  findOverlap(item, allItems) {
-    for (var i = 0; i < allItems.length; i++) {
-      var o = allItems[i];
-      if (o.id === item.id) continue;
-      if (this.rectsOverlap(item, o)) {
-        return { overlappingItem: o, depths: this._overlapDepths(item, o) };
-      }
-    }
-    return null;
-  }
-
+  /**
+   * Find ALL items that overlap with the given item.
+   * @param {Object} item - The item to check
+   * @param {Array} allItems - All items to check against
+   * @returns {Array<{other: Object, depths: {x: number, y: number}}>}
+   */
   findAllOverlaps(item, allItems) {
     var results = [];
+    var rectsOverlap = this.rectsOverlap;
     for (var i = 0; i < allItems.length; i++) {
       var other = allItems[i];
       if (other.id === item.id) continue;
-      if (this.rectsOverlap(item, other)) {
-        results.push({ other: other, depths: this._overlapDepths(item, other) });
+      if (rectsOverlap(item, other)) {
+        results.push({
+          other: other,
+          depths: this._overlapDepths(item, other)
+        });
       }
     }
     return results;
   }
 
+  /**
+   * Outward spiral search v3: find nearest clear position for an overlapping item.
+   *
+   * Phase 1 — Fine search: 2px increments up to MAX_SPIRAL_RADIUS_FINE (20px).
+   *   Tests 8 directions per step (N, S, E, W, NE, NW, SE, SW).
+   *
+   * Phase 2 — Coarse search: 0.5×item-dimension steps up to MAX_SPIRAL_COARSE_STEPS (20).
+   *   Same 8-direction pattern with larger offsets.
+   *
+   * @param {Object} item - The overlapping item (with x, y, w, h)
+   * @param {Array} allItems - All items to check against
+   * @returns {{x: number, y: number}|null} Nearest clear position, or null if stuck
+   */
+  findNearestClearSpot(item, allItems) {
+    var core = this.core;
+    var GAP = this.GAP;
+    var w = item.w, h = item.h;
+    var findAllOverlaps = this.findAllOverlaps;
+
+    // Check if current position is already clear
+    if (findAllOverlaps(item, allItems).length === 0) {
+      return { x: item.x, y: item.y };
+    }
+
+    // Phase 1: Fine search (GAP increments, small radius)
+    for (var step = GAP; step <= this.MAX_SPIRAL_RADIUS_FINE; step += GAP) {
+      var positions = [
+        { x: item.x + step, y: item.y },
+        { x: item.x - step, y: item.y },
+        { x: item.x, y: item.y + step },
+        { x: item.x, y: item.y - step },
+        { x: item.x + step, y: item.y + step },
+        { x: item.x + step, y: item.y - step },
+        { x: item.x - step, y: item.y + step },
+        { x: item.x - step, y: item.y - step }
+      ];
+      for (var p = 0; p < positions.length; p++) {
+        var pos = positions[p];
+        var ex = Math.max(0, Math.min(core.CANVAS_W - w, pos.x));
+        var ey = Math.max(0, Math.min(core.CANVAS_H - h, pos.y));
+        if (findAllOverlaps(
+          { id: item.id, x: ex, y: ey, w: w, h: h },
+          allItems
+        ).length === 0) {
+          return { x: ex, y: ey };
+        }
+      }
+    }
+
+    // Phase 2: Coarse search (fractional item dimensions, full canvas)
+    var stepX = Math.max(GAP, Math.round(item.w * 0.5));
+    var stepY = Math.max(GAP, Math.round(item.h * 0.5));
+
+    for (var s = 1; s <= this.MAX_SPIRAL_COARSE_STEPS; s++) {
+      var offsetX = stepX * s;
+      var offsetY = stepY * s;
+      var positions = [
+        { x: item.x + offsetX, y: item.y },
+        { x: item.x - offsetX, y: item.y },
+        { x: item.x, y: item.y + offsetY },
+        { x: item.x, y: item.y - offsetY },
+        { x: item.x + offsetX, y: item.y + offsetY },
+        { x: item.x + offsetX, y: item.y - offsetY },
+        { x: item.x - offsetX, y: item.y + offsetY },
+        { x: item.x - offsetX, y: item.y - offsetY }
+      ];
+      for (var p = 0; p < positions.length; p++) {
+        var pos = positions[p];
+        var ex = Math.max(0, Math.min(core.CANVAS_W - w, pos.x));
+        var ey = Math.max(0, Math.min(core.CANVAS_H - h, pos.y));
+        if (findAllOverlaps(
+          { id: item.id, x: ex, y: ey, w: w, h: h },
+          allItems
+        ).length === 0) {
+          return { x: ex, y: ey };
+        }
+      }
+    }
+
+    return null; // no clear spot found in entire canvas
+  }
+
+  /**
+   * Check whether any item overlaps with another.
+   * Items whose IDs are in excludeIds are excluded from the check.
+   * @param {Array} items - All items on canvas
+   * @param {Array} [excludeIds] - IDs to exclude from overlap check
+   * @returns {boolean} true if any overlap exists among non-excluded items
+   */
   hasAnyOverlap(items, excludeIds) {
     var excludeSet = {};
     if (excludeIds) {
@@ -257,56 +353,87 @@ class CollisionEngine {
         excludeSet[excludeIds[ei]] = true;
       }
     }
+    var rectsOverlap = this.rectsOverlap;
     for (var i = 0; i < items.length; i++) {
       for (var j = i + 1; j < items.length; j++) {
-        if (excludeSet[items[i].id] && excludeSet[items[j].id]) continue;
-        if (this.rectsOverlap(items[i], items[j])) return true;
+        var a = items[i], b = items[j];
+        // Only skip pairs where BOTH items are dragged
+        if (excludeSet[a.id] && excludeSet[b.id]) continue;
+        if (rectsOverlap(a, b)) return true;
       }
     }
     return false;
   }
 
-  findNearestClearSpot(item, allItems) {
-    var core = this.core;
-    var GAP = this.GAP;
-    var w = item.w, h = item.h;
-    if (this.findAllOverlaps(item, allItems).length === 0) {
-      return { x: item.x, y: item.y };
-    }
-    var bestX = item.x, bestY = item.y;
-    var bestDist = Infinity;
+  /**
+   * Check if a specific item overlaps with any other item.
+   * @param {Object} item - The item to check
+   * @param {Array} allItems - All items to check against
+   * @returns {Object|null} { overlappingItem, depths } or null if no overlap
+   */
+  findOverlap(item, allItems) {
+    var rectsOverlap = this.rectsOverlap;
     for (var i = 0; i < allItems.length; i++) {
-      var other = allItems[i];
-      if (other.id === item.id) continue;
-      if (!this.rectsOverlap(item, other)) continue;
-      var escapes = [
-        { x: other.x + other.w + GAP, y: item.y },
-        { x: other.x - w - GAP, y: item.y },
-        { x: item.x, y: other.y + other.h + GAP },
-        { x: item.x, y: other.y - h - GAP },
-        { x: other.x + other.w + GAP, y: other.y + other.h + GAP },
-        { x: other.x + other.w + GAP, y: other.y - h - GAP },
-        { x: other.x - w - GAP, y: other.y + other.h + GAP },
-        { x: other.x - w - GAP, y: other.y - h - GAP }
-      ];
-      for (var e = 0; e < escapes.length; e++) {
-        var ex = escapes[e].x, ey = escapes[e].y;
-        ex = Math.max(0, Math.min(core.CANVAS_W - w, ex));
-        ey = Math.max(0, Math.min(core.CANVAS_H - h, ey));
-        if (this.findAllOverlaps(
-          { id: item.id, x: ex, y: ey, w: w, h: h },
-          allItems
-        ).length > 0) continue;
-        var dist = Math.abs(ex - item.x) + Math.abs(ey - item.y);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestX = ex;
-          bestY = ey;
-        }
+      var o = allItems[i];
+      if (o.id === item.id) continue;
+      if (rectsOverlap(item, o)) {
+        return { overlappingItem: o, depths: this._overlapDepths(item, o) };
       }
     }
-    if (bestDist === Infinity) return null;
-    return { x: bestX, y: bestY };
+    return null;
+  }
+
+  /**
+   * Resolve ALL overlapping items by nudging each to a clear position.
+   * For structural operations (align, arrange, distribute).
+   * Does NOT update DOM — caller must re-render after this call.
+   *
+   * @param {Array} items - All items on canvas (mutated in place)
+   * @returns {boolean} true if all overlaps were resolved
+   */
+  resolveAllOverlaps(items) {
+    var anyFailed = false;
+
+    for (var iter = 0; iter < 3; iter++) {
+      var resolvedAny = false;
+
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var overlaps = this.findAllOverlaps(item, items);
+        if (overlaps.length === 0) continue;
+
+        var next = this.findNearestClearSpot(item, items);
+        if (next) {
+          item.x = next.x;
+          item.y = next.y;
+          resolvedAny = true;
+        } else {
+          anyFailed = true;
+        }
+      }
+
+      if (!resolvedAny) break;
+    }
+
+    return !anyFailed && !this.hasAnyOverlap(items);
+  }
+
+  /**
+   * Compute axis-aligned bounding box of a rotated item.
+   * Pure computation — does NOT mutate the item.
+   *
+   * @param {Object} item - Item with {x, y, w, h, rotation} (rotation in degrees)
+   * @returns {{x: number, y: number, w: number, h: number}} The rotated AABB
+   */
+  getRotatedAABB(item) {
+    var cx = item.x + item.w / 2;
+    var cy = item.y + item.h / 2;
+    var rad = item.rotation * Math.PI / 180;
+    var cosA = Math.abs(Math.cos(rad));
+    var sinA = Math.abs(Math.sin(rad));
+    var rotW = item.w * cosA + item.h * sinA;
+    var rotH = item.w * sinA + item.h * cosA;
+    return { x: cx - rotW / 2, y: cy - rotH / 2, w: rotW, h: rotH };
   }
 }
 /* ===========================================
@@ -494,6 +621,14 @@ class ItemManager {
     var slot = this.findNextSlot(defaultW, defaultH);
     item.x = slot.x;
     item.y = slot.y;
+
+    // V3: Collision check before DOM render
+    var clearSpot = core.collisionEngine.findNearestClearSpot(item, core.state.items);
+    if (clearSpot) {
+      item.x = clearSpot.x;
+      item.y = clearSpot.y;
+    }
+
     el.style.left = item.x + 'px';
     el.style.top = item.y + 'px';
 
@@ -559,6 +694,14 @@ class ItemManager {
     var slot = this.findNextSlot(item.w, item.h);
     item.x = slot.x;
     item.y = slot.y;
+
+    // V3: Collision check before DOM render
+    var clearSpot = core.collisionEngine.findNearestClearSpot(item, core.state.items);
+    if (clearSpot) {
+      item.x = clearSpot.x;
+      item.y = clearSpot.y;
+    }
+
     el.style.left = item.x + 'px';
     el.style.top = item.y + 'px';
 
@@ -712,6 +855,14 @@ class ItemManager {
           dup.rotation = it.rotation || 0;
           dup.scaleX = it.scaleX || 1;
           dup.scaleY = it.scaleY || 1;
+
+          // V3: Collision check BEFORE DOM render (no flash)
+          var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
+          if (clearSpot) {
+            dup.x = clearSpot.x;
+            dup.y = clearSpot.y;
+          }
+
           dup.el.style.left = dup.x + 'px';
           dup.el.style.top = dup.y + 'px';
           dup.el.style.width = dup.w + 'px';
@@ -730,6 +881,14 @@ class ItemManager {
             dup.rotation = it.rotation || 0;
             dup.scaleX = it.scaleX || 1;
             dup.scaleY = it.scaleY || 1;
+
+            // V3: Collision check BEFORE DOM render (no flash)
+            var clearSpot = core.collisionEngine.findNearestClearSpot(dup, core.state.items);
+            if (clearSpot) {
+              dup.x = clearSpot.x;
+              dup.y = clearSpot.y;
+            }
+
             dup.el.style.left = dup.x + 'px';
             dup.el.style.top = dup.y + 'px';
             dup.el.style.width = dup.w + 'px';
@@ -739,6 +898,7 @@ class ItemManager {
               dup.el.querySelector('img').style.height = dup.h + 'px';
             }
             core.applyTransform(dup);
+
             core.historyManager.saveState();
             core.growCanvas();
           }
@@ -1121,10 +1281,17 @@ class AlignmentEngine {
       sel.forEach(function (it) { it.y = cy - it.h / 2; });
     }
 
-    sel.forEach(function (it) {
+    // Check for overlaps created by alignment
+    var allOverlapsResolved = core.collisionEngine.resolveAllOverlaps(core.state.items);
+    if (!allOverlapsResolved && core.debug) {
+      console.warn('Alignment created unresolvable overlap');
+    }
+    // Re-render positions for items that were nudged
+    core.state.items.forEach(function (it) {
       it.el.style.left = it.x + 'px';
       it.el.style.top = it.y + 'px';
     });
+
     core.historyManager.saveState();
     core.growCanvas();
   }
@@ -1152,11 +1319,15 @@ class AlignmentEngine {
       }
       it.x = x;
       it.y = y;
-      it.el.style.left = x + 'px';
-      it.el.style.top = y + 'px';
       x += it.w + gapPx;
       col++;
       if (it.h > rowH) rowH = it.h;
+    });
+    core.collisionEngine.resolveAllOverlaps(core.state.items);
+    // Re-render positions for nudged items
+    core.state.items.forEach(function (it) {
+      it.el.style.left = it.x + 'px';
+      it.el.style.top = it.y + 'px';
     });
     core.historyManager.saveState();
     core.growCanvas();
@@ -1164,9 +1335,10 @@ class AlignmentEngine {
   }
 
   distributeHorizontal() {
-    var sel = this.core.selectionManager.getSelected();
+    var core = this.core;
+    var sel = core.selectionManager.getSelected();
     if (sel.length < 3) return;
-    this.core.historyManager.saveState();
+    core.historyManager.saveState();
 
     // Sort by x position
     sel.sort(function (a, b) { return a.x - b.x; });
@@ -1182,18 +1354,25 @@ class AlignmentEngine {
     var curX = first.x;
     for (var j = 0; j < sel.length; j++) {
       sel[j].x = curX;
-      sel[j].el.style.left = curX + 'px';
       curX += sel[j].w + gap;
     }
+
+    core.collisionEngine.resolveAllOverlaps(core.state.items);
+    // Re-render positions for nudged items
+    core.state.items.forEach(function (it) {
+      it.el.style.left = it.x + 'px';
+      it.el.style.top = it.y + 'px';
+    });
 
     this.core.historyManager.saveState();
     this.core.growCanvas();
   }
 
   distributeVertical() {
-    var sel = this.core.selectionManager.getSelected();
+    var core = this.core;
+    var sel = core.selectionManager.getSelected();
     if (sel.length < 3) return;
-    this.core.historyManager.saveState();
+    core.historyManager.saveState();
 
     // Sort by y position
     sel.sort(function (a, b) { return a.y - b.y; });
@@ -1209,9 +1388,15 @@ class AlignmentEngine {
     var curY = first.y;
     for (var j = 0; j < sel.length; j++) {
       sel[j].y = curY;
-      sel[j].el.style.top = curY + 'px';
       curY += sel[j].h + gap;
     }
+
+    core.collisionEngine.resolveAllOverlaps(core.state.items);
+    // Re-render positions for nudged items
+    core.state.items.forEach(function (it) {
+      it.el.style.left = it.x + 'px';
+      it.el.style.top = it.y + 'px';
+    });
 
     this.core.historyManager.saveState();
     this.core.growCanvas();
@@ -1855,11 +2040,31 @@ class PriceManager {
 /* ===========================================
    InteractionManager — Mouse/touch/keyboard input, drag state machine
    Integration: snapVal in onMouseUp/onTouchEnd, CollisionEngine extraction
+   V3: Resize collision clamp, rotation AABB check, applyOverlapVisual helper
    =========================================== */
 
 class InteractionManager {
   constructor(core) {
     this.core = core;
+  }
+
+  /**
+   * Visual feedback helper for overlap state.
+   * Sets opacity + outline on item.el when overlapping any stationary item.
+   * Lives in InteractionManager (DOM concern), NOT CollisionEngine (pure math).
+   * @param {Object} item - The item to check
+   * @param {Array} allItems - All items on canvas
+   * @param {Array} excludeIds - IDs to exclude (e.g., currently dragged items)
+   */
+  applyOverlapVisual(item, allItems, excludeIds) {
+    var overlap = this.core.collisionEngine.findOverlap(item, allItems);
+    if (overlap) {
+      item.el.style.opacity = '0.4';
+      item.el.style.outline = '2px solid #FF4444';
+    } else {
+      item.el.style.opacity = '';
+      item.el.style.outline = '';
+    }
   }
 
   onMouseDown(e) {
@@ -1925,6 +2130,7 @@ class InteractionManager {
 
   onMouseMove(e) {
     var core = this.core;
+    var im = this;
     if (!core.state.dragState) return;
     var ds = core.state.dragState;
 
@@ -1939,55 +2145,115 @@ class InteractionManager {
     }
 
     if (ds.type === 'move') {
+      // Use previous position delta (not from start) so constrained position persists
       var prevX = ds._lastX != null ? ds._lastX : ds.ox;
       var prevY = ds._lastY != null ? ds._lastY : ds.oy;
       var dx = (e.clientX - prevX) / core.state.zoom;
       var dy = (e.clientY - prevY) / core.state.zoom;
       ds._lastX = e.clientX;
       ds._lastY = e.clientY;
+      var draggedItems = [];
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
+        draggedItems.push(item);
+      });
+
+      // Wall-collision: constrain each dragged item against stationary items
+      var ce = core.collisionEngine;
+      var itemsArr = core.state.items;
+      draggedItems.forEach(function (item) {
         var candidateX = item.x + dx;
         var candidateY = item.y + dy;
         candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
         candidateY = Math.max(0, candidateY);
-        var result = core.collisionEngine.constrainPosition(
-          candidateX, candidateY, item, core.state.items, ds.ids,
-          item.x, item.y
+        var result = ce.constrainPosition(
+          candidateX, candidateY, item, itemsArr, ds.ids,
+          item.x, item.y  // startX/startY unused in v3, kept for ABI compat
         );
         item.x = result.x;
         item.y = result.y;
         item.el.style.left = result.x + 'px';
         item.el.style.top = result.y + 'px';
+
+        // Visual feedback for overlap (V3: use helper)
+        im.applyOverlapVisual(item, itemsArr, ds.ids);
       });
 
       core.selectionManager.updateGuides(
-        core.state.items.find(function (i) { return i.id === ds.ids[0]; }),
-        core.state.items
+        itemsArr.find(function (i) { return i.id === ds.ids[0]; }),
+        itemsArr
       );
       return;
     }
 
     if (ds.type === 'resize') {
-      var item = core.state.items.find(function (i) { return i.id === ds.id; });
+      var item = itemsArr.find(function (i) { return i.id === ds.id; });
       if (!item) return;
       var dx = (e.clientX - ds.ox) / core.state.zoom;
       var dy = (e.clientY - ds.oy) / core.state.zoom;
-      if (ds.handle.indexOf('e') > -1) item.w = Math.max(30, ds.sw + dx);
+      var GAP = core.collisionEngine.GAP;
+
+      // Compute candidate dimensions from raw delta
+      var candidateX = ds.sx;
+      var candidateY = ds.sy;
+      var candidateW = ds.sw;
+      var candidateH = ds.sh;
+
+      if (ds.handle.indexOf('e') > -1) candidateW = Math.max(30, ds.sw + dx);
       if (ds.handle.indexOf('w') > -1) {
         var nw = Math.max(30, ds.sw - dx);
-        item.x = ds.sx + ds.sw - nw;
-        item.w = nw;
+        candidateX = ds.sx + ds.sw - nw;
+        candidateW = nw;
       }
-      if (ds.handle.indexOf('s') > -1) item.h = Math.max(30, ds.sh + dy);
+      if (ds.handle.indexOf('s') > -1) candidateH = Math.max(30, ds.sh + dy);
       if (ds.handle.indexOf('n') > -1) {
         var nh = Math.max(30, ds.sh - dy);
-        item.y = ds.sy + ds.sh - nh;
-        item.h = nh;
+        candidateY = ds.sy + ds.sh - nh;
+        candidateH = nh;
       }
-      item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x));
-      item.y = Math.max(0, item.y);
+
+      // V3: Collision clamping against stationary items (per-handle direction)
+      var candidate = { x: candidateX, y: candidateY, w: candidateW, h: candidateH };
+      for (var ri = 0; ri < core.state.items.length; ri++) {
+        var other = core.state.items[ri];
+        if (other.id === ds.id) continue;
+        if (core.collisionEngine.rectsOverlap(candidate, other)) {
+          if (ds.handle.indexOf('e') > -1) {
+            candidateW = Math.min(candidateW, other.x - candidate.x - GAP);
+          }
+          if (ds.handle.indexOf('w') > -1) {
+            candidateX = Math.max(candidateX, other.x + other.w + GAP);
+            candidateW = candidate.x + candidate.w - candidateX;
+          }
+          if (ds.handle.indexOf('s') > -1) {
+            candidateH = Math.min(candidateH, other.y - candidate.y - GAP);
+          }
+          if (ds.handle.indexOf('n') > -1) {
+            candidateY = Math.max(candidateY, other.y + other.h + GAP);
+            candidateH = candidate.y + candidate.h - candidateY;
+          }
+        }
+        // Update candidate rect after each blocker for correct subsequent clamping
+        candidate.x = candidateX;
+        candidate.y = candidateY;
+        candidate.w = candidateW;
+        candidate.h = candidateH;
+      }
+
+      // Re-check minimums after clamping
+      candidateW = Math.max(30, candidateW);
+      candidateH = Math.max(30, candidateH);
+
+      // Canvas boundary clamp
+      candidateX = Math.max(0, Math.min(core.CANVAS_W - candidateW, candidateX));
+      candidateY = Math.max(0, candidateY);
+
+      // Apply to item and DOM
+      item.x = candidateX;
+      item.y = candidateY;
+      item.w = candidateW;
+      item.h = candidateH;
       item.el.style.left = item.x + 'px';
       item.el.style.top = item.y + 'px';
       item.el.style.width = item.w + 'px';
@@ -1999,10 +2265,46 @@ class InteractionManager {
     if (ds.type === 'rotate') {
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
+
+      // V3: Square items — skip collision check (AABB is constant under rotation)
+      if (Math.abs(item.w - item.h) < 0.01) {
+        var cx = item.x + item.w / 2;
+        var cy = item.y + item.h / 2;
+        var angle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+        item.rotation = angle - ds.startAngle;
+        core.applyTransform(item);
+        return;
+      }
+
+      // V3: Non-square — compute rotated AABB and check overlap
       var cx = item.x + item.w / 2;
       var cy = item.y + item.h / 2;
-      var angle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
-      item.rotation = angle - ds.startAngle;
+      var newAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI - ds.startAngle;
+
+      var oldRotation = item.rotation;
+      item.rotation = newAngle;
+      var newAABB = core.collisionEngine.getRotatedAABB(item);
+
+      var overlaps = false;
+      for (var ro = 0; ro < core.state.items.length; ro++) {
+        var s = core.state.items[ro];
+        if (s.id === ds.id) continue;
+        if (core.collisionEngine.rectsOverlap(newAABB, s)) {
+          overlaps = true;
+          break;
+        }
+      }
+
+      if (overlaps) {
+        item.el.style.opacity = '0.4';
+        item.el.style.outline = '2px solid #FF4444';
+        item.rotation = oldRotation; // revert to previous angle
+      } else {
+        item.rotation = newAngle;
+        item.el.style.opacity = '';
+        item.el.style.outline = '';
+      }
+
       core.applyTransform(item);
       return;
     }
@@ -2053,24 +2355,48 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
-      // On drop, if there are any overlaps, gently resolve them to clear spots
+      // Drop validation: if overlap persists, find nearest clear spot
       ds.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
-        if (next) {
-          dragged.x = next.x;
-          dragged.y = next.y;
-          dragged.el.style.left = next.x + 'px';
-          dragged.el.style.top = next.y + 'px';
+        var overlap = core.collisionEngine.findOverlap(dragged, core.state.items);
+        if (overlap) {
+          var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+          if (next) {
+            dragged.x = next.x;
+            dragged.y = next.y;
+            dragged.el.style.left = next.x + 'px';
+            dragged.el.style.top = next.y + 'px';
+          }
         }
+        dragged.el.style.outline = '';
       });
       core.historyManager.saveState();
       core.growCanvas();
       core.dispatchUpdateEvent();
     }
 
-    if (ds.type === 'resize' || ds.type === 'rotate') {
+    if (ds.type === 'resize') {
+      // Overlap check: nudge item to clear position before saving state
+      var resizedItem = core.state.items.find(function (i) { return i.id === ds.id; });
+      if (resizedItem) {
+        var resOverlap = core.collisionEngine.findOverlap(resizedItem, core.state.items);
+        if (resOverlap) {
+          var resNext = core.collisionEngine.findNearestClearSpot(resizedItem, core.state.items);
+          if (resNext) {
+            resizedItem.x = resNext.x;
+            resizedItem.y = resNext.y;
+            resizedItem.el.style.left = resNext.x + 'px';
+            resizedItem.el.style.top = resNext.y + 'px';
+          }
+        }
+      }
+      core.historyManager.saveState();
+      core.growCanvas();
+      core.dispatchUpdateEvent();
+    }
+
+    if (ds.type === 'rotate') {
       core.historyManager.saveState();
       core.growCanvas();
       core.dispatchUpdateEvent();
@@ -2122,6 +2448,7 @@ class InteractionManager {
 
   onTouchMove(e) {
     var core = this.core;
+    var im = this;
     if (e.touches.length === 2) {
       // Pinch zoom
       var t1 = e.touches[0], t2 = e.touches[1];
@@ -2165,51 +2492,156 @@ class InteractionManager {
         ds._lastY = t.clientY;
         return;
       }
+      ds._lastPrevX = ds._lastX || ds.ox;
+      ds._lastPrevY = ds._lastY || ds.oy;
       ds._lastX = t.clientX;
       ds._lastY = t.clientY;
 
-      var dx = (t.clientX - ds.ox) / core.state.zoom;
-      var dy = (t.clientY - ds.oy) / core.state.zoom;
+      var dx = (t.clientX - ds._lastPrevX) / core.state.zoom;
+      var dy = (t.clientY - ds._lastPrevY) / core.state.zoom;
+      var draggedItems = [];
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
+        draggedItems.push(item);
+      });
+
+      // Wall-collision: constrain each dragged item against stationary items
+      var ce = core.collisionEngine;
+      var itemsArr = core.state.items;
+      draggedItems.forEach(function (item) {
         var candidateX = item.x + dx;
         var candidateY = item.y + dy;
         candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
         candidateY = Math.max(0, candidateY);
-        var result = core.collisionEngine.constrainPosition(
-          candidateX, candidateY, item, core.state.items, ds.ids,
+        var result = ce.constrainPosition(
+          candidateX, candidateY, item, itemsArr, ds.ids,
           item.x, item.y
         );
         item.x = result.x;
         item.y = result.y;
         item.el.style.left = result.x + 'px';
         item.el.style.top = result.y + 'px';
+
+        // Visual feedback for overlap (V3: use helper)
+        im.applyOverlapVisual(item, itemsArr, ds.ids);
       });
     } else if (ds.type === 'resize') {
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
       var dx = (t.clientX - ds.ox) / core.state.zoom;
       var dy = (t.clientY - ds.oy) / core.state.zoom;
-      if (ds.handle.indexOf('e') > -1) item.w = Math.max(30, ds.sw + dx);
+      var GAP = core.collisionEngine.GAP;
+
+      // Compute candidate dimensions from raw delta
+      var candidateX = ds.sx;
+      var candidateY = ds.sy;
+      var candidateW = ds.sw;
+      var candidateH = ds.sh;
+
+      if (ds.handle.indexOf('e') > -1) candidateW = Math.max(30, ds.sw + dx);
       if (ds.handle.indexOf('w') > -1) {
         var nw = Math.max(30, ds.sw - dx);
-        item.x = ds.sx + ds.sw - nw;
-        item.w = nw;
+        candidateX = ds.sx + ds.sw - nw;
+        candidateW = nw;
       }
-      if (ds.handle.indexOf('s') > -1) item.h = Math.max(30, ds.sh + dy);
+      if (ds.handle.indexOf('s') > -1) candidateH = Math.max(30, ds.sh + dy);
       if (ds.handle.indexOf('n') > -1) {
         var nh = Math.max(30, ds.sh - dy);
-        item.y = ds.sy + ds.sh - nh;
-        item.h = nh;
+        candidateY = ds.sy + ds.sh - nh;
+        candidateH = nh;
       }
-      item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x));
-      item.y = Math.max(0, item.y);
+
+      // V3: Collision clamping against stationary items (per-handle direction)
+      var candidate = { x: candidateX, y: candidateY, w: candidateW, h: candidateH };
+      for (var ri = 0; ri < core.state.items.length; ri++) {
+        var other = core.state.items[ri];
+        if (other.id === ds.id) continue;
+        if (core.collisionEngine.rectsOverlap(candidate, other)) {
+          if (ds.handle.indexOf('e') > -1) {
+            candidateW = Math.min(candidateW, other.x - candidate.x - GAP);
+          }
+          if (ds.handle.indexOf('w') > -1) {
+            candidateX = Math.max(candidateX, other.x + other.w + GAP);
+            candidateW = candidate.x + candidate.w - candidateX;
+          }
+          if (ds.handle.indexOf('s') > -1) {
+            candidateH = Math.min(candidateH, other.y - candidate.y - GAP);
+          }
+          if (ds.handle.indexOf('n') > -1) {
+            candidateY = Math.max(candidateY, other.y + other.h + GAP);
+            candidateH = candidate.y + candidate.h - candidateY;
+          }
+        }
+        // Update candidate rect after each blocker for correct subsequent clamping
+        candidate.x = candidateX;
+        candidate.y = candidateY;
+        candidate.w = candidateW;
+        candidate.h = candidateH;
+      }
+
+      // Re-check minimums after clamping
+      candidateW = Math.max(30, candidateW);
+      candidateH = Math.max(30, candidateH);
+
+      // Canvas boundary clamp
+      candidateX = Math.max(0, Math.min(core.CANVAS_W - candidateW, candidateX));
+      candidateY = Math.max(0, candidateY);
+
+      // Apply to item and DOM
+      item.x = candidateX;
+      item.y = candidateY;
+      item.w = candidateW;
+      item.h = candidateH;
       item.el.style.left = item.x + 'px';
       item.el.style.top = item.y + 'px';
       item.el.style.width = item.w + 'px';
       item.el.style.height = item.h + 'px';
       core.utils.updateSizeInfo(item);
+    } else if (ds.type === 'rotate') {
+      var item = core.state.items.find(function (i) { return i.id === ds.id; });
+      if (!item) return;
+
+      // V3: Square items — skip collision check (AABB is constant under rotation)
+      if (Math.abs(item.w - item.h) < 0.01) {
+        var cx = item.x + item.w / 2;
+        var cy = item.y + item.h / 2;
+        var angle = Math.atan2(t.clientY - cy, t.clientX - cx) * 180 / Math.PI;
+        item.rotation = angle - ds.startAngle;
+        core.applyTransform(item);
+        return;
+      }
+
+      // V3: Non-square — compute rotated AABB and check overlap
+      var cx = item.x + item.w / 2;
+      var cy = item.y + item.h / 2;
+      var newAngle = Math.atan2(t.clientY - cy, t.clientX - cx) * 180 / Math.PI - ds.startAngle;
+
+      var oldRotation = item.rotation;
+      item.rotation = newAngle;
+      var newAABB = core.collisionEngine.getRotatedAABB(item);
+
+      var overlaps = false;
+      for (var ro = 0; ro < core.state.items.length; ro++) {
+        var s = core.state.items[ro];
+        if (s.id === ds.id) continue;
+        if (core.collisionEngine.rectsOverlap(newAABB, s)) {
+          overlaps = true;
+          break;
+        }
+      }
+
+      if (overlaps) {
+        item.el.style.opacity = '0.4';
+        item.el.style.outline = '2px solid #FF4444';
+        item.rotation = oldRotation; // revert to previous angle
+      } else {
+        item.rotation = newAngle;
+        item.el.style.opacity = '';
+        item.el.style.outline = '';
+      }
+
+      core.applyTransform(item);
     }
   }
 
@@ -2229,22 +2661,42 @@ class InteractionManager {
         core.snapEngine.applySnap(snapItems);
       }
 
-      // On drop, if there are any overlaps, gently resolve them to clear spots
+      // Drop validation: if overlap persists, find nearest clear spot
       core.state.dragState.ids.forEach(function (id) {
         var dragged = core.state.items.find(function (i) { return i.id === id; });
         if (!dragged) return;
-        var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
-        if (next) {
-          dragged.x = next.x;
-          dragged.y = next.y;
-          dragged.el.style.left = next.x + 'px';
-          dragged.el.style.top = next.y + 'px';
+        var overlap = core.collisionEngine.findOverlap(dragged, core.state.items);
+        if (overlap) {
+          var next = core.collisionEngine.findNearestClearSpot(dragged, core.state.items);
+          if (next) {
+            dragged.x = next.x;
+            dragged.y = next.y;
+            dragged.el.style.left = next.x + 'px';
+            dragged.el.style.top = next.y + 'px';
+          }
         }
+        dragged.el.style.outline = '';
       });
       core.historyManager.saveState();
       core.growCanvas();
-    } else if (core.state.dragState &&
-      (core.state.dragState.type === 'resize' || core.state.dragState.type === 'rotate')) {
+    } else if (core.state.dragState && core.state.dragState.type === 'resize') {
+      // Overlap check: nudge item to clear position before saving state
+      var resizedItem = core.state.items.find(function (i) { return i.id === core.state.dragState.id; });
+      if (resizedItem) {
+        var resOverlap = core.collisionEngine.findOverlap(resizedItem, core.state.items);
+        if (resOverlap) {
+          var resNext = core.collisionEngine.findNearestClearSpot(resizedItem, core.state.items);
+          if (resNext) {
+            resizedItem.x = resNext.x;
+            resizedItem.y = resNext.y;
+            resizedItem.el.style.left = resNext.x + 'px';
+            resizedItem.el.style.top = resNext.y + 'px';
+          }
+        }
+      }
+      core.historyManager.saveState();
+      core.growCanvas();
+    } else if (core.state.dragState && core.state.dragState.type === 'rotate') {
       core.historyManager.saveState();
       core.growCanvas();
     }
