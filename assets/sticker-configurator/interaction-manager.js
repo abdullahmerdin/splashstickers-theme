@@ -104,8 +104,10 @@ class InteractionManager {
       // Wall-collision: constrain each dragged item against stationary items
       // Also show visual feedback (red outline) for any residual overlap
       draggedItems.forEach(function (item) {
+        var sp = ds.startPos[item.id];
         var result = core.collisionEngine.constrainPosition(
-          item.x, item.y, item, core.state.items, ds.ids
+          item.x, item.y, item, core.state.items, ds.ids,
+          sp ? sp.x : null, sp ? sp.y : null
         );
         item.x = result.x;
         item.y = result.y;
@@ -372,8 +374,10 @@ class InteractionManager {
       // Wall-collision: constrain each dragged item against stationary items
       // Also show visual feedback (red outline) for any residual overlap
       draggedItems.forEach(function (item) {
+        var sp = ds.startPos[item.id];
         var result = core.collisionEngine.constrainPosition(
-          item.x, item.y, item, core.state.items, ds.ids
+          item.x, item.y, item, core.state.items, ds.ids,
+          sp ? sp.x : null, sp ? sp.y : null
         );
         item.x = result.x;
         item.y = result.y;

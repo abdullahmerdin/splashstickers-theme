@@ -57,9 +57,8 @@ class CollisionEngine {
    * @param {Array} draggedIds - IDs of all items currently being dragged
    * @returns {{x: number, y: number}} Closest non-overlapping position
    */
-  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds) {
+  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds, startX, startY) {
     var itemW = draggedItem.w, itemH = draggedItem.h;
-    var GAP = this.GAP;
     var core = this.core;
 
     // Build dragged set for O(1) lookup
@@ -70,22 +69,17 @@ class CollisionEngine {
       }
     }
 
-    // Helper: does candidate (cx,cy) overlap with a specific other item?
-    function overlapsWith(cx, cy, other) {
-      return (cx + 0.01) < (other.x + other.w - 0.01) &&
-             (other.x + 0.01) < (cx + itemW - 0.01) &&
-             (cy + 0.01) < (other.y + other.h - 0.01) &&
-             (other.y + 0.01) < (cy + itemH - 0.01);
-    }
-
     // Helper: does candidate (cx,cy) overlap with ANY stationary item?
     function overlapsAny(cx, cy) {
       for (var i = 0; i < allItems.length; i++) {
         var o = allItems[i];
         if (o.id === draggedItem.id || draggedSet[o.id]) continue;
-        if (overlapsWith(cx, cy, o)) return o;
+        if ((cx + 0.01) < (o.x + o.w - 0.01) &&
+            (o.x + 0.01) < (cx + itemW - 0.01) &&
+            (cy + 0.01) < (o.y + o.h - 0.01) &&
+            (o.y + 0.01) < (cy + itemH - 0.01)) return true;
       }
-      return null;
+      return false;
     }
 
     // 1. If candidate is already clear, return it
@@ -93,48 +87,27 @@ class CollisionEngine {
       return { x: candidateX, y: candidateY };
     }
 
-    // 2. For each blocking item, compute escape candidates per-axis
-    //    Try X-only, Y-only, and X+Y corner positions
-    var bestX = candidateX, bestY = candidateY;
-    var bestDist = Infinity;
+    // 2. Binary search from start (non-overlapping) to candidate (overlapping)
+    //    to find the LAST non-overlapping position (the exact boundary)
+    var loX = startX != null ? startX : candidateX;
+    var loY = startY != null ? startY : candidateY;
+    var hiX = candidateX, hiY = candidateY;
 
-    for (var i = 0; i < allItems.length; i++) {
-      var o = allItems[i];
-      if (o.id === draggedItem.id || draggedSet[o.id]) continue;
-      if (!overlapsWith(candidateX, candidateY, o)) continue;
-
-      // 4 single-axis escapes + 4 corner escapes
-      var escapes = [
-        // X-only (keep candidate Y)
-        { x: o.x + o.w + GAP, y: candidateY },
-        { x: o.x - itemW - GAP, y: candidateY },
-        // Y-only (keep candidate X)
-        { x: candidateX, y: o.y + o.h + GAP },
-        { x: candidateX, y: o.y - itemH - GAP },
-        // Corner: X first, then Y on the same side
-        { x: o.x + o.w + GAP, y: o.y + o.h + GAP },
-        { x: o.x + o.w + GAP, y: o.y - itemH - GAP },
-        { x: o.x - itemW - GAP, y: o.y + o.h + GAP },
-        { x: o.x - itemW - GAP, y: o.y - itemH - GAP }
-      ];
-
-      for (var e = 0; e < escapes.length; e++) {
-        var ex = escapes[e].x, ey = escapes[e].y;
-        ex = Math.max(0, Math.min(core.CANVAS_W - itemW, ex));
-        ey = Math.max(0, Math.min(core.CANVAS_H - itemH, ey));
-        if (overlapsAny(ex, ey)) continue;
-        var dist = Math.abs(ex - candidateX) + Math.abs(ey - candidateY);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestX = ex;
-          bestY = ey;
-        }
+    for (var iter = 0; iter < 12; iter++) {
+      var midX = (loX + hiX) / 2;
+      var midY = (loY + hiY) / 2;
+      if (overlapsAny(midX, midY)) {
+        hiX = midX; hiY = midY;
+      } else {
+        loX = midX; loY = midY;
       }
     }
 
-    // 3. If nothing found, keep the candidate (item stays in place rather than
-    //    teleporting to a bad position) — subsequent frames will nudge it free
-    return { x: bestX, y: bestY };
+    // Clamp to canvas
+    loX = Math.max(0, Math.min(core.CANVAS_W - itemW, loX));
+    loY = Math.max(0, Math.min(core.CANVAS_H - itemH, loY));
+
+    return { x: loX, y: loY };
   }
 
   /**
