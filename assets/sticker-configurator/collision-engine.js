@@ -183,61 +183,56 @@ class CollisionEngine {
   findNearestClearSpot(item, allItems) {
     var core = this.core;
     var GAP = this.GAP;
+    var w = item.w, h = item.h;
 
-    // 1. Check if current position is already clear
+    // Check if current position is already clear
     if (this.findAllOverlaps(item, allItems).length === 0) {
       return { x: item.x, y: item.y };
     }
 
-    var nx = item.x, ny = item.y;
-    var nw = item.w, nh = item.h;
+    // Same 4-edge escape algorithm as constrainPosition
+    var bestX = item.x, bestY = item.y;
+    var bestDist = Infinity;
 
-    for (var iter = 0; iter < 2; iter++) {
-      var overlaps = this.findAllOverlaps(
-        { id: item.id, x: nx, y: ny, w: nw, h: nh },
-        allItems
-      );
-      if (overlaps.length === 0) {
-        return { x: nx, y: ny };
+    for (var i = 0; i < allItems.length; i++) {
+      var other = allItems[i];
+      if (other.id === item.id) continue;
+
+      // Skip items that DON'T overlap at current position
+      // (only need to escape from actual blockers)
+      if (!this.rectsOverlap(item, other)) continue;
+
+      // 4 escape positions relative to this blocker
+      var escapes = [
+        { x: other.x + other.w + GAP, y: item.y },
+        { x: other.x - w - GAP, y: item.y },
+        { x: item.x, y: other.y + other.h + GAP },
+        { x: item.x, y: other.y - h - GAP }
+      ];
+
+      for (var e = 0; e < escapes.length; e++) {
+        var ex = escapes[e].x, ey = escapes[e].y;
+        // Clamp to canvas
+        ex = Math.max(0, Math.min(core.CANVAS_W - w, ex));
+        ey = Math.max(0, Math.min(core.CANVAS_H - h, ey));
+        // Verify no overlap at this escape
+        if (this.findAllOverlaps(
+          { id: item.id, x: ex, y: ey, w: w, h: h },
+          allItems
+        ).length > 0) continue;
+        var dist = Math.abs(ex - item.x) + Math.abs(ey - item.y);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestX = ex;
+          bestY = ey;
+        }
       }
-
-      var pushX = 0, pushY = 0;
-
-      for (var oi = 0; oi < overlaps.length; oi++) {
-        var ov = overlaps[oi];
-        var other = ov.other;
-        var depths = ov.depths;
-
-        // Centre-to-centre direction on each axis
-        var dCenterX = (nx + nw / 2) - (other.x + other.w / 2);
-        var dCenterY = (ny + nh / 2) - (other.y + other.h / 2);
-        var dirX = dCenterX >= 0 ? 1 : -1;
-        var dirY = dCenterY >= 0 ? 1 : -1;
-        if (dCenterX === 0) dirX = 1;
-        if (dCenterY === 0) dirY = 1;
-
-        pushX += dirX * (depths.x + GAP);
-        pushY += dirY * (depths.y + GAP);
-      }
-
-      nx = nx + pushX;
-      ny = ny + pushY;
-
-      // Clamp to canvas
-      nx = Math.max(0, Math.min(core.CANVAS_W - nw, nx));
-      ny = Math.max(0, Math.min(core.CANVAS_H - nh, ny));
     }
 
-    // Final validation — one last check
-    var finalOverlaps = this.findAllOverlaps(
-      { id: item.id, x: nx, y: ny, w: nw, h: nh },
-      allItems
-    );
-    if (finalOverlaps.length === 0) {
-      return { x: nx, y: ny };
+    if (bestDist === Infinity) {
+      return null; // no clear spot found
     }
-
-    return null;
+    return { x: bestX, y: bestY };
   }
 
   /**
