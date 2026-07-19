@@ -113,55 +113,37 @@ class CollisionEngine {
     return { x: overlapX, y: overlapY };
   }
 
-  /**
-   * Wall-collision via binary search.
-   * Searches from start (known non-overlapping) to candidate (might overlap)
-   * to find the LAST non-overlapping position.
-   */
-  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds, startX, startY) {
-    var itemW = draggedItem.w, itemH = draggedItem.h;
+  /** Wall-collision via direction-aware edge push */
+  constrainPosition(cx, cy, draggedItem, allItems, draggedIds, sx, sy) {
+    var w = draggedItem.w, h = draggedItem.h;
     var core = this.core;
-
-    var draggedSet = {};
+    var ds = {};
     if (draggedIds) {
-      for (var di = 0; di < draggedIds.length; di++) {
-        draggedSet[draggedIds[di]] = true;
-      }
+      for (var di = 0; di < draggedIds.length; di++) ds[draggedIds[di]] = true;
     }
-
-    function overlapsAny(cx, cy) {
+    var ok = true;
+    do {
+      ok = true;
       for (var i = 0; i < allItems.length; i++) {
         var o = allItems[i];
-        if (o.id === draggedItem.id || draggedSet[o.id]) continue;
-        if ((cx + 0.01) < (o.x + o.w - 0.01) &&
-            (o.x + 0.01) < (cx + itemW - 0.01) &&
-            (cy + 0.01) < (o.y + o.h - 0.01) &&
-            (o.y + 0.01) < (cy + itemH - 0.01)) return true;
+        if (o.id === draggedItem.id || ds[o.id]) continue;
+        if (!((cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
+              (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01))) continue;
+        var fromX = sx != null ? sx : cx;
+        var fromY = sy != null ? sy : cy;
+        var dirX = cx - fromX;
+        var dirY = cy - fromY;
+        if (Math.abs(dirX) >= Math.abs(dirY)) {
+          cx = dirX > 0 ? o.x - w : o.x + o.w;
+        } else {
+          cy = dirY > 0 ? o.y - h : o.y + o.h;
+        }
+        ok = false; break;
       }
-      return false;
-    }
-
-    if (!overlapsAny(candidateX, candidateY)) {
-      return { x: candidateX, y: candidateY };
-    }
-
-    var loX = startX != null ? startX : candidateX;
-    var loY = startY != null ? startY : candidateY;
-    var hiX = candidateX, hiY = candidateY;
-
-    for (var iter = 0; iter < 14; iter++) {
-      var midX = (loX + hiX) / 2;
-      var midY = (loY + hiY) / 2;
-      if (overlapsAny(midX, midY)) {
-        hiX = midX; hiY = midY;
-      } else {
-        loX = midX; loY = midY;
-      }
-    }
-
-    loX = Math.max(0, Math.min(core.CANVAS_W - itemW, loX));
-    loY = Math.max(0, Math.min(core.CANVAS_H - itemH, loY));
-    return { x: loX, y: loY };
+    } while (!ok);
+    cx = Math.max(0, Math.min(core.CANVAS_W - w, cx));
+    cy = Math.max(0, Math.min(core.CANVAS_H - h, cy));
+    return { x: cx, y: cy };
   }
 
   findOverlap(item, allItems) {
