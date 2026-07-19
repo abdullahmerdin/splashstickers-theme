@@ -82,21 +82,21 @@
           if (o.id === dragged.id || ds[o.id]) continue;
           if (!((cx+0.01) < (o.x+o.w-0.01) && (o.x+0.01) < (cx+w-0.01) &&
                 (cy+0.01) < (o.y+o.h-0.01) && (o.y+0.01) < (cy+h-0.01))) continue;
-          // Overlap: push to nearest edge using start direction (or center-based)
+          // Determine approach direction from start → candidate
           var fromX = sx != null ? sx : cx;
           var fromY = sy != null ? sy : cy;
-          var rightDist = Math.abs((o.x + o.w) - fromX);
-          var leftDist = Math.abs(fromX - (o.x - w));
-          var downDist = Math.abs((o.y + o.h) - fromY);
-          var upDist = Math.abs(fromY - (o.y - h));
-          var bestX = rightDist <= leftDist ? o.x + o.w : o.x - w;
-          var bestY = downDist <= upDist ? o.y + o.h : o.y - h;
-          var distX = Math.abs(bestX - fromX);
-          var distY = Math.abs(bestY - fromY);
-          if (distX <= distY) cx = bestX; else cy = bestY;
+          var dirX = cx - fromX;
+          var dirY = cy - fromY;
+          // Push on the axis with the most movement
+          if (Math.abs(dirX) >= Math.abs(dirY)) {
+            cx = dirX > 0 ? o.x - w : o.x + o.w;
+          } else {
+            cy = dirY > 0 ? o.y - h : o.y + o.h;
+          }
           ok = false; break;
         }
       } while (!ok);
+      // Clamp
       return {x: cx, y: cy};
     }
   };
