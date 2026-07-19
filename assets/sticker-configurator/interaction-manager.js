@@ -96,18 +96,21 @@ class InteractionManager {
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x + dx));
-        item.y = Math.max(0, item.y + dy);
         draggedItems.push(item);
       });
 
       // Wall-collision: constrain each dragged item against stationary items
+      // ConstrainPosition searches from current (non-overlapping) position to
+      // candidate (current + delta). Binary search finds exact boundary.
       // Also show visual feedback (red outline) for any residual overlap
       draggedItems.forEach(function (item) {
-        var sp = ds.startPos[item.id];
+        var candidateX = item.x + dx;
+        var candidateY = item.y + dy;
+        candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
+        candidateY = Math.max(0, candidateY);
         var result = core.collisionEngine.constrainPosition(
-          item.x, item.y, item, core.state.items, ds.ids,
-          sp ? sp.x : null, sp ? sp.y : null
+          candidateX, candidateY, item, core.state.items, ds.ids,
+          item.x, item.y  // current position = known non-overlapping
         );
         item.x = result.x;
         item.y = result.y;
@@ -366,18 +369,18 @@ class InteractionManager {
       ds.ids.forEach(function (id) {
         var item = core.state.items.find(function (i) { return i.id === id; });
         if (!item) return;
-        item.x = Math.max(0, Math.min(core.CANVAS_W - item.w, item.x + dx));
-        item.y = Math.max(0, item.y + dy);
         draggedItems.push(item);
       });
 
       // Wall-collision: constrain each dragged item against stationary items
-      // Also show visual feedback (red outline) for any residual overlap
       draggedItems.forEach(function (item) {
-        var sp = ds.startPos[item.id];
+        var candidateX = item.x + dx;
+        var candidateY = item.y + dy;
+        candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
+        candidateY = Math.max(0, candidateY);
         var result = core.collisionEngine.constrainPosition(
-          item.x, item.y, item, core.state.items, ds.ids,
-          sp ? sp.x : null, sp ? sp.y : null
+          candidateX, candidateY, item, core.state.items, ds.ids,
+          item.x, item.y
         );
         item.x = result.x;
         item.y = result.y;
