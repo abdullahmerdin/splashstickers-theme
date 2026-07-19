@@ -78,57 +78,51 @@ class CollisionEngine {
              (other.y + 0.01) < (cy + itemH - 0.01);
     }
 
-    // Helper: does candidate (cx,cy) overlap with ANY stationary item (excluding draggedIds)?
+    // Helper: does candidate (cx,cy) overlap with ANY stationary item?
     function overlapsAny(cx, cy) {
       for (var i = 0; i < allItems.length; i++) {
         var o = allItems[i];
         if (o.id === draggedItem.id || draggedSet[o.id]) continue;
-        if (overlapsWith(cx, cy, o)) return true;
+        if (overlapsWith(cx, cy, o)) return o;
       }
-      return false;
+      return null;
     }
 
-    // 1. If candidate position is already clear, return it
+    // 1. If candidate is already clear, return it
     if (!overlapsAny(candidateX, candidateY)) {
       return { x: candidateX, y: candidateY };
     }
 
-    // 2. Collect ALL overlapping stationary items at candidate position
-    var blockers = [];
-    for (var i = 0; i < allItems.length; i++) {
-      var o = allItems[i];
-      if (o.id === draggedItem.id || draggedSet[o.id]) continue;
-      if (overlapsWith(candidateX, candidateY, o)) {
-        blockers.push(o);
-      }
-    }
-
-    // 3. For each blocker compute the 4 escape positions and pick the best
-    //    that also doesn't cause new overlaps
+    // 2. For each blocking item, compute escape candidates per-axis
+    //    Try X-only, Y-only, and X+Y corner positions
     var bestX = candidateX, bestY = candidateY;
     var bestDist = Infinity;
 
-    for (var b = 0; b < blockers.length; b++) {
-      var blk = blockers[b];
+    for (var i = 0; i < allItems.length; i++) {
+      var o = allItems[i];
+      if (o.id === draggedItem.id || draggedSet[o.id]) continue;
+      if (!overlapsWith(candidateX, candidateY, o)) continue;
+
+      // 4 single-axis escapes + 4 corner escapes
       var escapes = [
-        // Right edge: place item to the right of blocker + GAP
-        { x: blk.x + blk.w + GAP, y: candidateY },
-        // Left edge: place item to the left of blocker - itemW - GAP
-        { x: blk.x - itemW - GAP, y: candidateY },
-        // Bottom edge: place item below blocker + GAP
-        { x: candidateX, y: blk.y + blk.h + GAP },
-        // Top edge: place item above blocker - itemH - GAP
-        { x: candidateX, y: blk.y - itemH - GAP }
+        // X-only (keep candidate Y)
+        { x: o.x + o.w + GAP, y: candidateY },
+        { x: o.x - itemW - GAP, y: candidateY },
+        // Y-only (keep candidate X)
+        { x: candidateX, y: o.y + o.h + GAP },
+        { x: candidateX, y: o.y - itemH - GAP },
+        // Corner: X first, then Y on the same side
+        { x: o.x + o.w + GAP, y: o.y + o.h + GAP },
+        { x: o.x + o.w + GAP, y: o.y - itemH - GAP },
+        { x: o.x - itemW - GAP, y: o.y + o.h + GAP },
+        { x: o.x - itemW - GAP, y: o.y - itemH - GAP }
       ];
 
       for (var e = 0; e < escapes.length; e++) {
         var ex = escapes[e].x, ey = escapes[e].y;
-        // Clamp to canvas
         ex = Math.max(0, Math.min(core.CANVAS_W - itemW, ex));
         ey = Math.max(0, Math.min(core.CANVAS_H - itemH, ey));
-        // Skip if this escape overlaps with anything
         if (overlapsAny(ex, ey)) continue;
-        // Distance from candidate
         var dist = Math.abs(ex - candidateX) + Math.abs(ey - candidateY);
         if (dist < bestDist) {
           bestDist = dist;
@@ -138,12 +132,8 @@ class CollisionEngine {
       }
     }
 
-    // 4. If bestDist is still Infinity, all escapes failed — clamp to canvas and return
-    if (bestDist === Infinity) {
-      bestX = Math.max(0, Math.min(core.CANVAS_W - itemW, candidateX));
-      bestY = Math.max(0, Math.min(core.CANVAS_H - itemH, candidateY));
-    }
-
+    // 3. If nothing found, keep the candidate (item stays in place rather than
+    //    teleporting to a bad position) — subsequent frames will nudge it free
     return { x: bestX, y: bestY };
   }
 
@@ -202,12 +192,16 @@ class CollisionEngine {
       // (only need to escape from actual blockers)
       if (!this.rectsOverlap(item, other)) continue;
 
-      // 4 escape positions relative to this blocker
+      // 4 single-axis escapes + 4 corner escapes
       var escapes = [
         { x: other.x + other.w + GAP, y: item.y },
         { x: other.x - w - GAP, y: item.y },
         { x: item.x, y: other.y + other.h + GAP },
-        { x: item.x, y: other.y - h - GAP }
+        { x: item.x, y: other.y - h - GAP },
+        { x: other.x + other.w + GAP, y: other.y + other.h + GAP },
+        { x: other.x + other.w + GAP, y: other.y - h - GAP },
+        { x: other.x - w - GAP, y: other.y + other.h + GAP },
+        { x: other.x - w - GAP, y: other.y - h - GAP }
       ];
 
       for (var e = 0; e < escapes.length; e++) {

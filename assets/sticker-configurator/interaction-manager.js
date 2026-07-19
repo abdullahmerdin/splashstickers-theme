@@ -102,6 +102,7 @@ class InteractionManager {
       });
 
       // Wall-collision: constrain each dragged item against stationary items
+      // Also show visual feedback (red outline) for any residual overlap
       draggedItems.forEach(function (item) {
         var result = core.collisionEngine.constrainPosition(
           item.x, item.y, item, core.state.items, ds.ids
@@ -110,6 +111,19 @@ class InteractionManager {
         item.y = result.y;
         item.el.style.left = result.x + 'px';
         item.el.style.top = result.y + 'px';
+
+        // Visual: check if final position still overlaps
+        var overlapVisual = false;
+        for (var oi = 0; oi < core.state.items.length; oi++) {
+          var o2 = core.state.items[oi];
+          if (o2.id === item.id || (ds.ids && ds.ids.indexOf(o2.id) > -1)) continue;
+          if (core.collisionEngine.rectsOverlap(item, o2)) {
+            overlapVisual = true;
+            break;
+          }
+        }
+        item.el.style.opacity = overlapVisual ? '0.4' : '';
+        item.el.style.outline = overlapVisual ? '2px solid #FF4444' : '';
       });
 
       core.selectionManager.updateGuides(
@@ -356,6 +370,7 @@ class InteractionManager {
       });
 
       // Wall-collision: constrain each dragged item against stationary items
+      // Also show visual feedback (red outline) for any residual overlap
       draggedItems.forEach(function (item) {
         var result = core.collisionEngine.constrainPosition(
           item.x, item.y, item, core.state.items, ds.ids
@@ -364,6 +379,19 @@ class InteractionManager {
         item.y = result.y;
         item.el.style.left = result.x + 'px';
         item.el.style.top = result.y + 'px';
+
+        // Visual: check if final position still overlaps
+        var overlapVisual = false;
+        for (var oi = 0; oi < core.state.items.length; oi++) {
+          var o2 = core.state.items[oi];
+          if (o2.id === item.id || (ds.ids && ds.ids.indexOf(o2.id) > -1)) continue;
+          if (core.collisionEngine.rectsOverlap(item, o2)) {
+            overlapVisual = true;
+            break;
+          }
+        }
+        item.el.style.opacity = overlapVisual ? '0.4' : '';
+        item.el.style.outline = overlapVisual ? '2px solid #FF4444' : '';
       });
     } else if (ds.type === 'resize') {
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
