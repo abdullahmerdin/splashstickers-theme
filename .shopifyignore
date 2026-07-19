@@ -1,0 +1,8 @@
+assets/sticker-configurator/*
+assets/sticker-configurator/**/*
+.hermes/*
+.hermes/**/*
+.github/*
+.github/**/*
+.gitignore
+.theme-check.yml
