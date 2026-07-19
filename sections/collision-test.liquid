@@ -20,6 +20,7 @@
     font-size: 12px; color: #fff; cursor: grab; user-select: none;
     border: 2px solid; background: rgba(255,255,255,0.08);
     transition: opacity 0.05s; border-radius: 4px;
+    box-sizing: border-box;
   }
   .collision-test-{{ section.id }} .ct-box.dragging { cursor: grabbing; z-index: 100; }
   .collision-test-{{ section.id }} .ct-box.overlap { border-color: #ff4444 !important; background: rgba(255,68,68,0.2) !important; opacity: 0.4; }
@@ -34,6 +35,7 @@
   <div class="ct-box" id="ct-drag-{{ section.id }}" style="left:50px;top:200px;width:100px;height:100px;border-color:#e17055;">DRAG ME</div>
   <div class="ct-box" id="ct-obs-{{ section.id }}" style="left:400px;top:200px;width:100px;height:100px;border-color:{{ accent }};">OBSTACLE</div>
   <div class="ct-info" id="ct-info-{{ section.id }}">Drag ORANGE box → BLUE box. It should STOP at the edge.</div>
+  <div id="ct-debug-{{ section.id }}" style="position:absolute;top:0;left:0;font-size:10px;color:#aaa;padding:4px;background:rgba(0,0,0,0.7);font-family:monospace;pointer-events:none;white-space:pre;"></div>
 </div>
 
 <script>
@@ -153,6 +155,13 @@
     dragEl.classList.toggle('overlap', overlap);
     infoEl.textContent = 'Box1: (' + Math.round(box1.x) + ', ' + Math.round(box1.y) + ') ' +
       (overlap ? '❌ OVERLAP!' : '✅ Clear') + ' | Obstacle: (' + box2.x + ', ' + box2.y + ')';
+
+    var dbg = document.getElementById('ct-debug-{{ section.id }}');
+    if (dbg) dbg.textContent =
+      'cand=(' + Math.round(candX) + ',' + Math.round(candY) + ')' +
+      ' | dir=(' + Math.round(result.x - box1.x) + ',' + Math.round(result.y - box1.y) + ')' +
+      ' | w=' + box1.w + ' h=' + box1.h +
+      ' | overlap=' + overlap;
   });
 
   document.addEventListener('mouseup', function() {
