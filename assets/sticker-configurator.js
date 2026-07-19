@@ -114,44 +114,7 @@ class CollisionEngine {
   }
 
   constrainPosition(cx, cy, draggedItem, allItems, draggedIds, sx, sy) {
-    var w = draggedItem.w, h = draggedItem.h;
-    var core = this.core;
-    var SKIN = 2;
-    var ds = {};
-    if (draggedIds) {
-      for (var di = 0; di < draggedIds.length; di++) ds[draggedIds[di]] = true;
-    }
-    function hit(cx, cy, o) {
-      return (cx - SKIN + 0.01) < (o.x + o.w + SKIN - 0.01) &&
-             (o.x - SKIN + 0.01) < (cx + w + SKIN - 0.01) &&
-             (cy - SKIN + 0.01) < (o.y + o.h + SKIN - 0.01) &&
-             (o.y - SKIN + 0.01) < (cy + h + SKIN - 0.01);
-    }
-    for (var i = 0; i < allItems.length; i++) {
-      var o = allItems[i];
-      if (o.id === draggedItem.id || ds[o.id]) continue;
-      if (!hit(cx, cy, o)) continue;
-      var fromX = sx != null ? sx : cx;
-      var fromY = sy != null ? sy : cy;
-      var dirX = cx - fromX;
-      var dirY = cy - fromY;
-      if (Math.abs(dirX) >= Math.abs(dirY)) {
-        cx = dirX > 0 ? o.x - w : o.x + o.w;
-      } else {
-        cy = dirY > 0 ? o.y - h : o.y + o.h;
-      }
-      if (hit(cx, cy, o)) {
-        if (Math.abs(dirX) >= Math.abs(dirY)) {
-          cy = dirY > 0 ? o.y - h : o.y + o.h;
-        } else {
-          cx = dirX > 0 ? o.x - w : o.x + o.w;
-        }
-      }
-      break;
-    }
-    cx = Math.max(0, Math.min(core.CANVAS_W - w, cx));
-    cy = Math.max(0, Math.min(core.CANVAS_H - h, cy));
-    return { x: cx, y: cy };
+    return {x: cx, y: cy};
   }
 
   findOverlap(item, allItems) {
