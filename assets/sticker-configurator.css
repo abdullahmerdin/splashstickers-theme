@@ -239,7 +239,9 @@
 
 .sticker-configurator .editor-wrap {
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  /* Only editor chrome and the canvas viewport live here. Controls are a
+     sibling below this grid, so a canvas zoom cannot reflow the UI. */
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
@@ -628,6 +630,7 @@
 /* Bottom controls stay in the editor's normal flow. The editor already owns
    the viewport height, so no sticky/fixed positioning is needed here. */
 .sticker-configurator .cfg-controls {
+  flex: 0 0 auto;
   position: static;
   z-index: auto;
   display: grid;
@@ -1432,7 +1435,7 @@ dialog.cfg-modal::backdrop {
   }
 
   .sticker-configurator .editor-wrap {
-    grid-template-rows: auto auto auto minmax(0, 1fr) max-content;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
   }
 
   .sticker-configurator .upload-btn-area {
