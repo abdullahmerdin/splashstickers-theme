@@ -589,9 +589,8 @@ class CanvasRenderer {
   }
 
   clampZoom(value) {
-    // Mobile viewports can be narrower than the 600px logical workspace.
-    // Keep a usable lower bound while allowing the canvas to fit the screen.
-    return Math.max(0.25, Math.min(4, Number(value) || 1));
+    // The workspace must never render below its true 100% scale.
+    return Math.max(1, Math.min(4, Number(value) || 1));
   }
 
   clampPan() {
@@ -643,8 +642,8 @@ class CanvasRenderer {
     // switch. Never treat that as a valid 100% viewport.
     if (!(viewportWidth > 0 && viewportHeight > 0)) return false;
 
-    fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportWidth - 20) / canvasWidth));
-    fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportHeight - 20) / canvasHeight));
+    fitZoom = Math.min(fitZoom, Math.max(1, (viewportWidth - 20) / canvasWidth));
+    fitZoom = Math.min(fitZoom, Math.max(1, (viewportHeight - 20) / canvasHeight));
 
     core.state.zoom = this.clampZoom(fitZoom);
     this._syncZoomTransform();
