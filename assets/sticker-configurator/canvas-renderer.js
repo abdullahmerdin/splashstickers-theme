@@ -151,12 +151,12 @@ class CanvasRenderer {
     var viewportWidth = core.wrap.clientWidth;
     var viewportHeight = core.wrap.clientHeight;
 
-    if (viewportWidth > 0) {
-      fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportWidth - 20) / canvasWidth));
-    }
-    if (viewportHeight > 0) {
-      fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportHeight - 20) / canvasHeight));
-    }
+    // A grid track can briefly be zero during component startup or a layout
+    // switch. Never treat that as a valid 100% viewport.
+    if (!(viewportWidth > 0 && viewportHeight > 0)) return false;
+
+    fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportWidth - 20) / canvasWidth));
+    fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportHeight - 20) / canvasHeight));
 
     core.state.zoom = this.clampZoom(fitZoom);
     this._syncZoomTransform();
@@ -166,6 +166,16 @@ class CanvasRenderer {
       core.wrap.scrollTop = Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
       core.state.panX = core.wrap.scrollLeft;
       core.state.panY = core.wrap.scrollTop;
+    });
+    return true;
+  }
+
+  fitWhenReady(attempt) {
+    var renderer = this;
+    var tries = Number(attempt) || 0;
+    requestAnimationFrame(function () {
+      if (renderer.zoomToFit()) return;
+      if (tries < 8) renderer.fitWhenReady(tries + 1);
     });
   }
 

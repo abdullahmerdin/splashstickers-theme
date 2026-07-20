@@ -31,11 +31,7 @@ class MobileHandler {
 
     var workspaceSettings = core.querySelector('.bottom-extra');
     if (workspaceSettings) {
-      if (core.state.mobile) {
-        workspaceSettings.removeAttribute('open');
-      } else {
-        workspaceSettings.setAttribute('open', '');
-      }
+      workspaceSettings.removeAttribute('open');
     }
 
     if (core.mobileBtn) {
@@ -46,7 +42,7 @@ class MobileHandler {
         : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
     }
 
-    setTimeout(function () { core.canvasRenderer.zoomToFit(); }, 100);
+    core.canvasRenderer.fitWhenReady();
   }
 
   onMobileToggle() {

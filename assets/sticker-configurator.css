@@ -441,9 +441,8 @@
   border: 1px solid var(--cfg-line-strong);
   border-radius: calc(var(--cfg-radius) + 2px);
   box-shadow: inset 0 1px 2px rgba(20, 22, 29, 0.025);
-  /* Keep the scaled stage from contributing an intrinsic size to the grid
-     row that contains the controls. Only this scroll viewport may resize. */
-  contain: size layout paint;
+  /* The canvas is a clipped viewport; zoom changes only the stage inside it. */
+  contain: layout paint;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -632,7 +631,8 @@
   position: static;
   z-index: auto;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
+  align-items: center;
   gap: 10px;
   min-width: 0;
   padding: 12px;
@@ -643,6 +643,7 @@
 
 .sticker-configurator .cfg-variant-field {
   display: grid;
+  grid-column: 1 / -1;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 10px;
@@ -663,6 +664,7 @@
 
 .sticker-configurator .upload-btn-area {
   display: flex;
+  grid-column: 1;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -735,6 +737,8 @@
 }
 
 .sticker-configurator .cfg-btn-submit {
+  grid-column: 2;
+  align-self: stretch;
   width: 100%;
   min-height: 46px;
   padding: 10px 16px;
@@ -769,11 +773,16 @@
 }
 
 .sticker-configurator .cfg-cart-status {
+  grid-column: 1 / -1;
   min-height: 1.25em;
   margin: -2px 2px 0;
   color: var(--cfg-muted);
   font-size: 0.72rem;
   line-height: 1.35;
+}
+
+.sticker-configurator .cfg-cart-status:empty {
+  display: none;
 }
 
 .sticker-configurator .cfg-cart-status[data-state="error"] {
@@ -786,13 +795,42 @@
 
 .sticker-configurator .bottom-extra {
   display: block;
-  padding-top: 2px;
+  grid-column: 1 / -1;
+  padding-top: 0;
   color: var(--cfg-muted);
   font-size: 0.7rem;
 }
 
 .sticker-configurator .bottom-extra > summary {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  color: var(--cfg-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  touch-action: manipulation;
+}
+
+.sticker-configurator .bottom-extra > summary::-webkit-details-marker {
   display: none;
+}
+
+.sticker-configurator .bottom-extra-chevron {
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 140ms ease;
+}
+
+.sticker-configurator .bottom-extra[open] .bottom-extra-chevron {
+  transform: rotate(225deg);
 }
 
 .sticker-configurator .be-row {

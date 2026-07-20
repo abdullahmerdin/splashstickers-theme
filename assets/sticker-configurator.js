@@ -639,12 +639,12 @@ class CanvasRenderer {
     var viewportWidth = core.wrap.clientWidth;
     var viewportHeight = core.wrap.clientHeight;
 
-    if (viewportWidth > 0) {
-      fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportWidth - 20) / canvasWidth));
-    }
-    if (viewportHeight > 0) {
-      fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportHeight - 20) / canvasHeight));
-    }
+    // A grid track can briefly be zero during component startup or a layout
+    // switch. Never treat that as a valid 100% viewport.
+    if (!(viewportWidth > 0 && viewportHeight > 0)) return false;
+
+    fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportWidth - 20) / canvasWidth));
+    fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportHeight - 20) / canvasHeight));
 
     core.state.zoom = this.clampZoom(fitZoom);
     this._syncZoomTransform();
@@ -654,6 +654,16 @@ class CanvasRenderer {
       core.wrap.scrollTop = Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
       core.state.panX = core.wrap.scrollLeft;
       core.state.panY = core.wrap.scrollTop;
+    });
+    return true;
+  }
+
+  fitWhenReady(attempt) {
+    var renderer = this;
+    var tries = Number(attempt) || 0;
+    requestAnimationFrame(function () {
+      if (renderer.zoomToFit()) return;
+      if (tries < 8) renderer.fitWhenReady(tries + 1);
     });
   }
 
@@ -1703,11 +1713,7 @@ class MobileHandler {
 
     var workspaceSettings = core.querySelector('.bottom-extra');
     if (workspaceSettings) {
-      if (core.state.mobile) {
-        workspaceSettings.removeAttribute('open');
-      } else {
-        workspaceSettings.setAttribute('open', '');
-      }
+      workspaceSettings.removeAttribute('open');
     }
 
     if (core.mobileBtn) {
@@ -1718,7 +1724,7 @@ class MobileHandler {
         : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
     }
 
-    setTimeout(function () { core.canvasRenderer.zoomToFit(); }, 100);
+    core.canvasRenderer.fitWhenReady();
   }
 
   onMobileToggle() {
