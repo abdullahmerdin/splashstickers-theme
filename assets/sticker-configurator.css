@@ -426,7 +426,9 @@
   margin-inline: calc(0px - var(--cfg-shell-pad));
   overflow: auto;
   overscroll-behavior: auto;
-  touch-action: pan-x pan-y;
+  /* The editor owns panning/zooming. Do not let a pinch fall through to
+     browser/page zoom, which would scale the controls below the canvas too. */
+  touch-action: none;
   scrollbar-gutter: stable both-edges;
   background-color: #fff;
   background-image:
@@ -439,7 +441,9 @@
   border: 1px solid var(--cfg-line-strong);
   border-radius: calc(var(--cfg-radius) + 2px);
   box-shadow: inset 0 1px 2px rgba(20, 22, 29, 0.025);
-  contain: layout paint;
+  /* Keep the scaled stage from contributing an intrinsic size to the grid
+     row that contains the controls. Only this scroll viewport may resize. */
+  contain: size layout paint;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -466,7 +470,7 @@
   overflow: visible;
   cursor: default;
   user-select: none;
-  touch-action: pan-x pan-y;
+  touch-action: none;
   transform-origin: 0 0;
   background: var(--cfg-bg, #fff);
   border-radius: 0;
