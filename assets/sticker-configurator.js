@@ -565,7 +565,7 @@ class CanvasRenderer {
   }
 
   clampZoom(value) {
-    return Math.max(0.35, Math.min(4, Number(value) || 1));
+    return Math.max(1, Math.min(4, Number(value) || 1));
   }
 
   clampPan() {
@@ -607,11 +607,7 @@ class CanvasRenderer {
   zoomToFit() {
     var core = this.core;
     if (!core.canvas || !core.wrap) return;
-    var wrapW = core.wrap ? core.wrap.clientWidth : core.CANVAS_W;
-    var wrapH = core.wrap ? (core.wrap.clientHeight || core.CANVAS_H) : core.CANVAS_H;
-    var zoomX = Math.max(1, wrapW - 44) / core.CANVAS_W;
-    var zoomY = Math.max(1, wrapH - 44) / core.CANVAS_H;
-    core.state.zoom = this.clampZoom(Math.min(zoomX, zoomY, 1));
+    core.state.zoom = 1;
     this._syncZoomTransform();
 
     requestAnimationFrame(function () {

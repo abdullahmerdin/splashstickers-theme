@@ -24,19 +24,34 @@
   --cfg-z-guides: 30;
   --cfg-z-chrome: 40;
 
-  grid-column: 1;
+  box-sizing: border-box;
+  grid-column: 1 / -1;
   grid-row: 1;
-  align-self: start;
-  position: sticky;
-  top: 96px;
+  align-self: stretch;
+  position: relative;
+  top: auto;
+  z-index: 1;
+  width: 100%;
+  max-width: 100%;
+  height: calc(100svh - var(--header-group-height, 64px));
+  min-height: 560px;
+  margin-inline: 0;
   min-width: 0;
-  padding: 0 20px;
+  padding: 8px 0;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .sticker-configurator > sticker-configurator {
-  display: block;
+  --cfg-shell-pad: 16px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
   min-width: 0;
-  padding: 18px;
+  min-height: 0;
+  padding: var(--cfg-shell-pad);
+  overflow: hidden;
   color: var(--cfg-ink);
   background:
     radial-gradient(circle at 100% 0, rgba(var(--cfg-primary-rgb), 0.055), transparent 30%),
@@ -47,9 +62,8 @@
 }
 
 .product-information.product-information {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) min(50vw, 420px);
-  gap: clamp(24px, 4vw, 56px);
+  position: relative;
+  gap: 24px 0;
   align-items: start;
 }
 
@@ -57,8 +71,9 @@
   display: none;
 }
 
-.product-information.product-information product-component {
-  grid-column: 2;
+.product-information.product-information > product-component {
+  grid-column: 1 / -1;
+  grid-row: 2;
   width: 100%;
   min-width: 0;
 }
@@ -91,8 +106,10 @@
 }
 
 .sticker-configurator .editor-wrap {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  flex: 1 1 auto;
+  min-height: 0;
   min-width: 0;
   gap: 10px;
 }
@@ -256,9 +273,11 @@
 /* Canvas viewport and scaled stage */
 .sticker-configurator .canvas-wrap {
   position: relative;
-  width: 100%;
-  height: clamp(340px, 53vh, 560px);
-  min-height: 320px;
+  align-self: stretch;
+  width: calc(100% + var(--cfg-shell-pad) + var(--cfg-shell-pad));
+  height: auto;
+  min-height: 0;
+  margin-inline: calc(0px - var(--cfg-shell-pad));
   overflow: auto;
   overscroll-behavior: auto;
   touch-action: pan-x pan-y;
@@ -272,6 +291,7 @@
   border: 1px solid var(--cfg-line-strong);
   border-radius: calc(var(--cfg-radius) + 2px);
   box-shadow: inset 0 1px 2px rgba(20, 22, 29, 0.025);
+  contain: layout paint;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -882,50 +902,45 @@ dialog.cfg-modal::backdrop {
 }
 
 /* Explicit mobile mode and naturally narrow sections share one layout. */
-.sticker-configurator.mobile-mode {
-  position: relative;
-  top: auto;
-  padding: 0 12px;
-}
-
-.sticker-configurator.mobile-mode > sticker-configurator {
-  padding: 14px;
+.sticker-configurator > sticker-configurator.mobile-mode {
+  --cfg-shell-pad: 12px;
+  padding: var(--cfg-shell-pad);
   border-radius: 18px;
 }
 
-.sticker-configurator.mobile-mode .toolbar {
+.sticker-configurator sticker-configurator.mobile-mode .toolbar {
   scroll-snap-type: x proximity;
 }
 
-.sticker-configurator.mobile-mode .toolbar button {
+.sticker-configurator sticker-configurator.mobile-mode .toolbar button {
   flex-basis: 42px;
   width: 42px;
   height: 42px;
   scroll-snap-align: start;
 }
 
-.sticker-configurator.mobile-mode .toolbar-divider {
+.sticker-configurator sticker-configurator.mobile-mode .toolbar-divider {
   display: none;
 }
 
-.sticker-configurator.mobile-mode .canvas-wrap {
-  height: clamp(280px, 36svh, 330px);
-  min-height: 280px;
+.sticker-configurator sticker-configurator.mobile-mode .canvas-wrap {
+  height: auto;
+  min-height: 0;
 }
 
-.sticker-configurator.mobile-mode .canvas-item {
+.sticker-configurator sticker-configurator.mobile-mode .canvas-item {
   cursor: grab;
 }
 
-.sticker-configurator.mobile-mode .hint-desktop {
+.sticker-configurator sticker-configurator.mobile-mode .hint-desktop {
   display: none;
 }
 
-.sticker-configurator.mobile-mode .hint-mobile {
+.sticker-configurator sticker-configurator.mobile-mode .hint-mobile {
   display: inline;
 }
 
-.sticker-configurator.mobile-mode .zoom-display {
+.sticker-configurator sticker-configurator.mobile-mode .zoom-display {
   display: none;
 }
 
@@ -940,8 +955,8 @@ dialog.cfg-modal::backdrop {
   }
 
   .shopify-section.sticker-configurator {
-    grid-column: 1;
-    grid-row: auto;
+    grid-column: 1 / -1;
+    grid-row: 1;
     position: relative;
     top: auto;
   }
@@ -949,11 +964,12 @@ dialog.cfg-modal::backdrop {
 
 @media (max-width: 767px) {
   .shopify-section.sticker-configurator {
-    padding: 0 12px;
+    padding: 0;
   }
 
   .sticker-configurator > sticker-configurator {
-    padding: 14px;
+    --cfg-shell-pad: 10px;
+    padding: var(--cfg-shell-pad);
     border-radius: 18px;
   }
 
@@ -993,8 +1009,8 @@ dialog.cfg-modal::backdrop {
   }
 
   .sticker-configurator .canvas-wrap {
-    height: clamp(280px, 36svh, 330px);
-    min-height: 280px;
+    height: auto;
+    min-height: 0;
     scrollbar-gutter: auto;
   }
 
