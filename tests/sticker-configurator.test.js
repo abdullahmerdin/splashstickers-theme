@@ -55,6 +55,13 @@ test('millimetre conversion stays stable on the 600 mm workspace', () => {
   assert.equal(utils.pxToMm(125), 125);
 });
 
+test('canvas zoom never falls below its 100 percent scale', () => {
+  const renderer = new CanvasRenderer({});
+  assert.equal(renderer.clampZoom(0.25), 1);
+  assert.equal(renderer.clampZoom(0.99), 1);
+  assert.equal(renderer.clampZoom(1), 1);
+});
+
 test('collision engine enforces configured gaps and workspace bounds', () => {
   const core = {
     CANVAS_W: 600,

@@ -3783,6 +3783,19 @@ class StickerConfigurator extends HTMLElement {
     var signal = this.abortController.signal;
     var core = this;
 
+    // Keep a two-finger gesture inside the editor. Without this capture-level
+    // guard some mobile browsers treat the same pinch as page zoom, which
+    // scales the UI even though the canvas zoom itself is clamped at 100%.
+    var preventViewportPinch = function (e) {
+      if (e.type.indexOf('gesture') === 0 || (e.touches && e.touches.length > 1)) {
+        e.preventDefault();
+      }
+    };
+    this.addEventListener('touchstart', preventViewportPinch, { signal: signal, capture: true, passive: false });
+    this.addEventListener('touchmove', preventViewportPinch, { signal: signal, capture: true, passive: false });
+    this.addEventListener('gesturestart', preventViewportPinch, { signal: signal, passive: false });
+    this.addEventListener('gesturechange', preventViewportPinch, { signal: signal, passive: false });
+
     var variantSelect = this.cache['variant-select'];
     if (variantSelect) {
       variantSelect.addEventListener('change', function () {
