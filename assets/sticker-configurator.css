@@ -622,13 +622,16 @@
   width: 1px;
 }
 
-/* Bottom controls */
-.sticker-configurator .sticky-ctrls {
-  position: relative;
-  z-index: var(--cfg-z-chrome);
+/* Bottom controls stay in the editor's normal flow. The editor already owns
+   the viewport height, so no sticky/fixed positioning is needed here. */
+.sticker-configurator .cfg-controls {
+  position: static;
+  z-index: auto;
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
+  min-width: 0;
+  min-height: 0;
   padding: 12px;
   background: rgba(249, 249, 251, 0.92);
   border: 1px solid var(--cfg-line);
@@ -1292,6 +1295,8 @@ dialog.cfg-modal::backdrop {
   .sticker-configurator > sticker-configurator {
     --cfg-shell-pad: 10px;
     padding: var(--cfg-shell-pad) var(--cfg-shell-pad) max(var(--cfg-shell-pad), env(safe-area-inset-bottom));
+    padding-block-start: var(--cfg-shell-pad) !important;
+    padding-block-end: max(var(--cfg-shell-pad), env(safe-area-inset-bottom)) !important;
     border-radius: 0;
   }
 
@@ -1377,9 +1382,9 @@ dialog.cfg-modal::backdrop {
     display: none;
   }
 
-  .sticker-configurator .sticky-ctrls {
+  .sticker-configurator .cfg-controls {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
     gap: 8px;
     padding: 8px;
@@ -1392,6 +1397,10 @@ dialog.cfg-modal::backdrop {
     gap: 8px;
     min-width: 0;
     align-items: center;
+  }
+
+  .sticker-configurator .cfg-variant-field {
+    grid-column: 1 / -1;
   }
 
   .sticker-configurator .cfg-add-design {
