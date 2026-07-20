@@ -15,6 +15,7 @@
   data-heading="{{ heading | escape }}"
   data-bg-color="{{ bg_color }}"
   data-base-price="{{ base_price }}"
+  data-gap-mm="{{ section.settings.gap_mm | default: 3 }}"
   style="--cfg-bg: {{ bg_color }};"
 >
   {%- unless heading == blank -%}
@@ -143,7 +144,11 @@
         Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
       </button>
 
-      <div class="bottom-extra">
+      <details class="bottom-extra" open>
+        <summary>
+          <span>Workspace settings</span>
+          <span class="bottom-extra-chevron" aria-hidden="true"></span>
+        </summary>
         <div class="be-row">
           <span class="be-label">Snap</span>
           <input type="checkbox" id="snap-btm-{{ section.id }}" checked>
@@ -159,7 +164,7 @@
           <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF">
           <button class="be-btn danger" id="clear-btn-{{ section.id }}">Clear</button>
         </div>
-      </div>
+      </details>
     </div>
 
     <dialog id="modal-{{ section.id }}" class="cfg-modal" aria-labelledby="modal-title-{{ section.id }}">

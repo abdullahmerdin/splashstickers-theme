@@ -531,6 +531,29 @@ class CanvasRenderer {
       ctx.lineTo(x, h);
     }
     ctx.stroke();
+    this.scheduleBackdropGridSync();
+  }
+
+  syncBackdropGrid() {
+    var core = this.core;
+    if (!core.wrap || !core.canvas) return;
+    var zoom = this.clampZoom(core.state.zoom);
+    var step = Math.max(4, (core.state.gridSize || 20) * zoom);
+    var wrapRect = core.wrap.getBoundingClientRect();
+    var canvasRect = core.canvas.getBoundingClientRect();
+    core.wrap.style.setProperty('--cfg-grid-step', step + 'px');
+    core.wrap.style.setProperty('--cfg-grid-origin-x', (canvasRect.left - wrapRect.left) + 'px');
+    core.wrap.style.setProperty('--cfg-grid-origin-y', (canvasRect.top - wrapRect.top) + 'px');
+  }
+
+  scheduleBackdropGridSync() {
+    var core = this.core;
+    if (core._gridBackdropRaf) return;
+    var renderer = this;
+    core._gridBackdropRaf = requestAnimationFrame(function () {
+      core._gridBackdropRaf = null;
+      renderer.syncBackdropGrid();
+    });
   }
 
   applyZoom() {
@@ -558,6 +581,7 @@ class CanvasRenderer {
     core.canvas.style.height = core.CANVAS_H + 'px';
     core.canvas.style.transform = 'scale(' + zoom + ')';
     core.canvas.style.transformOrigin = '0 0';
+    this.scheduleBackdropGridSync();
     var zoomDisplay = core.querySelector('#zoom-display-' + core.sid);
     if (zoomDisplay) {
       zoomDisplay.textContent = Math.round(zoom * 100) + '%';
@@ -710,7 +734,7 @@ class ItemManager {
     el.style.height = defaultH + 'px';
 
     // Find slot
-    var slot = this.findNextSlot(defaultW, defaultH);
+    var slot = this.findNextSlot(defaultW, defaultH, item.id);
     item.x = slot.x;
     item.y = slot.y;
 
@@ -783,7 +807,7 @@ class ItemManager {
     el.style.height = item.h + 'px';
 
     // Find slot
-    var slot = this.findNextSlot(item.w, item.h);
+    var slot = this.findNextSlot(item.w, item.h, item.id);
     item.x = slot.x;
     item.y = slot.y;
 
@@ -874,30 +898,37 @@ class ItemManager {
     this.core.growCanvas();
   }
 
-  findNextSlot(w, h) {
-    var CANVAS_W = this.core.CANVAS_W;
-    var items = this.core.state.items;
-    var cols = Math.floor(CANVAS_W / (w + 20));
-    if (cols < 1) cols = 1;
-    var gap = 10;
+  findNextSlot(w, h, excludeId) {
+    var core = this.core;
+    var gap = Math.max(0, core.utils.mmToPx(core.state.gapSize));
+    var rects = core.state.items
+      .filter(function (item) { return item.id !== excludeId; })
+      .map(function (item) { return core.collisionEngine.getCollisionRect(item); });
+    var xs = [0];
+    var ys = [0];
 
-    for (var row = 0; row < 50; row++) {
-      for (var col = 0; col < cols; col++) {
-        var x = col * (w + gap) + gap;
-        var y = row * (h + gap) + gap;
-        var fits = true;
-        for (var i = 0; i < items.length; i++) {
-          var it = items[i];
-          if (x < it.x + it.w + 5 && x + w + 5 > it.x &&
-              y < it.y + it.h + 5 && y + h + 5 > it.y) {
-            fits = false;
-            break;
-          }
-        }
-        if (fits) return { x: x, y: y };
+    rects.forEach(function (rect) {
+      xs.push(rect.x + rect.w + gap);
+      ys.push(rect.y + rect.h + gap);
+    });
+    xs.sort(function (a, b) { return a - b; });
+    ys.sort(function (a, b) { return a - b; });
+
+    for (var yi = 0; yi < ys.length; yi++) {
+      for (var xi = 0; xi < xs.length; xi++) {
+        var candidate = { x: xs[xi], y: ys[yi], w: w, h: h };
+        if (candidate.x + candidate.w > core.CANVAS_W + core.collisionEngine.EPSILON) continue;
+        var blocked = rects.some(function (rect) {
+          return core.collisionEngine.rectsOverlap(candidate, rect, gap);
+        });
+        if (!blocked) return { x: candidate.x, y: candidate.y };
       }
     }
-    return { x: gap, y: this.core.CANVAS_H + gap };
+
+    var maxBottom = rects.reduce(function (bottom, rect) {
+      return Math.max(bottom, rect.y + rect.h);
+    }, 0);
+    return { x: 0, y: maxBottom > 0 ? maxBottom + gap : 0 };
   }
 
   deleteSelected() {
@@ -1102,7 +1133,7 @@ class SelectionManager {
     // Size inputs visibility
     var sizeInputs = core.cache['size-inputs'];
     if (sizeInputs) {
-      sizeInputs.style.visibility = selCount > 0 ? 'visible' : 'hidden';
+      sizeInputs.hidden = selCount === 0;
     }
 
     // Update size inputs for single selection
@@ -1233,6 +1264,7 @@ class HistoryManager {
         isText: !!it.text
       };
     });
+    snapshot.gapSize = state.gapSize;
 
     if (state.historyIdx < state.history.length - 1) {
       state.history = state.history.slice(0, state.historyIdx + 1);
@@ -1263,6 +1295,11 @@ class HistoryManager {
 
   restoreState(snapshot) {
     var core = this.core;
+    if (Number.isFinite(snapshot.gapSize)) {
+      core.state.gapSize = Math.max(3, Math.min(50, snapshot.gapSize));
+      var gapInput = core.cache ? core.cache['gap-size'] : null;
+      if (gapInput) gapInput.value = core.state.gapSize;
+    }
     // Remove existing items
     core.state.items.slice().forEach(function (it) { it.el.remove(); });
     core.state.items.length = 0;
@@ -1391,35 +1428,91 @@ class AlignmentEngine {
     core.growCanvas();
   }
 
-  onAutoArrange() {
+  onAutoArrange(options) {
     var core = this.core;
-    if (!core.state.items.length) return;
-    core.historyManager.saveState();
-    var items = core.state.items.slice();
-    // Sort by area descending (largest first)
-    items.sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
-    var cols = Math.floor(core.CANVAS_W / (items[0].w + 10));
-    if (cols < 1) cols = 1;
-    var gapPx = core.state.gapSize / 600 * core.CANVAS_W;
-    var x = gapPx;
-    var y = gapPx;
-    var rowH = 0;
-    var col = 0;
-    items.forEach(function (it) {
-      if (col >= cols) {
-        y += rowH + gapPx;
-        x = gapPx;
-        col = 0;
-        rowH = 0;
-      }
-      it.x = x;
-      it.y = y;
-      x += it.w + gapPx;
-      col++;
-      if (it.h > rowH) rowH = it.h;
+    if (!core.state.items.length) return false;
+    options = options || {};
+    if (!options.skipInitialHistory) core.historyManager.saveState();
+    var previousHeight = core.CANVAS_H;
+    var previous = core.state.items.map(function (item) {
+      return { item: item, x: item.x, y: item.y };
     });
-    core.collisionEngine.resolveAllOverlaps(core.state.items);
-    // Re-render positions for nudged items
+    var gapPx = Math.max(0, core.utils.mmToPx(core.state.gapSize));
+    var entries = core.state.items.map(function (item, index) {
+      var rect = core.collisionEngine.getCollisionRect(item);
+      return {
+        item: item,
+        index: index,
+        w: rect.w,
+        h: rect.h,
+        offsetX: rect.x - item.x,
+        offsetY: rect.y - item.y
+      };
+    });
+
+    // Largest artwork first gives a compact, deterministic shelf layout.
+    entries.sort(function (a, b) {
+      return (b.w * b.h) - (a.w * a.h) || b.h - a.h || a.index - b.index;
+    });
+
+    var x = 0;
+    var y = 0;
+    var rowH = 0;
+    var maxBottom = 0;
+    var failed = false;
+
+    entries.forEach(function (entry) {
+      if (failed) return;
+      if (entry.w > core.CANVAS_W + core.collisionEngine.EPSILON) {
+        failed = true;
+        return;
+      }
+
+      var nextX = x > 0 ? x + gapPx : 0;
+      if (nextX + entry.w > core.CANVAS_W + core.collisionEngine.EPSILON) {
+        y += rowH + gapPx;
+        x = 0;
+        rowH = 0;
+        nextX = 0;
+      }
+
+      entry.item.x = nextX - entry.offsetX;
+      entry.item.y = y - entry.offsetY;
+      x = nextX + entry.w;
+      rowH = Math.max(rowH, entry.h);
+      maxBottom = Math.max(maxBottom, y + entry.h);
+    });
+
+    // Vertical growth must happen before collision validation.
+    if (!failed && maxBottom > core.CANVAS_H) {
+      core.CANVAS_H = Math.ceil(maxBottom);
+      core.canvasRenderer.drawGrid();
+      core.canvasRenderer._syncZoomTransform();
+    }
+
+    var valid = !failed &&
+      entries.every(function (entry) {
+        return core.collisionEngine.isInsideCanvas(entry.item);
+      }) &&
+      !core.collisionEngine.hasAnyOverlap(core.state.items);
+
+    if (!valid) {
+      previous.forEach(function (snapshot) {
+        snapshot.item.x = snapshot.x;
+        snapshot.item.y = snapshot.y;
+      });
+      core.CANVAS_H = previousHeight;
+      core.canvasRenderer.drawGrid();
+      core.canvasRenderer._syncZoomTransform();
+      core.state.items.forEach(function (item) {
+        item.el.style.left = item.x + 'px';
+        item.el.style.top = item.y + 'px';
+      });
+      var stats = core.cache ? core.cache.stats : null;
+      if (stats) stats.textContent = 'A design is too wide for the 600 mm workspace.';
+      return false;
+    }
+
     core.state.items.forEach(function (it) {
       it.el.style.left = it.x + 'px';
       it.el.style.top = it.y + 'px';
@@ -1427,6 +1520,7 @@ class AlignmentEngine {
     core.historyManager.saveState();
     core.growCanvas();
     core.dispatchUpdateEvent();
+    return true;
   }
 
   distributeHorizontal() {
@@ -1526,6 +1620,17 @@ class MobileHandler {
     var core = this.core;
     core.state.mobile = Boolean(enabled);
     core.classList.toggle('mobile-mode', core.state.mobile);
+    var section = core.closest('.sticker-configurator');
+    if (section) section.classList.toggle('is-mobile-mode', core.state.mobile);
+
+    var workspaceSettings = core.querySelector('.bottom-extra');
+    if (workspaceSettings) {
+      if (core.state.mobile) {
+        workspaceSettings.removeAttribute('open');
+      } else {
+        workspaceSettings.setAttribute('open', '');
+      }
+    }
 
     if (core.mobileBtn) {
       core.mobileBtn.setAttribute('aria-pressed', String(core.state.mobile));
@@ -2574,6 +2679,8 @@ class InteractionManager {
   onTouchStart(e) {
     var core = this.core;
     if (e.touches.length === 2) {
+      e.preventDefault();
+      this._cancelTouchInteraction(true);
       var first = e.touches[0];
       var second = e.touches[1];
       core.state.lastTouchDist = Math.hypot(
@@ -2591,6 +2698,7 @@ class InteractionManager {
       var cid = parseInt(itemEl.dataset.itemId);
 
       if (e.target.classList.contains('resize-handle')) {
+        e.preventDefault();
         if (core.state.selectedIds.indexOf(cid) === -1) {
           core.state.selectedIds = [cid];
           core.selectionManager.updateSelection();
@@ -2599,6 +2707,7 @@ class InteractionManager {
         return;
       }
       if (e.target.classList.contains('rot-handle')) {
+        e.preventDefault();
         if (core.state.selectedIds.indexOf(cid) === -1) {
           core.state.selectedIds = [cid];
           core.selectionManager.updateSelection();
@@ -2610,8 +2719,27 @@ class InteractionManager {
         core.state.selectedIds = [cid];
         core.selectionManager.updateSelection();
       }
+
+      var item = core.state.items.find(function (candidate) { return candidate.id === cid; });
+      if (item && item.locked) {
+        e.preventDefault();
+        core.state.dragState = {
+          type: 'pan',
+          ox: t.clientX,
+          oy: t.clientY,
+          scrollX: core.wrap ? core.wrap.scrollLeft : 0,
+          scrollY: core.wrap ? core.wrap.scrollTop : 0
+        };
+        if (core.wrap) core.wrap.classList.add('is-panning');
+        return;
+      }
+
       e.preventDefault();
-      this.startDrag({ clientX: t.clientX, clientY: t.clientY }, cid);
+      core.state.touchStarted = {
+        id: cid,
+        x: t.clientX,
+        y: t.clientY
+      };
       return;
     }
 
@@ -2626,6 +2754,9 @@ class InteractionManager {
     if (e.touches.length === 2) {
       // Pinch zoom
       e.preventDefault();
+      if (core.state.dragState || core.state.touchStarted) {
+        this._cancelTouchInteraction(true);
+      }
       var t1 = e.touches[0], t2 = e.touches[1];
       var dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
       if (core.state.lastTouchDist > 0) {
@@ -2638,12 +2769,25 @@ class InteractionManager {
       return;
     }
 
-    if (!core.state.dragState || e.touches.length !== 1) return;
-    e.preventDefault();
+    if (e.touches.length !== 1) return;
     var t = e.touches[0];
+    if (!core.state.dragState && core.state.touchStarted) {
+      e.preventDefault();
+      var pending = core.state.touchStarted;
+      if (Math.hypot(t.clientX - pending.x, t.clientY - pending.y) < 7) return;
+      core.state.touchStarted = null;
+      this.startDrag({ clientX: pending.x, clientY: pending.y }, pending.id);
+    }
+    if (!core.state.dragState) return;
+    e.preventDefault();
     var ds = core.state.dragState;
 
-    if (ds.type === 'move') {
+    if (ds.type === 'pan') {
+      if (!core.wrap) return;
+      core.wrap.scrollLeft = ds.scrollX - (t.clientX - ds.ox);
+      core.wrap.scrollTop = ds.scrollY - (t.clientY - ds.oy);
+      core.canvasRenderer.clampPan();
+    } else if (ds.type === 'move') {
       // Jitter threshold
       var mx = t.clientX - (ds._lastX || ds.ox);
       var my = t.clientY - (ds._lastY || ds.oy);
@@ -2820,6 +2964,15 @@ class InteractionManager {
 
   onTouchEnd(e) {
     var core = this.core;
+    if (e.touches && e.touches.length > 0) {
+      core.state.lastTouchDist = 0;
+      return;
+    }
+    if (core.state.touchStarted) {
+      core.state.touchStarted = null;
+      core.state.lastTouchDist = 0;
+      return;
+    }
     if (core.state.dragState && core.state.dragState.type === 'move') {
       if (core.guideH) core.guideH.style.display = 'none';
       if (core.guideV) core.guideV.style.display = 'none';
@@ -2882,9 +3035,62 @@ class InteractionManager {
       core.historyManager.saveState();
       core.growCanvas();
     }
+    core.state.items.forEach(function (item) {
+      item.el.style.opacity = '';
+      item.el.style.outline = '';
+    });
+    if (core.guideH) core.guideH.style.display = 'none';
+    if (core.guideV) core.guideV.style.display = 'none';
+    if (core.wrap) core.wrap.classList.remove('is-panning');
     core.state.dragState = null;
     core.state.touchStarted = null;
     core.state.lastTouchDist = 0;
+  }
+
+  onTouchCancel() {
+    this._cancelTouchInteraction(true);
+    this.core.state.touchStarted = null;
+    this.core.state.lastTouchDist = 0;
+  }
+
+  _cancelTouchInteraction(revert) {
+    var core = this.core;
+    var ds = core.state.dragState;
+    if (revert && ds) {
+      if (ds.type === 'move' && ds.startPos) {
+        ds.ids.forEach(function (id) {
+          var item = core.state.items.find(function (candidate) { return candidate.id === id; });
+          var start = ds.startPos[id];
+          if (!item || !start) return;
+          item.x = start.x;
+          item.y = start.y;
+          item.el.style.left = item.x + 'px';
+          item.el.style.top = item.y + 'px';
+        });
+      } else if (ds.type === 'resize') {
+        var resized = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
+        if (resized) {
+          resized.x = ds.sx;
+          resized.y = ds.sy;
+          resized.w = ds.sw;
+          resized.h = ds.sh;
+          resized.el.style.left = resized.x + 'px';
+          resized.el.style.top = resized.y + 'px';
+          resized.el.style.width = resized.w + 'px';
+          resized.el.style.height = resized.h + 'px';
+          core.utils.updateSizeInfo(resized);
+        }
+      } else if (ds.type === 'rotate') {
+        var rotated = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
+        if (rotated) {
+          rotated.rotation = ds.startRotation;
+          core.applyTransform(rotated);
+        }
+      }
+    }
+    if (core.wrap) core.wrap.classList.remove('is-panning');
+    core.state.dragState = null;
+    core.state.touchStarted = null;
   }
 
   _applyResize(ds, clientX, clientY) {
@@ -2937,9 +3143,8 @@ class InteractionManager {
     var item = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
     if (!item) return;
 
-    var cx = item.x + item.w / 2;
-    var cy = item.y + item.h / 2;
-    var requestedAngle = Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI - ds.startAngle;
+    var center = this._itemClientCenter(item);
+    var requestedAngle = Math.atan2(clientY - center.y, clientX - center.x) * 180 / Math.PI - ds.startAngle;
     var constrained = core.collisionEngine.constrainTransform(
       item,
       Object.assign({}, item, { rotation: requestedAngle }),
@@ -3002,14 +3207,23 @@ class InteractionManager {
     var core = this.core;
     var item = core.state.items.find(function (i) { return i.id === id; });
     if (item && item.locked) return;
-    var cx = item.x + item.w / 2;
-    var cy = item.y + item.h / 2;
-    var startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI - item.rotation;
+    var center = this._itemClientCenter(item);
+    var startAngle = Math.atan2(e.clientY - center.y, e.clientX - center.x) * 180 / Math.PI - item.rotation;
     core.state.dragState = {
       type: 'rotate',
       ox: e.clientX, oy: e.clientY,
       id: id,
-      startAngle: startAngle
+      startAngle: startAngle,
+      startRotation: item.rotation || 0
+    };
+  }
+
+  _itemClientCenter(item) {
+    var core = this.core;
+    var canvasRect = core.canvas.getBoundingClientRect();
+    return {
+      x: canvasRect.left + (item.x + item.w / 2) * core.state.zoom,
+      y: canvasRect.top + (item.y + item.h / 2) * core.state.zoom
     };
   }
 
@@ -3115,7 +3329,7 @@ class StickerConfigurator extends HTMLElement {
       mobileOverride: null,
       snapEnabled: true,
       gridSize: 20,
-      gapSize: 3,
+      gapSize: Math.max(3, Math.min(50, parseInt(this.dataset.gapMm, 10) || 3)),
       modalFile: null
     };
 
@@ -3237,6 +3451,7 @@ class StickerConfigurator extends HTMLElement {
       this.canvas.addEventListener('touchstart', function (e) { core.interactionManager.onTouchStart(e); }, { signal, passive: false });
       this.canvas.addEventListener('touchmove', function (e) { core.interactionManager.onTouchMove(e); }, { signal, passive: false });
       this.canvas.addEventListener('touchend', function (e) { core.interactionManager.onTouchEnd(e); }, { signal, passive: true });
+      this.canvas.addEventListener('touchcancel', function () { core.interactionManager.onTouchCancel(); }, { signal, passive: true });
 
       this.canvas.addEventListener('drop', function (e) { core.handleCanvasDrop(e); }, { signal });
       this.canvas.addEventListener('dragover', function (e) { e.preventDefault(); }, { signal });
@@ -3247,6 +3462,7 @@ class StickerConfigurator extends HTMLElement {
       this.wrap.addEventListener('scroll', function () {
         core.state.panX = core.wrap.scrollLeft;
         core.state.panY = core.wrap.scrollTop;
+        core.canvasRenderer.scheduleBackdropGridSync();
       }, { signal, passive: true });
     }
 
@@ -3271,6 +3487,7 @@ class StickerConfigurator extends HTMLElement {
     }, { signal });
     window.addEventListener('resize', function () {
       if (core.mobileHandler) core.mobileHandler.syncToViewport();
+      if (core.canvasRenderer) core.canvasRenderer.scheduleBackdropGridSync();
     }, { signal, passive: true });
 
     // Add design button
@@ -3386,8 +3603,26 @@ class StickerConfigurator extends HTMLElement {
     // Gap size
     var gapSizeInput = this.cache['gap-size'];
     if (gapSizeInput) {
+      gapSizeInput.value = this.state.gapSize;
       gapSizeInput.addEventListener('change', function () {
-        core.state.gapSize = parseInt(gapSizeInput.value) || 3;
+        var nextGap = parseInt(gapSizeInput.value, 10);
+        var previousGap = core.state.gapSize;
+        var clampedGap = Math.max(3, Math.min(50, Number.isFinite(nextGap) ? nextGap : 3));
+        if (clampedGap === previousGap) {
+          gapSizeInput.value = previousGap;
+          return;
+        }
+        core.historyManager.saveState();
+        core.state.gapSize = clampedGap;
+        gapSizeInput.value = core.state.gapSize;
+        if (core.state.items.length) {
+          if (!core.alignmentEngine.onAutoArrange({ skipInitialHistory: true })) {
+            core.state.gapSize = previousGap;
+            gapSizeInput.value = previousGap;
+          }
+        } else {
+          core.historyManager.saveState();
+        }
       }, { signal });
     }
 
@@ -3428,6 +3663,9 @@ class StickerConfigurator extends HTMLElement {
       var btn = this.querySelector('#' + id + '-' + this.sid);
       if (btn) {
         btn.dataset.action = actionMap[id];
+        if (!btn.getAttribute('aria-label') && btn.getAttribute('title')) {
+          btn.setAttribute('aria-label', btn.getAttribute('title'));
+        }
         if (!btn.getAttribute('title')) {
           btn.setAttribute('title', actionMap[id].replace(/-/g, ' '));
         }
@@ -3466,8 +3704,10 @@ class StickerConfigurator extends HTMLElement {
   growCanvas() {
     if (!this.state.items.length) return;
     var maxB = 0;
+    var collisionEngine = this.collisionEngine;
     this.state.items.forEach(function (it) {
-      var b = it.y + it.h;
+      var rect = collisionEngine.getCollisionRect(it);
+      var b = rect.y + rect.h;
       if (b > maxB) maxB = b;
     });
     var newH = Math.max(this.CANVAS_H, maxB + 20);

@@ -34,6 +34,7 @@
   width: 100%;
   max-width: 100%;
   height: calc(100svh - var(--header-group-height, 64px));
+  height: calc(100dvh - var(--header-group-height, 64px));
   min-height: 560px;
   margin-inline: 0;
   min-width: 0;
@@ -241,6 +242,10 @@
   border-radius: 10px;
 }
 
+.sticker-configurator .size-inputs[hidden] {
+  display: none;
+}
+
 .sticker-configurator .size-inputs label,
 .sticker-configurator .size-unit {
   font-size: 0.68rem;
@@ -272,6 +277,9 @@
 
 /* Canvas viewport and scaled stage */
 .sticker-configurator .canvas-wrap {
+  --cfg-grid-step: 20px;
+  --cfg-grid-origin-x: 0px;
+  --cfg-grid-origin-y: 0px;
   position: relative;
   align-self: stretch;
   width: calc(100% + var(--cfg-shell-pad) + var(--cfg-shell-pad));
@@ -282,12 +290,14 @@
   overscroll-behavior: auto;
   touch-action: pan-x pan-y;
   scrollbar-gutter: stable both-edges;
-  background:
-    linear-gradient(45deg, rgba(28, 31, 40, 0.025) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(28, 31, 40, 0.025) 25%, transparent 25%),
-    #f1f2f5;
-  background-position: 0 0, 8px 8px;
-  background-size: 16px 16px;
+  background-color: #fff;
+  background-image:
+    linear-gradient(to right, rgba(44, 48, 61, 0.075) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(44, 48, 61, 0.075) 1px, transparent 1px);
+  background-position:
+    var(--cfg-grid-origin-x) var(--cfg-grid-origin-y),
+    var(--cfg-grid-origin-x) var(--cfg-grid-origin-y);
+  background-size: var(--cfg-grid-step) var(--cfg-grid-step);
   border: 1px solid var(--cfg-line-strong);
   border-radius: calc(var(--cfg-radius) + 2px);
   box-shadow: inset 0 1px 2px rgba(20, 22, 29, 0.025);
@@ -321,8 +331,8 @@
   touch-action: pan-x pan-y;
   transform-origin: 0 0;
   background: var(--cfg-bg, #fff);
-  border-radius: 3px;
-  box-shadow: 0 8px 28px rgba(27, 29, 37, 0.13);
+  border-radius: 0;
+  box-shadow: 0 0 0 1px rgba(var(--cfg-primary-rgb), 0.16);
   -webkit-user-select: none;
 }
 
@@ -582,12 +592,14 @@
 }
 
 .sticker-configurator .bottom-extra {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: block;
   padding-top: 2px;
   color: var(--cfg-muted);
   font-size: 0.7rem;
+}
+
+.sticker-configurator .bottom-extra > summary {
+  display: none;
 }
 
 .sticker-configurator .be-row {
@@ -598,6 +610,7 @@
 }
 
 .sticker-configurator .be-row:last-child {
+  margin-top: 8px;
   padding-top: 7px;
   border-top: 1px solid var(--cfg-line);
 }
@@ -908,14 +921,22 @@ dialog.cfg-modal::backdrop {
   border-radius: 18px;
 }
 
+.sticker-configurator.is-mobile-mode {
+  min-height: 0;
+  padding-block: 0;
+}
+
 .sticker-configurator sticker-configurator.mobile-mode .toolbar {
   scroll-snap-type: x proximity;
+  scroll-padding-inline: 6px;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: inset -18px 0 16px -18px rgba(23, 24, 28, 0.45);
 }
 
 .sticker-configurator sticker-configurator.mobile-mode .toolbar button {
-  flex-basis: 42px;
-  width: 42px;
-  height: 42px;
+  flex-basis: 48px;
+  width: 48px;
+  height: 48px;
   scroll-snap-align: start;
 }
 
@@ -926,6 +947,22 @@ dialog.cfg-modal::backdrop {
 .sticker-configurator sticker-configurator.mobile-mode .canvas-wrap {
   height: auto;
   min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .editor-wrap {
+  position: relative;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .size-inputs:not([hidden]) {
+  position: absolute;
+  z-index: calc(var(--cfg-z-chrome) + 1);
+  top: 102px;
+  right: 12px;
+  align-self: auto;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.12);
+  backdrop-filter: blur(10px);
 }
 
 .sticker-configurator sticker-configurator.mobile-mode .canvas-item {
@@ -942,6 +979,99 @@ dialog.cfg-modal::backdrop {
 
 .sticker-configurator sticker-configurator.mobile-mode .zoom-display {
   display: none;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .resize-handle {
+  width: 18px;
+  height: 18px;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .resize-handle::before,
+.sticker-configurator sticker-configurator.mobile-mode .rot-handle::before {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 44px;
+  height: 44px;
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .resize-handle.nw { top: -9px; left: -9px; }
+.sticker-configurator sticker-configurator.mobile-mode .resize-handle.ne { top: -9px; right: -9px; }
+.sticker-configurator sticker-configurator.mobile-mode .resize-handle.sw { bottom: -9px; left: -9px; }
+.sticker-configurator sticker-configurator.mobile-mode .resize-handle.se { right: -9px; bottom: -9px; }
+
+.sticker-configurator sticker-configurator.mobile-mode .rot-handle {
+  bottom: -34px;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .size-info {
+  bottom: -38px;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .qty-group button,
+.sticker-configurator sticker-configurator.mobile-mode .be-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .cfg-inline-input,
+.sticker-configurator sticker-configurator.mobile-mode .cfg-inline-sm {
+  min-height: 44px;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .bottom-extra {
+  display: block;
+  padding-top: 0;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .bottom-extra > summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  color: var(--cfg-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  touch-action: manipulation;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .bottom-extra > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .bottom-extra-chevron {
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 140ms ease;
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .bottom-extra[open] {
+  display: block;
+  position: absolute;
+  z-index: 2;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  padding: 8px 10px 10px;
+  background: var(--cfg-surface);
+  border: 1px solid var(--cfg-line-strong);
+  border-radius: 12px;
+  box-shadow: 0 14px 35px rgba(23, 24, 28, 0.18);
+}
+
+.sticker-configurator sticker-configurator.mobile-mode .bottom-extra[open] .bottom-extra-chevron {
+  transform: rotate(225deg);
 }
 
 @media (max-width: 989px) {
@@ -964,28 +1094,38 @@ dialog.cfg-modal::backdrop {
 
 @media (max-width: 767px) {
   .shopify-section.sticker-configurator {
+    height: calc(100svh - var(--header-group-height, 64px));
+    height: calc(100dvh - var(--header-group-height, 64px));
+    min-height: 0;
     padding: 0;
   }
 
   .sticker-configurator > sticker-configurator {
     --cfg-shell-pad: 10px;
-    padding: var(--cfg-shell-pad);
-    border-radius: 18px;
+    padding: var(--cfg-shell-pad) var(--cfg-shell-pad) max(var(--cfg-shell-pad), env(safe-area-inset-bottom));
+    border-radius: 0;
   }
 
   .sticker-configurator .cfg-header {
-    margin-bottom: 13px;
+    margin: 0 2px 7px;
+  }
+
+  .sticker-configurator .cfg-eyebrow {
+    display: none;
   }
 
   .sticker-configurator .cfg-heading {
     flex-basis: 100%;
-    font-size: 1.12rem;
+    overflow: hidden;
+    font-size: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .sticker-configurator .toolbar button {
-    flex-basis: 42px;
-    width: 42px;
-    height: 42px;
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
   }
 
   .sticker-configurator .toolbar-divider {
@@ -994,6 +1134,7 @@ dialog.cfg-modal::backdrop {
 
   .sticker-configurator .cfg-info-bar {
     grid-template-columns: auto minmax(0, 1fr);
+    min-height: 20px;
   }
 
   .sticker-configurator .cfg-info-bar > :nth-child(2) {
@@ -1019,7 +1160,8 @@ dialog.cfg-modal::backdrop {
   }
 
   .sticker-configurator .sticky-ctrls {
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
   }
 
   .sticker-configurator .upload-btn-area {
@@ -1028,6 +1170,11 @@ dialog.cfg-modal::backdrop {
 
   .sticker-configurator .cfg-add-design {
     flex: 1 1 145px;
+    min-height: 48px;
+  }
+
+  .sticker-configurator .cfg-btn-submit {
+    min-height: 48px;
   }
 
   .sticker-configurator .qty-label {

@@ -28,6 +28,7 @@ class HistoryManager {
         isText: !!it.text
       };
     });
+    snapshot.gapSize = state.gapSize;
 
     if (state.historyIdx < state.history.length - 1) {
       state.history = state.history.slice(0, state.historyIdx + 1);
@@ -58,6 +59,11 @@ class HistoryManager {
 
   restoreState(snapshot) {
     var core = this.core;
+    if (Number.isFinite(snapshot.gapSize)) {
+      core.state.gapSize = Math.max(3, Math.min(50, snapshot.gapSize));
+      var gapInput = core.cache ? core.cache['gap-size'] : null;
+      if (gapInput) gapInput.value = core.state.gapSize;
+    }
     // Remove existing items
     core.state.items.slice().forEach(function (it) { it.el.remove(); });
     core.state.items.length = 0;

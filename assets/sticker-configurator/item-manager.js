@@ -34,7 +34,7 @@ class ItemManager {
     el.style.height = defaultH + 'px';
 
     // Find slot
-    var slot = this.findNextSlot(defaultW, defaultH);
+    var slot = this.findNextSlot(defaultW, defaultH, item.id);
     item.x = slot.x;
     item.y = slot.y;
 
@@ -107,7 +107,7 @@ class ItemManager {
     el.style.height = item.h + 'px';
 
     // Find slot
-    var slot = this.findNextSlot(item.w, item.h);
+    var slot = this.findNextSlot(item.w, item.h, item.id);
     item.x = slot.x;
     item.y = slot.y;
 
@@ -198,30 +198,37 @@ class ItemManager {
     this.core.growCanvas();
   }
 
-  findNextSlot(w, h) {
-    var CANVAS_W = this.core.CANVAS_W;
-    var items = this.core.state.items;
-    var cols = Math.floor(CANVAS_W / (w + 20));
-    if (cols < 1) cols = 1;
-    var gap = 10;
+  findNextSlot(w, h, excludeId) {
+    var core = this.core;
+    var gap = Math.max(0, core.utils.mmToPx(core.state.gapSize));
+    var rects = core.state.items
+      .filter(function (item) { return item.id !== excludeId; })
+      .map(function (item) { return core.collisionEngine.getCollisionRect(item); });
+    var xs = [0];
+    var ys = [0];
 
-    for (var row = 0; row < 50; row++) {
-      for (var col = 0; col < cols; col++) {
-        var x = col * (w + gap) + gap;
-        var y = row * (h + gap) + gap;
-        var fits = true;
-        for (var i = 0; i < items.length; i++) {
-          var it = items[i];
-          if (x < it.x + it.w + 5 && x + w + 5 > it.x &&
-              y < it.y + it.h + 5 && y + h + 5 > it.y) {
-            fits = false;
-            break;
-          }
-        }
-        if (fits) return { x: x, y: y };
+    rects.forEach(function (rect) {
+      xs.push(rect.x + rect.w + gap);
+      ys.push(rect.y + rect.h + gap);
+    });
+    xs.sort(function (a, b) { return a - b; });
+    ys.sort(function (a, b) { return a - b; });
+
+    for (var yi = 0; yi < ys.length; yi++) {
+      for (var xi = 0; xi < xs.length; xi++) {
+        var candidate = { x: xs[xi], y: ys[yi], w: w, h: h };
+        if (candidate.x + candidate.w > core.CANVAS_W + core.collisionEngine.EPSILON) continue;
+        var blocked = rects.some(function (rect) {
+          return core.collisionEngine.rectsOverlap(candidate, rect, gap);
+        });
+        if (!blocked) return { x: candidate.x, y: candidate.y };
       }
     }
-    return { x: gap, y: this.core.CANVAS_H + gap };
+
+    var maxBottom = rects.reduce(function (bottom, rect) {
+      return Math.max(bottom, rect.y + rect.h);
+    }, 0);
+    return { x: 0, y: maxBottom > 0 ? maxBottom + gap : 0 };
   }
 
   deleteSelected() {

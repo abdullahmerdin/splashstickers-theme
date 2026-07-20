@@ -403,6 +403,8 @@ class InteractionManager {
   onTouchStart(e) {
     var core = this.core;
     if (e.touches.length === 2) {
+      e.preventDefault();
+      this._cancelTouchInteraction(true);
       var first = e.touches[0];
       var second = e.touches[1];
       core.state.lastTouchDist = Math.hypot(
@@ -420,6 +422,7 @@ class InteractionManager {
       var cid = parseInt(itemEl.dataset.itemId);
 
       if (e.target.classList.contains('resize-handle')) {
+        e.preventDefault();
         if (core.state.selectedIds.indexOf(cid) === -1) {
           core.state.selectedIds = [cid];
           core.selectionManager.updateSelection();
@@ -428,6 +431,7 @@ class InteractionManager {
         return;
       }
       if (e.target.classList.contains('rot-handle')) {
+        e.preventDefault();
         if (core.state.selectedIds.indexOf(cid) === -1) {
           core.state.selectedIds = [cid];
           core.selectionManager.updateSelection();
@@ -439,8 +443,27 @@ class InteractionManager {
         core.state.selectedIds = [cid];
         core.selectionManager.updateSelection();
       }
+
+      var item = core.state.items.find(function (candidate) { return candidate.id === cid; });
+      if (item && item.locked) {
+        e.preventDefault();
+        core.state.dragState = {
+          type: 'pan',
+          ox: t.clientX,
+          oy: t.clientY,
+          scrollX: core.wrap ? core.wrap.scrollLeft : 0,
+          scrollY: core.wrap ? core.wrap.scrollTop : 0
+        };
+        if (core.wrap) core.wrap.classList.add('is-panning');
+        return;
+      }
+
       e.preventDefault();
-      this.startDrag({ clientX: t.clientX, clientY: t.clientY }, cid);
+      core.state.touchStarted = {
+        id: cid,
+        x: t.clientX,
+        y: t.clientY
+      };
       return;
     }
 
@@ -455,6 +478,9 @@ class InteractionManager {
     if (e.touches.length === 2) {
       // Pinch zoom
       e.preventDefault();
+      if (core.state.dragState || core.state.touchStarted) {
+        this._cancelTouchInteraction(true);
+      }
       var t1 = e.touches[0], t2 = e.touches[1];
       var dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
       if (core.state.lastTouchDist > 0) {
@@ -467,12 +493,25 @@ class InteractionManager {
       return;
     }
 
-    if (!core.state.dragState || e.touches.length !== 1) return;
-    e.preventDefault();
+    if (e.touches.length !== 1) return;
     var t = e.touches[0];
+    if (!core.state.dragState && core.state.touchStarted) {
+      e.preventDefault();
+      var pending = core.state.touchStarted;
+      if (Math.hypot(t.clientX - pending.x, t.clientY - pending.y) < 7) return;
+      core.state.touchStarted = null;
+      this.startDrag({ clientX: pending.x, clientY: pending.y }, pending.id);
+    }
+    if (!core.state.dragState) return;
+    e.preventDefault();
     var ds = core.state.dragState;
 
-    if (ds.type === 'move') {
+    if (ds.type === 'pan') {
+      if (!core.wrap) return;
+      core.wrap.scrollLeft = ds.scrollX - (t.clientX - ds.ox);
+      core.wrap.scrollTop = ds.scrollY - (t.clientY - ds.oy);
+      core.canvasRenderer.clampPan();
+    } else if (ds.type === 'move') {
       // Jitter threshold
       var mx = t.clientX - (ds._lastX || ds.ox);
       var my = t.clientY - (ds._lastY || ds.oy);
@@ -649,6 +688,15 @@ class InteractionManager {
 
   onTouchEnd(e) {
     var core = this.core;
+    if (e.touches && e.touches.length > 0) {
+      core.state.lastTouchDist = 0;
+      return;
+    }
+    if (core.state.touchStarted) {
+      core.state.touchStarted = null;
+      core.state.lastTouchDist = 0;
+      return;
+    }
     if (core.state.dragState && core.state.dragState.type === 'move') {
       if (core.guideH) core.guideH.style.display = 'none';
       if (core.guideV) core.guideV.style.display = 'none';
@@ -711,9 +759,62 @@ class InteractionManager {
       core.historyManager.saveState();
       core.growCanvas();
     }
+    core.state.items.forEach(function (item) {
+      item.el.style.opacity = '';
+      item.el.style.outline = '';
+    });
+    if (core.guideH) core.guideH.style.display = 'none';
+    if (core.guideV) core.guideV.style.display = 'none';
+    if (core.wrap) core.wrap.classList.remove('is-panning');
     core.state.dragState = null;
     core.state.touchStarted = null;
     core.state.lastTouchDist = 0;
+  }
+
+  onTouchCancel() {
+    this._cancelTouchInteraction(true);
+    this.core.state.touchStarted = null;
+    this.core.state.lastTouchDist = 0;
+  }
+
+  _cancelTouchInteraction(revert) {
+    var core = this.core;
+    var ds = core.state.dragState;
+    if (revert && ds) {
+      if (ds.type === 'move' && ds.startPos) {
+        ds.ids.forEach(function (id) {
+          var item = core.state.items.find(function (candidate) { return candidate.id === id; });
+          var start = ds.startPos[id];
+          if (!item || !start) return;
+          item.x = start.x;
+          item.y = start.y;
+          item.el.style.left = item.x + 'px';
+          item.el.style.top = item.y + 'px';
+        });
+      } else if (ds.type === 'resize') {
+        var resized = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
+        if (resized) {
+          resized.x = ds.sx;
+          resized.y = ds.sy;
+          resized.w = ds.sw;
+          resized.h = ds.sh;
+          resized.el.style.left = resized.x + 'px';
+          resized.el.style.top = resized.y + 'px';
+          resized.el.style.width = resized.w + 'px';
+          resized.el.style.height = resized.h + 'px';
+          core.utils.updateSizeInfo(resized);
+        }
+      } else if (ds.type === 'rotate') {
+        var rotated = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
+        if (rotated) {
+          rotated.rotation = ds.startRotation;
+          core.applyTransform(rotated);
+        }
+      }
+    }
+    if (core.wrap) core.wrap.classList.remove('is-panning');
+    core.state.dragState = null;
+    core.state.touchStarted = null;
   }
 
   _applyResize(ds, clientX, clientY) {
@@ -766,9 +867,8 @@ class InteractionManager {
     var item = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
     if (!item) return;
 
-    var cx = item.x + item.w / 2;
-    var cy = item.y + item.h / 2;
-    var requestedAngle = Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI - ds.startAngle;
+    var center = this._itemClientCenter(item);
+    var requestedAngle = Math.atan2(clientY - center.y, clientX - center.x) * 180 / Math.PI - ds.startAngle;
     var constrained = core.collisionEngine.constrainTransform(
       item,
       Object.assign({}, item, { rotation: requestedAngle }),
@@ -831,14 +931,23 @@ class InteractionManager {
     var core = this.core;
     var item = core.state.items.find(function (i) { return i.id === id; });
     if (item && item.locked) return;
-    var cx = item.x + item.w / 2;
-    var cy = item.y + item.h / 2;
-    var startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI - item.rotation;
+    var center = this._itemClientCenter(item);
+    var startAngle = Math.atan2(e.clientY - center.y, e.clientX - center.x) * 180 / Math.PI - item.rotation;
     core.state.dragState = {
       type: 'rotate',
       ox: e.clientX, oy: e.clientY,
       id: id,
-      startAngle: startAngle
+      startAngle: startAngle,
+      startRotation: item.rotation || 0
+    };
+  }
+
+  _itemClientCenter(item) {
+    var core = this.core;
+    var canvasRect = core.canvas.getBoundingClientRect();
+    return {
+      x: canvasRect.left + (item.x + item.w / 2) * core.state.zoom,
+      y: canvasRect.top + (item.y + item.h / 2) * core.state.zoom
     };
   }
 

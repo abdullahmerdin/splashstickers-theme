@@ -66,7 +66,7 @@ class SelectionManager {
     // Size inputs visibility
     var sizeInputs = core.cache['size-inputs'];
     if (sizeInputs) {
-      sizeInputs.style.visibility = selCount > 0 ? 'visible' : 'hidden';
+      sizeInputs.hidden = selCount === 0;
     }
 
     // Update size inputs for single selection

@@ -26,6 +26,17 @@ class MobileHandler {
     var core = this.core;
     core.state.mobile = Boolean(enabled);
     core.classList.toggle('mobile-mode', core.state.mobile);
+    var section = core.closest('.sticker-configurator');
+    if (section) section.classList.toggle('is-mobile-mode', core.state.mobile);
+
+    var workspaceSettings = core.querySelector('.bottom-extra');
+    if (workspaceSettings) {
+      if (core.state.mobile) {
+        workspaceSettings.removeAttribute('open');
+      } else {
+        workspaceSettings.setAttribute('open', '');
+      }
+    }
 
     if (core.mobileBtn) {
       core.mobileBtn.setAttribute('aria-pressed', String(core.state.mobile));

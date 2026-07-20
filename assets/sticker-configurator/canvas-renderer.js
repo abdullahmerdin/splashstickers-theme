@@ -43,6 +43,29 @@ class CanvasRenderer {
       ctx.lineTo(x, h);
     }
     ctx.stroke();
+    this.scheduleBackdropGridSync();
+  }
+
+  syncBackdropGrid() {
+    var core = this.core;
+    if (!core.wrap || !core.canvas) return;
+    var zoom = this.clampZoom(core.state.zoom);
+    var step = Math.max(4, (core.state.gridSize || 20) * zoom);
+    var wrapRect = core.wrap.getBoundingClientRect();
+    var canvasRect = core.canvas.getBoundingClientRect();
+    core.wrap.style.setProperty('--cfg-grid-step', step + 'px');
+    core.wrap.style.setProperty('--cfg-grid-origin-x', (canvasRect.left - wrapRect.left) + 'px');
+    core.wrap.style.setProperty('--cfg-grid-origin-y', (canvasRect.top - wrapRect.top) + 'px');
+  }
+
+  scheduleBackdropGridSync() {
+    var core = this.core;
+    if (core._gridBackdropRaf) return;
+    var renderer = this;
+    core._gridBackdropRaf = requestAnimationFrame(function () {
+      core._gridBackdropRaf = null;
+      renderer.syncBackdropGrid();
+    });
   }
 
   applyZoom() {
@@ -70,6 +93,7 @@ class CanvasRenderer {
     core.canvas.style.height = core.CANVAS_H + 'px';
     core.canvas.style.transform = 'scale(' + zoom + ')';
     core.canvas.style.transformOrigin = '0 0';
+    this.scheduleBackdropGridSync();
     var zoomDisplay = core.querySelector('#zoom-display-' + core.sid);
     if (zoomDisplay) {
       zoomDisplay.textContent = Math.round(zoom * 100) + '%';
