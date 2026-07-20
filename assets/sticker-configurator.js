@@ -707,7 +707,7 @@ class ItemManager {
     this.core = core;
   }
 
-  addImageItem(src, silent) {
+  addImageItem(src, silent, dimensions) {
     var core = this.core;
     if (!core.canvas) return null;
 
@@ -725,9 +725,18 @@ class ItemManager {
     var item = this.addItemHelpers(el, id);
     item.src = src;
 
-    // Calculate default size proportional to canvas
-    var defaultW = Math.round(core.CANVAS_W * 0.15);
-    var defaultH = Math.round(defaultW * 0.75);
+    // Preserve the supplied artwork dimensions when available. The logical
+    // canvas uses 1 px = 1 mm, so modal dimensions map directly to the sheet.
+    // Without metadata, retain the compact default used by pasted/duplicated
+    // images.
+    var defaultW = dimensions && Number(dimensions.w) > 0
+      ? Number(dimensions.w)
+      : Math.round(core.CANVAS_W * 0.15);
+    var defaultH = dimensions && Number(dimensions.h) > 0
+      ? Number(dimensions.h)
+      : Math.round(defaultW * 0.75);
+    defaultW = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultW)));
+    defaultH = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultH)));
     item.w = defaultW;
     item.h = defaultH;
     el.style.width = defaultW + 'px';
@@ -3367,7 +3376,9 @@ class StickerConfigurator extends HTMLElement {
       snapEnabled: true,
       gridSize: 20,
       gapSize: Math.max(3, Math.min(50, parseInt(this.dataset.gapMm, 10) || 3)),
-      modalFile: null
+      modalFile: null,
+      modalImageSize: null,
+      modalSizeExplicit: false
     };
 
     // ── Compose submodules ──
@@ -3582,6 +3593,14 @@ class StickerConfigurator extends HTMLElement {
     if (modalAddBtn) {
       modalAddBtn.addEventListener('click', function () { core.onModalAddClick(); }, { signal });
     }
+    ['modal-w', 'modal-h'].forEach(function (key) {
+      var input = core.cache[key];
+      if (input) {
+        input.addEventListener('input', function () {
+          core.state.modalSizeExplicit = true;
+        }, { signal });
+      }
+    });
     if (this.fileInput) {
       this.fileInput.addEventListener('change', function () { core.handleFileSelect(core.fileInput.files[0]); }, { signal });
     }
@@ -3807,6 +3826,7 @@ class StickerConfigurator extends HTMLElement {
   handleFileSelect(file) {
     if (!file || !file.type.match('image.*')) return;
     this.state.modalFile = file;
+    this.state.modalImageSize = null;
     var modalFname = this.cache['modal-fname'];
     var modalZone = this.cache['modal-zone'];
     var modalAddBtn = this.cache['modal-add'];
@@ -3822,8 +3842,30 @@ class StickerConfigurator extends HTMLElement {
         iconEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
       }
     }
-    if (modalAddBtn) modalAddBtn.disabled = false;
+    if (modalAddBtn) modalAddBtn.disabled = true;
     this.modalManager.openModal(this.modalEl);
+
+    var core = this;
+    var objectUrl = URL.createObjectURL(file);
+    var probe = new Image();
+    probe.onload = function () {
+      var fitted = core._fitModalImageSize(
+        probe.naturalWidth || probe.width,
+        probe.naturalHeight || probe.height
+      );
+      core.state.modalImageSize = fitted;
+      if (!core.state.modalSizeExplicit) {
+        if (core.cache['modal-w']) core.cache['modal-w'].value = fitted.w;
+        if (core.cache['modal-h']) core.cache['modal-h'].value = fitted.h;
+      }
+      if (modalAddBtn) modalAddBtn.disabled = false;
+      URL.revokeObjectURL(objectUrl);
+    };
+    probe.onerror = function () {
+      if (modalAddBtn) modalAddBtn.disabled = false;
+      URL.revokeObjectURL(objectUrl);
+    };
+    probe.src = objectUrl;
   }
 
   handleCanvasDrop(e) {
@@ -3839,8 +3881,15 @@ class StickerConfigurator extends HTMLElement {
     var modalW = this.cache['modal-w'];
     var modalH = this.cache['modal-h'];
     var modalQty = this.cache['modal-qty'];
-    var wMm = parseInt(modalW ? modalW.value : 50) || 50;
-    var hMm = parseInt(modalH ? modalH.value : 50) || 50;
+    var natural = this.state.modalImageSize;
+    var wMm = parseInt(modalW && modalW.value, 10);
+    var hMm = parseInt(modalH && modalH.value, 10);
+    if (!this.state.modalSizeExplicit && natural) {
+      wMm = natural.w;
+      hMm = natural.h;
+    }
+    wMm = Number.isFinite(wMm) && wMm > 0 ? wMm : (natural ? natural.w : 50);
+    hMm = Number.isFinite(hMm) && hMm > 0 ? hMm : (natural ? natural.h : 50);
     var qty = parseInt(modalQty ? modalQty.value : 1) || 1;
 
     this.modalManager.closeModal(this.modalEl);
@@ -3849,13 +3898,7 @@ class StickerConfigurator extends HTMLElement {
     var core = this;
     reader.onload = function (e) {
       for (var i = 0; i < qty; i++) {
-        var item = core.itemManager.addImageItem(e.target.result, false);
-        if (item) {
-          item.w = wMm / 600 * core.CANVAS_W;
-          item.h = hMm / 600 * core.CANVAS_W;
-          item.el.style.width = item.w + 'px';
-          item.el.style.height = item.h + 'px';
-        }
+        core.itemManager.addImageItem(e.target.result, false, { w: wMm, h: hMm });
       }
       core.growCanvas();
       core.historyManager.saveState();
@@ -3863,6 +3906,17 @@ class StickerConfigurator extends HTMLElement {
       if (autoBtn) autoBtn.click();
     };
     reader.readAsDataURL(file);
+  }
+
+  _fitModalImageSize(width, height) {
+    var max = this.CANVAS_W || 600;
+    var w = Number(width) || 50;
+    var h = Number(height) || 50;
+    var scale = Math.min(1, max / w, max / h);
+    return {
+      w: Math.max(10, Math.round(w * scale)),
+      h: Math.max(10, Math.round(h * scale))
+    };
   }
 
   /* ── CustomEvent protocol ── */

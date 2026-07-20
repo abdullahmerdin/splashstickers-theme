@@ -7,7 +7,7 @@ class ItemManager {
     this.core = core;
   }
 
-  addImageItem(src, silent) {
+  addImageItem(src, silent, dimensions) {
     var core = this.core;
     if (!core.canvas) return null;
 
@@ -25,9 +25,18 @@ class ItemManager {
     var item = this.addItemHelpers(el, id);
     item.src = src;
 
-    // Calculate default size proportional to canvas
-    var defaultW = Math.round(core.CANVAS_W * 0.15);
-    var defaultH = Math.round(defaultW * 0.75);
+    // Preserve the supplied artwork dimensions when available. The logical
+    // canvas uses 1 px = 1 mm, so modal dimensions map directly to the sheet.
+    // Without metadata, retain the compact default used by pasted/duplicated
+    // images.
+    var defaultW = dimensions && Number(dimensions.w) > 0
+      ? Number(dimensions.w)
+      : Math.round(core.CANVAS_W * 0.15);
+    var defaultH = dimensions && Number(dimensions.h) > 0
+      ? Number(dimensions.h)
+      : Math.round(defaultW * 0.75);
+    defaultW = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultW)));
+    defaultH = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultH)));
     item.w = defaultW;
     item.h = defaultH;
     el.style.width = defaultW + 'px';

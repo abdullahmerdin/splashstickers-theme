@@ -1093,11 +1093,13 @@ dialog.cfg-modal::backdrop {
 }
 
 .sticker-configurator sticker-configurator.mobile-mode .size-inputs:not([hidden]) {
-  position: absolute;
+  position: relative;
   z-index: calc(var(--cfg-z-chrome) + 1);
-  top: 102px;
-  right: 12px;
-  align-self: auto;
+  top: auto;
+  right: auto;
+  justify-self: end;
+  align-self: start;
+  margin-inline-end: 0;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 8px 24px rgba(23, 24, 28, 0.12);
   backdrop-filter: blur(10px);
@@ -1161,10 +1163,10 @@ dialog.cfg-modal::backdrop {
   min-height: 44px;
 }
 
-.sticker-configurator sticker-configurator.mobile-mode .bottom-extra {
-  display: block;
-  padding-top: 0;
-}
+  .sticker-configurator sticker-configurator.mobile-mode .bottom-extra {
+    display: none;
+    padding-top: 0;
+  }
 
 .sticker-configurator sticker-configurator.mobile-mode .bottom-extra > summary {
   display: flex;
