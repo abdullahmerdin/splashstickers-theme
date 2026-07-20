@@ -24,12 +24,32 @@ class ModalManager {
     if (modalZone) {
       var textEl = modalZone.querySelector('.cfg-modal-text');
       var iconEl = modalZone.querySelector('.cfg-modal-icon');
-      if (textEl) textEl.textContent = 'Click to choose a design file';
-      if (iconEl) iconEl.innerHTML = '&#x1F5BC;';
+      if (textEl) textEl.textContent = 'Choose a file or drop it here';
+      if (iconEl) {
+        iconEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
+      }
     }
-    if (core.modalEl) core.modalEl.style.display = 'flex';
+    this.openModal(core.modalEl);
     if (core.fileInput) core.fileInput.value = '';
     this.trapFocus(core.modalEl);
+  }
+
+  openModal(modal) {
+    if (!modal) return;
+    if (typeof modal.showModal === 'function') {
+      if (!modal.open) modal.showModal();
+    } else {
+      modal.style.display = 'flex';
+    }
+  }
+
+  closeModal(modal) {
+    if (!modal) return;
+    if (typeof modal.close === 'function') {
+      if (modal.open) modal.close();
+    } else {
+      modal.style.display = 'none';
+    }
   }
 
   showEditTextModal(item, callback) {
@@ -292,15 +312,14 @@ class ModalManager {
   }
 
   createModal(htmlStructure) {
-    var modal = document.createElement('div');
+    var modal = document.createElement('dialog');
     modal.className = 'cfg-modal';
-    modal.style.display = 'flex';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
+    modal.dataset.dynamicModal = 'true';
     if (htmlStructure) {
       modal.innerHTML = htmlStructure;
     }
     document.body.appendChild(modal);
+    this.openModal(modal);
     return modal;
   }
 
@@ -313,11 +332,18 @@ class ModalManager {
     var first = focusable[0];
     var last = focusable[focusable.length - 1];
     first.focus();
+    if (container.dataset.focusTrapBound === 'true') return;
+    container.dataset.focusTrapBound = 'true';
 
     var handler = function (e) {
       if (e.key === 'Escape') {
-        container.style.display = 'none';
-        container.remove();
+        e.preventDefault();
+        if (container === this.core.modalEl) {
+          this.closeModal(container);
+        } else {
+          this.closeModal(container);
+          container.remove();
+        }
         return;
       }
       if (e.key !== 'Tab') return;
@@ -334,6 +360,6 @@ class ModalManager {
       }
     };
 
-    container.addEventListener('keydown', handler, { signal: this.core.abortController.signal });
+    container.addEventListener('keydown', handler.bind(this), { signal: this.core.abortController.signal });
   }
 }

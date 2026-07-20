@@ -31,6 +31,22 @@ class InteractionManager {
   onMouseDown(e) {
     var core = this.core;
     core.updateCanvasWH();
+
+    // Pan is an explicit gesture on desktop: middle mouse, or Space + left drag.
+    // The viewport owns the offset; the canvas itself is never translated.
+    if (e.button === 1 || (e.button === 0 && core.state.spacePressed)) {
+      e.preventDefault();
+      core.state.dragState = {
+        type: 'pan',
+        ox: e.clientX,
+        oy: e.clientY,
+        scrollX: core.wrap ? core.wrap.scrollLeft : 0,
+        scrollY: core.wrap ? core.wrap.scrollTop : 0
+      };
+      if (core.wrap) core.wrap.classList.add('is-panning');
+      return;
+    }
+
     var itemEl = e.target.closest('.canvas-item');
     if (itemEl) {
       var cid = parseInt(itemEl.dataset.itemId);
@@ -52,12 +68,6 @@ class InteractionManager {
           core.selectionManager.updateSelection();
         }
         this.startRotate(e, cid);
-        return;
-      }
-
-      // Middle-click pan
-      if (e.button === 1) {
-        core.state.dragState = { type: 'pan', ox: e.clientX, oy: e.clientY };
         return;
       }
 
@@ -97,12 +107,10 @@ class InteractionManager {
     var itemsArr = core.state.items;
 
     if (ds.type === 'pan') {
-      core.state.panX += e.clientX - ds.ox;
-      core.state.panY += e.clientY - ds.oy;
-      ds.ox = e.clientX;
-      ds.oy = e.clientY;
+      if (!core.wrap) return;
+      core.wrap.scrollLeft = ds.scrollX - (e.clientX - ds.ox);
+      core.wrap.scrollTop = ds.scrollY - (e.clientY - ds.oy);
       core.canvasRenderer.clampPan();
-      core.canvasRenderer.applyZoom();
       return;
     }
 
@@ -287,10 +295,10 @@ class InteractionManager {
       var selBox = core.querySelector('.sel-box');
       if (!selBox) return;
       var rect = core.canvas.getBoundingClientRect();
-      var x1 = (ds.sx - rect.left) / core.state.zoom - core.state.panX;
-      var y1 = (ds.sy - rect.top) / core.state.zoom - core.state.panY;
-      var x2 = (e.clientX - rect.left) / core.state.zoom - core.state.panX;
-      var y2 = (e.clientY - rect.top) / core.state.zoom - core.state.panY;
+      var x1 = (ds.sx - rect.left) / core.state.zoom;
+      var y1 = (ds.sy - rect.top) / core.state.zoom;
+      var x2 = (e.clientX - rect.left) / core.state.zoom;
+      var y2 = (e.clientY - rect.top) / core.state.zoom;
       selBox.style.left = Math.min(x1, x2) + 'px';
       selBox.style.top = Math.min(y1, y2) + 'px';
       selBox.style.width = Math.abs(x2 - x1) + 'px';
@@ -304,14 +312,18 @@ class InteractionManager {
     if (!core.state.dragState) return;
     var ds = core.state.dragState;
 
+    if (ds.type === 'pan' && core.wrap) {
+      core.wrap.classList.remove('is-panning');
+    }
+
     if (ds.type === 'selbox') {
       var selBox = core.querySelector('.sel-box');
       if (selBox) selBox.style.display = 'none';
       var rect = core.canvas.getBoundingClientRect();
-      var x1 = (ds.sx - rect.left) / core.state.zoom - core.state.panX;
-      var y1 = (ds.sy - rect.top) / core.state.zoom - core.state.panY;
-      var x2 = (e.clientX - rect.left) / core.state.zoom - core.state.panX;
-      var y2 = (e.clientY - rect.top) / core.state.zoom - core.state.panY;
+      var x1 = (ds.sx - rect.left) / core.state.zoom;
+      var y1 = (ds.sy - rect.top) / core.state.zoom;
+      var x2 = (e.clientX - rect.left) / core.state.zoom;
+      var y2 = (e.clientY - rect.top) / core.state.zoom;
       core.selectionManager.selectAllInRect(x1, y1, x2, y2);
     }
 
@@ -390,6 +402,15 @@ class InteractionManager {
 
   onTouchStart(e) {
     var core = this.core;
+    if (e.touches.length === 2) {
+      var first = e.touches[0];
+      var second = e.touches[1];
+      core.state.lastTouchDist = Math.hypot(
+        second.clientX - first.clientX,
+        second.clientY - first.clientY
+      );
+      return;
+    }
     if (e.touches.length !== 1) return;
     var t = e.touches[0];
     core.updateCanvasWH();
@@ -417,16 +438,15 @@ class InteractionManager {
       if (core.state.selectedIds.indexOf(cid) === -1) {
         core.state.selectedIds = [cid];
         core.selectionManager.updateSelection();
-        core.state.touchStarted = { ox: t.clientX, oy: t.clientY, type: 'pan', sel: true };
-        return;
       }
+      e.preventDefault();
       this.startDrag({ clientX: t.clientX, clientY: t.clientY }, cid);
       return;
     }
 
     core.state.selectedIds = [];
     core.selectionManager.updateSelection();
-    core.state.touchStarted = { ox: t.clientX, oy: t.clientY, type: 'pan' };
+    core.state.touchStarted = null;
   }
 
   onTouchMove(e) {
@@ -434,30 +454,16 @@ class InteractionManager {
     var im = this;
     if (e.touches.length === 2) {
       // Pinch zoom
+      e.preventDefault();
       var t1 = e.touches[0], t2 = e.touches[1];
       var dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
       if (core.state.lastTouchDist > 0) {
         var scale = dist / core.state.lastTouchDist;
-        core.state.zoom = Math.max(1, Math.min(5, core.state.zoom * scale));
-        core.canvasRenderer.applyZoom();
+        var centerX = (t1.clientX + t2.clientX) / 2;
+        var centerY = (t1.clientY + t2.clientY) / 2;
+        core.canvasRenderer.zoomAt(core.state.zoom * scale, centerX, centerY);
       }
       core.state.lastTouchDist = dist;
-      return;
-    }
-
-    if (!core.state.dragState && core.state.touchStarted && e.touches.length === 1) {
-      var t = e.touches[0];
-      if (core.state.touchStarted.sel) return;
-      var dx = t.clientX - core.state.touchStarted.ox;
-      var dy = t.clientY - core.state.touchStarted.oy;
-      if (Math.abs(dx) < 20) return;
-      if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
-      e.preventDefault();
-      core.state.panX += dx;
-      core.state.panY += dy;
-      core.state.touchStarted.ox = t.clientX;
-      core.state.touchStarted.oy = t.clientY;
-      core.canvasRenderer.applyZoom();
       return;
     }
 
@@ -779,10 +785,12 @@ class InteractionManager {
 
   onWheel(e) {
     var core = this.core;
+    // A regular wheel/trackpad gesture keeps scrolling the page/viewport.
+    // Zoom is deliberate and mirrors browsers/design tools: Ctrl/Cmd + wheel.
+    if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
-    var delta = e.deltaY > 0 ? -0.1 : 0.1;
-    core.state.zoom = Math.max(1, Math.min(5, core.state.zoom + delta));
-    core.canvasRenderer.applyZoom();
+    var factor = Math.exp(-e.deltaY * 0.002);
+    core.canvasRenderer.zoomAt(core.state.zoom * factor, e.clientX, e.clientY);
   }
 
   startDrag(e, id) {

@@ -76,6 +76,7 @@ class Utils {
            a.y < b.y + b.h && a.y + a.h > b.y;
   }
 }
+
 /* ===========================================
    SnapEngine — Snap-to-grid functionality
    =========================================== */
@@ -101,6 +102,7 @@ class SnapEngine {
     }, this);
   }
 }
+
 /* ===========================================
    CollisionEngine v4 — Continuous, rotation-aware constrained transforms
 
@@ -483,6 +485,7 @@ class CollisionEngine {
     return { x: cx - rotW / 2, y: cy - rotH / 2, w: rotW, h: rotH };
   }
 }
+
 /* ===========================================
    CanvasRenderer — Grid, zoom/pan, renderToCanvas
    =========================================== */
@@ -543,35 +546,80 @@ class CanvasRenderer {
   _syncZoomTransform() {
     var core = this.core;
     if (!core.canvas) return;
-    core.canvas.style.transform = 'scale(' + core.state.zoom + ') translate(' + (core.state.panX / core.state.zoom) + 'px, ' + (core.state.panY / core.state.zoom) + 'px)';
+    var zoom = this.clampZoom(core.state.zoom);
+    core.state.zoom = zoom;
+
+    if (core.canvasStage) {
+      core.canvasStage.style.width = (core.CANVAS_W * zoom) + 'px';
+      core.canvasStage.style.height = (core.CANVAS_H * zoom) + 'px';
+    }
+
+    core.canvas.style.width = core.CANVAS_W + 'px';
+    core.canvas.style.height = core.CANVAS_H + 'px';
+    core.canvas.style.transform = 'scale(' + zoom + ')';
     core.canvas.style.transformOrigin = '0 0';
     var zoomDisplay = core.querySelector('#zoom-display-' + core.sid);
     if (zoomDisplay) {
-      zoomDisplay.textContent = Math.round(core.state.zoom * 100) + '%';
+      zoomDisplay.textContent = Math.round(zoom * 100) + '%';
     }
+  }
+
+  clampZoom(value) {
+    return Math.max(0.35, Math.min(4, Number(value) || 1));
   }
 
   clampPan() {
     var core = this.core;
-    if (!core.canvas) return;
-    var rect = core.canvas.getBoundingClientRect();
-    var maxPanX = Math.max(0, core.CANVAS_W * core.state.zoom - rect.width);
-    var maxPanY = Math.max(0, core.CANVAS_H * core.state.zoom - rect.height);
-    core.state.panX = Math.max(0, Math.min(maxPanX, core.state.panX || 0));
-    core.state.panY = Math.max(0, Math.min(maxPanY, core.state.panY || 0));
+    if (!core.wrap) return;
+    var maxX = Math.max(0, core.wrap.scrollWidth - core.wrap.clientWidth);
+    var maxY = Math.max(0, core.wrap.scrollHeight - core.wrap.clientHeight);
+    core.wrap.scrollLeft = Math.max(0, Math.min(maxX, core.wrap.scrollLeft));
+    core.wrap.scrollTop = Math.max(0, Math.min(maxY, core.wrap.scrollTop));
+    core.state.panX = core.wrap.scrollLeft;
+    core.state.panY = core.wrap.scrollTop;
+  }
+
+  zoomAt(value, clientX, clientY) {
+    var core = this.core;
+    if (!core.wrap) return;
+
+    var oldZoom = core.state.zoom || 1;
+    var newZoom = this.clampZoom(value);
+    if (Math.abs(newZoom - oldZoom) < 0.001) return;
+
+    var wrapRect = core.wrap.getBoundingClientRect();
+    var anchorX = Number.isFinite(clientX) ? clientX - wrapRect.left : core.wrap.clientWidth / 2;
+    var anchorY = Number.isFinite(clientY) ? clientY - wrapRect.top : core.wrap.clientHeight / 2;
+    var oldStageLeft = core.canvasStage ? core.canvasStage.offsetLeft : 0;
+    var oldStageTop = core.canvasStage ? core.canvasStage.offsetTop : 0;
+    var worldX = (core.wrap.scrollLeft + anchorX - oldStageLeft) / oldZoom;
+    var worldY = (core.wrap.scrollTop + anchorY - oldStageTop) / oldZoom;
+
+    core.state.zoom = newZoom;
+    this._syncZoomTransform();
+    var newStageLeft = core.canvasStage ? core.canvasStage.offsetLeft : 0;
+    var newStageTop = core.canvasStage ? core.canvasStage.offsetTop : 0;
+    core.wrap.scrollLeft = newStageLeft + worldX * newZoom - anchorX;
+    core.wrap.scrollTop = newStageTop + worldY * newZoom - anchorY;
+    this.clampPan();
   }
 
   zoomToFit() {
     var core = this.core;
-    if (!core.canvas) return;
+    if (!core.canvas || !core.wrap) return;
     var wrapW = core.wrap ? core.wrap.clientWidth : core.CANVAS_W;
     var wrapH = core.wrap ? (core.wrap.clientHeight || core.CANVAS_H) : core.CANVAS_H;
-    var zoomX = (wrapW - 20) / core.CANVAS_W;
-    var zoomY = (wrapH - 20) / core.CANVAS_H;
-    core.state.zoom = Math.max(1, Math.min(5, Math.min(zoomX, zoomY)));
-    core.state.panX = 0;
-    core.state.panY = 0;
-    this.applyZoom();
+    var zoomX = Math.max(1, wrapW - 44) / core.CANVAS_W;
+    var zoomY = Math.max(1, wrapH - 44) / core.CANVAS_H;
+    core.state.zoom = this.clampZoom(Math.min(zoomX, zoomY, 1));
+    this._syncZoomTransform();
+
+    requestAnimationFrame(function () {
+      core.wrap.scrollLeft = Math.max(0, (core.wrap.scrollWidth - core.wrap.clientWidth) / 2);
+      core.wrap.scrollTop = Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
+      core.state.panX = core.wrap.scrollLeft;
+      core.state.panY = core.wrap.scrollTop;
+    });
   }
 
   getCanvasXY(e) {
@@ -579,8 +627,8 @@ class CanvasRenderer {
     if (!core.canvas) return { x: 0, y: 0 };
     var rect = core.canvas.getBoundingClientRect();
     return {
-      x: (e.clientX - rect.left) / core.state.zoom - core.state.panX,
-      y: (e.clientY - rect.top) / core.state.zoom - core.state.panY
+      x: (e.clientX - rect.left) / core.state.zoom,
+      y: (e.clientY - rect.top) / core.state.zoom
     };
   }
 
@@ -629,6 +677,7 @@ class CanvasRenderer {
     return c;
   }
 }
+
 /* ===========================================
    ItemManager — Item CRUD, factory, slot finder
    =========================================== */
@@ -988,6 +1037,7 @@ class ItemManager {
     this.core.selectionManager.updateSelection();
   }
 }
+
 /* ===========================================
    SelectionManager — Multi-select, guides, toolbar state
    =========================================== */
@@ -1156,6 +1206,7 @@ class SelectionManager {
     if (!guideVShown && core.guideV) core.guideV.style.display = 'none';
   }
 }
+
 /* ===========================================
    HistoryManager — Undo/redo with 50-step stack
    =========================================== */
@@ -1289,6 +1340,7 @@ class HistoryManager {
     if (this.core.redoBtn) this.core.redoBtn.disabled = state.historyIdx >= state.history.length - 1;
   }
 }
+
 /* ===========================================
    AlignmentEngine — Align, distribute, auto-arrange
    =========================================== */
@@ -1449,6 +1501,7 @@ class AlignmentEngine {
     this.core.growCanvas();
   }
 }
+
 /* ===========================================
    MobileHandler — Auto-detect mobile, toggle mode
    =========================================== */
@@ -1459,29 +1512,28 @@ class MobileHandler {
   }
 
   autoDetectMobile() {
-    var isMobile = window.innerWidth < 768 ||
-      ('ontouchstart' in window && window.innerWidth < 1024);
-    if (isMobile) {
-      this.onMobileToggle();
-    }
+    var core = this.core;
+    core.state.mobileOverride = null;
+    var isMobile = window.matchMedia('(max-width: 767px), (pointer: coarse) and (max-width: 1023px)').matches;
+    this.setMobileMode(isMobile);
   }
 
-  onMobileToggle() {
+  syncToViewport() {
     var core = this.core;
-    core.state.mobile = !core.state.mobile;
+    if (core.state.mobileOverride !== null) return;
+    var isMobile = window.matchMedia('(max-width: 767px), (pointer: coarse) and (max-width: 1023px)').matches;
+    if (core.state.mobile === isMobile) return;
+    this.setMobileMode(isMobile);
+  }
+
+  setMobileMode(enabled) {
+    var core = this.core;
+    core.state.mobile = Boolean(enabled);
     core.classList.toggle('mobile-mode', core.state.mobile);
 
-    if (core.state.mobile) {
-      // CRITICAL: clear wrap.style.height on mobile, but NEVER clear canvas.style.height
-      if (core.wrap) core.wrap.style.height = '';
-    } else {
-      // Restore canvas height and wrap height
-      if (core.canvas) core.canvas.style.height = core.CANVAS_H + 'px';
-      if (core.wrap) core.wrap.style.height = core.CANVAS_H + 'px';
-    }
-
-    // Update mobile button icon
     if (core.mobileBtn) {
+      core.mobileBtn.setAttribute('aria-pressed', String(core.state.mobile));
+      core.mobileBtn.title = core.state.mobile ? 'Switch to desktop controls' : 'Switch to mobile controls';
       core.mobileBtn.innerHTML = core.state.mobile
         ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
         : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
@@ -1489,7 +1541,14 @@ class MobileHandler {
 
     setTimeout(function () { core.canvasRenderer.zoomToFit(); }, 100);
   }
+
+  onMobileToggle() {
+    var core = this.core;
+    core.state.mobileOverride = !core.state.mobile;
+    this.setMobileMode(core.state.mobileOverride);
+  }
 }
+
 /* ===========================================
    ModalManager — All custom modals, focus trapping
    =========================================== */
@@ -1516,12 +1575,32 @@ class ModalManager {
     if (modalZone) {
       var textEl = modalZone.querySelector('.cfg-modal-text');
       var iconEl = modalZone.querySelector('.cfg-modal-icon');
-      if (textEl) textEl.textContent = 'Click to choose a design file';
-      if (iconEl) iconEl.innerHTML = '&#x1F5BC;';
+      if (textEl) textEl.textContent = 'Choose a file or drop it here';
+      if (iconEl) {
+        iconEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
+      }
     }
-    if (core.modalEl) core.modalEl.style.display = 'flex';
+    this.openModal(core.modalEl);
     if (core.fileInput) core.fileInput.value = '';
     this.trapFocus(core.modalEl);
+  }
+
+  openModal(modal) {
+    if (!modal) return;
+    if (typeof modal.showModal === 'function') {
+      if (!modal.open) modal.showModal();
+    } else {
+      modal.style.display = 'flex';
+    }
+  }
+
+  closeModal(modal) {
+    if (!modal) return;
+    if (typeof modal.close === 'function') {
+      if (modal.open) modal.close();
+    } else {
+      modal.style.display = 'none';
+    }
   }
 
   showEditTextModal(item, callback) {
@@ -1784,15 +1863,14 @@ class ModalManager {
   }
 
   createModal(htmlStructure) {
-    var modal = document.createElement('div');
+    var modal = document.createElement('dialog');
     modal.className = 'cfg-modal';
-    modal.style.display = 'flex';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
+    modal.dataset.dynamicModal = 'true';
     if (htmlStructure) {
       modal.innerHTML = htmlStructure;
     }
     document.body.appendChild(modal);
+    this.openModal(modal);
     return modal;
   }
 
@@ -1805,11 +1883,18 @@ class ModalManager {
     var first = focusable[0];
     var last = focusable[focusable.length - 1];
     first.focus();
+    if (container.dataset.focusTrapBound === 'true') return;
+    container.dataset.focusTrapBound = 'true';
 
     var handler = function (e) {
       if (e.key === 'Escape') {
-        container.style.display = 'none';
-        container.remove();
+        e.preventDefault();
+        if (container === this.core.modalEl) {
+          this.closeModal(container);
+        } else {
+          this.closeModal(container);
+          container.remove();
+        }
         return;
       }
       if (e.key !== 'Tab') return;
@@ -1826,9 +1911,10 @@ class ModalManager {
       }
     };
 
-    container.addEventListener('keydown', handler, { signal: this.core.abortController.signal });
+    container.addEventListener('keydown', handler.bind(this), { signal: this.core.abortController.signal });
   }
 }
+
 /* ===========================================
    ExportManager — PDF export via dynamic jsPDF import
    =========================================== */
@@ -1873,6 +1959,7 @@ class ExportManager {
     }
   }
 }
+
 /* ===========================================
    KeyboardManager — Keyboard shortcut routing
    =========================================== */
@@ -1944,19 +2031,19 @@ class KeyboardManager {
 
     // Escape — Unselect / close modals
     if (e.key === 'Escape') {
+      var visibleModal = core.querySelector('dialog.cfg-modal[open]');
+      if (visibleModal) {
+        e.preventDefault();
+        core.modalManager.closeModal(visibleModal);
+        return;
+      }
       core.state.selectedIds = [];
       core.selectionManager.updateSelection();
-      var visibleModal = core.querySelector('.cfg-modal[style*="display: flex"]');
-      if (!visibleModal) {
-        visibleModal = core.querySelector('.cfg-modal');
-        if (visibleModal && visibleModal.style.display !== 'none') {
-          visibleModal.style.display = 'none';
-        }
-      }
       return;
     }
   }
 }
+
 /* ===========================================
    ClipboardManager — Copy/paste with compact references
    =========================================== */
@@ -2034,6 +2121,7 @@ class ClipboardManager {
     if (autoBtn) autoBtn.click();
   }
 }
+
 /* ===========================================
    PriceManager — Price calculation, quantity, stats
    =========================================== */
@@ -2084,6 +2172,7 @@ class PriceManager {
     this.updatePrice();
   }
 }
+
 /* ===========================================
    InteractionManager — Mouse/touch/keyboard input, drag state machine
    Integration: snapVal in onMouseUp/onTouchEnd, CollisionEngine extraction
@@ -2117,6 +2206,22 @@ class InteractionManager {
   onMouseDown(e) {
     var core = this.core;
     core.updateCanvasWH();
+
+    // Pan is an explicit gesture on desktop: middle mouse, or Space + left drag.
+    // The viewport owns the offset; the canvas itself is never translated.
+    if (e.button === 1 || (e.button === 0 && core.state.spacePressed)) {
+      e.preventDefault();
+      core.state.dragState = {
+        type: 'pan',
+        ox: e.clientX,
+        oy: e.clientY,
+        scrollX: core.wrap ? core.wrap.scrollLeft : 0,
+        scrollY: core.wrap ? core.wrap.scrollTop : 0
+      };
+      if (core.wrap) core.wrap.classList.add('is-panning');
+      return;
+    }
+
     var itemEl = e.target.closest('.canvas-item');
     if (itemEl) {
       var cid = parseInt(itemEl.dataset.itemId);
@@ -2138,12 +2243,6 @@ class InteractionManager {
           core.selectionManager.updateSelection();
         }
         this.startRotate(e, cid);
-        return;
-      }
-
-      // Middle-click pan
-      if (e.button === 1) {
-        core.state.dragState = { type: 'pan', ox: e.clientX, oy: e.clientY };
         return;
       }
 
@@ -2183,12 +2282,10 @@ class InteractionManager {
     var itemsArr = core.state.items;
 
     if (ds.type === 'pan') {
-      core.state.panX += e.clientX - ds.ox;
-      core.state.panY += e.clientY - ds.oy;
-      ds.ox = e.clientX;
-      ds.oy = e.clientY;
+      if (!core.wrap) return;
+      core.wrap.scrollLeft = ds.scrollX - (e.clientX - ds.ox);
+      core.wrap.scrollTop = ds.scrollY - (e.clientY - ds.oy);
       core.canvasRenderer.clampPan();
-      core.canvasRenderer.applyZoom();
       return;
     }
 
@@ -2373,10 +2470,10 @@ class InteractionManager {
       var selBox = core.querySelector('.sel-box');
       if (!selBox) return;
       var rect = core.canvas.getBoundingClientRect();
-      var x1 = (ds.sx - rect.left) / core.state.zoom - core.state.panX;
-      var y1 = (ds.sy - rect.top) / core.state.zoom - core.state.panY;
-      var x2 = (e.clientX - rect.left) / core.state.zoom - core.state.panX;
-      var y2 = (e.clientY - rect.top) / core.state.zoom - core.state.panY;
+      var x1 = (ds.sx - rect.left) / core.state.zoom;
+      var y1 = (ds.sy - rect.top) / core.state.zoom;
+      var x2 = (e.clientX - rect.left) / core.state.zoom;
+      var y2 = (e.clientY - rect.top) / core.state.zoom;
       selBox.style.left = Math.min(x1, x2) + 'px';
       selBox.style.top = Math.min(y1, y2) + 'px';
       selBox.style.width = Math.abs(x2 - x1) + 'px';
@@ -2390,14 +2487,18 @@ class InteractionManager {
     if (!core.state.dragState) return;
     var ds = core.state.dragState;
 
+    if (ds.type === 'pan' && core.wrap) {
+      core.wrap.classList.remove('is-panning');
+    }
+
     if (ds.type === 'selbox') {
       var selBox = core.querySelector('.sel-box');
       if (selBox) selBox.style.display = 'none';
       var rect = core.canvas.getBoundingClientRect();
-      var x1 = (ds.sx - rect.left) / core.state.zoom - core.state.panX;
-      var y1 = (ds.sy - rect.top) / core.state.zoom - core.state.panY;
-      var x2 = (e.clientX - rect.left) / core.state.zoom - core.state.panX;
-      var y2 = (e.clientY - rect.top) / core.state.zoom - core.state.panY;
+      var x1 = (ds.sx - rect.left) / core.state.zoom;
+      var y1 = (ds.sy - rect.top) / core.state.zoom;
+      var x2 = (e.clientX - rect.left) / core.state.zoom;
+      var y2 = (e.clientY - rect.top) / core.state.zoom;
       core.selectionManager.selectAllInRect(x1, y1, x2, y2);
     }
 
@@ -2476,6 +2577,15 @@ class InteractionManager {
 
   onTouchStart(e) {
     var core = this.core;
+    if (e.touches.length === 2) {
+      var first = e.touches[0];
+      var second = e.touches[1];
+      core.state.lastTouchDist = Math.hypot(
+        second.clientX - first.clientX,
+        second.clientY - first.clientY
+      );
+      return;
+    }
     if (e.touches.length !== 1) return;
     var t = e.touches[0];
     core.updateCanvasWH();
@@ -2503,16 +2613,15 @@ class InteractionManager {
       if (core.state.selectedIds.indexOf(cid) === -1) {
         core.state.selectedIds = [cid];
         core.selectionManager.updateSelection();
-        core.state.touchStarted = { ox: t.clientX, oy: t.clientY, type: 'pan', sel: true };
-        return;
       }
+      e.preventDefault();
       this.startDrag({ clientX: t.clientX, clientY: t.clientY }, cid);
       return;
     }
 
     core.state.selectedIds = [];
     core.selectionManager.updateSelection();
-    core.state.touchStarted = { ox: t.clientX, oy: t.clientY, type: 'pan' };
+    core.state.touchStarted = null;
   }
 
   onTouchMove(e) {
@@ -2520,30 +2629,16 @@ class InteractionManager {
     var im = this;
     if (e.touches.length === 2) {
       // Pinch zoom
+      e.preventDefault();
       var t1 = e.touches[0], t2 = e.touches[1];
       var dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
       if (core.state.lastTouchDist > 0) {
         var scale = dist / core.state.lastTouchDist;
-        core.state.zoom = Math.max(1, Math.min(5, core.state.zoom * scale));
-        core.canvasRenderer.applyZoom();
+        var centerX = (t1.clientX + t2.clientX) / 2;
+        var centerY = (t1.clientY + t2.clientY) / 2;
+        core.canvasRenderer.zoomAt(core.state.zoom * scale, centerX, centerY);
       }
       core.state.lastTouchDist = dist;
-      return;
-    }
-
-    if (!core.state.dragState && core.state.touchStarted && e.touches.length === 1) {
-      var t = e.touches[0];
-      if (core.state.touchStarted.sel) return;
-      var dx = t.clientX - core.state.touchStarted.ox;
-      var dy = t.clientY - core.state.touchStarted.oy;
-      if (Math.abs(dx) < 20) return;
-      if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
-      e.preventDefault();
-      core.state.panX += dx;
-      core.state.panY += dy;
-      core.state.touchStarted.ox = t.clientX;
-      core.state.touchStarted.oy = t.clientY;
-      core.canvasRenderer.applyZoom();
       return;
     }
 
@@ -2865,10 +2960,12 @@ class InteractionManager {
 
   onWheel(e) {
     var core = this.core;
+    // A regular wheel/trackpad gesture keeps scrolling the page/viewport.
+    // Zoom is deliberate and mirrors browsers/design tools: Ctrl/Cmd + wheel.
+    if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
-    var delta = e.deltaY > 0 ? -0.1 : 0.1;
-    core.state.zoom = Math.max(1, Math.min(5, core.state.zoom + delta));
-    core.canvasRenderer.applyZoom();
+    var factor = Math.exp(-e.deltaY * 0.002);
+    core.canvasRenderer.zoomAt(core.state.zoom * factor, e.clientX, e.clientY);
   }
 
   startDrag(e, id) {
@@ -2943,6 +3040,7 @@ class InteractionManager {
     }
   }
 }
+
 class StickerConfigurator extends HTMLElement {
   constructor() {
     super();
@@ -2958,8 +3056,10 @@ class StickerConfigurator extends HTMLElement {
 
   disconnectedCallback() {
     this.abortController.abort();
+    if (this.resizeObserver) this.resizeObserver.disconnect();
     this.state = null;
     this.wrap = null;
+    this.canvasStage = null;
     this.canvas = null;
     this.gridCanvas = null;
     this.hintEl = null;
@@ -2981,16 +3081,18 @@ class StickerConfigurator extends HTMLElement {
   /* ── Initialization ── */
 
   init() {
+    if (this.abortController.signal.aborted) {
+      this.abortController = new AbortController();
+    }
     this.sid = this.dataset.sectionId;
 
     // DOM caching (V07 fix): cache all commonly-queried elements
     this.cache = {};
     this._cacheDomRefs();
 
-    // CRITICAL: CANVAS_W = wrap.clientWidth — FROZEN, do not reassign
-    var CANVAS_W = this.wrap ? this.wrap.clientWidth : 600;
-    this.CANVAS_W = CANVAS_W;
-    this.CANVAS_H = Math.round(CANVAS_W * 400 / 600);
+    // Stable logical workspace. Visual fitting belongs to CanvasRenderer zoom.
+    this.CANVAS_W = 600;
+    this.CANVAS_H = 400;
 
     // Parse base price from data attribute
     var basePrice = parseFloat(this.dataset.basePrice) || 2.5;
@@ -3013,6 +3115,8 @@ class StickerConfigurator extends HTMLElement {
       clipboard: null,
       touchStarted: null,
       lastTouchDist: 0,
+      spacePressed: false,
+      mobileOverride: null,
       snapEnabled: true,
       gridSize: 20,
       gapSize: 3,
@@ -3036,12 +3140,10 @@ class StickerConfigurator extends HTMLElement {
     this.keyboardManager = new KeyboardManager(this);
     this.alignmentEngine = new AlignmentEngine(this);
 
-    // Set canvas heights at init
+    // Set logical canvas dimensions at init. The viewport height is owned by CSS.
     if (this.canvas) {
+      this.canvas.style.width = this.CANVAS_W + 'px';
       this.canvas.style.height = this.CANVAS_H + 'px';
-    }
-    if (this.wrap) {
-      this.wrap.style.height = this.CANVAS_H + 'px';
     }
 
     // Apply bg color from dataset
@@ -3054,6 +3156,7 @@ class StickerConfigurator extends HTMLElement {
     }
 
     this.canvasRenderer.drawGrid();
+    this.canvasRenderer._syncZoomTransform();
     this.bindEvents();
     this.historyManager.saveState();
     this.mobileHandler.autoDetectMobile();
@@ -3070,7 +3173,7 @@ class StickerConfigurator extends HTMLElement {
   _cacheDomRefs() {
     var sid = this.dataset.sectionId;
     var ids = [
-      'canvas-wrap', 'canvas', 'grid-canvas', 'hint', 'file-input', 'modal',
+      'canvas-wrap', 'canvas-stage', 'canvas', 'grid-canvas', 'hint', 'file-input', 'modal',
       'undo-btn', 'redo-btn', 'item-count', 'price-display', 'qty-display',
       'mobile-btn', 'guide-h', 'guide-v',
       'del-btn', 'dup-btn', 'flip-h', 'flip-v',
@@ -3093,6 +3196,7 @@ class StickerConfigurator extends HTMLElement {
 
     // Convenience aliases
     this.wrap = this.cache['canvas-wrap'];
+    this.canvasStage = this.cache['canvas-stage'];
     this.canvas = this.cache['canvas'];
     this.gridCanvas = this.cache['grid-canvas'];
     this.hintEl = this.cache['hint'];
@@ -3132,7 +3236,6 @@ class StickerConfigurator extends HTMLElement {
       this.canvas.addEventListener('mousedown', function (e) { core.interactionManager.onMouseDown(e); }, { signal });
       this.canvas.addEventListener('mousemove', function (e) { core.interactionManager.onMouseMove(e); }, { signal });
       this.canvas.addEventListener('mouseup', function (e) { core.interactionManager.onMouseUp(e); }, { signal });
-      this.canvas.addEventListener('wheel', function (e) { core.interactionManager.onWheel(e); }, { signal });
       this.canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); }, { signal });
 
       this.canvas.addEventListener('touchstart', function (e) { core.interactionManager.onTouchStart(e); }, { signal, passive: false });
@@ -3143,8 +3246,36 @@ class StickerConfigurator extends HTMLElement {
       this.canvas.addEventListener('dragover', function (e) { e.preventDefault(); }, { signal });
     }
 
+    if (this.wrap) {
+      this.wrap.addEventListener('wheel', function (e) { core.interactionManager.onWheel(e); }, { signal, passive: false });
+      this.wrap.addEventListener('scroll', function () {
+        core.state.panX = core.wrap.scrollLeft;
+        core.state.panY = core.wrap.scrollTop;
+      }, { signal, passive: true });
+    }
+
     // Keyboard
-    document.addEventListener('keydown', function (e) { core.keyboardManager.onKeyDown(e); }, { signal });
+    document.addEventListener('keydown', function (e) {
+      var isField = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT');
+      if (e.code === 'Space' && !isField && core.matches(':hover')) {
+        e.preventDefault();
+        core.state.spacePressed = true;
+        if (core.wrap) core.wrap.classList.add('is-pan-ready');
+      }
+      core.keyboardManager.onKeyDown(e);
+    }, { signal });
+    document.addEventListener('keyup', function (e) {
+      if (e.code === 'Space') {
+        core.state.spacePressed = false;
+        if (core.wrap) core.wrap.classList.remove('is-pan-ready');
+      }
+    }, { signal });
+    document.addEventListener('mouseup', function (e) {
+      if (core.state && core.state.dragState) core.interactionManager.onMouseUp(e);
+    }, { signal });
+    window.addEventListener('resize', function () {
+      if (core.mobileHandler) core.mobileHandler.syncToViewport();
+    }, { signal, passive: true });
 
     // Add design button
     var addBtn = this.cache['add-btn'];
@@ -3155,11 +3286,31 @@ class StickerConfigurator extends HTMLElement {
     // Modal events
     var modalCancel = this.cache['modal-cancel'];
     if (modalCancel) {
-      modalCancel.addEventListener('click', function () { if (core.modalEl) core.modalEl.style.display = 'none'; }, { signal });
+      modalCancel.addEventListener('click', function () { core.modalManager.closeModal(core.modalEl); }, { signal });
     }
     var modalZone = this.cache['modal-zone'];
     if (modalZone) {
       modalZone.addEventListener('click', function () { if (core.fileInput) core.fileInput.click(); }, { signal });
+      modalZone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (core.fileInput) core.fileInput.click();
+        }
+      }, { signal });
+      modalZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        modalZone.classList.add('is-dragover');
+      }, { signal });
+      modalZone.addEventListener('dragleave', function () {
+        modalZone.classList.remove('is-dragover');
+      }, { signal });
+      modalZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        modalZone.classList.remove('is-dragover');
+        if (e.dataTransfer && e.dataTransfer.files.length) {
+          core.handleFileSelect(e.dataTransfer.files[0]);
+        }
+      }, { signal });
     }
     var modalAddBtn = this.cache['modal-add'];
     if (modalAddBtn) {
@@ -3325,8 +3476,9 @@ class StickerConfigurator extends HTMLElement {
     });
     var newH = Math.max(this.CANVAS_H, maxB + 20);
     if (newH > this.CANVAS_H) {
-      if (this.canvas) this.canvas.style.height = newH + 'px';
-      if (this.wrap) this.wrap.style.height = newH + 'px';
+      this.CANVAS_H = newH;
+      this.canvasRenderer.drawGrid();
+      this.canvasRenderer._syncZoomTransform();
     }
   }
 
@@ -3368,10 +3520,12 @@ class StickerConfigurator extends HTMLElement {
       var textEl = modalZone.querySelector('.cfg-modal-text');
       var iconEl = modalZone.querySelector('.cfg-modal-icon');
       if (textEl) textEl.textContent = 'File selected';
-      if (iconEl) iconEl.innerHTML = '&#x2705;';
+      if (iconEl) {
+        iconEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+      }
     }
     if (modalAddBtn) modalAddBtn.disabled = false;
-    if (this.modalEl) this.modalEl.style.display = 'flex';
+    this.modalManager.openModal(this.modalEl);
   }
 
   handleCanvasDrop(e) {
@@ -3391,7 +3545,7 @@ class StickerConfigurator extends HTMLElement {
     var hMm = parseInt(modalH ? modalH.value : 50) || 50;
     var qty = parseInt(modalQty ? modalQty.value : 1) || 1;
 
-    if (this.modalEl) this.modalEl.style.display = 'none';
+    this.modalManager.closeModal(this.modalEl);
 
     var reader = new FileReader();
     var core = this;

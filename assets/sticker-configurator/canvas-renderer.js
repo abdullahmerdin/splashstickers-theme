@@ -58,35 +58,80 @@ class CanvasRenderer {
   _syncZoomTransform() {
     var core = this.core;
     if (!core.canvas) return;
-    core.canvas.style.transform = 'scale(' + core.state.zoom + ') translate(' + (core.state.panX / core.state.zoom) + 'px, ' + (core.state.panY / core.state.zoom) + 'px)';
+    var zoom = this.clampZoom(core.state.zoom);
+    core.state.zoom = zoom;
+
+    if (core.canvasStage) {
+      core.canvasStage.style.width = (core.CANVAS_W * zoom) + 'px';
+      core.canvasStage.style.height = (core.CANVAS_H * zoom) + 'px';
+    }
+
+    core.canvas.style.width = core.CANVAS_W + 'px';
+    core.canvas.style.height = core.CANVAS_H + 'px';
+    core.canvas.style.transform = 'scale(' + zoom + ')';
     core.canvas.style.transformOrigin = '0 0';
     var zoomDisplay = core.querySelector('#zoom-display-' + core.sid);
     if (zoomDisplay) {
-      zoomDisplay.textContent = Math.round(core.state.zoom * 100) + '%';
+      zoomDisplay.textContent = Math.round(zoom * 100) + '%';
     }
+  }
+
+  clampZoom(value) {
+    return Math.max(0.35, Math.min(4, Number(value) || 1));
   }
 
   clampPan() {
     var core = this.core;
-    if (!core.canvas) return;
-    var rect = core.canvas.getBoundingClientRect();
-    var maxPanX = Math.max(0, core.CANVAS_W * core.state.zoom - rect.width);
-    var maxPanY = Math.max(0, core.CANVAS_H * core.state.zoom - rect.height);
-    core.state.panX = Math.max(0, Math.min(maxPanX, core.state.panX || 0));
-    core.state.panY = Math.max(0, Math.min(maxPanY, core.state.panY || 0));
+    if (!core.wrap) return;
+    var maxX = Math.max(0, core.wrap.scrollWidth - core.wrap.clientWidth);
+    var maxY = Math.max(0, core.wrap.scrollHeight - core.wrap.clientHeight);
+    core.wrap.scrollLeft = Math.max(0, Math.min(maxX, core.wrap.scrollLeft));
+    core.wrap.scrollTop = Math.max(0, Math.min(maxY, core.wrap.scrollTop));
+    core.state.panX = core.wrap.scrollLeft;
+    core.state.panY = core.wrap.scrollTop;
+  }
+
+  zoomAt(value, clientX, clientY) {
+    var core = this.core;
+    if (!core.wrap) return;
+
+    var oldZoom = core.state.zoom || 1;
+    var newZoom = this.clampZoom(value);
+    if (Math.abs(newZoom - oldZoom) < 0.001) return;
+
+    var wrapRect = core.wrap.getBoundingClientRect();
+    var anchorX = Number.isFinite(clientX) ? clientX - wrapRect.left : core.wrap.clientWidth / 2;
+    var anchorY = Number.isFinite(clientY) ? clientY - wrapRect.top : core.wrap.clientHeight / 2;
+    var oldStageLeft = core.canvasStage ? core.canvasStage.offsetLeft : 0;
+    var oldStageTop = core.canvasStage ? core.canvasStage.offsetTop : 0;
+    var worldX = (core.wrap.scrollLeft + anchorX - oldStageLeft) / oldZoom;
+    var worldY = (core.wrap.scrollTop + anchorY - oldStageTop) / oldZoom;
+
+    core.state.zoom = newZoom;
+    this._syncZoomTransform();
+    var newStageLeft = core.canvasStage ? core.canvasStage.offsetLeft : 0;
+    var newStageTop = core.canvasStage ? core.canvasStage.offsetTop : 0;
+    core.wrap.scrollLeft = newStageLeft + worldX * newZoom - anchorX;
+    core.wrap.scrollTop = newStageTop + worldY * newZoom - anchorY;
+    this.clampPan();
   }
 
   zoomToFit() {
     var core = this.core;
-    if (!core.canvas) return;
+    if (!core.canvas || !core.wrap) return;
     var wrapW = core.wrap ? core.wrap.clientWidth : core.CANVAS_W;
     var wrapH = core.wrap ? (core.wrap.clientHeight || core.CANVAS_H) : core.CANVAS_H;
-    var zoomX = (wrapW - 20) / core.CANVAS_W;
-    var zoomY = (wrapH - 20) / core.CANVAS_H;
-    core.state.zoom = Math.max(1, Math.min(5, Math.min(zoomX, zoomY)));
-    core.state.panX = 0;
-    core.state.panY = 0;
-    this.applyZoom();
+    var zoomX = Math.max(1, wrapW - 44) / core.CANVAS_W;
+    var zoomY = Math.max(1, wrapH - 44) / core.CANVAS_H;
+    core.state.zoom = this.clampZoom(Math.min(zoomX, zoomY, 1));
+    this._syncZoomTransform();
+
+    requestAnimationFrame(function () {
+      core.wrap.scrollLeft = Math.max(0, (core.wrap.scrollWidth - core.wrap.clientWidth) / 2);
+      core.wrap.scrollTop = Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
+      core.state.panX = core.wrap.scrollLeft;
+      core.state.panY = core.wrap.scrollTop;
+    });
   }
 
   getCanvasXY(e) {
@@ -94,8 +139,8 @@ class CanvasRenderer {
     if (!core.canvas) return { x: 0, y: 0 };
     var rect = core.canvas.getBoundingClientRect();
     return {
-      x: (e.clientX - rect.left) / core.state.zoom - core.state.panX,
-      y: (e.clientY - rect.top) / core.state.zoom - core.state.panY
+      x: (e.clientX - rect.left) / core.state.zoom,
+      y: (e.clientY - rect.top) / core.state.zoom
     };
   }
 

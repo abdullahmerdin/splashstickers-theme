@@ -7,31 +7,25 @@
 {%- liquid
   assign bg_color = section.settings.bg_color
   assign heading = section.settings.heading
-  assign subtext = section.settings.subtext
   assign base_price = section.settings.base_price
 -%}
 
 <sticker-configurator
   data-section-id="{{ section.id }}"
   data-heading="{{ heading | escape }}"
-  data-subtext="{{ subtext | escape }}"
   data-bg-color="{{ bg_color }}"
   data-base-price="{{ base_price }}"
   style="--cfg-bg: {{ bg_color }};"
 >
-  {%- unless heading == blank and subtext == blank -%}
+  {%- unless heading == blank -%}
     <div class="cfg-header">
-      {%- unless heading == blank -%}
-        <h2 class="cfg-heading">{{ heading | escape }}</h2>
-      {%- endunless -%}
-      {%- unless subtext == blank -%}
-        <p class="cfg-subtext">{{ subtext | escape }}</p>
-      {%- endunless -%}
+      <span class="cfg-eyebrow">Gangsheet Studio</span>
+      <h2 class="cfg-heading">{{ heading | escape }}</h2>
     </div>
   {%- endunless -%}
 
   <div class="editor-wrap">
-    <div class="toolbar">
+    <div class="toolbar" role="toolbar" aria-label="Canvas tools">
       <!-- Toolbar buttons generated via JS delegation (data-action) -->
       <button title="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -105,7 +99,10 @@
     <div class="cfg-info-bar">
       <span id="item-count-{{ section.id }}">0 items</span>
       <span id="sel-size-{{ section.id }}">&nbsp;</span>
-      <span id="hint-text-{{ section.id }}">Middle-click drag to pan | Scroll to zoom | T to add text</span>
+      <span id="hint-text-{{ section.id }}">
+        <span class="hint-desktop">Ctrl/Cmd + scroll to zoom &middot; Space + drag to pan</span>
+        <span class="hint-mobile">Pinch to zoom &middot; Drag empty space to pan</span>
+      </span>
     </div>
 
     <div class="size-inputs" id="size-inputs-{{ section.id }}">
@@ -117,18 +114,24 @@
     </div>
 
     <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}">
-      <div class="canvas-area" id="canvas-{{ section.id }}">
-        <canvas class="grid-bg" id="grid-canvas-{{ section.id }}"></canvas>
-        <div class="canvas-hint" id="hint-{{ section.id }}">Add a design or press T to add text</div>
+      <div class="canvas-stage" id="canvas-stage-{{ section.id }}">
+        <div class="canvas-area" id="canvas-{{ section.id }}">
+          <canvas class="grid-bg" id="grid-canvas-{{ section.id }}"></canvas>
+          <div class="canvas-hint" id="hint-{{ section.id }}">Add a design or press T to add text</div>
+          <div class="sel-box" aria-hidden="true"></div>
+          <div class="guide-line h" id="guide-h-{{ section.id }}"></div>
+          <div class="guide-line v" id="guide-v-{{ section.id }}"></div>
+        </div>
       </div>
-      <div class="guide-line h" id="guide-h-{{ section.id }}"></div>
-      <div class="guide-line v" id="guide-v-{{ section.id }}"></div>
     </div>
 
     <div class="sticky-ctrls">
-      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}">
+      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" hidden>
       <div class="upload-btn-area">
-        <button id="add-btn-{{ section.id }}">&#x2795; Add design</button>
+        <button id="add-btn-{{ section.id }}" class="cfg-add-design">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Add design
+        </button>
         <div class="qty-group">
           <button id="qty-down-{{ section.id }}">&minus;</button>
           <span class="qty-val" id="qty-display-{{ section.id }}">10</span>
@@ -139,36 +142,6 @@
       <button id="submit-{{ section.id }}" class="cfg-btn-submit">
         Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
       </button>
-
-      <div id="modal-{{ section.id }}" class="cfg-modal" role="dialog" aria-modal="true" aria-label="Add Design">
-        <div class="cfg-modal-box">
-          <h3 class="cfg-modal-title">Add Design</h3>
-          <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}" role="button" tabindex="0" aria-label="Choose a design file">
-            <div class="cfg-modal-icon">&#x1F5BC;</div>
-            <div class="cfg-modal-text">Click to choose a design file</div>
-            <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
-          </div>
-          <div class="cfg-modal-row">
-            <label>W</label>
-            <input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1">
-            <span>mm</span>
-          </div>
-          <div class="cfg-modal-row">
-            <label>H</label>
-            <input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1">
-            <span>mm</span>
-          </div>
-          <div class="cfg-modal-row">
-            <label>Copies</label>
-            <input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1">
-            <span>pcs</span>
-          </div>
-          <div class="cfg-modal-actions">
-            <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec">Cancel</button>
-            <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" disabled>Add to Canvas</button>
-          </div>
-        </div>
-      </div>
 
       <div class="bottom-extra">
         <div class="be-row">
@@ -188,6 +161,46 @@
         </div>
       </div>
     </div>
+
+    <dialog id="modal-{{ section.id }}" class="cfg-modal" aria-labelledby="modal-title-{{ section.id }}">
+      <div class="cfg-modal-box">
+        <div class="cfg-modal-title-row">
+          <div>
+            <span class="cfg-modal-kicker">New artwork</span>
+            <h3 class="cfg-modal-title" id="modal-title-{{ section.id }}">Add Design</h3>
+          </div>
+        </div>
+        <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}" role="button" tabindex="0" aria-label="Choose or drop a design file">
+          <div class="cfg-modal-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+          </div>
+          <div class="cfg-modal-text">Choose a file or drop it here</div>
+          <div class="cfg-modal-note">PNG, JPG, SVG or WebP</div>
+          <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
+        </div>
+        <div class="cfg-modal-fields">
+          <div class="cfg-modal-row">
+            <label for="modal-w-{{ section.id }}">Width</label>
+            <input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1">
+            <span>mm</span>
+          </div>
+          <div class="cfg-modal-row">
+            <label for="modal-h-{{ section.id }}">Height</label>
+            <input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1">
+            <span>mm</span>
+          </div>
+          <div class="cfg-modal-row">
+            <label for="modal-qty-{{ section.id }}">Copies</label>
+            <input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1">
+            <span>pcs</span>
+          </div>
+        </div>
+        <div class="cfg-modal-actions">
+          <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec">Cancel</button>
+          <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" disabled>Add to Canvas</button>
+        </div>
+      </div>
+    </dialog>
   </div>
 </sticker-configurator>
 
@@ -202,12 +215,6 @@
       "id": "heading",
       "label": "Heading",
       "default": "Design Your Sticker Sheet"
-    },
-    {
-      "type": "text",
-      "id": "subtext",
-      "label": "Subtext",
-      "default": "Arrange your stickers on a 60cm workspace"
     },
     {
       "type": "color",
@@ -304,7 +311,6 @@
       "category": "Custom",
       "settings": {
         "heading": "Design Your Sticker Sheet",
-        "subtext": "Arrange your stickers on a 60cm workspace",
         "bg_color": "#F8F9FA",
         "base_price": 2.5,
         "grid_size": 20,
@@ -322,7 +328,6 @@
   "locales": {
     "en": {
       "heading": "Design Your Sticker Sheet",
-      "subtext": "Arrange your stickers on a 60cm workspace",
       "undo": "Undo",
       "redo": "Redo",
       "auto_arrange": "Auto arrange",
@@ -361,7 +366,7 @@
       "snap_grid": "Grid",
       "gap": "Gap",
       "canvas_hint": "Add a design or press T to add text",
-      "hint_text": "Middle-click drag to pan | Scroll to zoom | T to add text",
+      "hint_text": "Ctrl/Cmd + scroll to zoom | Space + drag to pan",
       "pdf_load_error": "Could not load PDF library. Check internet connection.",
       "edit_text_title": "Edit Text",
       "size_label": "SIZE",

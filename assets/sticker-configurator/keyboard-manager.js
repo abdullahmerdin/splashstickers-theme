@@ -69,15 +69,14 @@ class KeyboardManager {
 
     // Escape — Unselect / close modals
     if (e.key === 'Escape') {
+      var visibleModal = core.querySelector('dialog.cfg-modal[open]');
+      if (visibleModal) {
+        e.preventDefault();
+        core.modalManager.closeModal(visibleModal);
+        return;
+      }
       core.state.selectedIds = [];
       core.selectionManager.updateSelection();
-      var visibleModal = core.querySelector('.cfg-modal[style*="display: flex"]');
-      if (!visibleModal) {
-        visibleModal = core.querySelector('.cfg-modal');
-        if (visibleModal && visibleModal.style.display !== 'none') {
-          visibleModal.style.display = 'none';
-        }
-      }
       return;
     }
   }
