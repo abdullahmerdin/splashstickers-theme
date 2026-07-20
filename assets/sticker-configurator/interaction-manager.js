@@ -94,6 +94,7 @@ class InteractionManager {
     var im = this;
     if (!core.state.dragState) return;
     var ds = core.state.dragState;
+    var itemsArr = core.state.items;
 
     if (ds.type === 'pan') {
       core.state.panX += e.clientX - ds.ox;
@@ -122,20 +123,18 @@ class InteractionManager {
 
       // Wall-collision: constrain each dragged item against stationary items
       var ce = core.collisionEngine;
-      var itemsArr = core.state.items;
+      var constrainedDelta = ce.constrainGroupDelta(
+        dx,
+        dy,
+        draggedItems,
+        itemsArr,
+        ds.ids
+      );
       draggedItems.forEach(function (item) {
-        var candidateX = item.x + dx;
-        var candidateY = item.y + dy;
-        candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
-        candidateY = Math.max(0, candidateY);
-        var result = ce.constrainPosition(
-          candidateX, candidateY, item, itemsArr, ds.ids,
-          item.x, item.y  // startX/startY unused in v3, kept for ABI compat
-        );
-        item.x = result.x;
-        item.y = result.y;
-        item.el.style.left = result.x + 'px';
-        item.el.style.top = result.y + 'px';
+        item.x += constrainedDelta.dx;
+        item.y += constrainedDelta.dy;
+        item.el.style.left = item.x + 'px';
+        item.el.style.top = item.y + 'px';
 
         // Visual feedback for overlap (V3: use helper)
         im.applyOverlapVisual(item, itemsArr, ds.ids);
@@ -149,6 +148,9 @@ class InteractionManager {
     }
 
     if (ds.type === 'resize') {
+      this._applyResize(ds, e.clientX, e.clientY);
+      return;
+
       var item = itemsArr.find(function (i) { return i.id === ds.id; });
       if (!item) return;
       var dx = (e.clientX - ds.ox) / core.state.zoom;
@@ -232,6 +234,9 @@ class InteractionManager {
     }
 
     if (ds.type === 'rotate') {
+      this._applyRotation(ds, e.clientX, e.clientY);
+      return;
+
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
 
@@ -487,24 +492,26 @@ class InteractionManager {
       // Wall-collision: constrain each dragged item against stationary items
       var ce = core.collisionEngine;
       var itemsArr = core.state.items;
+      var constrainedDelta = ce.constrainGroupDelta(
+        dx,
+        dy,
+        draggedItems,
+        itemsArr,
+        ds.ids
+      );
       draggedItems.forEach(function (item) {
-        var candidateX = item.x + dx;
-        var candidateY = item.y + dy;
-        candidateX = Math.max(0, Math.min(core.CANVAS_W - item.w, candidateX));
-        candidateY = Math.max(0, candidateY);
-        var result = ce.constrainPosition(
-          candidateX, candidateY, item, itemsArr, ds.ids,
-          item.x, item.y
-        );
-        item.x = result.x;
-        item.y = result.y;
-        item.el.style.left = result.x + 'px';
-        item.el.style.top = result.y + 'px';
+        item.x += constrainedDelta.dx;
+        item.y += constrainedDelta.dy;
+        item.el.style.left = item.x + 'px';
+        item.el.style.top = item.y + 'px';
 
         // Visual feedback for overlap (V3: use helper)
         im.applyOverlapVisual(item, itemsArr, ds.ids);
       });
     } else if (ds.type === 'resize') {
+      this._applyResize(ds, t.clientX, t.clientY);
+      return;
+
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
       var dx = (t.clientX - ds.ox) / core.state.zoom;
@@ -585,6 +592,9 @@ class InteractionManager {
       item.el.style.height = item.h + 'px';
       core.utils.updateSizeInfo(item);
     } else if (ds.type === 'rotate') {
+      this._applyRotation(ds, t.clientX, t.clientY);
+      return;
+
       var item = core.state.items.find(function (i) { return i.id === ds.id; });
       if (!item) return;
 
@@ -698,6 +708,73 @@ class InteractionManager {
     core.state.dragState = null;
     core.state.touchStarted = null;
     core.state.lastTouchDist = 0;
+  }
+
+  _applyResize(ds, clientX, clientY) {
+    var core = this.core;
+    var item = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
+    if (!item) return;
+
+    var dx = (clientX - ds.ox) / core.state.zoom;
+    var dy = (clientY - ds.oy) / core.state.zoom;
+    var target = {
+      id: item.id,
+      x: ds.sx,
+      y: ds.sy,
+      w: ds.sw,
+      h: ds.sh,
+      rotation: item.rotation
+    };
+
+    if (ds.handle.indexOf('e') > -1) target.w = Math.max(30, ds.sw + dx);
+    if (ds.handle.indexOf('w') > -1) {
+      target.w = Math.max(30, ds.sw - dx);
+      target.x = ds.sx + ds.sw - target.w;
+    }
+    if (ds.handle.indexOf('s') > -1) target.h = Math.max(30, ds.sh + dy);
+    if (ds.handle.indexOf('n') > -1) {
+      target.h = Math.max(30, ds.sh - dy);
+      target.y = ds.sy + ds.sh - target.h;
+    }
+
+    var constrained = core.collisionEngine.constrainTransform(
+      item,
+      target,
+      core.state.items,
+      [item.id]
+    );
+    item.x = constrained.x;
+    item.y = constrained.y;
+    item.w = constrained.w;
+    item.h = constrained.h;
+    item.el.style.left = item.x + 'px';
+    item.el.style.top = item.y + 'px';
+    item.el.style.width = item.w + 'px';
+    item.el.style.height = item.h + 'px';
+    core.utils.updateSizeInfo(item);
+    this.applyOverlapVisual(item, core.state.items, [item.id]);
+  }
+
+  _applyRotation(ds, clientX, clientY) {
+    var core = this.core;
+    var item = core.state.items.find(function (candidate) { return candidate.id === ds.id; });
+    if (!item) return;
+
+    var cx = item.x + item.w / 2;
+    var cy = item.y + item.h / 2;
+    var requestedAngle = Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI - ds.startAngle;
+    var constrained = core.collisionEngine.constrainTransform(
+      item,
+      Object.assign({}, item, { rotation: requestedAngle }),
+      core.state.items,
+      [item.id]
+    );
+
+    item.x = constrained.x;
+    item.y = constrained.y;
+    item.rotation = constrained.rotation;
+    core.applyTransform(item);
+    this.applyOverlapVisual(item, core.state.items, [item.id]);
   }
 
   onWheel(e) {

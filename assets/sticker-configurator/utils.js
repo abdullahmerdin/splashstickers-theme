@@ -48,13 +48,25 @@ class Utils {
     var input = this.core.querySelector('#' + axis + '-input-' + sid);
     if (!input) return;
     var val = Math.max(20, this.mmToPx(parseInt(input.value) || 50));
-    if (axis === 'w') {
-      item.w = val;
-      item.el.style.width = item.w + 'px';
-    } else {
-      item.h = val;
-      item.el.style.height = item.h + 'px';
-    }
+    var target = Object.assign({}, item);
+    if (axis === 'w') target.w = val;
+    else target.h = val;
+
+    var constrained = this.core.collisionEngine.constrainTransform(
+      item,
+      target,
+      state.items,
+      [item.id]
+    );
+    item.x = constrained.x;
+    item.y = constrained.y;
+    item.w = constrained.w;
+    item.h = constrained.h;
+    item.el.style.left = item.x + 'px';
+    item.el.style.top = item.y + 'px';
+    item.el.style.width = item.w + 'px';
+    item.el.style.height = item.h + 'px';
+    input.value = Math.round(this.pxToMm(axis === 'w' ? item.w : item.h));
     this.updateSizeInfo(item);
     this.core.priceManager.updatePrice();
   }

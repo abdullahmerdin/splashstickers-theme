@@ -1,14 +1,12 @@
 /* ===========================================
-   CollisionEngine v3 — Axis-Separated AABB Clamping + Spiral Search
+   CollisionEngine v4 — Continuous, rotation-aware constrained transforms
 
-   Principles:
-   - Query methods (pure): rectsOverlap, _overlapDepths, findOverlap, findAllOverlaps, hasAnyOverlap
-   - Resolution methods (return position, do NOT mutate items): constrainPosition, findNearestClearSpot, resolveAllOverlaps
-   - Canvas clamping is inlined in constrainPosition and findNearestClearSpot
-   - GAP = 2px minimum gap between items
-   - MAX_CASCADE_ITERATIONS = 10 iterations for axis feedback loop
-   - MAX_SPIRAL_RADIUS_FINE = 20px fine-search radius
-   - MAX_SPIRAL_COARSE_STEPS = 20 coarse-search outer steps
+   Guarantees:
+   - Fast pointer movement cannot tunnel through another design.
+   - Dragged groups move atomically and keep their internal spacing.
+   - Drag, resize, rotation, numeric sizing and drop validation share one engine.
+   - Rotated designs use their complete visual AABB.
+   - Every accepted position stays inside the canvas and respects the configured gap.
    =========================================== */
 
 class CollisionEngine {
@@ -16,339 +14,365 @@ class CollisionEngine {
     this.core = core;
     this.GAP = 2;
     this.EPSILON = 0.01;
-    this.MAX_CASCADE_ITERATIONS = 10;
-    this.MAX_SPIRAL_RADIUS_FINE = 20;
-    this.MAX_SPIRAL_COARSE_STEPS = 20;
+    this.MAX_SPIRAL_RADIUS_FINE = 40;
+    this.MAX_SPIRAL_COARSE_STEPS = 40;
   }
 
   /**
-   * Standard AABB overlap test with epsilon tolerance.
-   * @param {Object} a - Item with {x, y, w, h}
-   * @param {Object} b - Item with {x, y, w, h}
-   * @returns {boolean}
+   * AABB overlap test. Optional gap is the required edge-to-edge distance.
    */
-  rectsOverlap(a, b) {
-    return (a.x + this.EPSILON) < (b.x + b.w - this.EPSILON) &&
-           (b.x + this.EPSILON) < (a.x + a.w - this.EPSILON) &&
-           (a.y + this.EPSILON) < (b.y + b.h - this.EPSILON) &&
-           (b.y + this.EPSILON) < (a.y + a.h - this.EPSILON);
+  rectsOverlap(a, b, gap) {
+    gap = Math.max(0, Number(gap) || 0);
+    return (a.x + this.EPSILON) < (b.x + b.w + gap - this.EPSILON) &&
+           (b.x + this.EPSILON) < (a.x + a.w + gap - this.EPSILON) &&
+           (a.y + this.EPSILON) < (b.y + b.h + gap - this.EPSILON) &&
+           (b.y + this.EPSILON) < (a.y + a.h + gap - this.EPSILON);
   }
 
-  /** Calculate overlap depths per axis (positive = overlapping) */
   _overlapDepths(a, b) {
     var overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
     var overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
     return { x: overlapX, y: overlapY };
   }
 
-  /**
-   * Axis-separated AABB clamping response.
-   * Resolves overlaps iteratively by finding the axis requiring MINIMUM displacement.
-   * Uses relative center-to-center positions to determine push directions.
-   * Includes a fail-safe to revert to starting position if unresolvable.
-   *
-   * @param {number} candidateX - Mouse candidate X
-   * @param {number} candidateY - Mouse candidate Y
-   * @param {Object} draggedItem - The item being dragged
-   * @param {Array} allItems - All items on canvas
-   * @param {Array} draggedIds - IDs of all items currently being dragged
-   * @returns {{x: number, y: number}} Closest non-overlapping position
-   */
-  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds) {
-    var rectsOverlap = this.rectsOverlap.bind(this);
-    var GAP = this.GAP;
-    var CANVAS_W = this.core.CANVAS_W;
-    var CANVAS_H = this.core.CANVAS_H;
-
-    var draggedSet = {};
-    if (draggedIds) {
-      for (var di = 0; di < draggedIds.length; di++) {
-        draggedSet[draggedIds[di]] = true;
-      }
+  _configuredGap() {
+    var stateGap = this.core && this.core.state ? Number(this.core.state.gapSize) : 0;
+    if (stateGap > 0 && this.core.utils && typeof this.core.utils.mmToPx === 'function') {
+      return Math.max(this.GAP, this.core.utils.mmToPx(stateGap));
     }
-
-    var stationary = [];
-    for (var si = 0; si < allItems.length; si++) {
-      var s = allItems[si];
-      if (s.id === draggedItem.id || draggedSet[s.id]) continue;
-      stationary.push(s);
-    }
-
-    var rx = candidateX, ry = candidateY;
-    var dw = draggedItem.w, dh = draggedItem.h;
-
-    // Initial boundary clamp
-    rx = Math.max(0, Math.min(CANVAS_W - dw, rx));
-    ry = Math.max(0, Math.min(CANVAS_H - dh, ry));
-
-    var candidateRect = { x: rx, y: ry, w: dw, h: dh };
-    var anyOverlap = false;
-    for (var z = 0; z < stationary.length; z++) {
-      if (rectsOverlap(candidateRect, stationary[z])) {
-        anyOverlap = true;
-        break;
-      }
-    }
-    if (!anyOverlap) {
-      return { x: rx, y: ry };
-    }
-
-    // Cascade resolver using minimum displacement push
-    var adjusted = true;
-    for (var iter = 0; iter < this.MAX_CASCADE_ITERATIONS && adjusted; iter++) {
-      adjusted = false;
-      for (var i = 0; i < stationary.length; i++) {
-        var s = stationary[i];
-        var itemRect = { x: rx, y: ry, w: dw, h: dh };
-        if (rectsOverlap(itemRect, s)) {
-          var overlapX = Math.min(rx + dw, s.x + s.w) - Math.max(rx, s.x);
-          var overlapY = Math.min(ry + dh, s.y + s.h) - Math.max(ry, s.y);
-          
-          if (overlapX > 0 && overlapY > 0) {
-            if (overlapX < overlapY) {
-              // Push horizontally based on relative centers
-              if (rx + dw / 2 > s.x + s.w / 2) {
-                rx = s.x + s.w + GAP;
-              } else {
-                rx = s.x - dw - GAP;
-              }
-            } else {
-              // Push vertically based on relative centers
-              if (ry + dh / 2 > s.y + s.h / 2) {
-                ry = s.y + s.h + GAP;
-              } else {
-                ry = s.y - dh - GAP;
-              }
-            }
-            // Clamp to canvas after each push
-            rx = Math.max(0, Math.min(CANVAS_W - dw, rx));
-            ry = Math.max(0, Math.min(CANVAS_H - dh, ry));
-            adjusted = true;
-          }
-        }
-      }
-    }
-
-    // Fail-safe check: if still overlapping after cascade, revert to start position
-    var finalRect = { x: rx, y: ry, w: dw, h: dh };
-    var stillOverlaps = false;
-    for (var j = 0; j < stationary.length; j++) {
-      if (rectsOverlap(finalRect, stationary[j])) {
-        stillOverlaps = true;
-        break;
-      }
-    }
-
-    if (stillOverlaps) {
-      var startRect = { x: draggedItem.x, y: draggedItem.y, w: dw, h: dh };
-      var startIsClear = true;
-      for (var k = 0; k < stationary.length; k++) {
-        if (rectsOverlap(startRect, stationary[k])) {
-          startIsClear = false;
-          break;
-        }
-      }
-      if (startIsClear) {
-        return { x: draggedItem.x, y: draggedItem.y };
-      }
-    }
-
-    return { x: rx, y: ry };
+    return this.GAP;
   }
 
   /**
-   * Find ALL items that overlap with the given item.
-   * @param {Object} item - The item to check
-   * @param {Array} allItems - All items to check against
-   * @returns {Array<{other: Object, depths: {x: number, y: number}}>}
+   * Compute the visual collision box, including CSS rotation.
    */
+  getCollisionRect(item) {
+    return Math.abs(Number(item.rotation) || 0) > this.EPSILON
+      ? this.getRotatedAABB(item)
+      : { x: item.x, y: item.y, w: item.w, h: item.h };
+  }
+
+  itemsOverlap(a, b, gap) {
+    return this.rectsOverlap(
+      this.getCollisionRect(a),
+      this.getCollisionRect(b),
+      gap == null ? this._configuredGap() : gap
+    );
+  }
+
+  _excludedSet(ids) {
+    var set = {};
+    (ids || []).forEach(function (id) { set[id] = true; });
+    return set;
+  }
+
+  isInsideCanvas(item) {
+    var rect = this.getCollisionRect(item);
+    return rect.x >= -this.EPSILON &&
+           rect.y >= -this.EPSILON &&
+           rect.x + rect.w <= this.core.CANVAS_W + this.EPSILON &&
+           rect.y + rect.h <= this.core.CANVAS_H + this.EPSILON;
+  }
+
+  /**
+   * Check a complete item transform against bounds and all stationary items.
+   */
+  canPlace(item, allItems, excludeIds) {
+    if (!(item.w > 0) || !(item.h > 0) || !this.isInsideCanvas(item)) return false;
+    var excluded = this._excludedSet(excludeIds);
+    var gap = this._configuredGap();
+
+    for (var i = 0; i < allItems.length; i++) {
+      var other = allItems[i];
+      if (other.id === item.id || excluded[other.id]) continue;
+      if (this.itemsOverlap(item, other, gap)) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Clamp x/y by the rotated visual bounds, not the unrotated CSS box.
+   */
+  clampPosition(item, x, y) {
+    var candidate = Object.assign({}, item, { x: x, y: y });
+    var rect = this.getCollisionRect(candidate);
+
+    if (rect.x < 0) candidate.x -= rect.x;
+    if (rect.y < 0) candidate.y -= rect.y;
+
+    rect = this.getCollisionRect(candidate);
+    if (rect.x + rect.w > this.core.CANVAS_W) {
+      candidate.x -= rect.x + rect.w - this.core.CANVAS_W;
+    }
+    if (rect.y + rect.h > this.core.CANVAS_H) {
+      candidate.y -= rect.y + rect.h - this.core.CANVAS_H;
+    }
+
+    return candidate;
+  }
+
+  _shortestAngle(target, source) {
+    return ((target - source + 540) % 360) - 180;
+  }
+
+  _interpolate(from, to, t) {
+    return Object.assign({}, to, {
+      x: from.x + (to.x - from.x) * t,
+      y: from.y + (to.y - from.y) * t,
+      w: from.w + (to.w - from.w) * t,
+      h: from.h + (to.h - from.h) * t,
+      rotation: (Number(from.rotation) || 0) +
+        this._shortestAngle(Number(to.rotation) || 0, Number(from.rotation) || 0) * t
+    });
+  }
+
+  _transformSteps(from, to) {
+    var distance = Math.hypot(to.x - from.x, to.y - from.y);
+    var sizeDelta = Math.max(Math.abs(to.w - from.w), Math.abs(to.h - from.h));
+    var rotationDelta = Math.abs(
+      this._shortestAngle(Number(to.rotation) || 0, Number(from.rotation) || 0)
+    );
+    var linearStep = Math.max(1, Math.min(from.w, from.h, to.w, to.h) / 5);
+    return Math.max(
+      1,
+      Math.ceil(distance / linearStep),
+      Math.ceil(sizeDelta / linearStep),
+      Math.ceil(rotationDelta / 3)
+    );
+  }
+
+  /**
+   * Sweep a move/resize/rotation from the last valid transform to the requested one.
+   * Returns the furthest continuously valid transform.
+   */
+  constrainTransform(from, requested, allItems, excludeIds) {
+    var target = this.clampPosition(requested, requested.x, requested.y);
+    var steps = this._transformSteps(from, target);
+    var last = Object.assign({}, from);
+    var lastT = 0;
+
+    for (var step = 1; step <= steps; step++) {
+      var t = step / steps;
+      var candidate = this._interpolate(from, target, t);
+      if (!this.canPlace(candidate, allItems, excludeIds)) {
+        var low = lastT;
+        var high = t;
+
+        for (var iteration = 0; iteration < 14; iteration++) {
+          var middle = (low + high) / 2;
+          var boundary = this._interpolate(from, target, middle);
+          if (this.canPlace(boundary, allItems, excludeIds)) {
+            low = middle;
+            last = boundary;
+          } else {
+            high = middle;
+          }
+        }
+        return last;
+      }
+      last = candidate;
+      lastT = t;
+    }
+
+    return target;
+  }
+
+  _groupBounds(items) {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    items.forEach(function (item) {
+      var rect = this.getCollisionRect(item);
+      minX = Math.min(minX, rect.x);
+      minY = Math.min(minY, rect.y);
+      maxX = Math.max(maxX, rect.x + rect.w);
+      maxY = Math.max(maxY, rect.y + rect.h);
+    }, this);
+    return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
+  }
+
+  _groupCanMove(items, dx, dy, allItems, draggedIds) {
+    for (var i = 0; i < items.length; i++) {
+      var candidate = Object.assign({}, items[i], {
+        x: items[i].x + dx,
+        y: items[i].y + dy
+      });
+      if (!this.canPlace(candidate, allItems, draggedIds)) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Constrain a selected group as one rigid body.
+   */
+  constrainGroupDelta(dx, dy, draggedItems, allItems, draggedIds) {
+    if (!draggedItems.length) return { dx: 0, dy: 0 };
+
+    var bounds = this._groupBounds(draggedItems);
+    var targetX = Math.max(-bounds.minX, Math.min(this.core.CANVAS_W - bounds.maxX, dx));
+    var targetY = Math.max(-bounds.minY, Math.min(this.core.CANVAS_H - bounds.maxY, dy));
+    var distance = Math.hypot(targetX, targetY);
+    var minSize = Math.min.apply(null, draggedItems.map(function (item) {
+      return Math.min(item.w, item.h);
+    }));
+    var steps = Math.max(1, Math.ceil(distance / Math.max(1, minSize / 5)));
+    var lastT = 0;
+
+    for (var step = 1; step <= steps; step++) {
+      var t = step / steps;
+      if (!this._groupCanMove(draggedItems, targetX * t, targetY * t, allItems, draggedIds)) {
+        var low = lastT;
+        var high = t;
+        for (var iteration = 0; iteration < 14; iteration++) {
+          var middle = (low + high) / 2;
+          if (this._groupCanMove(
+            draggedItems,
+            targetX * middle,
+            targetY * middle,
+            allItems,
+            draggedIds
+          )) {
+            low = middle;
+          } else {
+            high = middle;
+          }
+        }
+        return { dx: targetX * low, dy: targetY * low };
+      }
+      lastT = t;
+    }
+
+    return { dx: targetX, dy: targetY };
+  }
+
+  /**
+   * Backwards-compatible single-item movement API.
+   */
+  constrainPosition(candidateX, candidateY, draggedItem, allItems, draggedIds) {
+    var delta = this.constrainGroupDelta(
+      candidateX - draggedItem.x,
+      candidateY - draggedItem.y,
+      [draggedItem],
+      allItems,
+      draggedIds || [draggedItem.id]
+    );
+    return { x: draggedItem.x + delta.dx, y: draggedItem.y + delta.dy };
+  }
+
   findAllOverlaps(item, allItems) {
     var results = [];
-    var rectsOverlap = this.rectsOverlap.bind(this);
     for (var i = 0; i < allItems.length; i++) {
       var other = allItems[i];
       if (other.id === item.id) continue;
-      if (rectsOverlap(item, other)) {
+      if (this.itemsOverlap(item, other)) {
         results.push({
           other: other,
-          depths: this._overlapDepths(item, other)
+          depths: this._overlapDepths(
+            this.getCollisionRect(item),
+            this.getCollisionRect(other)
+          )
         });
       }
     }
     return results;
   }
 
-  /**
-   * Outward spiral search v3: find nearest clear position for an overlapping item.
-   *
-   * Phase 1 — Fine search: 2px increments up to MAX_SPIRAL_RADIUS_FINE (20px).
-   *   Tests 8 directions per step (N, S, E, W, NE, NW, SE, SW).
-   *
-   * Phase 2 — Coarse search: 0.5×item-dimension steps up to MAX_SPIRAL_COARSE_STEPS (20).
-   *   Same 8-direction pattern with larger offsets.
-   *
-   * @param {Object} item - The overlapping item (with x, y, w, h)
-   * @param {Array} allItems - All items to check against
-   * @returns {{x: number, y: number}|null} Nearest clear position, or null if stuck
-   */
   findNearestClearSpot(item, allItems) {
-    var core = this.core;
-    var GAP = this.GAP;
-    var w = item.w, h = item.h;
-    var findAllOverlaps = this.findAllOverlaps.bind(this);
-
-    // Check if current position is already clear
-    if (findAllOverlaps(item, allItems).length === 0) {
+    if (this.canPlace(item, allItems, [item.id])) {
       return { x: item.x, y: item.y };
     }
 
-    // Phase 1: Fine search (GAP increments, small radius)
-    for (var step = GAP; step <= this.MAX_SPIRAL_RADIUS_FINE; step += GAP) {
-      var positions = [
-        { x: item.x + step, y: item.y },
-        { x: item.x - step, y: item.y },
-        { x: item.x, y: item.y + step },
-        { x: item.x, y: item.y - step },
-        { x: item.x + step, y: item.y + step },
-        { x: item.x + step, y: item.y - step },
-        { x: item.x - step, y: item.y + step },
-        { x: item.x - step, y: item.y - step }
-      ];
-      for (var p = 0; p < positions.length; p++) {
-        var pos = positions[p];
-        var ex = Math.max(0, Math.min(core.CANVAS_W - w, pos.x));
-        var ey = Math.max(0, Math.min(core.CANVAS_H - h, pos.y));
-        if (findAllOverlaps(
-          { id: item.id, x: ex, y: ey, w: w, h: h },
-          allItems
-        ).length === 0) {
-          return { x: ex, y: ey };
-        }
-      }
+    var fineStep = Math.max(1, this.GAP);
+    for (var radius = fineStep; radius <= this.MAX_SPIRAL_RADIUS_FINE; radius += fineStep) {
+      var fine = this._ringPositions(item.x, item.y, radius, radius);
+      var found = this._firstClear(item, fine, allItems);
+      if (found) return found;
     }
 
-    // Phase 2: Coarse search (fractional item dimensions, full canvas)
-    var stepX = Math.max(GAP, Math.round(item.w * 0.5));
-    var stepY = Math.max(GAP, Math.round(item.h * 0.5));
-
-    for (var s = 1; s <= this.MAX_SPIRAL_COARSE_STEPS; s++) {
-      var offsetX = stepX * s;
-      var offsetY = stepY * s;
-      var positions = [
-        { x: item.x + offsetX, y: item.y },
-        { x: item.x - offsetX, y: item.y },
-        { x: item.x, y: item.y + offsetY },
-        { x: item.x, y: item.y - offsetY },
-        { x: item.x + offsetX, y: item.y + offsetY },
-        { x: item.x + offsetX, y: item.y - offsetY },
-        { x: item.x - offsetX, y: item.y + offsetY },
-        { x: item.x - offsetX, y: item.y - offsetY }
-      ];
-      for (var p = 0; p < positions.length; p++) {
-        var pos = positions[p];
-        var ex = Math.max(0, Math.min(core.CANVAS_W - w, pos.x));
-        var ey = Math.max(0, Math.min(core.CANVAS_H - h, pos.y));
-        if (findAllOverlaps(
-          { id: item.id, x: ex, y: ey, w: w, h: h },
-          allItems
-        ).length === 0) {
-          return { x: ex, y: ey };
-        }
-      }
+    var stepX = Math.max(this.GAP, Math.round(item.w * 0.4));
+    var stepY = Math.max(this.GAP, Math.round(item.h * 0.4));
+    for (var step = 1; step <= this.MAX_SPIRAL_COARSE_STEPS; step++) {
+      var coarse = this._ringPositions(item.x, item.y, stepX * step, stepY * step);
+      var result = this._firstClear(item, coarse, allItems);
+      if (result) return result;
     }
 
-    return null; // no clear spot found in entire canvas
+    return null;
   }
 
-  /**
-   * Check whether any item overlaps with another.
-   * Items whose IDs are in excludeIds are excluded from the check.
-   * @param {Array} items - All items on canvas
-   * @param {Array} [excludeIds] - IDs to exclude from overlap check
-   * @returns {boolean} true if any overlap exists among non-excluded items
-   */
-  hasAnyOverlap(items, excludeIds) {
-    var excludeSet = {};
-    if (excludeIds) {
-      for (var ei = 0; ei < excludeIds.length; ei++) {
-        excludeSet[excludeIds[ei]] = true;
-      }
-    }
-    var rectsOverlap = this.rectsOverlap.bind(this);
-    for (var i = 0; i < items.length; i++) {
-      for (var j = i + 1; j < items.length; j++) {
-        var a = items[i], b = items[j];
-        if (excludeSet[a.id] && excludeSet[b.id]) continue;
-        if (rectsOverlap(a, b)) return true;
-      }
-    }
-    return false;
+  _ringPositions(x, y, offsetX, offsetY) {
+    return [
+      { x: x + offsetX, y: y },
+      { x: x - offsetX, y: y },
+      { x: x, y: y + offsetY },
+      { x: x, y: y - offsetY },
+      { x: x + offsetX, y: y + offsetY },
+      { x: x + offsetX, y: y - offsetY },
+      { x: x - offsetX, y: y + offsetY },
+      { x: x - offsetX, y: y - offsetY }
+    ];
   }
 
-  /**
-   * Check if a specific item overlaps with any other item.
-   * @param {Object} item - The item to check
-   * @param {Array} allItems - All items to check against
-   * @returns {Object|null} { overlappingItem, depths } or null if no overlap
-   */
-  findOverlap(item, allItems) {
-    var rectsOverlap = this.rectsOverlap.bind(this);
-    for (var i = 0; i < allItems.length; i++) {
-      var o = allItems[i];
-      if (o.id === item.id) continue;
-      if (rectsOverlap(item, o)) {
-        return { overlappingItem: o, depths: this._overlapDepths(item, o) };
+  _firstClear(item, positions, allItems) {
+    for (var i = 0; i < positions.length; i++) {
+      var candidate = this.clampPosition(item, positions[i].x, positions[i].y);
+      if (this.canPlace(candidate, allItems, [item.id])) {
+        return { x: candidate.x, y: candidate.y };
       }
     }
     return null;
   }
 
-  /**
-   * Resolve ALL overlapping items by nudging each to a clear position.
-   * For structural operations (align, arrange, distribute).
-   * Does NOT update DOM — caller must re-render after this call.
-   *
-   * @param {Array} items - All items on canvas (mutated in place)
-   * @returns {boolean} true if all overlaps were resolved
-   */
+  hasAnyOverlap(items, excludeIds) {
+    var excluded = this._excludedSet(excludeIds);
+    for (var i = 0; i < items.length; i++) {
+      for (var j = i + 1; j < items.length; j++) {
+        if (excluded[items[i].id] && excluded[items[j].id]) continue;
+        if (this.itemsOverlap(items[i], items[j])) return true;
+      }
+    }
+    return false;
+  }
+
+  findOverlap(item, allItems) {
+    for (var i = 0; i < allItems.length; i++) {
+      var other = allItems[i];
+      if (other.id === item.id) continue;
+      if (this.itemsOverlap(item, other)) {
+        return {
+          overlappingItem: other,
+          depths: this._overlapDepths(
+            this.getCollisionRect(item),
+            this.getCollisionRect(other)
+          )
+        };
+      }
+    }
+    return null;
+  }
+
   resolveAllOverlaps(items) {
     var anyFailed = false;
-
-    for (var iter = 0; iter < 3; iter++) {
+    for (var iteration = 0; iteration < 4; iteration++) {
       var resolvedAny = false;
-
       for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        var overlaps = this.findAllOverlaps(item, items);
-        if (overlaps.length === 0) continue;
-
-        var next = this.findNearestClearSpot(item, items);
+        if (!this.findOverlap(items[i], items)) continue;
+        var next = this.findNearestClearSpot(items[i], items);
         if (next) {
-          item.x = next.x;
-          item.y = next.y;
+          items[i].x = next.x;
+          items[i].y = next.y;
           resolvedAny = true;
         } else {
           anyFailed = true;
         }
       }
-
       if (!resolvedAny) break;
     }
-
     return !anyFailed && !this.hasAnyOverlap(items);
   }
 
-  /**
-   * Compute axis-aligned bounding box of a rotated item.
-   * Pure computation — does NOT mutate the item.
-   *
-   * @param {Object} item - Item with {x, y, w, h, rotation} (rotation in degrees)
-   * @returns {{x: number, y: number, w: number, h: number}} The rotated AABB
-   */
   getRotatedAABB(item) {
     var cx = item.x + item.w / 2;
     var cy = item.y + item.h / 2;
-    var rad = item.rotation * Math.PI / 180;
+    var rad = (Number(item.rotation) || 0) * Math.PI / 180;
     var cosA = Math.abs(Math.cos(rad));
     var sinA = Math.abs(Math.sin(rad));
     var rotW = item.w * cosA + item.h * sinA;
