@@ -11,7 +11,14 @@ class PriceManager {
     var core = this.core;
     if (!core.priceEl) return;
     var qty = parseInt(core.qtyEl ? core.qtyEl.textContent : 1) || 1;
-    core.priceEl.textContent = '$' + (core.state.basePrice * (core.state.items.length || 1) * qty).toFixed(2);
+    var cartQuantity = core.state.items.length
+      ? (core.cartManager ? core.cartManager.getCartQuantity() : qty)
+      : 0;
+    var totalCents = core.state.unitPriceCents * cartQuantity;
+    core.priceEl.textContent = core.cartManager
+      ? core.cartManager.formatMoney(totalCents)
+      : (totalCents / 100).toFixed(2);
+    if (core.cartManager) core.cartManager.updateButtonState();
     core.dispatchPriceEvent();
   }
 

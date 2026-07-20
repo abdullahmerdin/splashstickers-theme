@@ -1,0 +1,11 @@
+{
+  "name": "all-the-stickers-theme",
+  "private": true,
+  "scripts": {
+    "check:configurator": "node --check assets/sticker-configurator.js && node scripts/check-configurator-sync.js && node --test tests/sticker-configurator.test.js",
+    "vendor:jspdf": "node scripts/vendor-jspdf.js"
+  },
+  "devDependencies": {
+    "jspdf": "^4.2.1"
+  }
+}

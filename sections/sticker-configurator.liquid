@@ -28,17 +28,48 @@
   assign bg_color = section.settings.bg_color
   assign heading = section.settings.heading
   assign base_price = section.settings.base_price
+  assign configurator_product = section.settings.product | default: product
+  assign configurator_variant = configurator_product.selected_or_first_available_variant
+  assign unit_price_cents = configurator_variant.price
+  if unit_price_cents == blank
+    assign unit_price_cents = base_price | times: 100 | round
+  endif
 -%}
+
+{% if configurator_product != blank %}
+  <script type="application/ld+json">
+    {{ configurator_product | structured_data }}
+  </script>
+{% endif %}
 
 <sticker-configurator
   data-section-id="{{ section.id }}"
   data-heading="{{ heading | escape }}"
   data-bg-color="{{ bg_color }}"
   data-base-price="{{ base_price }}"
+  data-unit-price-cents="{{ unit_price_cents }}"
+  data-currency="{{ cart.currency.iso_code | default: shop.currency | escape }}"
+  data-variant-id="{{ configurator_variant.id }}"
+  data-product-id="{{ configurator_product.id }}"
+  data-product-title="{{ configurator_product.title | escape }}"
+  data-variant-available="{{ configurator_variant.available | default: false }}"
+  data-cart-add-url="{{ routes.cart_add_url }}.js"
+  data-cart-url="{{ routes.cart_url }}"
+  data-grid-size="{{ section.settings.grid_size }}"
+  data-snap-enabled="{{ section.settings.snap_enabled }}"
   data-gap-mm="{{ section.settings.gap_mm | default: 3 }}"
+  data-export-enabled="{{ section.settings.enable_export }}"
+  data-export-dpi="{{ section.settings.export_dpi }}"
+  data-jspdf-url="{{ 'jspdf.umd.min.js' | asset_url }}"
+  data-max-file-mb="{{ section.settings.max_file_mb }}"
+  data-redirect-to-cart="{{ section.settings.redirect_to_cart }}"
   aria-busy="true"
   class="is-loading"
-  style="--cfg-bg: {{ bg_color }};"
+  style="
+    --cfg-bg: {{ bg_color }};
+    padding-block-start: {{ section.settings.padding_top }}px;
+    padding-block-end: {{ section.settings.padding_bottom }}px;
+  "
 >
   <div class="cfg-loading-skeleton" role="status" aria-live="polite">
     <div class="cfg-skeleton-heading"><span></span><span></span></div>
@@ -116,9 +147,11 @@
       <button title="Zoom to fit" data-action="zoom-fit" id="zoom-fit-{{ section.id }}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
       </button>
-      <button title="Export PDF" data-action="export-pdf" id="export-btn-{{ section.id }}">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      </button>
+      {% if section.settings.enable_export %}
+        <button title="Export PDF" data-action="export-pdf" id="export-btn-{{ section.id }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      {% endif %}
       <span class="toolbar-divider"></span>
       <button title="Lock" data-action="lock" id="lock-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -162,22 +195,46 @@
     </div>
 
     <div class="sticky-ctrls">
-      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" id="file-input-{{ section.id }}" hidden>
+      <input type="file" accept="image/png,image/jpeg,image/webp" id="file-input-{{ section.id }}" hidden>
+      {% if configurator_product != blank and configurator_product.has_only_default_variant == false %}
+        <label class="cfg-variant-field" for="variant-select-{{ section.id }}">
+          <span>Product option</span>
+          <select id="variant-select-{{ section.id }}">
+            {% for variant in configurator_product.variants %}
+              <option
+                value="{{ variant.id }}"
+                data-price-cents="{{ variant.price }}"
+                data-available="{{ variant.available }}"
+                {% if variant.id == configurator_variant.id %}selected{% endif %}
+                {% unless variant.available %}disabled{% endunless %}
+              >
+                {{ variant.title | escape }} — {{ variant.price | money_with_currency }}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+      {% endif %}
       <div class="upload-btn-area">
         <button id="add-btn-{{ section.id }}" class="cfg-add-design">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Add design
         </button>
         <div class="qty-group">
-          <button id="qty-down-{{ section.id }}">&minus;</button>
-          <span class="qty-val" id="qty-display-{{ section.id }}">10</span>
-          <button id="qty-up-{{ section.id }}">+</button>
+          <button id="qty-down-{{ section.id }}" type="button" aria-label="Decrease quantity">&minus;</button>
+          <span class="qty-val" id="qty-display-{{ section.id }}">1</span>
+          <button id="qty-up-{{ section.id }}" type="button" aria-label="Increase quantity">+</button>
         </div>
-        <span class="qty-label">pieces</span>
+        <span class="qty-label">sheets</span>
       </div>
-      <button id="submit-{{ section.id }}" class="cfg-btn-submit">
+      <button
+        id="submit-{{ section.id }}"
+        class="cfg-btn-submit"
+        type="button"
+        disabled
+      >
         Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
       </button>
+      <p id="cart-status-{{ section.id }}" class="cfg-cart-status" role="status" aria-live="polite"></p>
 
       <details class="bottom-extra" open>
         <summary>
@@ -186,9 +243,21 @@
         </summary>
         <div class="be-row">
           <span class="be-label">Snap</span>
-          <input type="checkbox" id="snap-btm-{{ section.id }}" checked>
+          <input
+            type="checkbox"
+            id="snap-btm-{{ section.id }}"
+            {% if section.settings.snap_enabled %}checked{% endif %}
+          >
           <span class="be-unit">Grid</span>
-          <input type="number" id="grid-size-{{ section.id }}" value="20" min="5" max="100" step="5" class="cfg-inline-sm">
+          <input
+            type="number"
+            id="grid-size-{{ section.id }}"
+            value="{{ section.settings.grid_size }}"
+            min="5"
+            max="100"
+            step="5"
+            class="cfg-inline-sm"
+          >
           <span class="be-unit">px</span>
           <span class="be-label">Gap</span>
           <input type="number" id="gap-size-{{ section.id }}" value="3" min="3" max="50" step="1" class="cfg-inline-sm">
@@ -215,7 +284,9 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
           </div>
           <div class="cfg-modal-text">Choose a file or drop it here</div>
-          <div class="cfg-modal-note">PNG, JPG, SVG or WebP</div>
+          <div class="cfg-modal-note">
+            PNG, JPG or WebP · up to {{ section.settings.max_file_mb }} MB
+          </div>
           <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
         </div>
         <div class="cfg-modal-fields">
@@ -265,9 +336,15 @@
     {
       "type": "number",
       "id": "base_price",
-      "label": "Base price per sheet ($)",
+      "label": "Fallback unit price",
       "default": 2.5,
-      "info": "Base price used for dynamic pricing calculation"
+      "info": "Used only when no Shopify product variant is available"
+    },
+    {
+      "type": "product",
+      "id": "product",
+      "label": "Product to add to cart",
+      "info": "On a product template, the current product is used when this is empty"
     },
     {
       "type": "range",
@@ -332,6 +409,31 @@
       "default": true
     },
     {
+      "type": "range",
+      "id": "export_dpi",
+      "label": "Production export DPI",
+      "min": 150,
+      "max": 300,
+      "step": 50,
+      "default": 300
+    },
+    {
+      "type": "range",
+      "id": "max_file_mb",
+      "label": "Maximum artwork file size",
+      "min": 2,
+      "max": 30,
+      "step": 1,
+      "unit": "MB",
+      "default": 20
+    },
+    {
+      "type": "checkbox",
+      "id": "redirect_to_cart",
+      "label": "Go to cart after adding",
+      "default": true
+    },
+    {
       "type": "checkbox",
       "id": "enable_auto_arrange",
       "label": "Enable auto-arrange",
@@ -358,6 +460,9 @@
         "gap_mm": 3,
         "enable_clipboard": true,
         "enable_export": true,
+        "export_dpi": 300,
+        "max_file_mb": 20,
+        "redirect_to_cart": true,
         "enable_auto_arrange": true,
         "enable_undo_redo": true,
         "padding_top": 48,
@@ -389,7 +494,7 @@
       "lock": "Lock",
       "mobile": "Mobile",
       "add_design": "Add design",
-      "pieces": "pieces",
+      "pieces": "sheets",
       "add_to_cart": "Add to Cart",
       "add_design_modal_title": "Add Design",
       "cancel": "Cancel",

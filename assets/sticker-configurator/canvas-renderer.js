@@ -164,16 +164,58 @@ class CanvasRenderer {
     };
   }
 
-  renderToCanvas() {
+  getRenderScale(options) {
     var core = this.core;
+    options = options || {};
+    var dpi = Math.max(25.4, Number(options.dpi) || 25.4);
+    var scale = dpi / 25.4;
+    var maxDimension = Math.max(0, Number(options.maxDimension) || 0);
+    if (maxDimension > 0) {
+      scale = Math.min(scale, maxDimension / Math.max(core.CANVAS_W, core.CANVAS_H));
+    }
+    var maxPixels = Math.max(0, Number(options.maxPixels) || 0);
+    var requestedPixels = core.CANVAS_W * core.CANVAS_H * scale * scale;
+    if (maxPixels > 0 && requestedPixels > maxPixels) {
+      scale *= Math.sqrt(maxPixels / requestedPixels);
+    }
+    return Math.max(0.01, scale);
+  }
+
+  getContainedRect(sourceWidth, sourceHeight, boxWidth, boxHeight) {
+    var safeSourceWidth = Math.max(1, Number(sourceWidth) || 1);
+    var safeSourceHeight = Math.max(1, Number(sourceHeight) || 1);
+    var safeBoxWidth = Math.max(0, Number(boxWidth) || 0);
+    var safeBoxHeight = Math.max(0, Number(boxHeight) || 0);
+    var scale = Math.min(
+      safeBoxWidth / safeSourceWidth,
+      safeBoxHeight / safeSourceHeight
+    );
+    var width = safeSourceWidth * scale;
+    var height = safeSourceHeight * scale;
+    return {
+      x: (safeBoxWidth - width) / 2,
+      y: (safeBoxHeight - height) / 2,
+      width: width,
+      height: height
+    };
+  }
+
+  renderToCanvas(options) {
+    var core = this.core;
+    var renderer = this;
+    options = options || {};
+    var scale = this.getRenderScale(options);
     var c = document.createElement('canvas');
-    c.width = core.CANVAS_W;
-    c.height = core.CANVAS_H;
+    c.width = Math.max(1, Math.round(core.CANVAS_W * scale));
+    c.height = Math.max(1, Math.round(core.CANVAS_H * scale));
     var ctx = c.getContext('2d');
     if (!ctx) return null;
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
-    // Draw grid background
-    ctx.fillStyle = '#ffffff';
+    // Production output intentionally omits the editor grid.
+    ctx.fillStyle = core.state.backgroundColor || '#ffffff';
     ctx.fillRect(0, 0, core.CANVAS_W, core.CANVAS_H);
 
     // Draw items
@@ -200,7 +242,19 @@ class CanvasRenderer {
         ctx.fillText(it.text, tx, it.h / 2);
       } else if (it.el && it.el.querySelector('img')) {
         var img = it.el.querySelector('img');
-        ctx.drawImage(img, 0, 0, it.w, it.h);
+        var contained = renderer.getContainedRect(
+          img.naturalWidth || img.width,
+          img.naturalHeight || img.height,
+          it.w,
+          it.h
+        );
+        ctx.drawImage(
+          img,
+          contained.x,
+          contained.y,
+          contained.width,
+          contained.height
+        );
       }
 
       ctx.restore();

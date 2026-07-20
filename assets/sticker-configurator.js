@@ -652,16 +652,58 @@ class CanvasRenderer {
     };
   }
 
-  renderToCanvas() {
+  getRenderScale(options) {
     var core = this.core;
+    options = options || {};
+    var dpi = Math.max(25.4, Number(options.dpi) || 25.4);
+    var scale = dpi / 25.4;
+    var maxDimension = Math.max(0, Number(options.maxDimension) || 0);
+    if (maxDimension > 0) {
+      scale = Math.min(scale, maxDimension / Math.max(core.CANVAS_W, core.CANVAS_H));
+    }
+    var maxPixels = Math.max(0, Number(options.maxPixels) || 0);
+    var requestedPixels = core.CANVAS_W * core.CANVAS_H * scale * scale;
+    if (maxPixels > 0 && requestedPixels > maxPixels) {
+      scale *= Math.sqrt(maxPixels / requestedPixels);
+    }
+    return Math.max(0.01, scale);
+  }
+
+  getContainedRect(sourceWidth, sourceHeight, boxWidth, boxHeight) {
+    var safeSourceWidth = Math.max(1, Number(sourceWidth) || 1);
+    var safeSourceHeight = Math.max(1, Number(sourceHeight) || 1);
+    var safeBoxWidth = Math.max(0, Number(boxWidth) || 0);
+    var safeBoxHeight = Math.max(0, Number(boxHeight) || 0);
+    var scale = Math.min(
+      safeBoxWidth / safeSourceWidth,
+      safeBoxHeight / safeSourceHeight
+    );
+    var width = safeSourceWidth * scale;
+    var height = safeSourceHeight * scale;
+    return {
+      x: (safeBoxWidth - width) / 2,
+      y: (safeBoxHeight - height) / 2,
+      width: width,
+      height: height
+    };
+  }
+
+  renderToCanvas(options) {
+    var core = this.core;
+    var renderer = this;
+    options = options || {};
+    var scale = this.getRenderScale(options);
     var c = document.createElement('canvas');
-    c.width = core.CANVAS_W;
-    c.height = core.CANVAS_H;
+    c.width = Math.max(1, Math.round(core.CANVAS_W * scale));
+    c.height = Math.max(1, Math.round(core.CANVAS_H * scale));
     var ctx = c.getContext('2d');
     if (!ctx) return null;
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
-    // Draw grid background
-    ctx.fillStyle = '#ffffff';
+    // Production output intentionally omits the editor grid.
+    ctx.fillStyle = core.state.backgroundColor || '#ffffff';
     ctx.fillRect(0, 0, core.CANVAS_W, core.CANVAS_H);
 
     // Draw items
@@ -688,7 +730,19 @@ class CanvasRenderer {
         ctx.fillText(it.text, tx, it.h / 2);
       } else if (it.el && it.el.querySelector('img')) {
         var img = it.el.querySelector('img');
-        ctx.drawImage(img, 0, 0, it.w, it.h);
+        var contained = renderer.getContainedRect(
+          img.naturalWidth || img.width,
+          img.naturalHeight || img.height,
+          it.w,
+          it.h
+        );
+        ctx.drawImage(
+          img,
+          contained.x,
+          contained.y,
+          contained.width,
+          contained.height
+        );
       }
 
       ctx.restore();
@@ -2032,38 +2086,78 @@ class ModalManager {
 class ExportManager {
   constructor(core) {
     this.core = core;
+    this._libraryPromise = null;
   }
 
-  onExportPDF() {
+  ensureLibrary() {
+    var core = this.core;
+    if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+    if (this._libraryPromise) return this._libraryPromise;
+
+    this._libraryPromise = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = core.dataset.jspdfUrl;
+      script.async = true;
+      script.onload = function () {
+        if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
+        else reject(new Error('PDF library did not initialize.'));
+      };
+      script.onerror = function () { reject(new Error('Could not load the PDF library.')); };
+      document.body.appendChild(script);
+    });
+    return this._libraryPromise;
+  }
+
+  async buildPdfBlob() {
+    var core = this.core;
+    var jsPDF = await this.ensureLibrary();
+    var widthMm = core.CANVAS_W;
+    var heightMm = core.CANVAS_H;
+    var dpi = Math.max(150, Math.min(300, Number(core.dataset.exportDpi) || 300));
+    var doc = new jsPDF({
+      orientation: widthMm >= heightMm ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: [widthMm, heightMm],
+      compress: true
+    });
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var pageHeight = doc.internal.pageSize.getHeight();
+    var requestedRatio = widthMm / heightMm;
+    var pageRatio = pageWidth / pageHeight;
+    if (Math.abs(requestedRatio - pageRatio) > 0.001) {
+      throw new Error('The PDF page dimensions do not match the workspace.');
+    }
+
+    // A uniformly scaled pixel budget prevents very tall sheets from exhausting
+    // browser memory. Both axes always use the same scale, so artwork is never
+    // stretched or compressed as the workspace height grows.
+    var canvas = core.canvasRenderer.renderToCanvas({
+      dpi: dpi,
+      maxPixels: 45000000
+    });
+    if (!canvas) throw new Error('Production canvas could not be created.');
+    var canvasRatio = canvas.width / canvas.height;
+    if (Math.abs(requestedRatio - canvasRatio) > 0.002) {
+      throw new Error('The production image dimensions do not match the workspace.');
+    }
+    var imgData = canvas.toDataURL('image/png');
+    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+    return doc.output('blob');
+  }
+
+  async onExportPDF() {
     var core = this.core;
     core.dispatchExportEvent();
-
-    // Dynamic script injection for jsPDF
-    if (typeof window.jspdf === 'undefined') {
-      var script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-      script.async = true;
-      script.onload = function () { core.exportManager.renderPDF(); };
-      script.onerror = function () {
-        core.modalManager.showErrorModal('Could not load PDF library. Check internet connection.');
-      };
-      document.body.appendChild(script);
-    } else {
-      this.renderPDF();
-    }
-  }
-
-  renderPDF() {
-    var core = this.core;
     try {
-      var { jsPDF } = window.jspdf;
-      var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [600, 400] });
-      var canvas = core.canvasRenderer.renderToCanvas();
-      if (canvas) {
-        var imgData = canvas.toDataURL('image/png');
-        doc.addImage(imgData, 'PNG', 0, 0, 600, 400);
-      }
-      doc.save('sticker-sheet.pdf');
+      var blob = await this.buildPdfBlob();
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'sticker-sheet-' + (core.state.projectId || 'design') + '.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     } catch (err) {
       core.modalManager.showErrorModal('Could not generate PDF. Error: ' + err.message);
     }
@@ -2233,6 +2327,167 @@ class ClipboardManager {
 }
 
 /* ===========================================
+   CartManager — Shopify Ajax cart integration and design handoff
+   =========================================== */
+
+class CartManager {
+  constructor(core) {
+    this.core = core;
+    this.busy = false;
+  }
+
+  getSheetQuantity() {
+    return Math.max(1, parseInt(this.core.qtyEl ? this.core.qtyEl.textContent : 1, 10) || 1);
+  }
+
+  getCartQuantity() {
+    return this.core.state.items.length ? this.getSheetQuantity() : 0;
+  }
+
+  formatMoney(cents) {
+    var currency = this.core.dataset.currency || 'USD';
+    try {
+      return new Intl.NumberFormat(document.documentElement.lang || undefined, {
+        style: 'currency',
+        currency: currency
+      }).format((Number(cents) || 0) / 100);
+    } catch (_error) {
+      return currency + ' ' + ((Number(cents) || 0) / 100).toFixed(2);
+    }
+  }
+
+  setStatus(message, state) {
+    var status = this.core.cache && this.core.cache['cart-status'];
+    if (!status) return;
+    status.textContent = message || '';
+    if (state) status.dataset.state = state;
+    else delete status.dataset.state;
+  }
+
+  reportError(message) {
+    this.setStatus(message, 'error');
+    var modalManager = this.core.modalManager;
+    if (modalManager && modalManager.showErrorModal) {
+      modalManager.showErrorModal(message);
+    }
+  }
+
+  updateButtonState() {
+    var button = this.core.cache && this.core.cache.submit;
+    if (!button) return;
+    // Keep the button clickable when product setup is incomplete so the
+    // customer/merchant receives an actionable error instead of a dead button.
+    button.disabled = this.busy || this.core.state.items.length === 0;
+  }
+
+  buildManifest() {
+    var core = this.core;
+    return {
+      version: 1,
+      projectId: core.state.projectId,
+      workspace: { widthMm: core.CANVAS_W, heightMm: core.CANVAS_H },
+      gapMm: core.state.gapSize,
+      background: core.state.backgroundColor,
+      sheetQuantity: this.getSheetQuantity(),
+      items: core.state.items.map(function (item) {
+        return {
+          kind: item.text ? 'text' : 'image',
+          xMm: Math.round(item.x * 100) / 100,
+          yMm: Math.round(item.y * 100) / 100,
+          widthMm: Math.round(item.w * 100) / 100,
+          heightMm: Math.round(item.h * 100) / 100,
+          rotation: Math.round((Number(item.rotation) || 0) * 100) / 100,
+          flipX: (item.scaleX || 1) < 0,
+          flipY: (item.scaleY || 1) < 0,
+          text: item.text || undefined
+        };
+      })
+    };
+  }
+
+  async addToCart() {
+    var core = this.core;
+    if (this.busy) return;
+    if (!core.state.items.length) {
+      this.reportError('Add at least one design before continuing.');
+      return;
+    }
+    if (!(Number(core.state.variantId) > 0)) {
+      this.reportError('No Shopify product variant is connected to this configurator.');
+      return;
+    }
+    if (!core.state.variantAvailable) {
+      this.reportError('The selected Shopify product variant is unavailable or sold out.');
+      return;
+    }
+
+    var button = core.cache.submit;
+    var originalMarkup = button ? button.innerHTML : '';
+    this.busy = true;
+    this.updateButtonState();
+    if (button) {
+      button.classList.add('is-busy');
+      button.textContent = 'Adding to cart…';
+    }
+    this.setStatus('Adding the configured gangsheet to Shopify.');
+
+    try {
+      var cartPayload = {
+        items: [{
+          id: Number(core.state.variantId),
+          quantity: this.getCartQuantity(),
+          properties: {
+            'Design ID': core.state.projectId,
+            'Artwork count': String(core.state.items.length),
+            'Sheet copies': String(this.getSheetQuantity()),
+            'Sheet size': core.CANVAS_W + ' × ' + core.CANVAS_H + ' mm',
+            '_configurator_version': '3'
+          }
+        }]
+      };
+
+      var response = await fetch(
+        core.dataset.cartAddUrl || ((window.Shopify && window.Shopify.routes.root) || '/') + 'cart/add.js',
+        {
+          method: 'POST',
+          body: JSON.stringify(cartPayload),
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      var responseText = await response.text();
+      var payload = {};
+      try {
+        payload = responseText ? JSON.parse(responseText) : {};
+      } catch (_error) {
+        payload = {};
+      }
+      if (!response.ok) {
+        throw new Error(payload.description || payload.message || 'The design could not be added to cart.');
+      }
+
+      this.setStatus('Design added to cart.', 'success');
+      core.dispatchAddToCartEvent(payload);
+      if (core.dataset.redirectToCart !== 'false') {
+        window.location.assign(core.dataset.cartUrl || '/cart');
+      }
+    } catch (error) {
+      var message = error && error.message ? error.message : 'The design could not be added to cart.';
+      this.reportError('Could not add to cart. ' + message);
+    } finally {
+      this.busy = false;
+      if (button) {
+        button.classList.remove('is-busy');
+        button.innerHTML = originalMarkup;
+      }
+      this.updateButtonState();
+    }
+  }
+}
+
+/* ===========================================
    PriceManager — Price calculation, quantity, stats
    =========================================== */
 
@@ -2245,7 +2500,14 @@ class PriceManager {
     var core = this.core;
     if (!core.priceEl) return;
     var qty = parseInt(core.qtyEl ? core.qtyEl.textContent : 1) || 1;
-    core.priceEl.textContent = '$' + (core.state.basePrice * (core.state.items.length || 1) * qty).toFixed(2);
+    var cartQuantity = core.state.items.length
+      ? (core.cartManager ? core.cartManager.getCartQuantity() : qty)
+      : 0;
+    var totalCents = core.state.unitPriceCents * cartQuantity;
+    core.priceEl.textContent = core.cartManager
+      ? core.cartManager.formatMoney(totalCents)
+      : (totalCents / 100).toFixed(2);
+    if (core.cartManager) core.cartManager.updateButtonState();
     core.dispatchPriceEvent();
   }
 
@@ -3349,8 +3611,10 @@ class StickerConfigurator extends HTMLElement {
     this.CANVAS_W = 600;
     this.CANVAS_H = 400;
 
-    // Parse base price from data attribute
+    // Shopify variant pricing is authoritative; the section price is fallback-only.
     var basePrice = parseFloat(this.dataset.basePrice) || 2.5;
+    var unitPriceCents = parseInt(this.dataset.unitPriceCents, 10);
+    if (!(unitPriceCents >= 0)) unitPriceCents = Math.round(basePrice * 100);
 
     // Build state
     this.state = {
@@ -3367,14 +3631,21 @@ class StickerConfigurator extends HTMLElement {
       textToolActive: false,
       mobile: false,
       basePrice: basePrice,
+      unitPriceCents: unitPriceCents,
+      variantId: parseInt(this.dataset.variantId, 10) || null,
+      variantAvailable: this.dataset.variantAvailable === 'true',
+      projectId: window.crypto && typeof window.crypto.randomUUID === 'function'
+        ? window.crypto.randomUUID()
+        : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10),
+      backgroundColor: '#FFFFFF',
       clipboard: null,
       touchStarted: null,
       lastTouchDist: 0,
       spacePressed: false,
       mobileOverride: null,
       multiSelectMode: false,
-      snapEnabled: true,
-      gridSize: 20,
+      snapEnabled: this.dataset.snapEnabled !== 'false',
+      gridSize: Math.max(5, Math.min(100, parseInt(this.dataset.gridSize, 10) || 20)),
       gapSize: Math.max(3, Math.min(50, parseInt(this.dataset.gapMm, 10) || 3)),
       modalFile: null,
       modalImageSize: null,
@@ -3395,6 +3666,7 @@ class StickerConfigurator extends HTMLElement {
     this.mobileHandler = new MobileHandler(this);
     this.modalManager = new ModalManager(this);
     this.exportManager = new ExportManager(this);
+    this.cartManager = new CartManager(this);
     this.keyboardManager = new KeyboardManager(this);
     this.alignmentEngine = new AlignmentEngine(this);
 
@@ -3456,7 +3728,7 @@ class StickerConfigurator extends HTMLElement {
       'auto-btn', 'export-btn', 'text-btn', 'zoom-fit',
       'qty-down', 'qty-up', 'clear-btn', 'bg-color',
       'snap-btm', 'grid-size', 'gap-size',
-      'add-btn', 'submit',
+      'add-btn', 'submit', 'cart-status', 'variant-select',
       'modal-cancel', 'modal-zone', 'modal-add',
       'modal-w', 'modal-h', 'modal-qty', 'modal-fname',
       'stats'
@@ -3490,6 +3762,18 @@ class StickerConfigurator extends HTMLElement {
   bindEvents() {
     var signal = this.abortController.signal;
     var core = this;
+
+    var variantSelect = this.cache['variant-select'];
+    if (variantSelect) {
+      variantSelect.addEventListener('change', function () {
+        var option = variantSelect.options[variantSelect.selectedIndex];
+        core.state.variantId = parseInt(option.value, 10) || null;
+        core.state.unitPriceCents = parseInt(option.dataset.priceCents, 10) || 0;
+        core.state.variantAvailable = option.dataset.available === 'true';
+        core.priceManager.updatePrice();
+        core.cartManager.setStatus('');
+      }, { signal });
+    }
 
     // Toolbar DELEGATION (V22 fix): use data-action on .toolbar container
     var toolbar = this.querySelector('.toolbar');
@@ -3631,6 +3915,7 @@ class StickerConfigurator extends HTMLElement {
     var bgColorInput = this.cache['bg-color'];
     if (bgColorInput) {
       bgColorInput.addEventListener('input', function () {
+        core.state.backgroundColor = bgColorInput.value;
         if (core.gridCanvas) core.gridCanvas.style.background = bgColorInput.value;
         if (core.canvas) core.canvas.style.background = bgColorInput.value;
       }, { signal });
@@ -3698,13 +3983,16 @@ class StickerConfigurator extends HTMLElement {
       }, { signal });
     }
 
-    // Submit button
-    var submitBtn = this.cache['submit'];
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function () {
-        core.dispatchAddToCartEvent();
-      }, { signal });
-    }
+    this._bindCartButton(signal);
+  }
+
+  _bindCartButton(signal) {
+    var core = this;
+    var submitBtn = this.cache && this.cache.submit;
+    if (!submitBtn) return;
+    submitBtn.addEventListener('click', function () {
+      core.cartManager.addToCart();
+    }, { signal: signal });
   }
 
   /* ── Update toolbar buttons for delegation ── */
@@ -3824,9 +4112,24 @@ class StickerConfigurator extends HTMLElement {
   /* ── File handling ── */
 
   handleFileSelect(file) {
-    if (!file || !file.type.match('image.*')) return;
+    if (!file) return;
+    var allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    var maxBytes = Math.max(2, Number(this.dataset.maxFileMb) || 20) * 1024 * 1024;
+    if (allowedTypes.indexOf(file.type) === -1) {
+      this.modalManager.showErrorModal('Use a PNG, JPG, or WebP artwork file.');
+      if (this.fileInput) this.fileInput.value = '';
+      return;
+    }
+    if (file.size > maxBytes) {
+      this.modalManager.showErrorModal(
+        'Artwork files must be smaller than ' + (Number(this.dataset.maxFileMb) || 20) + ' MB.'
+      );
+      if (this.fileInput) this.fileInput.value = '';
+      return;
+    }
     this.state.modalFile = file;
     this.state.modalImageSize = null;
+    this.state.modalSizeExplicit = false;
     var modalFname = this.cache['modal-fname'];
     var modalZone = this.cache['modal-zone'];
     var modalAddBtn = this.cache['modal-add'];
@@ -3849,11 +4152,28 @@ class StickerConfigurator extends HTMLElement {
     var objectUrl = URL.createObjectURL(file);
     var probe = new Image();
     probe.onload = function () {
+      var pixelCount = (probe.naturalWidth || probe.width) * (probe.naturalHeight || probe.height);
+      if (pixelCount > 50000000) {
+        core.state.modalFile = null;
+        if (modalAddBtn) modalAddBtn.disabled = true;
+        URL.revokeObjectURL(objectUrl);
+        core.modalManager.closeModal(core.modalEl);
+        core.modalManager.showErrorModal('Artwork resolution is too large. The maximum is 50 megapixels.');
+        return;
+      }
       var fitted = core._fitModalImageSize(
         probe.naturalWidth || probe.width,
         probe.naturalHeight || probe.height
       );
       core.state.modalImageSize = fitted;
+      core.state.modalSourcePixels = {
+        width: probe.naturalWidth || probe.width,
+        height: probe.naturalHeight || probe.height
+      };
+      if (modalFname) {
+        modalFname.textContent = file.name + ' · ' +
+          core.state.modalSourcePixels.width + '×' + core.state.modalSourcePixels.height + ' px';
+      }
       if (!core.state.modalSizeExplicit) {
         if (core.cache['modal-w']) core.cache['modal-w'].value = fitted.w;
         if (core.cache['modal-h']) core.cache['modal-h'].value = fitted.h;
@@ -3910,9 +4230,11 @@ class StickerConfigurator extends HTMLElement {
 
   _fitModalImageSize(width, height) {
     var max = this.CANVAS_W || 600;
-    var w = Number(width) || 50;
-    var h = Number(height) || 50;
-    var scale = Math.min(1, max / w, max / h);
+    var sourceW = Math.max(1, Number(width) || 1);
+    var sourceH = Math.max(1, Number(height) || 1);
+    var w = sourceW / 300 * 25.4;
+    var h = sourceH / 300 * 25.4;
+    var scale = Math.min(1, max / w, (this.CANVAS_H || 400) / h);
     return {
       w: Math.max(10, Math.round(w * scale)),
       h: Math.max(10, Math.round(h * scale))
@@ -3948,23 +4270,32 @@ class StickerConfigurator extends HTMLElement {
 
   dispatchPriceEvent() {
     var qty = parseInt(this.qtyEl ? this.qtyEl.textContent : 1) || 1;
+    var cartQuantity = this.state.items.length
+      ? (this.cartManager ? this.cartManager.getCartQuantity() : qty)
+      : 0;
+    var totalCents = this.state.unitPriceCents * cartQuantity;
     this.dispatchEvent(new CustomEvent('sticker-configurator:price', {
       bubbles: true,
       detail: {
-        price: this.state.basePrice * (this.state.items.length || 1) * qty,
+        price: totalCents / 100,
+        priceCents: totalCents,
         quantity: qty,
-        basePrice: this.state.basePrice,
+        cartQuantity: cartQuantity,
+        unitPriceCents: this.state.unitPriceCents,
+        currency: this.dataset.currency || 'USD',
         type: 'price'
       }
     }));
   }
 
-  dispatchAddToCartEvent() {
+  dispatchAddToCartEvent(response) {
     this.dispatchEvent(new CustomEvent('sticker-configurator:add-to-cart', {
       bubbles: true,
       detail: {
-        variantId: null,
-        quantity: parseInt(this.qtyEl ? this.qtyEl.textContent : 1) || 1,
+        variantId: this.state.variantId,
+        quantity: this.cartManager ? this.cartManager.getCartQuantity() : 0,
+        projectId: this.state.projectId,
+        response: response || null,
         type: 'add-to-cart'
       }
     }));

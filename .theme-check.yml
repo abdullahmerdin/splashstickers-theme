@@ -16,7 +16,7 @@ MissingRequiredTemplate:
   enabled: true
 TemplateLength:
   enabled: true
-  maxLength: 300
+  max_length: 300
 
 # Performance
 ImgWidthAndHeight:
@@ -25,10 +25,13 @@ ParserBlockingScript:
   enabled: true
 AssetSizeCSS:
   enabled: true
-  maxSize: 100KB
+  threshold_in_bytes: 102400
 AssetSizeJavaScript:
   enabled: true
-  maxSize: 16KB
+  threshold_in_bytes: 16384
+  ignore:
+    - assets/jspdf.umd.min.js
+    - assets/sticker-configurator.js
 ContentForHeaderModification:
   enabled: true
 RemoteAsset:

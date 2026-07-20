@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "sticker_configurator": {
+      "type": "sticker-configurator",
+      "name": "Sticker Configurator",
+      "settings": {
+        "heading": "Design Your Sticker Sheet",
+        "bg_color": "#f8f9fa",
+        "base_price": 2.5,
+        "grid_size": 20,
+        "snap_enabled": true,
+        "gap_mm": 3,
+        "padding_top": 32,
+        "padding_bottom": 32,
+        "enable_clipboard": true,
+        "enable_export": true,
+        "export_dpi": 300,
+        "max_file_mb": 20,
+        "redirect_to_cart": true,
+        "enable_auto_arrange": true,
+        "enable_undo_redo": true
+      }
+    }
+  },
+  "order": [
+    "sticker_configurator"
+  ]
+}

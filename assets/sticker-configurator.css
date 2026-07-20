@@ -635,6 +635,26 @@
   border-radius: var(--cfg-radius);
 }
 
+.sticker-configurator .cfg-variant-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  color: var(--cfg-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.sticker-configurator .cfg-variant-field select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 34px 8px 11px;
+  color: var(--cfg-ink);
+  background: var(--cfg-surface);
+  border: 1px solid var(--cfg-line-strong);
+  border-radius: 10px;
+}
+
 .sticker-configurator .upload-btn-area {
   display: flex;
   align-items: center;
@@ -727,6 +747,35 @@
   background: #2b2d34;
   box-shadow: 0 6px 16px rgba(23, 24, 28, 0.16);
   transform: translateY(-1px);
+}
+
+.sticker-configurator .cfg-btn-submit:disabled {
+  color: rgba(255, 255, 255, 0.72);
+  background: #8c8f98;
+  border-color: #8c8f98;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sticker-configurator .cfg-btn-submit.is-busy {
+  cursor: progress;
+}
+
+.sticker-configurator .cfg-cart-status {
+  min-height: 1.25em;
+  margin: -2px 2px 0;
+  color: var(--cfg-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.sticker-configurator .cfg-cart-status[data-state="error"] {
+  color: #a52222;
+}
+
+.sticker-configurator .cfg-cart-status[data-state="success"] {
+  color: #176b45;
 }
 
 .sticker-configurator .bottom-extra {
