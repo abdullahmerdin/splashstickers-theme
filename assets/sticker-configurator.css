@@ -54,6 +54,126 @@
   clear: both;
 }
 
+.sticker-configurator .cfg-loading-skeleton {
+  color: var(--cfg-muted);
+  border: 1px solid var(--cfg-line);
+  border-radius: var(--cfg-radius-lg);
+}
+
+.sticker-configurator > sticker-configurator:not(.is-loading) .cfg-loading-skeleton,
+.sticker-configurator > sticker-configurator.is-ready .cfg-loading-skeleton {
+  display: none;
+}
+
+.sticker-configurator .cfg-loading-skeleton > * {
+  min-width: 0;
+}
+
+.sticker-configurator .cfg-skeleton-heading,
+.sticker-configurator .cfg-skeleton-toolbar,
+.sticker-configurator .cfg-skeleton-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sticker-configurator .cfg-skeleton-heading span:first-child {
+  width: 92px;
+  height: 9px;
+}
+
+.sticker-configurator .cfg-skeleton-heading span:last-child {
+  width: min(270px, 48%);
+  height: 22px;
+}
+
+.sticker-configurator .cfg-skeleton-toolbar {
+  padding: 7px;
+  border: 1px solid var(--cfg-line);
+  border-radius: var(--cfg-radius);
+}
+
+.sticker-configurator .cfg-skeleton-toolbar i {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+}
+
+.sticker-configurator .cfg-skeleton-canvas {
+  position: relative;
+  min-height: 180px;
+  border: 1px solid var(--cfg-line-strong);
+  border-radius: calc(var(--cfg-radius) + 2px);
+  background:
+    linear-gradient(to right, rgba(44, 48, 61, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(44, 48, 61, 0.07) 1px, transparent 1px),
+    #fff;
+  background-size: 20px 20px;
+}
+
+.sticker-configurator .cfg-skeleton-canvas span {
+  position: absolute;
+  inset: 20% 18%;
+  border-radius: 12px;
+}
+
+.sticker-configurator .cfg-skeleton-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.45fr) minmax(0, 1fr);
+}
+
+.sticker-configurator .cfg-skeleton-actions span {
+  height: 48px;
+  border-radius: 12px;
+}
+
+.sticker-configurator .cfg-loading-status {
+  display: grid;
+  gap: 7px;
+  color: var(--cfg-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.01em;
+}
+
+.sticker-configurator .cfg-loading-progress {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  background: var(--cfg-line);
+  border-radius: 999px;
+}
+
+.sticker-configurator .cfg-loading-progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  content: "";
+  background: var(--cfg-primary);
+  border-radius: inherit;
+  animation: cfg-loading-progress 1.15s ease-in-out infinite;
+}
+
+.sticker-configurator .cfg-skeleton-heading span,
+.sticker-configurator .cfg-skeleton-toolbar i,
+.sticker-configurator .cfg-skeleton-canvas span,
+.sticker-configurator .cfg-skeleton-actions span {
+  background: linear-gradient(100deg, #f0f0f3 15%, #fafafd 35%, #f0f0f3 55%);
+  background-size: 220% 100%;
+  animation: cfg-loading-shimmer 1.25s linear infinite;
+}
+
+@keyframes cfg-loading-shimmer {
+  to { background-position: -220% 0; }
+}
+
+@keyframes cfg-loading-progress {
+  0% { transform: translateX(-115%); }
+  55%, 100% { transform: translateX(245%); }
+}
+
 .sticker-configurator > sticker-configurator {
   --cfg-shell-pad: 16px;
   display: flex;
@@ -1171,6 +1291,35 @@ dialog.cfg-modal::backdrop {
     height: auto;
     min-height: 0;
     scrollbar-gutter: auto;
+    scrollbar-width: none;
+  }
+
+  .sticker-configurator .canvas-wrap::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .sticker-configurator .cfg-loading-skeleton {
+    border-radius: 0;
+    padding: 10px;
+  }
+
+  .sticker-configurator .cfg-skeleton-toolbar {
+    overflow: hidden;
+  }
+
+  .sticker-configurator .cfg-skeleton-toolbar i {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .sticker-configurator .cfg-skeleton-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(92px, 0.7fr);
+  }
+
+  .sticker-configurator .cfg-skeleton-actions span:last-child {
+    grid-column: 1 / -1;
   }
 
   .sticker-configurator .zoom-display {

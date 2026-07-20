@@ -3273,12 +3273,33 @@ class StickerConfigurator extends HTMLElement {
   /* ── Lifecycle ── */
 
   connectedCallback() {
-    requestAnimationFrame(() => this.init());
+    this.classList.add('is-loading');
+    this.setAttribute('aria-busy', 'true');
+    this._loadingStartedAt = Date.now();
+
+    var boot = () => {
+      if (this._lazyObserver) this._lazyObserver.disconnect();
+      if (this._lazyInitTimer) clearTimeout(this._lazyInitTimer);
+      requestAnimationFrame(() => this.init());
+    };
+
+    if ('IntersectionObserver' in window) {
+      this._lazyObserver = new IntersectionObserver(function (entries) {
+        if (entries.some(function (entry) { return entry.isIntersecting; })) boot();
+      }, { rootMargin: '240px 0px' });
+      this._lazyObserver.observe(this);
+      this._lazyInitTimer = setTimeout(boot, 1400);
+    } else {
+      boot();
+    }
   }
 
   disconnectedCallback() {
     this.abortController.abort();
     if (this.resizeObserver) this.resizeObserver.disconnect();
+    if (this._lazyObserver) this._lazyObserver.disconnect();
+    if (this._lazyInitTimer) clearTimeout(this._lazyInitTimer);
+    if (this._revealTimer) clearTimeout(this._revealTimer);
     this.state = null;
     this.wrap = null;
     this.canvasStage = null;
@@ -3292,6 +3313,9 @@ class StickerConfigurator extends HTMLElement {
 
   attributeChangedCallback(name, oldVal, newVal) {
     if (name === 'section-id' && oldVal !== null && oldVal !== newVal) {
+      this.classList.add('is-loading');
+      this.setAttribute('aria-busy', 'true');
+      this._loadingStartedAt = Date.now();
       this.init();
     }
   }
@@ -3390,6 +3414,21 @@ class StickerConfigurator extends HTMLElement {
     if (this.canvas) {
       this.canvas.style.cursor = this.state.textToolActive ? 'crosshair' : 'default';
     }
+
+    this._finishLoading();
+  }
+
+  _finishLoading() {
+    var core = this;
+    var elapsed = Date.now() - (this._loadingStartedAt || Date.now());
+    var delay = Math.max(0, 260 - elapsed);
+    if (this._revealTimer) clearTimeout(this._revealTimer);
+    this._revealTimer = setTimeout(function () {
+      core.classList.remove('is-loading');
+      core.classList.add('is-ready');
+      core.setAttribute('aria-busy', 'false');
+      core._revealTimer = null;
+    }, delay);
   }
 
   /* ── DOM caching ── */

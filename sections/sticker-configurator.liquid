@@ -1,8 +1,28 @@
 <!-- Preload CSS for above-the-fold paint (non-blocking) -->
-<link rel="preload" href="{{ 'sticker-configurator.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="{{ 'sticker-configurator.css' | asset_url }}"></noscript>
+{{ 'sticker-configurator.css' | asset_url | stylesheet_tag }}
 <!-- Defer JS — component renders in connectedCallback, no render-blocking needed -->
 <script src="{{ 'sticker-configurator.js' | asset_url }}" defer></script>
+
+<style>
+  .shopify-section.sticker-configurator > sticker-configurator { position: relative; }
+  .shopify-section.sticker-configurator > sticker-configurator.is-loading {
+    min-height: min(720px, calc(100svh - var(--header-group-height, 64px)));
+  }
+  .shopify-section.sticker-configurator > sticker-configurator.is-loading > :not(.cfg-loading-skeleton) {
+    visibility: hidden;
+  }
+  .cfg-loading-skeleton {
+    position: absolute;
+    z-index: 100;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(180px, 1fr) auto auto;
+    gap: 12px;
+    padding: clamp(12px, 2vw, 24px);
+    overflow: hidden;
+    background: #fff;
+  }
+</style>
 
 {%- liquid
   assign bg_color = section.settings.bg_color
@@ -16,8 +36,20 @@
   data-bg-color="{{ bg_color }}"
   data-base-price="{{ base_price }}"
   data-gap-mm="{{ section.settings.gap_mm | default: 3 }}"
+  aria-busy="true"
+  class="is-loading"
   style="--cfg-bg: {{ bg_color }};"
 >
+  <div class="cfg-loading-skeleton" role="status" aria-live="polite">
+    <div class="cfg-skeleton-heading"><span></span><span></span></div>
+    <div class="cfg-skeleton-toolbar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="cfg-skeleton-canvas"><span></span></div>
+    <div class="cfg-skeleton-actions"><span></span><span></span><span></span></div>
+    <div class="cfg-loading-status">
+      <span>Preparing your workspace</span>
+      <span class="cfg-loading-progress"><i></i></span>
+    </div>
+  </div>
   {%- unless heading == blank -%}
     <div class="cfg-header">
       <span class="cfg-eyebrow">Gangsheet Studio</span>
