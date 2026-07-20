@@ -631,7 +631,6 @@
   grid-template-columns: 1fr;
   gap: 10px;
   min-width: 0;
-  min-height: 0;
   padding: 12px;
   background: rgba(249, 249, 251, 0.92);
   border: 1px solid var(--cfg-line);
@@ -1388,6 +1387,10 @@ dialog.cfg-modal::backdrop {
     align-items: stretch;
     gap: 8px;
     padding: 8px;
+  }
+
+  .sticker-configurator .editor-wrap {
+    grid-template-rows: auto auto auto minmax(0, 1fr) max-content;
   }
 
   .sticker-configurator .upload-btn-area {

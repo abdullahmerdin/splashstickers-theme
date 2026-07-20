@@ -101,7 +101,9 @@ class CanvasRenderer {
   }
 
   clampZoom(value) {
-    return Math.max(1, Math.min(4, Number(value) || 1));
+    // Mobile viewports can be narrower than the 600px logical workspace.
+    // Keep a usable lower bound while allowing the canvas to fit the screen.
+    return Math.max(0.25, Math.min(4, Number(value) || 1));
   }
 
   clampPan() {
@@ -143,7 +145,20 @@ class CanvasRenderer {
   zoomToFit() {
     var core = this.core;
     if (!core.canvas || !core.wrap) return;
-    core.state.zoom = 1;
+    var fitZoom = 1;
+    var canvasWidth = Math.max(1, Number(core.CANVAS_W) || 1);
+    var canvasHeight = Math.max(1, Number(core.CANVAS_H) || 1);
+    var viewportWidth = core.wrap.clientWidth;
+    var viewportHeight = core.wrap.clientHeight;
+
+    if (viewportWidth > 0) {
+      fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportWidth - 20) / canvasWidth));
+    }
+    if (viewportHeight > 0) {
+      fitZoom = Math.min(fitZoom, Math.max(0.25, (viewportHeight - 20) / canvasHeight));
+    }
+
+    core.state.zoom = this.clampZoom(fitZoom);
     this._syncZoomTransform();
 
     requestAnimationFrame(function () {
