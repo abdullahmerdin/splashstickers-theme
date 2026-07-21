@@ -1,44 +1,52 @@
 /* =====================================================
-   SPLASHSTICKERS — Custom Brand Styles
+   BOLD & JUICY — Custom Brand Styles
    Brand Colors:
-     Teal:    #00CEC9 (primary — the splash)
-     Purple:  #6C5CE7 (creative accent)
-     Pink:    #FD79A8 (energy/sale accent)
-     Gold:    #FDCB6E (premium/highlight)
+     Purple:  #6C5CE7 (primary)
+     Pink:    #FD79A8 (sale/badges/accent)
+     Gold:    #FDCB6E (sold-out/highlights)
+     Teal:    #00CEC9 (secondary accent)
      Dark:    #2D3436 (text)
      White:   #FFFFFF (background)
    ===================================================== */
 
 /* ─── Color Utilities ─── */
-.bg-teal { background-color: #00CEC9 !important; }
 .bg-purple { background-color: #6C5CE7 !important; }
 .bg-pink { background-color: #FD79A8 !important; }
 .bg-gold { background-color: #FDCB6E !important; }
-.text-teal { color: #00CEC9 !important; }
+.bg-teal { background-color: #00CEC9 !important; }
 .text-purple { color: #6C5CE7 !important; }
 .text-pink { color: #FD79A8 !important; }
 .text-gold { color: #FDCB6E !important; }
+.text-teal { color: #00CEC9 !important; }
 
 /* ─── Gradient Backgrounds ─── */
-.bg-gradient-splash {
-  background: linear-gradient(135deg, #00CEC9 0%, #6C5CE7 100%) !important;
+.bg-gradient-purple-pink {
+  background: linear-gradient(135deg, #6C5CE7 0%, #FD79A8 100%) !important;
 }
-.bg-gradient-warm {
-  background: linear-gradient(135deg, #FD79A8 0%, #FDCB6E 100%) !important;
+.bg-gradient-gold-pink {
+  background: linear-gradient(135deg, #FDCB6E 0%, #FD79A8 100%) !important;
 }
-.bg-gradient-ocean {
-  background: linear-gradient(135deg, #00CEC9 0%, #FD79A8 100%) !important;
+.bg-gradient-purple-teal {
+  background: linear-gradient(135deg, #6C5CE7 0%, #00CEC9 100%) !important;
 }
 
-/* ─── Brand Header Bar ─── */
+/* ─── Section Dividers with Brand Color ─── */
+.section-divider {
+  height: 4px;
+  background: linear-gradient(90deg, #6C5CE7, #FD79A8, #FDCB6E, #00CEC9);
+  border: none;
+  margin: 0;
+}
+
+/* ─── Brand Header/Footer Accents ─── */
 .brand-header-bar {
   height: 4px;
-  background: linear-gradient(90deg, #00CEC9, #FD79A8, #6C5CE7);
+  background: linear-gradient(90deg, #6C5CE7, #FD79A8);
 }
 
 /* ─── Hero Overlay ─── */
 .hero-overlay-brand {
-  background: linear-gradient(135deg, rgba(0,206,201,0.15) 0%, rgba(108,92,231,0.15) 100%) !important;
+  background: linear-gradient(135deg, rgba(108,92,231,0.15) 0%, rgba(253,121,168,0.15) 100%) !important;
 }
 
 /* ─── Category / Collection Cards ─── */
@@ -51,10 +59,10 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.collection-card-badge.teal { background: #00CEC9; color: #FFFFFF; }
 .collection-card-badge.purple { background: #6C5CE7; color: #FFFFFF; }
 .collection-card-badge.pink { background: #FD79A8; color: #FFFFFF; }
 .collection-card-badge.gold { background: #FDCB6E; color: #2D3436; }
+.collection-card-badge.teal { background: #00CEC9; color: #FFFFFF; }
 
 /* ─── Sticker Category Circle Cards ─── */
 .sticker-category-card {
@@ -80,12 +88,12 @@
   transition: box-shadow 0.3s ease;
 }
 .sticker-category-card:hover .sticker-category-circle {
-  box-shadow: 0 8px 24px rgba(0,206,201,0.25);
+  box-shadow: 0 8px 24px rgba(108,92,231,0.25);
 }
-.sticker-category-circle.teal { background: linear-gradient(135deg, #00CEC9, #81ecec); }
 .sticker-category-circle.purple { background: linear-gradient(135deg, #6C5CE7, #a29bfe); }
 .sticker-category-circle.pink { background: linear-gradient(135deg, #FD79A8, #fab1a0); }
 .sticker-category-circle.gold { background: linear-gradient(135deg, #FDCB6E, #ffeaa7); }
+.sticker-category-circle.teal { background: linear-gradient(135deg, #00CEC9, #81ecec); }
 .sticker-category-label {
   font-weight: 600;
   font-size: 0.9rem;
@@ -98,23 +106,23 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: #00CEC9;
+  background: #6C5CE7;
   color: #FFFFFF;
   border: none;
   border-radius: 50px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 .custom-upload-btn:hover {
-  background: #00b3b0;
+  background: #5a4bd1;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,206,201,0.3);
+  box-shadow: 0 4px 12px rgba(108,92,231,0.3);
 }
 
 /* ─── Price Highlights ─── */
 .price-highlight {
-  color: #00CEC9;
+  color: #6C5CE7;
   font-weight: 700;
 }
 .sale-price-highlight {
@@ -140,10 +148,10 @@
   justify-content: center;
   font-size: 1.5rem;
 }
-.trust-badge-icon.teal { background: rgba(0,206,201,0.1); color: #00CEC9; }
 .trust-badge-icon.purple { background: rgba(108,92,231,0.1); color: #6C5CE7; }
 .trust-badge-icon.pink { background: rgba(253,121,168,0.1); color: #FD79A8; }
 .trust-badge-icon.gold { background: rgba(253,206,110,0.15); color: #B7953D; }
+.trust-badge-icon.teal { background: rgba(0,206,201,0.1); color: #00CEC9; }
 .trust-badge-title {
   font-weight: 700;
   font-size: 0.95rem;
@@ -155,21 +163,21 @@
   max-width: 180px;
 }
 
-/* ─── Gradient Text ─── */
-.gradient-text-teal-purple {
-  background: linear-gradient(135deg, #00CEC9, #6C5CE7);
+/* ─── Gradient Text (for headings) ─── */
+.gradient-text-purple-pink {
+  background: linear-gradient(135deg, #6C5CE7, #FD79A8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.gradient-text-warm {
-  background: linear-gradient(135deg, #FD79A8, #FDCB6E);
+.gradient-text-gold-pink {
+  background: linear-gradient(135deg, #FDCB6E, #FD79A8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.gradient-text-ocean {
-  background: linear-gradient(135deg, #00CEC9, #FD79A8);
+.gradient-text-purple-teal {
+  background: linear-gradient(135deg, #6C5CE7, #00CEC9);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -177,16 +185,16 @@
 
 /* ─── Animated CTA Button ─── */
 .btn-cta-gradient {
-  background: linear-gradient(135deg, #00CEC9, #6C5CE7) !important;
+  background: linear-gradient(135deg, #6C5CE7, #FD79A8) !important;
   color: #FFFFFF !important;
   border: none !important;
   position: relative;
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  transition: all 0.3s ease !important;
 }
 .btn-cta-gradient:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(0,206,201,0.35) !important;
+  box-shadow: 0 8px 24px rgba(108,92,231,0.35) !important;
 }
 .btn-cta-gradient::after {
   content: '';
@@ -200,88 +208,6 @@
 }
 .btn-cta-gradient:hover::after {
   left: 100%;
-}
-
-/* ─── CTA Outline Button ─── */
-.btn-cta-outline {
-  display: inline-block;
-  padding: 16px 40px;
-  background: transparent;
-  color: #FFFFFF;
-  border: 2px solid rgba(255,255,255,0.6);
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  text-decoration: none;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-}
-.btn-cta-outline:hover {
-  transform: translateY(-2px);
-  border-color: #FFFFFF;
-  box-shadow: 0 8px 24px rgba(255,255,255,0.15);
-}
-
-/* ─── Product Card Splash Hover ─── */
-.sticker-product-card {
-  border: 1px solid transparent;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-}
-.sticker-product-card:hover {
-  border-color: rgba(0,206,201,0.3);
-}
-
-/* ─── Section Heading Decoration ─── */
-.section-heading-splash {
-  position: relative;
-  display: inline-block;
-}
-.section-heading-splash::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 4px;
-  background: linear-gradient(90deg, #00CEC9, #FD79A8);
-  border-radius: 2px;
-}
-
-/* ─── Button Ripple ─── */
-.btn-splash-ripple {
-  position: relative;
-  overflow: hidden;
-}
-.btn-splash-ripple::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-}
-.btn-splash-ripple:active::before {
-  width: 300px;
-  height: 300px;
-}
-
-/* ─── Shimmer Animation ─── */
-@keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-.gradient-text-shimmer {
-  background: linear-gradient(135deg, #FDCB6E, #FD79A8, #FDCB6E);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 4s ease-in-out infinite;
 }
 
 /* ─── Mobile: Sticker category scroll ─── */
@@ -298,11 +224,16 @@
   flex-shrink: 0;
 }
 
-/* ─── Sticker Product Card ─── */
+/* ─── Sticker Product Card Styles ─── */
 .sticker-product-card {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.sticker-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(108,92,231,0.15);
 }
 .sticker-product-card .card-badge {
   position: absolute;
@@ -314,7 +245,7 @@
 /* ─── Footer Brand Bar ─── */
 .footer-brand-bar {
   height: 6px;
-  background: linear-gradient(90deg, #00CEC9, #FD79A8, #6C5CE7, #00CEC9);
+  background: linear-gradient(90deg, #6C5CE7, #FD79A8, #FDCB6E, #00CEC9, #6C5CE7);
   background-size: 200% 100%;
   animation: brandBarSlide 4s linear infinite;
 }
@@ -323,49 +254,192 @@
   100% { background-position: 200% 0%; }
 }
 
-/* ─── Brand Scrollbar ─── */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #F5F5F5;
-}
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #00CEC9, #6C5CE7);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #00b3b0, #5a4bd1);
-}
-
-/* ─── Selection ─── */
-::selection {
-  background: rgba(0,206,201,0.2);
-  color: #2D3436;
-}
-
 /* ─── Section Spacing ─── */
 .section-brand-spacing {
   padding-top: 60px !important;
   padding-bottom: 60px !important;
 }
 
-/* ─── Mobile ─── */
+/* ─── Editable storefront sections ─── */
+.sticker-section-heading {
+  max-width: 680px;
+  margin: 0 auto 32px;
+  text-align: center;
+}
+
+.sticker-section-heading h2,
+.sticker-section-heading p {
+  margin-block: 0;
+}
+
+.sticker-section-heading h2 + p {
+  margin-top: 10px;
+  color: #636e72;
+}
+
+.sticker-section-eyebrow {
+  margin-bottom: 8px !important;
+  color: #6c5ce7;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sticker-section-empty {
+  padding: 32px 20px;
+  color: #636e72;
+  text-align: center;
+}
+
+.sticker-categories-section .sticker-categories-scroll {
+  justify-content: center;
+  gap: var(--category-gap, 16px);
+  padding: 0;
+}
+
+.sticker-categories-section .sticker-category-card {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sticker-categories-section .sticker-category-circle {
+  width: var(--category-size, 100px);
+  height: var(--category-size, 100px);
+  font-size: calc(var(--category-size, 100px) * 0.4);
+}
+
+.sticker-category-card:focus-visible,
+.sticker-primary-link:focus-visible {
+  outline: 3px solid #2d3436;
+  outline-offset: 4px;
+}
+
+.trust-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--trust-columns, 4), minmax(0, 1fr));
+  gap: 24px;
+}
+
+.trust-badges-grid .trust-badge-title {
+  margin-block: 12px 6px;
+}
+
+.sticker-process-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sticker-process-card {
+  position: relative;
+  padding: 28px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(108, 92, 231, 0.14);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(45, 52, 54, 0.06);
+}
+
+.sticker-process-number {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  color: rgba(108, 92, 231, 0.14);
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+.sticker-process-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 20px;
+  place-items: center;
+  background: rgba(108, 92, 231, 0.1);
+  border-radius: 14px;
+  font-size: 1.45rem;
+}
+
+.sticker-process-card h3,
+.sticker-process-card p {
+  margin-block: 0;
+}
+
+.sticker-process-card p {
+  margin-top: 8px;
+  color: #636e72;
+}
+
+.sticker-section-action {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.sticker-primary-link {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  background: #6c5ce7;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.splash-cta-button {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.splash-cta-button--solid {
+  background: #fff;
+  color: #5a4bd1;
+}
+
+.splash-cta-button--outline {
+  background: transparent;
+  color: #fff;
+}
+
+.splash-cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(45, 52, 54, 0.2);
+}
+
+.splash-cta-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}
+
 @media (max-width: 749px) {
-  .section-heading-splash::after {
-    width: 40px;
-    height: 3px;
+  .trust-badges-grid,
+  .sticker-process-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sticker-section-heading {
+    margin-bottom: 24px;
   }
 }
 
-/* =====================================================
-   ACCESSIBILITY & PERFORMANCE
-   ===================================================== */
-body {
-  font-display: swap;
-}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
+    scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

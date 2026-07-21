@@ -29,3 +29,24 @@ npm.cmd run check:configurator
 
 The vendored `assets/jspdf.umd.min.js` file is committed so the storefront does
 not depend on a third-party CDN at runtime.
+
+## Storefront conversion features
+
+The home page uses editable Shopify sections for categories, the three-step
+ordering flow, the custom-design call to action, and trust badges. Their text
+and links can be managed in the theme editor and translated per market with
+Shopify's locale tooling.
+
+The gangsheet configurator includes a first-visit quick start and a print-size
+resolution check. When configurator analytics are enabled in the section
+settings, privacy-safe events are pushed to `window.dataLayer`:
+
+- `configurator_view`
+- `configurator_upload_open`
+- `configurator_upload_select`
+- `configurator_design_start`
+- `configurator_export`
+- `configurator_add_to_cart`
+- `configurator_abandon`
+
+No file name or artwork contents are included in these events.

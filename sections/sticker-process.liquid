@@ -1,0 +1,70 @@
+<div
+  class="sticker-process-section"
+  style="background-color: {{ section.settings.background_color }}; padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  <div class="page-width">
+    <header class="sticker-section-heading">
+      {% if section.settings.eyebrow != blank %}<p class="sticker-section-eyebrow">{{ section.settings.eyebrow }}</p>{% endif %}
+      {% if section.settings.heading != blank %}<h2>{{ section.settings.heading }}</h2>{% endif %}
+      {% if section.settings.subtext != blank %}<p>{{ section.settings.subtext }}</p>{% endif %}
+    </header>
+
+    <ol class="sticker-process-grid">
+      {% for block in section.blocks %}
+        <li class="sticker-process-card" {{ block.shopify_attributes }}>
+          <span class="sticker-process-number" aria-hidden="true">{{ forloop.index }}</span>
+          <span class="sticker-process-icon" aria-hidden="true">{{ block.settings.icon }}</span>
+          <h3>{{ block.settings.title }}</h3>
+          <p>{{ block.settings.text }}</p>
+        </li>
+      {% endfor %}
+    </ol>
+
+    {% if section.settings.button_label != blank and section.settings.button_link != blank %}
+      <div class="sticker-section-action">
+        <a class="sticker-primary-link" href="{{ section.settings.button_link }}">{{ section.settings.button_label }}</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "How it works",
+  "tag": "section",
+  "class": "sticker-process",
+  "max_blocks": 4,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Simple from start to finish" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Your idea, ready to stick" },
+    { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Create a custom sticker in a few clear steps." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Start designing" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#F8F7FF" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 64 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "⬆️" },
+        { "type": "text", "id": "title", "label": "Title", "default": "Upload your artwork" },
+        { "type": "textarea", "id": "text", "label": "Text", "default": "Choose a clear PNG, JPG or WebP file." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "How it works",
+      "category": "Custom",
+      "blocks": [
+        { "type": "step", "settings": { "icon": "⬆️", "title": "Upload your artwork", "text": "Choose a clear PNG, JPG or WebP file." } },
+        { "type": "step", "settings": { "icon": "✨", "title": "Arrange your sheet", "text": "Set the size, copies and spacing in the live studio." } },
+        { "type": "step", "settings": { "icon": "📦", "title": "We print and ship", "text": "Review your order, then follow its production journey." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

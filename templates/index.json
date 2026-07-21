@@ -1,111 +1,141 @@
 {
   "sections": {
     "hero_sticker": {
-      "type": "splash-hero",
+      "type": "hero",
       "blocks": {
-        "btn_shop": {
-          "type": "button",
+        "text_main": {
+          "type": "text",
+          "name": "Main Heading",
           "settings": {
-            "button_label": "Shop Stickers",
-            "button_link": "shopify://collections/all",
-            "button_style": "solid",
-            "button_bg": "#FFFFFF",
-            "button_text": "#1A1A2E"
-          }
+            "text": "<h1>Your Vision, A Sticker</h1>",
+            "text_color": "#FFFFFF",
+            "width": "fit-content",
+            "max_width": "560px",
+            "alignment": "center",
+            "type_preset": "h1",
+            "font": "var(--font-heading--family)",
+            "line_height": "1.1",
+            "letter_spacing": "-0.02em",
+            "case": "none",
+            "wrap": "pretty",
+            "background": false,
+            "padding-block-start": 0,
+            "padding-block-end": 8
+          },
+          "blocks": {}
         },
-        "btn_custom": {
-          "type": "button",
+        "text_sub": {
+          "type": "text",
+          "name": "Subtitle",
           "settings": {
-            "button_label": "Design Your Own",
-            "button_link": "",
-            "button_style": "outline",
-            "button_bg": "#FFFFFF",
-            "button_text": "#1A1A2E"
-          }
+            "text": "<p>Premium custom stickers — Fast turnaround — Worldwide shipping</p>",
+            "text_color": "#FFFFFF",
+            "width": "fit-content",
+            "max_width": "normal",
+            "alignment": "center",
+            "type_preset": "rte",
+            "font": "var(--font-body--family)",
+            "line_height": "normal",
+            "letter_spacing": "normal",
+            "case": "none",
+            "wrap": "pretty",
+            "background": false,
+            "padding-block-start": 8,
+            "padding-block-end": 8
+          },
+          "blocks": {}
+        },
+        "button_shop": {
+          "type": "button",
+          "name": "Shop Stickers",
+          "settings": {
+            "label": "Shop Stickers",
+            "link": "shopify://collections/all",
+            "open_in_new_tab": false,
+            "style_class": "button-custom",
+            "custom_button_background": "#6C5CE7",
+            "custom_button_text": "#FFFFFF",
+            "custom_button_border": "#6C5CE7",
+            "width": "fit-content",
+            "custom_width": 100,
+            "width_mobile": "fit-content",
+            "custom_width_mobile": 100
+          },
+          "blocks": {}
+        },
+        "button_custom": {
+          "type": "button",
+          "name": "Custom Design",
+          "settings": {
+            "label": "Design Your Own",
+            "link": "shopify://collections/custom-stickers",
+            "open_in_new_tab": false,
+            "style_class": "button-custom",
+            "custom_button_background": "rgba(255,255,255,0.15)",
+            "custom_button_text": "#FFFFFF",
+            "custom_button_border": "#FFFFFF",
+            "width": "fit-content",
+            "custom_width": 100,
+            "width_mobile": "fit-content",
+            "custom_width_mobile": 100
+          },
+          "blocks": {}
         }
       },
       "block_order": [
-        "btn_shop",
-        "btn_custom"
+        "text_main",
+        "text_sub",
+        "button_shop",
+        "button_custom"
       ],
+      "name": "Hero - Sticker Shop",
       "settings": {
-        "heading": "Splash Your Style",
-        "subtext": "Premium custom stickers \u2014 Vibrant colors \u2014 Worldwide shipping",
-        "background_color": "#1A1A2E",
-        "heading_color": "#FFFFFF",
-        "text_color": "rgba(255,255,255,0.8)",
-        "section_height": 550,
-        "padding_top": 80,
-        "padding_bottom": 80,
-        "show_animation": true
+        "media_type_1": "image",
+        "media_type_2": "image",
+        "stack_media_on_mobile": false,
+        "custom_mobile_media": false,
+        "open_in_new_tab": false,
+        "content_direction": "column",
+        "vertical_on_mobile": true,
+        "horizontal_alignment": "center",
+        "vertical_alignment": "center",
+        "align_baseline": true,
+        "horizontal_alignment_flex_direction_column": "center",
+        "vertical_alignment_flex_direction_column": "center",
+        "gap": 16,
+        "section_width": "page-width",
+        "section_height": "large",
+        "section_height_custom": 70,
+        "background_color": "#6C5CE7",
+        "toggle_overlay": false,
+        "overlay_color": "rgba(0,0,0,0)",
+        "overlay_style": "solid",
+        "gradient_direction": "to bottom",
+        "blurred_reflection": false,
+        "reflection_opacity": 75,
+        "padding-block-start": 100,
+        "padding-block-end": 72
       }
     },
     "category_cards": {
       "type": "sticker-categories",
-      "blocks": {
-        "cat_animals": {
-          "type": "category",
-          "settings": {
-            "icon": "\ud83d\udc3e",
-            "label": "Animals",
-            "link": "",
-            "color_style": "teal"
-          }
-        },
-        "cat_nature": {
-          "type": "category",
-          "settings": {
-            "icon": "\ud83c\udf38",
-            "label": "Nature",
-            "link": "",
-            "color_style": "pink"
-          }
-        },
-        "cat_quotes": {
-          "type": "category",
-          "settings": {
-            "icon": "\u2728",
-            "label": "Quotes",
-            "link": "",
-            "color_style": "gold"
-          }
-        },
-        "cat_aesthetic": {
-          "type": "category",
-          "settings": {
-            "icon": "\ud83c\udfa8",
-            "label": "Aesthetic",
-            "link": "",
-            "color_style": "purple"
-          }
-        },
-        "cat_gaming": {
-          "type": "category",
-          "settings": {
-            "icon": "\ud83c\udfae",
-            "label": "Gaming",
-            "link": "",
-            "color_style": "teal"
-          }
-        }
-      },
-      "block_order": [
-        "cat_animals",
-        "cat_nature",
-        "cat_quotes",
-        "cat_aesthetic",
-        "cat_gaming"
-      ],
       "settings": {
         "heading": "Shop by Category",
-        "subtext": "Find your perfect sticker vibe",
-        "columns": 5,
+        "subtext": "Find the perfect sticker for every vibe",
         "circle_size": 100,
         "gap": 16,
         "background_color": "#FFFFFF",
         "padding_top": 48,
         "padding_bottom": 48
-      }
+      },
+      "blocks": {
+        "cat_animals": { "type": "category", "settings": { "icon": "🐾", "label": "Animals", "color_style": "purple" } },
+        "cat_nature": { "type": "category", "settings": { "icon": "🌸", "label": "Nature", "color_style": "pink" } },
+        "cat_quotes": { "type": "category", "settings": { "icon": "✨", "label": "Quotes", "color_style": "gold" } },
+        "cat_aesthetic": { "type": "category", "settings": { "icon": "🎨", "label": "Aesthetic", "color_style": "teal" } },
+        "cat_gaming": { "type": "category", "settings": { "icon": "🎮", "label": "Gaming", "color_style": "purple" } }
+      },
+      "block_order": ["cat_animals", "cat_nature", "cat_quotes", "cat_aesthetic", "cat_gaming"]
     },
     "featured_stickers": {
       "type": "product-list",
@@ -270,80 +300,64 @@
     "custom_cta": {
       "type": "splash-cta",
       "settings": {
-        "heading": "Create Your Own Sticker",
-        "subtext": "Upload any design and we'll turn it into a premium, die-cut sticker. Free proof included!",
-        "button_label": "Start Designing",
-        "button_link": "",
+        "heading": "Can't Find What You're Looking For?",
+        "subtext": "Upload your own design and we'll turn it into a premium sticker.",
+        "button_label": "Create Your Custom Sticker",
+        "button_link": "shopify://collections/custom-stickers",
         "button_style": "solid",
-        "gradient_start": "#00CEC9",
-        "gradient_end": "#6C5CE7",
+        "gradient_start": "#6C5CE7",
+        "gradient_end": "#FD79A8",
         "heading_color": "#FFFFFF",
-        "text_color": "rgba(255,255,255,0.85)",
+        "text_color": "#FFFFFF",
         "padding_top": 80,
         "padding_bottom": 80
       },
       "blocks": {},
       "block_order": []
     },
+    "sticker_process": {
+      "type": "sticker-process",
+      "settings": {
+        "eyebrow": "Simple from start to finish",
+        "heading": "Your idea, ready to stick",
+        "subtext": "Create a custom sticker in a few clear steps.",
+        "button_label": "Start designing",
+        "button_link": "shopify://collections/custom-stickers",
+        "background_color": "#F8F7FF",
+        "padding_top": 64,
+        "padding_bottom": 64
+      },
+      "blocks": {
+        "step_upload": { "type": "step", "settings": { "icon": "⬆️", "title": "Upload your artwork", "text": "Choose a clear PNG, JPG or WebP file." } },
+        "step_arrange": { "type": "step", "settings": { "icon": "✨", "title": "Arrange your sheet", "text": "Set the size, copies and spacing in the live studio." } },
+        "step_ship": { "type": "step", "settings": { "icon": "📦", "title": "We print and ship", "text": "Review your order, then follow its production journey." } }
+      },
+      "block_order": ["step_upload", "step_arrange", "step_ship"]
+    },
     "trust_section": {
       "type": "trust-badges",
-      "blocks": {
-        "badge_quality": {
-          "type": "badge",
-          "settings": {
-            "icon": "\ud83c\udfa8",
-            "title": "Premium Quality",
-            "description": "Vibrant colors, durable vinyl, weatherproof finish",
-            "color_style": "teal"
-          }
-        },
-        "badge_turnaround": {
-          "type": "badge",
-          "settings": {
-            "icon": "\u26a1",
-            "title": "Fast Turnaround",
-            "description": "Printed and shipped within 2-3 business days",
-            "color_style": "pink"
-          }
-        },
-        "badge_shapes": {
-          "type": "badge",
-          "settings": {
-            "icon": "\u2702\ufe0f",
-            "title": "Custom Shapes",
-            "description": "Die-cut to your exact design, any size",
-            "color_style": "purple"
-          }
-        },
-        "badge_shipping": {
-          "type": "badge",
-          "settings": {
-            "icon": "\ud83c\udf0d",
-            "title": "Worldwide Shipping",
-            "description": "We deliver to over 50 countries",
-            "color_style": "gold"
-          }
-        }
-      },
-      "block_order": [
-        "badge_quality",
-        "badge_turnaround",
-        "badge_shapes",
-        "badge_shipping"
-      ],
       "settings": {
-        "heading": "Why SplashStickers",
+        "heading": "Why Choose Us",
+        "subtext": "Everything you need for stickers that look great and last.",
         "columns_desktop": "4",
         "background_color": "#FFFFFF",
         "padding_top": 60,
         "padding_bottom": 60
-      }
+      },
+      "blocks": {
+        "badge_quality": { "type": "badge", "settings": { "icon": "🎨", "title": "Premium Quality", "description": "Vibrant colors, durable vinyl and a weatherproof finish.", "color_style": "purple" } },
+        "badge_turnaround": { "type": "badge", "settings": { "icon": "⚡", "title": "Fast Turnaround", "description": "Clear production updates from upload to dispatch.", "color_style": "pink" } },
+        "badge_shapes": { "type": "badge", "settings": { "icon": "✂️", "title": "Custom Shapes", "description": "Die-cut to fit your artwork and chosen size.", "color_style": "teal" } },
+        "badge_shipping": { "type": "badge", "settings": { "icon": "🌍", "title": "Worldwide Shipping", "description": "Delivery options shown clearly at checkout.", "color_style": "gold" } }
+      },
+      "block_order": ["badge_quality", "badge_turnaround", "badge_shapes", "badge_shipping"]
     }
   },
   "order": [
     "hero_sticker",
     "category_cards",
     "featured_stickers",
+    "sticker_process",
     "custom_cta",
     "trust_section"
   ]

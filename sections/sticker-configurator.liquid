@@ -2,6 +2,7 @@
 {{ 'sticker-configurator.css' | asset_url | stylesheet_tag }}
 <!-- Defer JS — component renders in connectedCallback, no render-blocking needed -->
 <script src="{{ 'sticker-configurator.js' | asset_url }}" defer></script>
+<script src="{{ 'sticker-configurator-experience.js' | asset_url }}" defer></script>
 
 <style>
   .shopify-section.sticker-configurator > sticker-configurator { position: relative; }
@@ -63,6 +64,10 @@
   data-jspdf-url="{{ 'jspdf.umd.min.js' | asset_url }}"
   data-max-file-mb="{{ section.settings.max_file_mb }}"
   data-redirect-to-cart="{{ section.settings.redirect_to_cart }}"
+  data-track-enabled="{{ section.settings.enable_analytics }}"
+  data-onboarding-version="1"
+  data-resolution-low="{{ section.settings.resolution_low_text | escape }}"
+  data-resolution-success="{{ section.settings.resolution_success_text | escape }}"
   aria-busy="true"
   class="is-loading"
   style="
@@ -88,78 +93,93 @@
     </div>
   {%- endunless -%}
 
+  {% if section.settings.show_quick_start %}
+    <aside class="cfg-onboarding" id="onboarding-{{ section.id }}" aria-labelledby="onboarding-title-{{ section.id }}">
+      <div class="cfg-onboarding-copy">
+        <span class="cfg-onboarding-kicker">{{ section.settings.quick_start_kicker | escape }}</span>
+        <h3 id="onboarding-title-{{ section.id }}">{{ section.settings.quick_start_heading | escape }}</h3>
+        <ol>
+          <li><span aria-hidden="true">1</span>{{ section.settings.quick_start_step_1 | escape }}</li>
+          <li><span aria-hidden="true">2</span>{{ section.settings.quick_start_step_2 | escape }}</li>
+          <li><span aria-hidden="true">3</span>{{ section.settings.quick_start_step_3 | escape }}</li>
+        </ol>
+      </div>
+      <button type="button" class="cfg-onboarding-dismiss" data-configurator-dismiss aria-label="{{ section.settings.quick_start_dismiss | escape }}">{{ section.settings.quick_start_dismiss | escape }}</button>
+    </aside>
+  {% endif %}
+
   <div class="editor-wrap">
     <div class="toolbar" role="toolbar" aria-label="Canvas tools">
       <!-- Toolbar buttons generated via JS delegation (data-action) -->
-      <button title="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
+      <button title="Undo" aria-label="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
       </button>
-      <button title="Redo" data-action="redo" id="redo-btn-{{ section.id }}" disabled>
+      <button title="Redo" aria-label="Redo" data-action="redo" id="redo-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       </button>
       <span class="toolbar-divider"></span>
-      <button title="Auto arrange" data-action="auto-arrange" id="auto-btn-{{ section.id }}">
+      <button title="Auto arrange" aria-label="Auto arrange" data-action="auto-arrange" id="auto-btn-{{ section.id }}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       </button>
-      <button title="Delete selected" data-action="delete" id="del-btn-{{ section.id }}" disabled>
+      <button title="Delete selected" aria-label="Delete selected" data-action="delete" id="del-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
       </button>
-      <button title="Duplicate" data-action="duplicate" id="dup-btn-{{ section.id }}" disabled>
+      <button title="Duplicate" aria-label="Duplicate selected" data-action="duplicate" id="dup-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       </button>
       <span class="toolbar-divider"></span>
-      <button title="Flip H" data-action="flip-h" id="flip-h-{{ section.id }}" disabled>
+      <button title="Flip H" aria-label="Flip horizontally" data-action="flip-h" id="flip-h-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/></svg>
       </button>
-      <button title="Flip V" data-action="flip-v" id="flip-v-{{ section.id }}" disabled>
+      <button title="Flip V" aria-label="Flip vertically" data-action="flip-v" id="flip-v-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg>
       </button>
       <span class="toolbar-divider"></span>
-      <button title="Align left" data-action="align-left" id="align-left-{{ section.id }}" disabled>
+      <button title="Align left" aria-label="Align left" data-action="align-left" id="align-left-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="10" x2="14" y2="10"/><line x1="4" y1="14" x2="18" y2="14"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
       </button>
-      <button title="Align center H" data-action="align-h" id="align-h-{{ section.id }}" disabled>
+      <button title="Align center H" aria-label="Align horizontal centers" data-action="align-h" id="align-h-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
       </button>
-      <button title="Align right" data-action="align-right" id="align-right-{{ section.id }}" disabled>
+      <button title="Align right" aria-label="Align right" data-action="align-right" id="align-right-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="10" x2="20" y2="10"/><line x1="6" y1="14" x2="20" y2="14"/><line x1="14" y1="18" x2="20" y2="18"/></svg>
       </button>
-      <button title="Align top" data-action="align-top" id="align-top-{{ section.id }}" disabled>
+      <button title="Align top" aria-label="Align top" data-action="align-top" id="align-top-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
       </button>
-      <button title="Align center V" data-action="align-v" id="align-v-{{ section.id }}" disabled>
+      <button title="Align center V" aria-label="Align vertical centers" data-action="align-v" id="align-v-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
       </button>
-      <button title="Align bottom" data-action="align-bot" id="align-bot-{{ section.id }}" disabled>
+      <button title="Align bottom" aria-label="Align bottom" data-action="align-bot" id="align-bot-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
       </button>
       <span class="toolbar-divider"></span>
-      <button title="Distribute H" data-action="distribute-h" id="dist-h-{{ section.id }}" disabled>
+      <button title="Distribute H" aria-label="Distribute horizontally" data-action="distribute-h" id="dist-h-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="7" y1="18" x2="17" y2="18"/></svg>
       </button>
-      <button title="Distribute V" data-action="distribute-v" id="dist-v-{{ section.id }}" disabled>
+      <button title="Distribute V" aria-label="Distribute vertically" data-action="distribute-v" id="dist-v-{{ section.id }}" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="21"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="3" x2="14" y2="21"/><line x1="18" y1="7" x2="18" y2="17"/></svg>
       </button>
       <span class="toolbar-divider"></span>
-      <button title="Add text" data-action="add-text" id="text-btn-{{ section.id }}">
+      <button title="Add text" aria-label="Add text" data-action="add-text" id="text-btn-{{ section.id }}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
       </button>
-      <button title="Zoom to fit" data-action="zoom-fit" id="zoom-fit-{{ section.id }}">
+      <button title="Zoom to fit" aria-label="Zoom to fit" data-action="zoom-fit" id="zoom-fit-{{ section.id }}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
       </button>
       {% if section.settings.enable_export %}
-        <button title="Export PDF" data-action="export-pdf" id="export-btn-{{ section.id }}">
+        <button title="Export PDF" aria-label="Export print-ready PDF" data-action="export-pdf" id="export-btn-{{ section.id }}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
       {% endif %}
       <span class="toolbar-divider"></span>
-      <button title="Lock" data-action="lock" id="lock-btn-{{ section.id }}" disabled>
+      <button title="Lock" aria-label="Lock selected items" data-action="lock" id="lock-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </button>
-      <button title="Mobile" data-action="mobile" id="mobile-btn-{{ section.id }}">
+      <button title="Mobile" aria-label="Toggle mobile workspace" data-action="mobile" id="mobile-btn-{{ section.id }}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
       </button>
-      <button title="Multi-select" data-action="multi-select" id="multi-select-btn-{{ section.id }}" aria-pressed="false">
+      <button title="Multi-select" aria-label="Toggle multiple selection" data-action="multi-select" id="multi-select-btn-{{ section.id }}" aria-pressed="false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="11" height="11" rx="2"/><path d="M9 20h9a2 2 0 0 0 2-2V9"/></svg>
       </button>
       <span class="zoom-display" id="zoom-display-{{ section.id }}">100%</span>
@@ -175,14 +195,14 @@
     </div>
 
     <div class="size-inputs" id="size-inputs-{{ section.id }}">
-      <label>W:</label>
+      <label for="w-input-{{ section.id }}">W:</label>
       <input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
-      <label>H:</label>
+      <label for="h-input-{{ section.id }}">H:</label>
       <input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
       <span class="size-unit">mm</span>
     </div>
 
-    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}">
+    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}" role="region" aria-label="Sticker sheet canvas">
       <div class="canvas-stage" id="canvas-stage-{{ section.id }}">
         <div class="canvas-area" id="canvas-{{ section.id }}">
           <canvas class="grid-bg" id="grid-canvas-{{ section.id }}"></canvas>
@@ -196,7 +216,7 @@
   </div>
 
     <div class="cfg-controls">
-      <input type="file" accept="image/png,image/jpeg,image/webp" id="file-input-{{ section.id }}" hidden>
+      <input type="file" accept="image/png,image/jpeg,image/webp" id="file-input-{{ section.id }}" aria-label="Choose a design file" hidden>
       {% if configurator_product != blank and configurator_product.has_only_default_variant == false %}
         <label class="cfg-variant-field" for="variant-select-{{ section.id }}">
           <span>Product option</span>
@@ -216,7 +236,7 @@
         </label>
       {% endif %}
       <div class="upload-btn-area">
-        <button id="add-btn-{{ section.id }}" class="cfg-add-design">
+        <button id="add-btn-{{ section.id }}" class="cfg-add-design" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Add design
         </button>
@@ -289,6 +309,7 @@
             PNG, JPG or WebP · up to {{ section.settings.max_file_mb }} MB
           </div>
           <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
+          <p class="cfg-resolution-warning" id="resolution-warning-{{ section.id }}" role="status" aria-live="polite"></p>
         </div>
         <div class="cfg-modal-fields">
           <div class="cfg-modal-row">
@@ -308,8 +329,8 @@
           </div>
         </div>
         <div class="cfg-modal-actions">
-          <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec">Cancel</button>
-          <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" disabled>Add to Canvas</button>
+          <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec" type="button">Cancel</button>
+          <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" type="button" disabled>Add to Canvas</button>
         </div>
       </div>
     </dialog>
@@ -394,6 +415,64 @@
     },
     {
       "type": "header",
+      "content": "Quick start"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_start",
+      "label": "Show first-visit quick start",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "quick_start_kicker",
+      "label": "Quick start label",
+      "default": "Quick start"
+    },
+    {
+      "type": "text",
+      "id": "quick_start_heading",
+      "label": "Quick start heading",
+      "default": "Build your sheet in three steps"
+    },
+    {
+      "type": "text",
+      "id": "quick_start_step_1",
+      "label": "Step 1",
+      "default": "Upload a clear PNG, JPG or WebP design."
+    },
+    {
+      "type": "text",
+      "id": "quick_start_step_2",
+      "label": "Step 2",
+      "default": "Choose its print size and number of copies."
+    },
+    {
+      "type": "text",
+      "id": "quick_start_step_3",
+      "label": "Step 3",
+      "default": "Arrange the sheet, review it and add it to cart."
+    },
+    {
+      "type": "text",
+      "id": "quick_start_dismiss",
+      "label": "Dismiss button label",
+      "default": "Got it"
+    },
+    {
+      "type": "text",
+      "id": "resolution_low_text",
+      "label": "Low-resolution message",
+      "default": "Low-resolution artwork at this print size. Use a larger file or reduce the size."
+    },
+    {
+      "type": "text",
+      "id": "resolution_success_text",
+      "label": "Suitable-resolution message",
+      "default": "Resolution looks suitable at this print size."
+    },
+    {
+      "type": "header",
       "content": "Feature Toggles"
     },
     {
@@ -445,6 +524,13 @@
       "label": "Enable undo/redo",
       "default": true,
       "info": "50-step stack"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_analytics",
+      "label": "Publish configurator analytics events",
+      "default": true,
+      "info": "Pushes privacy-safe events to window.dataLayer when available"
     }
   ],
   "presets": [
@@ -465,6 +551,8 @@
         "redirect_to_cart": true,
         "enable_auto_arrange": true,
         "enable_undo_redo": true,
+        "show_quick_start": true,
+        "enable_analytics": true,
         "padding_top": 48,
         "padding_bottom": 48
       }

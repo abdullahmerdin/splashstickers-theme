@@ -19,23 +19,22 @@
   <div class="page-width">
     {% if heading != blank %}
       <h2 style="font-size: 2.5rem; color: {{ heading_color }}; margin: 0 0 12px; line-height: 1.2;">
-        {{ heading }}
+        {{ heading | escape }}
       </h2>
     {% endif %}
 
     {% if subtext != blank %}
       <p style="font-size: 1.1rem; color: {{ text_color }}; margin: 0 auto 32px; max-width: 500px;">
-        {{ subtext }}
+        {{ subtext | escape }}
       </p>
     {% endif %}
 
     {% if button_label != blank and button_link != blank %}
       <a
         href="{{ button_link }}"
-        class="{% if button_style == 'solid' %}btn-cta-gradient{% else %}btn-cta-outline{% endif %}"
-        style="display: inline-block; padding: 16px 40px; border-radius: 50px; font-weight: 700; font-size: 1.1rem; text-decoration: none; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+        class="splash-cta-button splash-cta-button--{{ button_style }}"
       >
-        {{ button_label }}
+        {{ button_label | escape }}
       </a>
     {% endif %}
   </div>
