@@ -2,10 +2,99 @@
   assign circle_size = section.settings.circle_size | append: 'px'
 -%}
 
-<div
-  class="sticker-categories-section"
-  style="--category-size: {{ circle_size }}; --category-gap: {{ section.settings.gap }}px; background-color: {{ section.settings.background_color }}; padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
->
+{% style %}
+  .sticker-categories-section {
+    background-color: {{ section.settings.background_color }};
+    padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;
+  }
+
+  .sticker-categories-section .sticker-categories-scroll {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 0;
+  }
+
+  .sticker-categories-section .sticker-category-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 12px 18px;
+    border: 1px solid rgba(31, 41, 55, 0.12);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 92%);
+    color: #1f2937;
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .sticker-categories-section .sticker-category-card:hover {
+    transform: translateY(-1px);
+    border-color: rgb(108 92 231 / 35%);
+    box-shadow: 0 10px 24px rgb(31 41 55 / 6%);
+  }
+
+  .sticker-categories-section .sticker-category-dot {
+    width: 10px;
+    height: 10px;
+    flex: none;
+    border-radius: 999px;
+    background: #6c5ce7;
+  }
+
+  .sticker-categories-section .sticker-category-card--purple .sticker-category-dot {
+    background: #6c5ce7;
+  }
+
+  .sticker-categories-section .sticker-category-card--pink .sticker-category-dot {
+    background: #fd79a8;
+  }
+
+  .sticker-categories-section .sticker-category-card--gold .sticker-category-dot {
+    background: #fdcb6e;
+  }
+
+  .sticker-categories-section .sticker-category-card--teal .sticker-category-dot {
+    background: #00cec9;
+  }
+
+  .sticker-categories-section .sticker-category-label {
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .sticker-categories-section .sticker-section-empty {
+    padding: 32px 20px;
+    color: #636e72;
+    text-align: center;
+  }
+
+  .sticker-categories-section :is(.sticker-category-card, .sticker-category-card):focus-visible {
+    outline: 3px solid #1f2937;
+    outline-offset: 4px;
+  }
+
+  @media (max-width: 749px) {
+    .sticker-categories-section .sticker-categories-scroll {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      justify-content: flex-start;
+      padding-bottom: 6px;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .sticker-categories-section .sticker-category-card {
+      scroll-snap-align: start;
+      flex: 0 0 auto;
+    }
+  }
+{% endstyle %}
+
+<div class="sticker-categories-section" style="--category-size: {{ circle_size }}; --category-gap: {{ section.settings.gap }}px;">
   <div class="page-width">
     {% if section.settings.heading != blank %}
       <header class="sticker-section-heading">
@@ -19,18 +108,20 @@
         {% for block in section.blocks %}
           {% if block.settings.link != blank %}
             <a
-              class="sticker-category-card"
+              class="sticker-category-card sticker-category-card--{{ block.settings.color_style }}"
               href="{{ block.settings.link }}"
               aria-label="{{ block.settings.label | escape }}"
               role="listitem"
               {{ block.shopify_attributes }}
             >
           {% else %}
-            <div class="sticker-category-card" role="listitem" {{ block.shopify_attributes }}>
+            <div
+              class="sticker-category-card sticker-category-card--{{ block.settings.color_style }}"
+              role="listitem"
+              {{ block.shopify_attributes }}
+            >
           {% endif %}
-            <div class="sticker-category-circle {{ block.settings.color_style }}">
-              <span aria-hidden="true">{{ block.settings.icon }}</span>
-            </div>
+            <span class="sticker-category-dot" aria-hidden="true"></span>
             {% if block.settings.label != blank %}
               <span class="sticker-category-label">{{ block.settings.label }}</span>
             {% endif %}
@@ -45,24 +136,24 @@
 
 {% schema %}
 {
-  "name": "Sticker Categories",
+  "name": "Category Links",
   "tag": "section",
   "class": "sticker-categories",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Shop by Category" },
-    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Find your perfect sticker vibe" },
+    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Find the format that fits your design." },
     { "type": "range", "id": "circle_size", "label": "Circle size", "min": 60, "max": 140, "step": 10, "unit": "px", "default": 100 },
     { "type": "range", "id": "gap", "label": "Gap between items", "min": 8, "max": 40, "step": 4, "unit": "px", "default": 16 },
     { "type": "color", "id": "background_color", "label": "Background", "default": "#FFFFFF" },
-    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 48 },
-    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 48 }
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 40 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 40 }
   ],
   "blocks": [
     {
       "type": "category",
       "name": "Category",
       "settings": [
-        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "🐾", "info": "Use an emoji or short text" },
+        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "", "info": "Optional, unused in the clean layout" },
         { "type": "text", "id": "label", "label": "Label", "default": "Category" },
         { "type": "url", "id": "link", "label": "Link", "info": "Link to a collection or page" },
         {
@@ -82,14 +173,13 @@
   ],
   "presets": [
     {
-      "name": "Sticker Categories",
+      "name": "Category Links",
       "category": "Custom",
       "blocks": [
-        { "type": "category", "settings": { "icon": "🐾", "label": "Animals", "color_style": "teal" } },
-        { "type": "category", "settings": { "icon": "🌸", "label": "Nature", "color_style": "pink" } },
-        { "type": "category", "settings": { "icon": "✨", "label": "Quotes", "color_style": "gold" } },
-        { "type": "category", "settings": { "icon": "🎨", "label": "Aesthetic", "color_style": "purple" } },
-        { "type": "category", "settings": { "icon": "🎮", "label": "Gaming", "color_style": "teal" } }
+        { "type": "category", "settings": { "icon": "", "label": "Die Cut", "color_style": "purple" } },
+        { "type": "category", "settings": { "icon": "", "label": "UV DTF", "color_style": "teal" } },
+        { "type": "category", "settings": { "icon": "", "label": "UV", "color_style": "pink" } },
+        { "type": "category", "settings": { "icon": "", "label": "Magnet", "color_style": "gold" } }
       ]
     }
   ]

@@ -13,8 +13,7 @@
     {% if section.blocks.size > 0 %}
       <div class="trust-badges-grid" style="--trust-columns: {{ section.settings.columns_desktop }};">
         {% for block in section.blocks %}
-          <article class="trust-badge" {{ block.shopify_attributes }}>
-            <div class="trust-badge-icon {{ block.settings.color_style }}" aria-hidden="true">{{ block.settings.icon }}</div>
+          <article class="trust-badge trust-badge--{{ block.settings.color_style }}" {{ block.shopify_attributes }}>
             <h3 class="trust-badge-title">{{ block.settings.title }}</h3>
             <div class="trust-badge-desc">{{ block.settings.description }}</div>
           </article>
@@ -28,7 +27,7 @@
 
 {% schema %}
 {
-  "name": "Trust Badges",
+  "name": "Trust Cards",
   "tag": "section",
   "class": "trust-badges",
   "settings": [
@@ -46,21 +45,21 @@
       "default": "4"
     },
     { "type": "color", "id": "background_color", "label": "Background", "default": "#FFFFFF" },
-    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 60 },
-    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 60 }
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 48 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 48 }
   ],
   "blocks": [
     {
       "type": "badge",
       "name": "Badge",
       "settings": [
-        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "🎨" },
+        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "", "info": "Optional, unused in the clean layout" },
         { "type": "text", "id": "title", "label": "Title", "default": "Feature" },
         { "type": "textarea", "id": "description", "label": "Description", "default": "Short description of this feature" },
         {
           "type": "select",
           "id": "color_style",
-          "label": "Icon color",
+          "label": "Accent",
           "options": [
             { "value": "teal", "label": "Teal" },
             { "value": "purple", "label": "Purple" },
@@ -74,13 +73,13 @@
   ],
   "presets": [
     {
-      "name": "Trust Badges",
+      "name": "Trust Cards",
       "category": "Custom",
       "blocks": [
-        { "type": "badge", "settings": { "icon": "🎨", "title": "Premium quality", "description": "Vibrant colors, durable vinyl and a weatherproof finish.", "color_style": "teal" } },
-        { "type": "badge", "settings": { "icon": "⚡", "title": "Fast turnaround", "description": "Clear production updates from upload to dispatch.", "color_style": "pink" } },
-        { "type": "badge", "settings": { "icon": "✂️", "title": "Custom shapes", "description": "Die-cut to fit your artwork and chosen size.", "color_style": "purple" } },
-        { "type": "badge", "settings": { "icon": "🌍", "title": "Worldwide shipping", "description": "Delivery options shown clearly at checkout.", "color_style": "gold" } }
+        { "type": "badge", "settings": { "icon": "", "title": "Premium quality", "description": "Vibrant colors, durable vinyl and a weatherproof finish.", "color_style": "teal" } },
+        { "type": "badge", "settings": { "icon": "", "title": "Fast turnaround", "description": "Clear production updates from upload to dispatch.", "color_style": "pink" } },
+        { "type": "badge", "settings": { "icon": "", "title": "Custom shapes", "description": "Die-cut to fit your artwork and chosen size.", "color_style": "purple" } },
+        { "type": "badge", "settings": { "icon": "", "title": "Worldwide shipping", "description": "Delivery options shown clearly at checkout.", "color_style": "gold" } }
       ]
     }
   ]

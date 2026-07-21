@@ -13,7 +13,6 @@
       {% for block in section.blocks %}
         <li class="sticker-process-card" {{ block.shopify_attributes }}>
           <span class="sticker-process-number" aria-hidden="true">{{ forloop.index }}</span>
-          <span class="sticker-process-icon" aria-hidden="true">{{ block.settings.icon }}</span>
           <h3>{{ block.settings.title }}</h3>
           <p>{{ block.settings.text }}</p>
         </li>
@@ -40,16 +39,16 @@
     { "type": "textarea", "id": "subtext", "label": "Subtext", "default": "Create a custom sticker in a few clear steps." },
     { "type": "text", "id": "button_label", "label": "Button label", "default": "Start designing" },
     { "type": "url", "id": "button_link", "label": "Button link" },
-    { "type": "color", "id": "background_color", "label": "Background", "default": "#F8F7FF" },
-    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 64 },
-    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 64 }
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#F8F9FA" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 56 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 120, "step": 8, "unit": "px", "default": 56 }
   ],
   "blocks": [
     {
       "type": "step",
       "name": "Step",
       "settings": [
-        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "⬆️" },
+        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "", "info": "Optional, unused in the clean layout" },
         { "type": "text", "id": "title", "label": "Title", "default": "Upload your artwork" },
         { "type": "textarea", "id": "text", "label": "Text", "default": "Choose a clear PNG, JPG or WebP file." }
       ]
@@ -60,9 +59,9 @@
       "name": "How it works",
       "category": "Custom",
       "blocks": [
-        { "type": "step", "settings": { "icon": "⬆️", "title": "Upload your artwork", "text": "Choose a clear PNG, JPG or WebP file." } },
-        { "type": "step", "settings": { "icon": "✨", "title": "Arrange your sheet", "text": "Set the size, copies and spacing in the live studio." } },
-        { "type": "step", "settings": { "icon": "📦", "title": "We print and ship", "text": "Review your order, then follow its production journey." } }
+        { "type": "step", "settings": { "icon": "", "title": "Upload your artwork", "text": "Choose a clear PNG, JPG or WebP file." } },
+        { "type": "step", "settings": { "icon": "", "title": "Choose size and quantity", "text": "Set the size, copies and spacing in the studio." } },
+        { "type": "step", "settings": { "icon": "", "title": "We print and ship", "text": "Review your order, then follow production updates." } }
       ]
     }
   ]
