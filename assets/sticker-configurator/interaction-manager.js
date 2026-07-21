@@ -515,7 +515,11 @@ class InteractionManager {
       pending.moved = true;
       e.preventDefault();
       core.state.touchStarted = null;
-      if (pending.id != null && pending.wasSelected && !pending.locked) {
+      if (pending.id != null && !pending.locked &&
+          (pending.wasSelected || core.state.multiSelectMode)) {
+        if (core.state.multiSelectMode && !pending.wasSelected) {
+          core.selectionManager.toggleSelect(pending.id, true);
+        }
         this.startDrag({ clientX: pending.x, clientY: pending.y }, pending.id);
       } else {
         core.state.dragState = {

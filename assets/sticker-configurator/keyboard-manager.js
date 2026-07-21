@@ -9,6 +9,7 @@ class KeyboardManager {
 
   onKeyDown(e) {
     var core = this.core;
+    if (core.state.exporting) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     // Ctrl/Cmd + Z — Undo

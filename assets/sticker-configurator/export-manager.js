@@ -6,6 +6,47 @@ class ExportManager {
   constructor(core) {
     this.core = core;
     this._libraryPromise = null;
+    this._savedControlState = null;
+  }
+
+  setExporting(exporting) {
+    var core = this.core;
+    if (exporting) {
+      if (core.state.exporting) return;
+      core.state.exporting = true;
+      core.classList.add('is-exporting');
+      core.setAttribute('aria-busy', 'true');
+      this._savedControlState = [];
+      core.querySelectorAll('button, input, select, textarea, summary, [contenteditable="true"]').forEach(function (control) {
+        this._savedControlState.push({
+          control: control,
+          disabled: 'disabled' in control ? control.disabled : null,
+          ariaDisabled: control.getAttribute('aria-disabled')
+        });
+        if ('disabled' in control) control.disabled = true;
+        control.setAttribute('aria-disabled', 'true');
+      }, this);
+      if (core.exportOverlay) {
+        core.exportOverlay.hidden = false;
+        core.exportOverlay.setAttribute('aria-hidden', 'false');
+      }
+      return;
+    }
+
+    (this._savedControlState || []).forEach(function (entry) {
+      if (!entry.control) return;
+      if (entry.disabled !== null) entry.control.disabled = entry.disabled;
+      if (entry.ariaDisabled === null) entry.control.removeAttribute('aria-disabled');
+      else entry.control.setAttribute('aria-disabled', entry.ariaDisabled);
+    });
+    this._savedControlState = null;
+    if (core.exportOverlay) {
+      core.exportOverlay.hidden = true;
+      core.exportOverlay.setAttribute('aria-hidden', 'true');
+    }
+    core.classList.remove('is-exporting');
+    core.setAttribute('aria-busy', 'false');
+    core.state.exporting = false;
   }
 
   ensureLibrary() {
@@ -66,8 +107,11 @@ class ExportManager {
 
   async onExportPDF() {
     var core = this.core;
-    core.dispatchExportEvent();
+    if (core.state.exporting) return;
+    this.setExporting(true);
+    var errorMessage = '';
     try {
+      core.dispatchExportEvent();
       var blob = await this.buildPdfBlob();
       var url = URL.createObjectURL(blob);
       var link = document.createElement('a');
@@ -78,7 +122,10 @@ class ExportManager {
       link.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     } catch (err) {
-      core.modalManager.showErrorModal('Could not generate PDF. Error: ' + err.message);
+      errorMessage = 'Could not generate PDF. Error: ' + err.message;
+    } finally {
+      this.setExporting(false);
     }
+    if (errorMessage) core.modalManager.showErrorModal(errorMessage);
   }
 }

@@ -42,9 +42,7 @@ class SelectionManager {
     // Update toolbar buttons
     var selCount = ids.length;
     var btnIds = [
-      'del-btn', 'dup-btn', 'flip-h', 'flip-v',
-      'align-left', 'align-h', 'align-right',
-      'align-top', 'align-v', 'align-bot'
+      'del-btn', 'dup-btn', 'flip-h', 'flip-v'
     ];
     btnIds.forEach(function (id) {
       var btn = core.cache[id];

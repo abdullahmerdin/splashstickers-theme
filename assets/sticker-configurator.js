@@ -1220,9 +1220,7 @@ class SelectionManager {
     // Update toolbar buttons
     var selCount = ids.length;
     var btnIds = [
-      'del-btn', 'dup-btn', 'flip-h', 'flip-v',
-      'align-left', 'align-h', 'align-right',
-      'align-top', 'align-v', 'align-bot'
+      'del-btn', 'dup-btn', 'flip-h', 'flip-v'
     ];
     btnIds.forEach(function (id) {
       var btn = core.cache[id];
@@ -2154,6 +2152,47 @@ class ExportManager {
   constructor(core) {
     this.core = core;
     this._libraryPromise = null;
+    this._savedControlState = null;
+  }
+
+  setExporting(exporting) {
+    var core = this.core;
+    if (exporting) {
+      if (core.state.exporting) return;
+      core.state.exporting = true;
+      core.classList.add('is-exporting');
+      core.setAttribute('aria-busy', 'true');
+      this._savedControlState = [];
+      core.querySelectorAll('button, input, select, textarea, summary, [contenteditable="true"]').forEach(function (control) {
+        this._savedControlState.push({
+          control: control,
+          disabled: 'disabled' in control ? control.disabled : null,
+          ariaDisabled: control.getAttribute('aria-disabled')
+        });
+        if ('disabled' in control) control.disabled = true;
+        control.setAttribute('aria-disabled', 'true');
+      }, this);
+      if (core.exportOverlay) {
+        core.exportOverlay.hidden = false;
+        core.exportOverlay.setAttribute('aria-hidden', 'false');
+      }
+      return;
+    }
+
+    (this._savedControlState || []).forEach(function (entry) {
+      if (!entry.control) return;
+      if (entry.disabled !== null) entry.control.disabled = entry.disabled;
+      if (entry.ariaDisabled === null) entry.control.removeAttribute('aria-disabled');
+      else entry.control.setAttribute('aria-disabled', entry.ariaDisabled);
+    });
+    this._savedControlState = null;
+    if (core.exportOverlay) {
+      core.exportOverlay.hidden = true;
+      core.exportOverlay.setAttribute('aria-hidden', 'true');
+    }
+    core.classList.remove('is-exporting');
+    core.setAttribute('aria-busy', 'false');
+    core.state.exporting = false;
   }
 
   ensureLibrary() {
@@ -2214,8 +2253,11 @@ class ExportManager {
 
   async onExportPDF() {
     var core = this.core;
-    core.dispatchExportEvent();
+    if (core.state.exporting) return;
+    this.setExporting(true);
+    var errorMessage = '';
     try {
+      core.dispatchExportEvent();
       var blob = await this.buildPdfBlob();
       var url = URL.createObjectURL(blob);
       var link = document.createElement('a');
@@ -2226,8 +2268,11 @@ class ExportManager {
       link.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     } catch (err) {
-      core.modalManager.showErrorModal('Could not generate PDF. Error: ' + err.message);
+      errorMessage = 'Could not generate PDF. Error: ' + err.message;
+    } finally {
+      this.setExporting(false);
     }
+    if (errorMessage) core.modalManager.showErrorModal(errorMessage);
   }
 }
 
@@ -2242,6 +2287,7 @@ class KeyboardManager {
 
   onKeyDown(e) {
     var core = this.core;
+    if (core.state.exporting) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     // Ctrl/Cmd + Z — Undo
@@ -3146,7 +3192,11 @@ class InteractionManager {
       pending.moved = true;
       e.preventDefault();
       core.state.touchStarted = null;
-      if (pending.id != null && pending.wasSelected && !pending.locked) {
+      if (pending.id != null && !pending.locked &&
+          (pending.wasSelected || core.state.multiSelectMode)) {
+        if (core.state.multiSelectMode && !pending.wasSelected) {
+          core.selectionManager.toggleSelect(pending.id, true);
+        }
         this.startDrag({ clientX: pending.x, clientY: pending.y }, pending.id);
       } else {
         core.state.dragState = {
@@ -3733,6 +3783,7 @@ class StickerConfigurator extends HTMLElement {
       spacePressed: false,
       mobileOverride: null,
       multiSelectMode: false,
+      exporting: false,
       snapEnabled: this.dataset.snapEnabled !== 'false',
       gridSize: Math.max(5, Math.min(100, parseInt(this.dataset.gridSize, 10) || 20)),
       gapSize: Math.max(3, Math.min(50, parseInt(this.dataset.gapMm, 10) || 3)),
@@ -3824,11 +3875,10 @@ class StickerConfigurator extends HTMLElement {
     var sid = this.dataset.sectionId;
     var ids = [
       'canvas-wrap', 'canvas-stage', 'canvas', 'grid-canvas', 'hint', 'file-input', 'modal',
+      'export-overlay',
       'undo-btn', 'redo-btn', 'item-count', 'price-display', 'qty-display',
       'mobile-btn', 'multi-select-btn', 'guide-h', 'guide-v',
       'del-btn', 'dup-btn', 'flip-h', 'flip-v',
-      'align-left', 'align-h', 'align-right',
-      'align-top', 'align-v', 'align-bot',
       'lock-btn', 'size-inputs', 'w-input', 'h-input',
       'auto-btn', 'export-btn', 'text-btn', 'zoom-fit',
       'qty-down', 'qty-up', 'clear-btn', 'bg-color',
@@ -3852,6 +3902,7 @@ class StickerConfigurator extends HTMLElement {
     this.hintEl = this.cache['hint'];
     this.fileInput = this.cache['file-input'];
     this.modalEl = this.cache['modal'];
+    this.exportOverlay = this.cache['export-overlay'];
     this.undoBtn = this.cache['undo-btn'];
     this.redoBtn = this.cache['redo-btn'];
     this.countEl = this.cache['item-count'];
@@ -3896,7 +3947,20 @@ class StickerConfigurator extends HTMLElement {
     // Toolbar DELEGATION (V22 fix): use data-action on .toolbar container
     var toolbar = this.querySelector('.toolbar');
     if (toolbar) {
+      var touchActionHandledUntil = 0;
+      toolbar.addEventListener('pointerup', function (e) {
+        if (e.pointerType !== 'touch') return;
+        var btn = e.target.closest('[data-action]');
+        if (!btn || btn.disabled) return;
+        e.preventDefault();
+        touchActionHandledUntil = Date.now() + 500;
+        core._handleToolbarAction(btn.dataset.action);
+      }, { signal: signal });
       toolbar.addEventListener('click', function (e) {
+        if (Date.now() < touchActionHandledUntil) {
+          touchActionHandledUntil = 0;
+          return;
+        }
         var btn = e.target.closest('[data-action]');
         if (!btn || btn.disabled) return;
         var action = btn.dataset.action;
@@ -4126,12 +4190,6 @@ class StickerConfigurator extends HTMLElement {
       'dup-btn': 'duplicate',
       'flip-h': 'flip-h',
       'flip-v': 'flip-v',
-      'align-left': 'align-left',
-      'align-h': 'align-h',
-      'align-right': 'align-right',
-      'align-top': 'align-top',
-      'align-v': 'align-v',
-      'align-bot': 'align-bot',
       'text-btn': 'add-text',
       'zoom-fit': 'zoom-fit',
       'export-btn': 'export-pdf',
@@ -4157,6 +4215,7 @@ class StickerConfigurator extends HTMLElement {
 
   /* ── Toolbar action router ── */
   _handleToolbarAction(action) {
+    if (this.state.exporting && action !== 'export-pdf') return;
     switch (action) {
       case 'undo': this.historyManager.undo(); break;
       case 'redo': this.historyManager.redo(); break;
@@ -4165,13 +4224,6 @@ class StickerConfigurator extends HTMLElement {
       case 'duplicate': this.itemManager.duplicateSelected(); break;
       case 'flip-h': this.itemManager.flipH(); break;
       case 'flip-v': this.itemManager.flipV(); break;
-      case 'align-left':
-      case 'align-h':
-      case 'align-right':
-      case 'align-top':
-      case 'align-v':
-      case 'align-bot':
-        this.alignmentEngine.onAlignClick(action.replace('align-', '')); break;
       case 'add-text': this.interactionManager.onTextToolToggle(); break;
       case 'zoom-fit': this.canvasRenderer.zoomToFit(); break;
       case 'export-pdf': this.exportManager.onExportPDF(); break;

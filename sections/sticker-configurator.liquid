@@ -86,6 +86,19 @@
       <span class="cfg-loading-progress"><i></i></span>
     </div>
   </div>
+  <div
+    class="cfg-export-overlay"
+    id="export-overlay-{{ section.id }}"
+    role="status"
+    aria-live="polite"
+    aria-hidden="true"
+    hidden
+  >
+    <div class="cfg-export-loader">
+      <span class="cfg-export-spinner" aria-hidden="true"></span>
+      <span>Downloading PDF&hellip;</span>
+    </div>
+  </div>
   {%- unless heading == blank -%}
     <div class="cfg-header">
       <span class="cfg-eyebrow">Gangsheet Studio</span>
@@ -133,32 +146,6 @@
       </button>
       <button title="Flip V" aria-label="Flip vertically" data-action="flip-v" id="flip-v-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg>
-      </button>
-      <span class="toolbar-divider"></span>
-      <button title="Align left" aria-label="Align left" data-action="align-left" id="align-left-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="10" x2="14" y2="10"/><line x1="4" y1="14" x2="18" y2="14"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
-      </button>
-      <button title="Align center H" aria-label="Align horizontal centers" data-action="align-h" id="align-h-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
-      </button>
-      <button title="Align right" aria-label="Align right" data-action="align-right" id="align-right-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="10" x2="20" y2="10"/><line x1="6" y1="14" x2="20" y2="14"/><line x1="14" y1="18" x2="20" y2="18"/></svg>
-      </button>
-      <button title="Align top" aria-label="Align top" data-action="align-top" id="align-top-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
-      </button>
-      <button title="Align center V" aria-label="Align vertical centers" data-action="align-v" id="align-v-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
-      </button>
-      <button title="Align bottom" aria-label="Align bottom" data-action="align-bot" id="align-bot-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="4" x2="18" y2="4"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
-      </button>
-      <span class="toolbar-divider"></span>
-      <button title="Distribute H" aria-label="Distribute horizontally" data-action="distribute-h" id="dist-h-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="7" y1="18" x2="17" y2="18"/></svg>
-      </button>
-      <button title="Distribute V" aria-label="Distribute vertically" data-action="distribute-v" id="dist-v-{{ section.id }}" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="21"/><line x1="10" y1="7" x2="10" y2="17"/><line x1="14" y1="3" x2="14" y2="21"/><line x1="18" y1="7" x2="18" y2="17"/></svg>
       </button>
       <span class="toolbar-divider"></span>
       <button title="Add text" aria-label="Add text" data-action="add-text" id="text-btn-{{ section.id }}">
