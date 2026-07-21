@@ -37,7 +37,7 @@ const context = {
 };
 
 vm.runInNewContext(
-  source + '\n;globalThis.__configuratorClasses = { Utils, CollisionEngine, CanvasRenderer, CartManager, StickerConfigurator };',
+  source + '\n;globalThis.__configuratorClasses = { Utils, CollisionEngine, CanvasRenderer, CartManager, StickerConfigurator, AlignmentEngine };',
   context
 );
 
@@ -46,7 +46,8 @@ const {
   CollisionEngine,
   CanvasRenderer,
   CartManager,
-  StickerConfigurator
+  StickerConfigurator,
+  AlignmentEngine
 } = context.__configuratorClasses;
 
 test('millimetre conversion stays stable on the 600 px fallback workspace', () => {
@@ -126,6 +127,38 @@ test('collision engine enforces configured gaps and workspace bounds', () => {
     engine.canPlace({ id: 3, x: 590, y: 10, w: 20, h: 20, rotation: 0 }, [first], []),
     false
   );
+});
+
+test('auto arrange fills the gap beneath shorter artwork instead of starting a new shelf', () => {
+  const items = [
+    { id: 1, x: 0, y: 0, w: 100, h: 200, rotation: 0, el: { style: {} } },
+    { id: 2, x: 0, y: 0, w: 100, h: 100, rotation: 0, el: { style: {} } },
+    { id: 3, x: 0, y: 0, w: 100, h: 100, rotation: 0, el: { style: {} } },
+    { id: 4, x: 0, y: 0, w: 100, h: 100, rotation: 0, el: { style: {} } }
+  ];
+  const core = {
+    CANVAS_W: 320,
+    CANVAS_H: 300,
+    state: { items, gapSize: 10 },
+    utils: { mmToPx: (value) => value },
+    canvasRenderer: { drawGrid() {}, _syncZoomTransform() {} },
+    historyManager: { saveState() {} },
+    growCanvas() {},
+    dispatchUpdateEvent() {}
+  };
+  core.collisionEngine = new CollisionEngine(core);
+
+  assert.equal(new AlignmentEngine(core).onAutoArrange(), true);
+  assert.deepEqual(
+    items.map(({ id, x, y }) => ({ id, x, y })),
+    [
+      { id: 1, x: 0, y: 0 },
+      { id: 2, x: 110, y: 0 },
+      { id: 3, x: 220, y: 0 },
+      { id: 4, x: 110, y: 110 }
+    ]
+  );
+  assert.equal(core.CANVAS_H, 300);
 });
 
 test('cart quantity is sheet quantity and does not multiply artwork copies', () => {

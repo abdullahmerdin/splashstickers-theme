@@ -74,14 +74,12 @@ class AlignmentEngine {
       };
     });
 
-    // Largest artwork first gives a compact, deterministic shelf layout.
+    // Largest artwork first gives a compact, deterministic layout.
     entries.sort(function (a, b) {
       return (b.w * b.h) - (a.w * a.h) || b.h - a.h || a.index - b.index;
     });
 
-    var x = 0;
-    var y = 0;
-    var rowH = 0;
+    var placedRects = [];
     var maxBottom = 0;
     var failed = false;
 
@@ -92,19 +90,44 @@ class AlignmentEngine {
         return;
       }
 
-      var nextX = x > 0 ? x + gapPx : 0;
-      if (nextX + entry.w > core.CANVAS_W + core.collisionEngine.EPSILON) {
-        y += rowH + gapPx;
-        x = 0;
-        rowH = 0;
-        nextX = 0;
+      // Try every newly exposed right and bottom edge. Unlike a shelf layout,
+      // this lets shorter artwork fill the space below taller neighbours.
+      var xCandidates = [0];
+      var yCandidates = [0];
+      placedRects.forEach(function (rect) {
+        xCandidates.push(rect.x + rect.w + gapPx);
+        yCandidates.push(rect.y + rect.h + gapPx);
+      });
+      xCandidates.sort(function (a, b) { return a - b; });
+      yCandidates.sort(function (a, b) { return a - b; });
+
+      var slot = null;
+      for (var yi = 0; yi < yCandidates.length && !slot; yi++) {
+        for (var xi = 0; xi < xCandidates.length; xi++) {
+          var candidate = { x: xCandidates[xi], y: yCandidates[yi], w: entry.w, h: entry.h };
+          if (candidate.x + candidate.w > core.CANVAS_W + core.collisionEngine.EPSILON) continue;
+          var blocked = placedRects.some(function (rect) {
+            return core.collisionEngine.rectsOverlap(candidate, rect, gapPx);
+          });
+          if (!blocked) {
+            slot = candidate;
+            break;
+          }
+        }
       }
 
-      entry.item.x = nextX - entry.offsetX;
-      entry.item.y = y - entry.offsetY;
-      x = nextX + entry.w;
-      rowH = Math.max(rowH, entry.h);
-      maxBottom = Math.max(maxBottom, y + entry.h);
+      // The bottom edge of the current arrangement is always a valid new row.
+      if (!slot) {
+        var bottom = placedRects.reduce(function (value, rect) {
+          return Math.max(value, rect.y + rect.h);
+        }, 0);
+        slot = { x: 0, y: bottom > 0 ? bottom + gapPx : 0, w: entry.w, h: entry.h };
+      }
+
+      entry.item.x = slot.x - entry.offsetX;
+      entry.item.y = slot.y - entry.offsetY;
+      placedRects.push(slot);
+      maxBottom = Math.max(maxBottom, slot.y + slot.h);
     });
 
     // Vertical growth must happen before collision validation.
