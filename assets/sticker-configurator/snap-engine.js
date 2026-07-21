@@ -13,7 +13,8 @@ class SnapEngine {
   }
 
   applySnap(items) {
-    var g = this.core.state.gridSize || 20;
+    var gridMm = this.core.state.gridSize || 20;
+    var g = this.core.utils ? this.core.utils.mmToPx(gridMm) : gridMm;
     items.forEach(function (it) {
       if (!it) return;
       it.x = this.snapVal(it.x, g);

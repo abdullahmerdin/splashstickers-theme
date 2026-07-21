@@ -49,10 +49,56 @@ const {
   StickerConfigurator
 } = context.__configuratorClasses;
 
-test('millimetre conversion stays stable on the 600 mm workspace', () => {
+test('millimetre conversion stays stable on the 600 px fallback workspace', () => {
   const utils = new Utils({ CANVAS_W: 600 });
   assert.ok(Math.abs(utils.mmToPx(42) - 42) < Number.EPSILON * 100);
   assert.equal(utils.pxToMm(125), 125);
+});
+
+test('millimetres map to a viewport-width pixel workspace without changing physical size', () => {
+  const core = { CANVAS_W: 1800, CANVAS_H: 1200, SHEET_WIDTH_MM: 600 };
+  const utils = new Utils(core);
+
+  assert.equal(utils.getPixelsPerMm(), 3);
+  assert.equal(utils.mmToPx(42), 126);
+  assert.equal(utils.pxToMm(375), 125);
+  assert.equal(utils.getWorkspaceWidthMm(), 600);
+  assert.equal(utils.getWorkspaceHeightMm(), 400);
+});
+
+test('workspace resize fills the viewport and preserves item millimetres', () => {
+  const textContent = { style: {} };
+  const item = {
+    x: 10, y: 20, w: 30, h: 40, fontSize: 16,
+    el: {
+      style: {},
+      querySelector(selector) { return selector === '.text-content' ? textContent : null; }
+    }
+  };
+  const core = {
+    CANVAS_W: 600,
+    CANVAS_H: 400,
+    SHEET_WIDTH_MM: 600,
+    wrap: { clientWidth: 1800, scrollLeft: 0, scrollTop: 0 },
+    state: {
+      items: [item],
+      history: [[{ x: 10, y: 20, w: 30, h: 40, fontSize: 16 }]],
+      clipboard: null
+    }
+  };
+
+  const changed = StickerConfigurator.prototype.resizeWorkspaceToViewport.call(core, false);
+
+  assert.equal(changed, true);
+  assert.equal(core.CANVAS_W, 1800);
+  assert.equal(core.CANVAS_H, 1200);
+  assert.deepEqual(
+    { x: item.x, y: item.y, w: item.w, h: item.h, fontSize: item.fontSize },
+    { x: 30, y: 60, w: 90, h: 120, fontSize: 48 }
+  );
+  const utils = new Utils(core);
+  assert.equal(utils.pxToMm(item.w), 30);
+  assert.equal(textContent.style.fontSize, '48px');
 });
 
 test('canvas zoom never falls below its 100 percent scale', () => {
@@ -106,6 +152,31 @@ test('cart quantity is sheet quantity and does not multiply artwork copies', () 
   assert.equal(manifest.sheetQuantity, 10);
   assert.equal(manifest.items[1].flipX, true);
   assert.equal(manifest.workspace.widthMm, 600);
+});
+
+test('cart manifest converts responsive display pixels back to millimetres', () => {
+  const core = {
+    CANVAS_W: 1800,
+    CANVAS_H: 1200,
+    SHEET_WIDTH_MM: 600,
+    dataset: { currency: 'USD' },
+    qtyEl: { textContent: '2' },
+    state: {
+      projectId: 'responsive-project',
+      gapSize: 3,
+      backgroundColor: '#ffffff',
+      items: [{ x: 30, y: 60, w: 150, h: 90, rotation: 0, scaleX: 1, scaleY: 1 }]
+    }
+  };
+  core.utils = new Utils(core);
+  const manifest = new CartManager(core).buildManifest();
+
+  assert.equal(manifest.workspace.widthMm, 600);
+  assert.equal(manifest.workspace.heightMm, 400);
+  assert.equal(manifest.items[0].xMm, 10);
+  assert.equal(manifest.items[0].yMm, 20);
+  assert.equal(manifest.items[0].widthMm, 50);
+  assert.equal(manifest.items[0].heightMm, 30);
 });
 
 test('cart request uses Shopify JSON payload and never builds the production PDF', async () => {
@@ -232,6 +303,17 @@ test('long production canvases reduce both axes with one uniform scale', () => {
 
   assert.ok(scale < 300 / 25.4);
   assert.ok(core.CANVAS_W * core.CANVAS_H * scale * scale <= 45000000.001);
+  assert.equal((core.CANVAS_W * scale) / (core.CANVAS_H * scale), 600 / 1600);
+});
+
+test('production render scale is based on physical millimetres, not display width', () => {
+  const core = { CANVAS_W: 1800, CANVAS_H: 4800, SHEET_WIDTH_MM: 600 };
+  core.utils = new Utils(core);
+  const renderer = new CanvasRenderer(core);
+  const scale = renderer.getRenderScale({ dpi: 300 });
+
+  assert.ok(Math.abs(scale - ((300 / 25.4) / 3)) < 1e-12);
+  assert.ok(Math.abs(core.CANVAS_W * scale - 600 * 300 / 25.4) < 1e-9);
   assert.equal((core.CANVAS_W * scale) / (core.CANVAS_H * scale), 600 / 1600);
 });
 

@@ -41,8 +41,9 @@ class ClipboardManager {
           cd.color, cd.bgColor, cd.fontWeight, cd.fontStyle, cd.textAlign
         );
         if (item) {
-          item.x += 20;
-          item.y += 20;
+          var pasteOffset = core.utils ? core.utils.mmToPx(20) : 20;
+          item.x += pasteOffset;
+          item.y += pasteOffset;
           item.el.style.left = item.x + 'px';
           item.el.style.top = item.y + 'px';
         }

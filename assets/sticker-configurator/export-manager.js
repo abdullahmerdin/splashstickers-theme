@@ -30,8 +30,8 @@ class ExportManager {
   async buildPdfBlob() {
     var core = this.core;
     var jsPDF = await this.ensureLibrary();
-    var widthMm = core.CANVAS_W;
-    var heightMm = core.CANVAS_H;
+    var widthMm = core.utils ? core.utils.getWorkspaceWidthMm() : core.CANVAS_W;
+    var heightMm = core.utils ? core.utils.getWorkspaceHeightMm() : core.CANVAS_H;
     var dpi = Math.max(150, Math.min(300, Number(core.dataset.exportDpi) || 300));
     var doc = new jsPDF({
       orientation: widthMm >= heightMm ? 'landscape' : 'portrait',

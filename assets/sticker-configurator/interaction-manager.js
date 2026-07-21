@@ -977,7 +977,8 @@ class InteractionManager {
         function (data) {
           if (data && data.text) {
             core.historyManager.saveState();
-            core.itemManager.addTextItem(data.text, data.fontSize, false, data.color, data.bgColor, data.fontWeight, data.fontStyle, data.textAlign);
+            var fontSizePx = core.utils ? core.utils.mmToPx(data.fontSize) : data.fontSize;
+            core.itemManager.addTextItem(data.text, fontSizePx, false, data.color, data.bgColor, data.fontWeight, data.fontStyle, data.textAlign);
             core.state.textToolActive = false;
             if (core.canvas) core.canvas.style.cursor = 'default';
           }

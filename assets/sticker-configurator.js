@@ -7,14 +7,24 @@ class Utils {
     this.core = core;
   }
 
-  // CRITICAL: 1mm = CANVAS_W / 600px
-  pxToMm(px) {
-    return px / this.core.CANVAS_W * 600;
+  getWorkspaceWidthMm() {
+    return Math.max(1, Number(this.core.SHEET_WIDTH_MM) || 600);
   }
 
-  // CRITICAL: 1mm = CANVAS_W / 600px
+  getWorkspaceHeightMm() {
+    return this.pxToMm(this.core.CANVAS_H);
+  }
+
+  getPixelsPerMm() {
+    return Math.max(0.001, this.core.CANVAS_W / this.getWorkspaceWidthMm());
+  }
+
+  pxToMm(px) {
+    return Number(px) / this.getPixelsPerMm();
+  }
+
   mmToPx(mm) {
-    return mm / 600 * this.core.CANVAS_W;
+    return Number(mm) * this.getPixelsPerMm();
   }
 
   updateSizeInfo(item) {
@@ -47,7 +57,7 @@ class Utils {
     if (!item) return;
     var input = this.core.querySelector('#' + axis + '-input-' + sid);
     if (!input) return;
-    var val = Math.max(20, this.mmToPx(parseInt(input.value) || 50));
+    var val = Math.max(this.mmToPx(10), this.mmToPx(parseInt(input.value) || 50));
     var target = Object.assign({}, item);
     if (axis === 'w') target.w = val;
     else target.h = val;
@@ -92,7 +102,8 @@ class SnapEngine {
   }
 
   applySnap(items) {
-    var g = this.core.state.gridSize || 20;
+    var gridMm = this.core.state.gridSize || 20;
+    var g = this.core.utils ? this.core.utils.mmToPx(gridMm) : gridMm;
     items.forEach(function (it) {
       if (!it) return;
       it.x = this.snapVal(it.x, g);
@@ -515,7 +526,7 @@ class CanvasRenderer {
     ctx.strokeStyle = '#E8E8E8';
     ctx.lineWidth = 0.5;
 
-    var gridSize = core.state.gridSize || 20;
+    var gridSize = core.utils ? core.utils.mmToPx(core.state.gridSize || 20) : (core.state.gridSize || 20);
     var cols = Math.floor(w / gridSize);
     var rows = Math.floor(h / gridSize);
 
@@ -538,7 +549,8 @@ class CanvasRenderer {
     var core = this.core;
     if (!core.wrap || !core.canvas) return;
     var zoom = this.clampZoom(core.state.zoom);
-    var step = Math.max(4, (core.state.gridSize || 20) * zoom);
+    var baseStep = core.utils ? core.utils.mmToPx(core.state.gridSize || 20) : (core.state.gridSize || 20);
+    var step = Math.max(4, baseStep * zoom);
     var wrapRect = core.wrap.getBoundingClientRect();
     var canvasRect = core.canvas.getBoundingClientRect();
     core.wrap.style.setProperty('--cfg-grid-step', step + 'px');
@@ -650,7 +662,9 @@ class CanvasRenderer {
 
     requestAnimationFrame(function () {
       core.wrap.scrollLeft = Math.max(0, (core.wrap.scrollWidth - core.wrap.clientWidth) / 2);
-      core.wrap.scrollTop = Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
+      core.wrap.scrollTop = core.wrap.scrollHeight > core.wrap.clientHeight
+        ? 0
+        : Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
       core.state.panX = core.wrap.scrollLeft;
       core.state.panY = core.wrap.scrollTop;
     });
@@ -680,7 +694,11 @@ class CanvasRenderer {
     var core = this.core;
     options = options || {};
     var dpi = Math.max(25.4, Number(options.dpi) || 25.4);
-    var scale = dpi / 25.4;
+    var workspaceWidthMm = core.utils
+      ? core.utils.getWorkspaceWidthMm()
+      : Math.max(1, Number(core.SHEET_WIDTH_MM) || 600);
+    var pixelsPerMm = Math.max(0.001, core.CANVAS_W / workspaceWidthMm);
+    var scale = (dpi / 25.4) / pixelsPerMm;
     var maxDimension = Math.max(0, Number(options.maxDimension) || 0);
     if (maxDimension > 0) {
       scale = Math.min(scale, maxDimension / Math.max(core.CANVAS_W, core.CANVAS_H));
@@ -803,18 +821,18 @@ class ItemManager {
     var item = this.addItemHelpers(el, id);
     item.src = src;
 
-    // Preserve the supplied artwork dimensions when available. The logical
-    // canvas uses 1 px = 1 mm, so modal dimensions map directly to the sheet.
-    // Without metadata, retain the compact default used by pasted/duplicated
-    // images.
+    // Supplied dimensions are display-space pixels converted from millimetres
+    // by the configurator. This keeps physical sizes stable at every viewport
+    // width.
     var defaultW = dimensions && Number(dimensions.w) > 0
       ? Number(dimensions.w)
       : Math.round(core.CANVAS_W * 0.15);
     var defaultH = dimensions && Number(dimensions.h) > 0
       ? Number(dimensions.h)
       : Math.round(defaultW * 0.75);
-    defaultW = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultW)));
-    defaultH = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultH)));
+    var minArtworkSize = core.utils ? core.utils.mmToPx(10) : 10;
+    defaultW = Math.max(minArtworkSize, Math.min(core.CANVAS_W, Math.round(defaultW)));
+    defaultH = Math.max(minArtworkSize, Math.min(core.CANVAS_W, Math.round(defaultH)));
     item.w = defaultW;
     item.h = defaultH;
     el.style.width = defaultW + 'px';
@@ -886,10 +904,14 @@ class ItemManager {
 
     // Calculate size based on text
     var fs = fontSize || 16;
-    item.w = Math.round(text.length * fs * 0.6 + 20);
-    item.h = Math.round(fs * 1.8 + 16);
-    item.w = Math.max(60, Math.min(core.CANVAS_W * 0.4, item.w));
-    item.h = Math.max(40, Math.min(core.CANVAS_H * 0.15, item.h));
+    var horizontalPadding = core.utils ? core.utils.mmToPx(20) : 20;
+    var verticalPadding = core.utils ? core.utils.mmToPx(16) : 16;
+    var minTextWidth = core.utils ? core.utils.mmToPx(60) : 60;
+    var minTextHeight = core.utils ? core.utils.mmToPx(40) : 40;
+    item.w = Math.round(text.length * fs * 0.6 + horizontalPadding);
+    item.h = Math.round(fs * 1.8 + verticalPadding);
+    item.w = Math.max(minTextWidth, Math.min(core.CANVAS_W * 0.4, item.w));
+    item.h = Math.max(minTextHeight, Math.min(core.CANVAS_H * 0.15, item.h));
     el.style.width = item.w + 'px';
     el.style.height = item.h + 'px';
 
@@ -1058,8 +1080,9 @@ class ItemManager {
           it.color, it.bgColor, it.fontWeight, it.fontStyle, it.textAlign
         );
         if (dup) {
-          dup.x = it.x + 20;
-          dup.y = it.y + 20;
+          var duplicateOffset = core.utils ? core.utils.mmToPx(20) : 20;
+          dup.x = it.x + duplicateOffset;
+          dup.y = it.y + duplicateOffset;
           dup.w = it.w;
           dup.h = it.h;
           dup.rotation = it.rotation || 0;
@@ -1084,8 +1107,9 @@ class ItemManager {
         img.onload = function () {
           var dup = core.itemManager.addImageItem(it.src, true);
           if (dup) {
-            dup.x = it.x + 20;
-            dup.y = it.y + 20;
+            var duplicateOffset = core.utils ? core.utils.mmToPx(20) : 20;
+            dup.x = it.x + duplicateOffset;
+            dup.y = it.y + duplicateOffset;
             dup.w = it.w;
             dup.h = it.h;
             dup.rotation = it.rotation || 0;
@@ -2131,8 +2155,8 @@ class ExportManager {
   async buildPdfBlob() {
     var core = this.core;
     var jsPDF = await this.ensureLibrary();
-    var widthMm = core.CANVAS_W;
-    var heightMm = core.CANVAS_H;
+    var widthMm = core.utils ? core.utils.getWorkspaceWidthMm() : core.CANVAS_W;
+    var heightMm = core.utils ? core.utils.getWorkspaceHeightMm() : core.CANVAS_H;
     var dpi = Math.max(150, Math.min(300, Number(core.dataset.exportDpi) || 300));
     var doc = new jsPDF({
       orientation: widthMm >= heightMm ? 'landscape' : 'portrait',
@@ -2311,8 +2335,9 @@ class ClipboardManager {
           cd.color, cd.bgColor, cd.fontWeight, cd.fontStyle, cd.textAlign
         );
         if (item) {
-          item.x += 20;
-          item.y += 20;
+          var pasteOffset = core.utils ? core.utils.mmToPx(20) : 20;
+          item.x += pasteOffset;
+          item.y += pasteOffset;
           item.el.style.left = item.x + 'px';
           item.el.style.top = item.y + 'px';
         }
@@ -2400,22 +2425,32 @@ class CartManager {
     button.disabled = this.busy || this.core.state.items.length === 0;
   }
 
+  toMm(value) {
+    var utils = this.core.utils;
+    return utils && typeof utils.pxToMm === 'function' ? utils.pxToMm(value) : Number(value);
+  }
+
+  roundMm(value) {
+    return Math.round(this.toMm(value) * 100) / 100;
+  }
+
   buildManifest() {
     var core = this.core;
+    var manager = this;
     return {
       version: 1,
       projectId: core.state.projectId,
-      workspace: { widthMm: core.CANVAS_W, heightMm: core.CANVAS_H },
+      workspace: { widthMm: this.roundMm(core.CANVAS_W), heightMm: this.roundMm(core.CANVAS_H) },
       gapMm: core.state.gapSize,
       background: core.state.backgroundColor,
       sheetQuantity: this.getSheetQuantity(),
       items: core.state.items.map(function (item) {
         return {
           kind: item.text ? 'text' : 'image',
-          xMm: Math.round(item.x * 100) / 100,
-          yMm: Math.round(item.y * 100) / 100,
-          widthMm: Math.round(item.w * 100) / 100,
-          heightMm: Math.round(item.h * 100) / 100,
+          xMm: manager.roundMm(item.x),
+          yMm: manager.roundMm(item.y),
+          widthMm: manager.roundMm(item.w),
+          heightMm: manager.roundMm(item.h),
           rotation: Math.round((Number(item.rotation) || 0) * 100) / 100,
           flipX: (item.scaleX || 1) < 0,
           flipY: (item.scaleY || 1) < 0,
@@ -2452,6 +2487,8 @@ class CartManager {
     this.setStatus('Adding the configured gangsheet to Shopify.');
 
     try {
+      var sheetWidthMm = this.roundMm(core.CANVAS_W);
+      var sheetHeightMm = this.roundMm(core.CANVAS_H);
       var cartPayload = {
         items: [{
           id: Number(core.state.variantId),
@@ -2460,7 +2497,7 @@ class CartManager {
             'Design ID': core.state.projectId,
             'Artwork count': String(core.state.items.length),
             'Sheet copies': String(this.getSheetQuantity()),
-            'Sheet size': core.CANVAS_W + ' × ' + core.CANVAS_H + ' mm',
+            'Sheet size': sheetWidthMm + ' × ' + sheetHeightMm + ' mm',
             '_configurator_version': '3'
           }
         }]
@@ -2543,9 +2580,13 @@ class PriceManager {
     var core = this.core;
     var el = core.querySelector('#stats-' + core.sid);
     if (!el) return;
-    var area = 0;
-    core.state.items.forEach(function (it) { area += it.w * it.h; });
-    var areaCm = Math.round(area / core.CANVAS_W * 600 / core.CANVAS_W * 600 / 100);
+    var areaMm = 0;
+    core.state.items.forEach(function (it) {
+      var widthMm = core.utils ? core.utils.pxToMm(it.w) : it.w;
+      var heightMm = core.utils ? core.utils.pxToMm(it.h) : it.h;
+      areaMm += widthMm * heightMm;
+    });
+    var areaCm = Math.round(areaMm / 100);
     el.textContent = core.state.items.length + ' items \u00b7 ' + areaCm + ' cm\u00b2';
   }
 
@@ -3544,7 +3585,8 @@ class InteractionManager {
         function (data) {
           if (data && data.text) {
             core.historyManager.saveState();
-            core.itemManager.addTextItem(data.text, data.fontSize, false, data.color, data.bgColor, data.fontWeight, data.fontStyle, data.textAlign);
+            var fontSizePx = core.utils ? core.utils.mmToPx(data.fontSize) : data.fontSize;
+            core.itemManager.addTextItem(data.text, fontSizePx, false, data.color, data.bgColor, data.fontWeight, data.fontStyle, data.textAlign);
             core.state.textToolActive = false;
             if (core.canvas) core.canvas.style.cursor = 'default';
           }
@@ -3591,6 +3633,7 @@ class StickerConfigurator extends HTMLElement {
     if (this._lazyObserver) this._lazyObserver.disconnect();
     if (this._lazyInitTimer) clearTimeout(this._lazyInitTimer);
     if (this._revealTimer) clearTimeout(this._revealTimer);
+    if (this._workspaceResizeRaf) cancelAnimationFrame(this._workspaceResizeRaf);
     this.state = null;
     this.wrap = null;
     this.canvasStage = null;
@@ -3627,7 +3670,10 @@ class StickerConfigurator extends HTMLElement {
     this.cache = {};
     this._cacheDomRefs();
 
-    // Stable logical workspace. Visual fitting belongs to CanvasRenderer zoom.
+    // Physical sheet dimensions stay stable while display pixels follow the
+    // available editor width.
+    this.SHEET_WIDTH_MM = 600;
+    this.INITIAL_SHEET_HEIGHT_MM = 400;
     this.CANVAS_W = 600;
     this.CANVAS_H = 400;
 
@@ -3690,6 +3736,10 @@ class StickerConfigurator extends HTMLElement {
     this.keyboardManager = new KeyboardManager(this);
     this.alignmentEngine = new AlignmentEngine(this);
 
+    // Make 100% zoom mean "the full sheet width" for this viewport. All
+    // physical measurements continue to use the fixed millimetre dimensions.
+    this.resizeWorkspaceToViewport(false);
+
     // Set logical canvas dimensions at init. The viewport height is owned by CSS.
     if (this.canvas) {
       this.canvas.style.width = this.CANVAS_W + 'px';
@@ -3708,6 +3758,18 @@ class StickerConfigurator extends HTMLElement {
     this.canvasRenderer.drawGrid();
     this.canvasRenderer._syncZoomTransform();
     this.bindEvents();
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    if ('ResizeObserver' in window && this.wrap) {
+      var core = this;
+      this.resizeObserver = new ResizeObserver(function () {
+        if (core._workspaceResizeRaf) cancelAnimationFrame(core._workspaceResizeRaf);
+        core._workspaceResizeRaf = requestAnimationFrame(function () {
+          core._workspaceResizeRaf = null;
+          core.resizeWorkspaceToViewport(true);
+        });
+      });
+      this.resizeObserver.observe(this.wrap);
+    }
     this.historyManager.saveState();
     this.mobileHandler.autoDetectMobile();
     this.priceManager.updatePrice();
@@ -3868,7 +3930,10 @@ class StickerConfigurator extends HTMLElement {
     }, { signal });
     window.addEventListener('resize', function () {
       if (core.mobileHandler) core.mobileHandler.syncToViewport();
-      if (core.canvasRenderer) core.canvasRenderer.scheduleBackdropGridSync();
+      if (core.canvasRenderer) {
+        core.resizeWorkspaceToViewport(true);
+        core.canvasRenderer.scheduleBackdropGridSync();
+      }
     }, { signal, passive: true });
 
     // Add design button
@@ -4101,7 +4166,59 @@ class StickerConfigurator extends HTMLElement {
     }
   }
 
-  /* ── CRITICAL: growCanvas() — wrap.style.height grows, never shrinks ── */
+  resizeWorkspaceToViewport(renderAfterResize) {
+    if (!this.wrap || !this.state) return false;
+    var targetWidth = Math.max(240, Math.floor(this.wrap.clientWidth || 0));
+    if (!(targetWidth > 0)) return false;
+
+    var oldWidth = Math.max(1, Number(this.CANVAS_W) || 600);
+    if (Math.abs(targetWidth - oldWidth) < 1) return false;
+    var scale = targetWidth / oldWidth;
+    var oldScrollLeft = this.wrap.scrollLeft || 0;
+    var oldScrollTop = this.wrap.scrollTop || 0;
+    function scaleGeometry(data) {
+      if (!data) return;
+      ['x', 'y', 'w', 'h'].forEach(function (key) {
+        if (Number.isFinite(data[key])) data[key] *= scale;
+      });
+      if (Number.isFinite(data.fontSize)) data.fontSize *= scale;
+    }
+
+    this.CANVAS_W = targetWidth;
+    this.CANVAS_H *= scale;
+    this.state.items.forEach(function (item) {
+      scaleGeometry(item);
+      if (!item.el) return;
+      item.el.style.left = item.x + 'px';
+      item.el.style.top = item.y + 'px';
+      item.el.style.width = item.w + 'px';
+      item.el.style.height = item.h + 'px';
+      var textContent = item.el.querySelector('.text-content');
+      if (textContent && Number.isFinite(item.fontSize)) {
+        textContent.style.fontSize = item.fontSize + 'px';
+      }
+    });
+
+    (this.state.history || []).forEach(function (snapshot) {
+      snapshot.forEach(scaleGeometry);
+    });
+    if (Array.isArray(this.state.clipboard)) {
+      this.state.clipboard.forEach(scaleGeometry);
+    }
+
+    if (renderAfterResize !== false && this.canvasRenderer) {
+      this.canvasRenderer.drawGrid();
+      this.canvasRenderer._syncZoomTransform();
+      this.wrap.scrollLeft = oldScrollLeft * scale;
+      this.wrap.scrollTop = oldScrollTop * scale;
+      this.canvasRenderer.clampPan();
+      if (this.selectionManager) this.selectionManager.updateSelection();
+      if (this.priceManager) this.priceManager.updateStats();
+    }
+    return true;
+  }
+
+  /* ── CRITICAL: growCanvas() — physical height grows, never shrinks ── */
 
   growCanvas() {
     if (!this.state.items.length) return;
@@ -4112,7 +4229,8 @@ class StickerConfigurator extends HTMLElement {
       var b = rect.y + rect.h;
       if (b > maxB) maxB = b;
     });
-    var newH = Math.max(this.CANVAS_H, maxB + 20);
+    var bottomPadding = this.utils ? this.utils.mmToPx(20) : 20;
+    var newH = Math.max(this.CANVAS_H, maxB + bottomPadding);
     if (newH > this.CANVAS_H) {
       this.CANVAS_H = newH;
       this.canvasRenderer.drawGrid();
@@ -4251,7 +4369,10 @@ class StickerConfigurator extends HTMLElement {
     var core = this;
     reader.onload = function (e) {
       for (var i = 0; i < qty; i++) {
-        core.itemManager.addImageItem(e.target.result, false, { w: wMm, h: hMm });
+        core.itemManager.addImageItem(e.target.result, false, {
+          w: core.utils ? core.utils.mmToPx(wMm) : wMm,
+          h: core.utils ? core.utils.mmToPx(hMm) : hMm
+        });
       }
       core.growCanvas();
       core.historyManager.saveState();
@@ -4262,12 +4383,13 @@ class StickerConfigurator extends HTMLElement {
   }
 
   _fitModalImageSize(width, height) {
-    var max = this.CANVAS_W || 600;
+    var max = this.SHEET_WIDTH_MM || 600;
+    var maxHeight = this.utils ? this.utils.getWorkspaceHeightMm() : (this.INITIAL_SHEET_HEIGHT_MM || 400);
     var sourceW = Math.max(1, Number(width) || 1);
     var sourceH = Math.max(1, Number(height) || 1);
     var w = sourceW / 300 * 25.4;
     var h = sourceH / 300 * 25.4;
-    var scale = Math.min(1, max / w, (this.CANVAS_H || 400) / h);
+    var scale = Math.min(1, max / w, maxHeight / h);
     return {
       w: Math.max(10, Math.round(w * scale)),
       h: Math.max(10, Math.round(h * scale))
@@ -4277,9 +4399,14 @@ class StickerConfigurator extends HTMLElement {
   /* ── CustomEvent protocol ── */
 
   dispatchUpdateEvent() {
-    var area = 0;
-    this.state.items.forEach(function (it) { area += it.w * it.h; });
-    var areaCm = Math.round(area / this.CANVAS_W * 600 / this.CANVAS_W * 600 / 100);
+    var core = this;
+    var areaMm = 0;
+    this.state.items.forEach(function (it) {
+      var widthMm = core.utils ? core.utils.pxToMm(it.w) : it.w;
+      var heightMm = core.utils ? core.utils.pxToMm(it.h) : it.h;
+      areaMm += widthMm * heightMm;
+    });
+    var areaCm = Math.round(areaMm / 100);
     this.dispatchEvent(new CustomEvent('sticker-configurator:update', {
       bubbles: true,
       detail: {

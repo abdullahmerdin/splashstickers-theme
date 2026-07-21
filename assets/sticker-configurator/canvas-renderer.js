@@ -27,7 +27,7 @@ class CanvasRenderer {
     ctx.strokeStyle = '#E8E8E8';
     ctx.lineWidth = 0.5;
 
-    var gridSize = core.state.gridSize || 20;
+    var gridSize = core.utils ? core.utils.mmToPx(core.state.gridSize || 20) : (core.state.gridSize || 20);
     var cols = Math.floor(w / gridSize);
     var rows = Math.floor(h / gridSize);
 
@@ -50,7 +50,8 @@ class CanvasRenderer {
     var core = this.core;
     if (!core.wrap || !core.canvas) return;
     var zoom = this.clampZoom(core.state.zoom);
-    var step = Math.max(4, (core.state.gridSize || 20) * zoom);
+    var baseStep = core.utils ? core.utils.mmToPx(core.state.gridSize || 20) : (core.state.gridSize || 20);
+    var step = Math.max(4, baseStep * zoom);
     var wrapRect = core.wrap.getBoundingClientRect();
     var canvasRect = core.canvas.getBoundingClientRect();
     core.wrap.style.setProperty('--cfg-grid-step', step + 'px');
@@ -162,7 +163,9 @@ class CanvasRenderer {
 
     requestAnimationFrame(function () {
       core.wrap.scrollLeft = Math.max(0, (core.wrap.scrollWidth - core.wrap.clientWidth) / 2);
-      core.wrap.scrollTop = Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
+      core.wrap.scrollTop = core.wrap.scrollHeight > core.wrap.clientHeight
+        ? 0
+        : Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);
       core.state.panX = core.wrap.scrollLeft;
       core.state.panY = core.wrap.scrollTop;
     });
@@ -192,7 +195,11 @@ class CanvasRenderer {
     var core = this.core;
     options = options || {};
     var dpi = Math.max(25.4, Number(options.dpi) || 25.4);
-    var scale = dpi / 25.4;
+    var workspaceWidthMm = core.utils
+      ? core.utils.getWorkspaceWidthMm()
+      : Math.max(1, Number(core.SHEET_WIDTH_MM) || 600);
+    var pixelsPerMm = Math.max(0.001, core.CANVAS_W / workspaceWidthMm);
+    var scale = (dpi / 25.4) / pixelsPerMm;
     var maxDimension = Math.max(0, Number(options.maxDimension) || 0);
     if (maxDimension > 0) {
       scale = Math.min(scale, maxDimension / Math.max(core.CANVAS_W, core.CANVAS_H));

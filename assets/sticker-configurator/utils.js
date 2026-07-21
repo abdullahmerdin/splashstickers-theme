@@ -7,14 +7,24 @@ class Utils {
     this.core = core;
   }
 
-  // CRITICAL: 1mm = CANVAS_W / 600px
-  pxToMm(px) {
-    return px / this.core.CANVAS_W * 600;
+  getWorkspaceWidthMm() {
+    return Math.max(1, Number(this.core.SHEET_WIDTH_MM) || 600);
   }
 
-  // CRITICAL: 1mm = CANVAS_W / 600px
+  getWorkspaceHeightMm() {
+    return this.pxToMm(this.core.CANVAS_H);
+  }
+
+  getPixelsPerMm() {
+    return Math.max(0.001, this.core.CANVAS_W / this.getWorkspaceWidthMm());
+  }
+
+  pxToMm(px) {
+    return Number(px) / this.getPixelsPerMm();
+  }
+
   mmToPx(mm) {
-    return mm / 600 * this.core.CANVAS_W;
+    return Number(mm) * this.getPixelsPerMm();
   }
 
   updateSizeInfo(item) {
@@ -47,7 +57,7 @@ class Utils {
     if (!item) return;
     var input = this.core.querySelector('#' + axis + '-input-' + sid);
     if (!input) return;
-    var val = Math.max(20, this.mmToPx(parseInt(input.value) || 50));
+    var val = Math.max(this.mmToPx(10), this.mmToPx(parseInt(input.value) || 50));
     var target = Object.assign({}, item);
     if (axis === 'w') target.w = val;
     else target.h = val;

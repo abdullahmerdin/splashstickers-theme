@@ -25,18 +25,18 @@ class ItemManager {
     var item = this.addItemHelpers(el, id);
     item.src = src;
 
-    // Preserve the supplied artwork dimensions when available. The logical
-    // canvas uses 1 px = 1 mm, so modal dimensions map directly to the sheet.
-    // Without metadata, retain the compact default used by pasted/duplicated
-    // images.
+    // Supplied dimensions are display-space pixels converted from millimetres
+    // by the configurator. This keeps physical sizes stable at every viewport
+    // width.
     var defaultW = dimensions && Number(dimensions.w) > 0
       ? Number(dimensions.w)
       : Math.round(core.CANVAS_W * 0.15);
     var defaultH = dimensions && Number(dimensions.h) > 0
       ? Number(dimensions.h)
       : Math.round(defaultW * 0.75);
-    defaultW = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultW)));
-    defaultH = Math.max(10, Math.min(core.CANVAS_W, Math.round(defaultH)));
+    var minArtworkSize = core.utils ? core.utils.mmToPx(10) : 10;
+    defaultW = Math.max(minArtworkSize, Math.min(core.CANVAS_W, Math.round(defaultW)));
+    defaultH = Math.max(minArtworkSize, Math.min(core.CANVAS_W, Math.round(defaultH)));
     item.w = defaultW;
     item.h = defaultH;
     el.style.width = defaultW + 'px';
@@ -108,10 +108,14 @@ class ItemManager {
 
     // Calculate size based on text
     var fs = fontSize || 16;
-    item.w = Math.round(text.length * fs * 0.6 + 20);
-    item.h = Math.round(fs * 1.8 + 16);
-    item.w = Math.max(60, Math.min(core.CANVAS_W * 0.4, item.w));
-    item.h = Math.max(40, Math.min(core.CANVAS_H * 0.15, item.h));
+    var horizontalPadding = core.utils ? core.utils.mmToPx(20) : 20;
+    var verticalPadding = core.utils ? core.utils.mmToPx(16) : 16;
+    var minTextWidth = core.utils ? core.utils.mmToPx(60) : 60;
+    var minTextHeight = core.utils ? core.utils.mmToPx(40) : 40;
+    item.w = Math.round(text.length * fs * 0.6 + horizontalPadding);
+    item.h = Math.round(fs * 1.8 + verticalPadding);
+    item.w = Math.max(minTextWidth, Math.min(core.CANVAS_W * 0.4, item.w));
+    item.h = Math.max(minTextHeight, Math.min(core.CANVAS_H * 0.15, item.h));
     el.style.width = item.w + 'px';
     el.style.height = item.h + 'px';
 
@@ -280,8 +284,9 @@ class ItemManager {
           it.color, it.bgColor, it.fontWeight, it.fontStyle, it.textAlign
         );
         if (dup) {
-          dup.x = it.x + 20;
-          dup.y = it.y + 20;
+          var duplicateOffset = core.utils ? core.utils.mmToPx(20) : 20;
+          dup.x = it.x + duplicateOffset;
+          dup.y = it.y + duplicateOffset;
           dup.w = it.w;
           dup.h = it.h;
           dup.rotation = it.rotation || 0;
@@ -306,8 +311,9 @@ class ItemManager {
         img.onload = function () {
           var dup = core.itemManager.addImageItem(it.src, true);
           if (dup) {
-            dup.x = it.x + 20;
-            dup.y = it.y + 20;
+            var duplicateOffset = core.utils ? core.utils.mmToPx(20) : 20;
+            dup.x = it.x + duplicateOffset;
+            dup.y = it.y + duplicateOffset;
             dup.w = it.w;
             dup.h = it.h;
             dup.rotation = it.rotation || 0;

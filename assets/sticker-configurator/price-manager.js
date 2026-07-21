@@ -34,9 +34,13 @@ class PriceManager {
     var core = this.core;
     var el = core.querySelector('#stats-' + core.sid);
     if (!el) return;
-    var area = 0;
-    core.state.items.forEach(function (it) { area += it.w * it.h; });
-    var areaCm = Math.round(area / core.CANVAS_W * 600 / core.CANVAS_W * 600 / 100);
+    var areaMm = 0;
+    core.state.items.forEach(function (it) {
+      var widthMm = core.utils ? core.utils.pxToMm(it.w) : it.w;
+      var heightMm = core.utils ? core.utils.pxToMm(it.h) : it.h;
+      areaMm += widthMm * heightMm;
+    });
+    var areaCm = Math.round(areaMm / 100);
     el.textContent = core.state.items.length + ' items \u00b7 ' + areaCm + ' cm\u00b2';
   }
 

@@ -52,22 +52,32 @@ class CartManager {
     button.disabled = this.busy || this.core.state.items.length === 0;
   }
 
+  toMm(value) {
+    var utils = this.core.utils;
+    return utils && typeof utils.pxToMm === 'function' ? utils.pxToMm(value) : Number(value);
+  }
+
+  roundMm(value) {
+    return Math.round(this.toMm(value) * 100) / 100;
+  }
+
   buildManifest() {
     var core = this.core;
+    var manager = this;
     return {
       version: 1,
       projectId: core.state.projectId,
-      workspace: { widthMm: core.CANVAS_W, heightMm: core.CANVAS_H },
+      workspace: { widthMm: this.roundMm(core.CANVAS_W), heightMm: this.roundMm(core.CANVAS_H) },
       gapMm: core.state.gapSize,
       background: core.state.backgroundColor,
       sheetQuantity: this.getSheetQuantity(),
       items: core.state.items.map(function (item) {
         return {
           kind: item.text ? 'text' : 'image',
-          xMm: Math.round(item.x * 100) / 100,
-          yMm: Math.round(item.y * 100) / 100,
-          widthMm: Math.round(item.w * 100) / 100,
-          heightMm: Math.round(item.h * 100) / 100,
+          xMm: manager.roundMm(item.x),
+          yMm: manager.roundMm(item.y),
+          widthMm: manager.roundMm(item.w),
+          heightMm: manager.roundMm(item.h),
           rotation: Math.round((Number(item.rotation) || 0) * 100) / 100,
           flipX: (item.scaleX || 1) < 0,
           flipY: (item.scaleY || 1) < 0,
@@ -104,6 +114,8 @@ class CartManager {
     this.setStatus('Adding the configured gangsheet to Shopify.');
 
     try {
+      var sheetWidthMm = this.roundMm(core.CANVAS_W);
+      var sheetHeightMm = this.roundMm(core.CANVAS_H);
       var cartPayload = {
         items: [{
           id: Number(core.state.variantId),
@@ -112,7 +124,7 @@ class CartManager {
             'Design ID': core.state.projectId,
             'Artwork count': String(core.state.items.length),
             'Sheet copies': String(this.getSheetQuantity()),
-            'Sheet size': core.CANVAS_W + ' × ' + core.CANVAS_H + ' mm',
+            'Sheet size': sheetWidthMm + ' × ' + sheetHeightMm + ' mm',
             '_configurator_version': '3'
           }
         }]
