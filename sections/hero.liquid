@@ -10,6 +10,10 @@
   assign media_2_mobile = 'none'
   assign has_only_video = false
   assign has_only_video_mobile = false
+  assign use_custom_mobile_media = false
+  assign rendered_media_count = 0
+  assign rendered_media_count_mobile = 0
+  assign should_render_blur_shadow = false
 
   # Desktop media checks
   # For each media slot, check if the media is not blank and the media type matches the slot
@@ -55,31 +59,8 @@
   if media_count > 0 and media_1 != 'image' and media_2 != 'image'
     assign has_only_video = true
   endif
-  if media_count > 0 and media_count_mobile > 0 and media_1_mobile != 'image' and media_2_mobile != 'image'
-    assign has_only_video_mobile = true
-  endif
-
   assign media_wrapper_desktop_class = 'hero__media-wrapper hero__media-wrapper--desktop'
   assign media_wrapper_mobile_class = 'hero__media-wrapper hero__media-wrapper--mobile'
-  # If there is no custom mobile media to show, we add the mobile class to the desktop classes so content is always shown on mobile.
-  if section.settings.custom_mobile_media == false or section.settings.custom_mobile_media == true and media_count_mobile == 0
-    assign media_wrapper_desktop_class = media_wrapper_desktop_class | append: ' hero__media-wrapper--mobile'
-  endif
-
-  # Should we show the blurred reflection on mobile?
-  assign show_mobile_blurred_reflection = false
-  if section.settings.blurred_reflection
-    if section.settings.custom_mobile_media == true and media_count_mobile > 0 and has_only_video_mobile == false
-      # Custom mobile media is active and a mobile image is present
-      assign show_mobile_blurred_reflection = true
-    elsif section.settings.custom_mobile_media == true and media_count_mobile == 0 and media_count > 0 and has_only_video == false
-      # Custom mobile media is active, no mobile media is present, but a desktop image is present
-      assign show_mobile_blurred_reflection = true
-    elsif section.settings.custom_mobile_media == false and media_count > 0 and has_only_video == false
-      # Custom mobile media is inactive, but a desktop image is present
-      assign show_mobile_blurred_reflection = true
-    endif
-  endif
 
   if media_1 == 'image' and media_2 == 'image'
     assign media_width_desktop = '50vw'
@@ -87,10 +68,44 @@
     assign media_width_desktop = '100vw'
   endif
 
-  # If custom mobile media is disabled or no mobile media is present, we need to fallback to desktop media.
-  if section.settings.custom_mobile_media == false or media_count_mobile == 0 or media_count == 0
+  # Use the desktop media on mobile only when no custom mobile media is available.
+  # This deliberately supports mobile-only media instead of falling back to an empty desktop slot.
+  if section.settings.custom_mobile_media and media_count_mobile > 0
+    assign use_custom_mobile_media = true
+  else
     assign media_count_mobile = media_count
     assign fallback_to_desktop = true
+    assign media_wrapper_desktop_class = media_wrapper_desktop_class | append: ' hero__media-wrapper--mobile'
+  endif
+
+  if fallback_to_desktop
+    assign has_only_video_mobile = has_only_video
+  elsif media_count_mobile > 0 and media_1_mobile != 'image' and media_2_mobile != 'image'
+    assign has_only_video_mobile = true
+  endif
+
+  assign rendered_media_count = media_count
+  if rendered_media_count == 0
+    assign rendered_media_count = 1
+  endif
+
+  assign rendered_media_count_mobile = media_count_mobile
+  if rendered_media_count_mobile == 0
+    assign rendered_media_count_mobile = 1
+  endif
+
+  # Should we show the blurred reflection on mobile?
+  assign show_mobile_blurred_reflection = false
+  if section.settings.blurred_reflection and has_only_video_mobile == false
+    if use_custom_mobile_media or media_count > 0
+      assign show_mobile_blurred_reflection = true
+    endif
+  endif
+
+  if section.settings.blurred_reflection
+    if has_only_video == false or has_only_video_mobile == false
+      assign should_render_blur_shadow = true
+    endif
   endif
 
   if fallback_to_desktop
@@ -181,7 +196,7 @@
   {%- endif -%}
 
   {%- comment -%} Mobile-only slot 1 media (when desktop is different type) {%- endcomment -%}
-  {%- if media_count > 0 and media_count_mobile > 0 -%}
+  {%- if use_custom_mobile_media -%}
     {%- if media_1_mobile == 'image' and media_1 != 'image' -%}
       <div class="{{ media_wrapper_mobile_class }}">
         {{
@@ -285,7 +300,7 @@
   {%- endif -%}
 
   {%- comment -%} Mobile-only slot 2 media (when desktop is different type) {%- endcomment -%}
-  {%- if media_count > 0 and media_count_mobile > 0 -%}
+  {%- if use_custom_mobile_media -%}
     {%- if media_2_mobile == 'image' and media_2 != 'image' -%}
       <div class="{{ media_wrapper_mobile_class }}">
         {{
@@ -327,7 +342,13 @@
   {{ media_slot_2 }}
 
   {% if media_count == 0 %}
-    {{ 'hero-apparel-1' | placeholder_svg_tag: 'hero__media' }}
+    {% if use_custom_mobile_media %}
+      <div class="{{ media_wrapper_desktop_class }}">
+        {{ 'hero-apparel-1' | placeholder_svg_tag: 'hero__media' }}
+      </div>
+    {% else %}
+      {{ 'hero-apparel-1' | placeholder_svg_tag: 'hero__media' }}
+    {% endif %}
   {%- endif -%}
 {% endcapture %}
 
@@ -475,7 +496,7 @@
   {% if request.visual_preview_mode %}
     data-shopify-visual-preview
   {% endif %}
-  {% if section.settings.blurred_reflection and has_only_video == false or has_only_video_mobile == false %}
+  {% if should_render_blur_shadow %}
     data-blur-shadow="true"
   {% endif %}
 >
@@ -518,7 +539,7 @@
     {%- endif -%}
     <div
       class="hero__media-grid"
-      style="--hero-media-count: {{ media_count }};--hero-media-count-mobile: {{ media_count_mobile }};{%- if section.settings.image_1 != blank -%} --hero-media-aspect-ratio: {{ section.settings.image_1.aspect_ratio }};{% endif %}"
+      style="--hero-media-count: {{ rendered_media_count }};--hero-media-count-mobile: {{ rendered_media_count_mobile }};{%- if section.settings.image_1 != blank -%} --hero-media-aspect-ratio: {{ section.settings.image_1.aspect_ratio }};{% endif %}"
       data-testid="hero-media-wrapper"
     >
       {% liquid
