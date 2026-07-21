@@ -451,6 +451,14 @@
   -webkit-overflow-scrolling: touch;
 }
 
+@media (min-width: 768px) {
+  /* Keep the desktop workspace generous enough to feel like a design surface,
+     rather than a short preview above an oversized footer. */
+  .sticker-configurator .canvas-wrap {
+    min-height: min(460px, calc(100dvh - var(--header-group-height, 64px) - 240px));
+  }
+}
+
 .sticker-configurator .canvas-wrap.is-panning,
 .sticker-configurator .canvas-wrap.is-panning .canvas-area {
   cursor: grabbing;
@@ -636,12 +644,12 @@
   flex: 0 0 auto;
   position: static;
   z-index: auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 10px 14px;
   min-width: 0;
-  padding: 12px;
+  padding: 12px 14px 10px;
   background: rgba(249, 249, 251, 0.92);
   border: 1px solid var(--cfg-line);
   border-radius: var(--cfg-radius);
@@ -670,9 +678,9 @@
 
 .sticker-configurator .upload-btn-area {
   display: flex;
-  grid-column: 1;
   align-items: center;
   gap: 8px;
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -702,7 +710,7 @@
 .sticker-configurator .qty-group {
   display: inline-flex;
   align-items: center;
-  margin-left: auto;
+  margin-left: 4px;
   padding: 2px;
   background: var(--cfg-surface);
   border: 1px solid var(--cfg-line-strong);
@@ -738,14 +746,15 @@
 }
 
 .sticker-configurator .qty-label {
+  margin-left: -3px;
   color: var(--cfg-muted);
   font-size: 0.7rem;
 }
 
 .sticker-configurator .cfg-btn-submit {
-  grid-column: 2;
+  flex: 0 1 clamp(280px, 35%, 480px);
   align-self: stretch;
-  width: 100%;
+  width: auto;
   min-height: 46px;
   padding: 10px 16px;
   color: #fff;
@@ -779,7 +788,7 @@
 }
 
 .sticker-configurator .cfg-cart-status {
-  grid-column: 1 / -1;
+  flex-basis: 100%;
   min-height: 1.25em;
   margin: -2px 2px 0;
   color: var(--cfg-muted);
@@ -801,10 +810,11 @@
 
 .sticker-configurator .bottom-extra {
   display: block;
-  grid-column: 1 / -1;
-  padding-top: 0;
+  flex-basis: 100%;
+  padding-top: 7px;
   color: var(--cfg-muted);
   font-size: 0.7rem;
+  border-top: 1px solid var(--cfg-line);
 }
 
 .sticker-configurator .bottom-extra > summary {
