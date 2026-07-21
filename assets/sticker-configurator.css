@@ -176,8 +176,11 @@
 
 .sticker-configurator > sticker-configurator {
   --cfg-shell-pad: 16px;
-  display: flex;
-  flex-direction: column;
+  /* Reserve the available viewport between the heading and the action bar for
+     the editor. A flex item's content-sized basis can leave this area blank on
+     wide desktop layouts, even though the action bar is pinned at the bottom. */
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: 100%;
   height: 100%;
   min-width: 0;
