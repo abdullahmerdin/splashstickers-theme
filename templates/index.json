@@ -117,6 +117,41 @@
         "padding-block-end": 72
       }
     },
+    "splash_drawing": {
+      "type": "splash-hero",
+      "name": "Interactive Drawing Hero",
+      "settings": {
+        "heading": "Your Vision, A Sticker",
+        "subtext": "Premium custom stickers - Fast turnaround - Worldwide shipping",
+        "background_color": "#6C5CE7",
+        "section_height": 550,
+        "padding_top": 80,
+        "padding_bottom": 80
+      },
+      "blocks": {
+        "button_shop": {
+          "type": "button",
+          "settings": {
+            "button_label": "Shop Stickers",
+            "button_link": "shopify://collections/all",
+            "button_style": "solid",
+            "button_bg": "#FFFFFF",
+            "button_text": "#5A4BD1"
+          }
+        },
+        "button_custom": {
+          "type": "button",
+          "settings": {
+            "button_label": "Design Your Own",
+            "button_link": "shopify://collections/custom-stickers",
+            "button_style": "outline",
+            "button_bg": "#FFFFFF",
+            "button_text": "#FFFFFF"
+          }
+        }
+      },
+      "block_order": ["button_shop", "button_custom"]
+    },
     "category_cards": {
       "type": "sticker-categories",
       "settings": {
@@ -354,7 +389,7 @@
     }
   },
   "order": [
-    "hero_sticker",
+    "splash_drawing",
     "category_cards",
     "featured_stickers",
     "sticker_process",
