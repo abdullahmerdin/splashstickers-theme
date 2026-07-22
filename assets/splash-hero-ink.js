@@ -10,24 +10,13 @@ const INK_PALETTE = [
   { base: '#ffd21f', deep: '#b98200' },
 ];
 
-const blendHex = (from, to, amount) => {
-  const fromValue = Number.parseInt(from.slice(1), 16);
-  const toValue = Number.parseInt(to.slice(1), 16);
-  const mix = (shift) => Math.round(
-    ((fromValue >> shift) & 0xff) + (((toValue >> shift) & 0xff) - ((fromValue >> shift) & 0xff)) * amount
-  );
-  return `#${[16, 8, 0].map((shift) => mix(shift).toString(16).padStart(2, '0')).join('')}`;
-};
-
 class SplashInkHero extends HTMLElement {
   connectedCallback() {
     if (this.initialized) return;
 
     this.canvas = this.querySelector('[data-ink-canvas]');
-    this.effectsCanvas = this.querySelector('[data-ink-effects]');
     this.context = this.canvas?.getContext('2d');
-    this.effectsContext = this.effectsCanvas?.getContext('2d');
-    if (!this.context || !this.effectsContext) return;
+    if (!this.context) return;
 
     this.initialized = true;
     this.dpr = 1;
@@ -35,10 +24,7 @@ class SplashInkHero extends HTMLElement {
     this.height = 0;
     this.paletteIndex = -1;
     this.stroke = null;
-    this.droplets = [];
     this.activePointer = null;
-    this.effectsFrame = null;
-    this.lastEffectsTime = 0;
     this.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.isTouchDevice = window.matchMedia('(max-width: 749px)').matches
       && (navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches);
@@ -93,7 +79,6 @@ class SplashInkHero extends HTMLElement {
     this.touchHintStyle?.remove();
     this.touchHintStyle = null;
     this.resizeObserver?.disconnect();
-    if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
     this.initialized = false;
   }
 
@@ -117,12 +102,9 @@ class SplashInkHero extends HTMLElement {
     this.height = height;
     this.dpr = dpr;
 
-    for (const layer of [this.canvas, this.effectsCanvas]) {
-      layer.width = Math.round(width * dpr);
-      layer.height = Math.round(height * dpr);
-    }
+    this.canvas.width = Math.round(width * dpr);
+    this.canvas.height = Math.round(height * dpr);
     this.context.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.effectsContext.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     if (snapshot.width && snapshot.height) {
       const scale = width / Math.max(previousWidth, 1);
@@ -200,17 +182,15 @@ class SplashInkHero extends HTMLElement {
   beginStroke(point) {
     this.showScrollButton();
     this.paletteIndex = (this.paletteIndex + 1) % INK_PALETTE.length;
-    const palette = this.paletteAt(0);
+    const palette = INK_PALETTE[this.paletteIndex];
     this.stroke = {
       palette,
       last: point,
       midpoint: point,
-      size: 32,
+      size: 28,
       velocity: 0,
-      distance: 0,
-      lastPoolTime: point.time,
     };
-    this.drawPool(point.x, point.y, 12, palette, 0.72);
+    this.drawNib(point.x, point.y, this.stroke.size, palette);
   }
 
   extendStroke(point) {
@@ -222,11 +202,11 @@ class SplashInkHero extends HTMLElement {
 
     const elapsed = Math.max(8, point.time - stroke.last.time);
     const velocity = distance / elapsed;
-    const targetSize = clamp(40 - velocity * 18, 10, 40);
-    stroke.size = lerp(stroke.size, targetSize, 0.28);
+    // A felt-tip nib changes width gradually. Large per-sample changes read as
+    // overlapping circles, especially on high-frequency touch screens.
+    const targetSize = clamp(33 - velocity * 8, 22, 33);
+    stroke.size = lerp(stroke.size, targetSize, 0.16);
     stroke.velocity = lerp(stroke.velocity, velocity, 0.35);
-    stroke.distance += distance;
-    stroke.palette = this.paletteAt(stroke.distance / 240);
 
     const midpoint = {
       x: (stroke.last.x + point.x) / 2,
@@ -238,92 +218,46 @@ class SplashInkHero extends HTMLElement {
       this.context.quadraticCurveTo(stroke.last.x, stroke.last.y, midpoint.x, midpoint.y);
     };
 
-    this.drawInkPath(path, stroke.size, stroke.palette);
-
-    if (stroke.velocity < 0.32 && point.time - stroke.lastPoolTime > 95) {
-      this.drawPool(point.x, point.y, stroke.size * 0.56, stroke.palette, 0.42);
-      stroke.lastPoolTime = point.time;
-    }
-
-    if (stroke.velocity > 0.65 && Math.random() < Math.min(0.5, stroke.velocity * 0.18)) {
-      this.spawnDroplets(point, dx / distance, dy / distance, stroke.velocity, false);
-    }
+    this.drawMarkerPath(path, stroke.size, stroke.palette);
 
     stroke.last = point;
     stroke.midpoint = midpoint;
   }
 
-  paletteAt(distanceCycle) {
-    const position = (this.paletteIndex + distanceCycle) % INK_PALETTE.length;
-    const fromIndex = Math.floor(position);
-    const amount = position - fromIndex;
-    const from = INK_PALETTE[fromIndex];
-    const to = INK_PALETTE[(fromIndex + 1) % INK_PALETTE.length];
-    return {
-      base: blendHex(from.base, to.base, amount),
-      deep: blendHex(from.deep, to.deep, amount),
-    };
-  }
-
-  drawInkPath(makePath, size, palette) {
+  drawMarkerPath(makePath, size, palette) {
     const context = this.context;
     context.save();
     context.lineCap = 'round';
     context.lineJoin = 'round';
 
+    // The dark edge and opaque core form one coherent marker stroke. Avoiding
+    // translucent halos on every sample removes the bead/stamp appearance.
     makePath();
-    context.globalAlpha = 0.11;
-    context.strokeStyle = palette.base;
-    context.lineWidth = size * 1.85;
-    context.shadowColor = palette.base;
-    context.shadowBlur = size * 0.75;
+    context.globalAlpha = 1;
+    context.strokeStyle = palette.deep;
+    context.lineWidth = size + 2;
     context.stroke();
 
     makePath();
-    context.globalAlpha = 0.92;
+    context.globalAlpha = 1;
     context.strokeStyle = palette.base;
     context.lineWidth = size;
-    context.shadowColor = palette.deep;
-    context.shadowBlur = size * 0.22;
-    context.stroke();
-
-    makePath();
-    context.globalAlpha = 0.22;
-    context.strokeStyle = palette.deep;
-    context.lineWidth = size * 0.68;
-    context.shadowBlur = 0;
-    context.stroke();
-
-    makePath();
-    context.globalAlpha = 0.22;
-    context.strokeStyle = '#ffffff';
-    context.lineWidth = Math.max(1.5, size * 0.12);
     context.stroke();
     context.restore();
   }
 
-  drawPool(x, y, radius, palette, alpha = 0.65) {
+  drawNib(x, y, size, palette) {
     const context = this.context;
-    const gradient = context.createRadialGradient(
-      x - radius * 0.24,
-      y - radius * 0.28,
-      radius * 0.04,
-      x,
-      y,
-      radius
-    );
-    gradient.addColorStop(0, '#ffffff');
-    gradient.addColorStop(0.08, palette.base);
-    gradient.addColorStop(0.72, palette.base);
-    gradient.addColorStop(1, palette.deep);
-
     context.save();
-    context.globalAlpha = alpha;
-    context.fillStyle = gradient;
-    context.shadowColor = palette.deep;
-    context.shadowBlur = radius * 0.34;
+    context.globalAlpha = 1;
+    context.fillStyle = palette.deep;
     context.beginPath();
-    context.ellipse(x, y, radius, radius * 0.82, Math.random() * Math.PI, 0, Math.PI * 2);
+    context.arc(x, y, size / 2 + 1, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = palette.base;
+    context.beginPath();
+    context.arc(x, y, size / 2, 0, Math.PI * 2);
     context.fill();
     context.restore();
   }
@@ -331,99 +265,7 @@ class SplashInkHero extends HTMLElement {
   endStroke() {
     if (!this.stroke) return;
 
-    const { last, palette, velocity } = this.stroke;
-    this.drawPool(last.x, last.y, clamp(this.stroke.size * 0.38, 4, 13), palette, 0.58);
-    this.spawnDroplets(last, 0, 0, Math.max(velocity, 0.45), true);
     this.stroke = null;
-  }
-
-  spawnDroplets(point, directionX, directionY, velocity, burst) {
-    const palette = this.stroke?.palette || INK_PALETTE[this.paletteIndex] || INK_PALETTE[0];
-    const count = burst ? 7 + Math.floor(Math.random() * 6) : 1 + Math.floor(Math.random() * 3);
-
-    for (let index = 0; index < count; index += 1) {
-      const angle = Math.atan2(directionY, directionX) + (Math.random() - 0.5) * (burst ? Math.PI * 2 : 1.3);
-      const impulse = (burst ? 1.8 : 3.4) + Math.random() * (5 + velocity * 5);
-      const droplet = {
-        x: point.x,
-        y: point.y,
-        vx: Math.cos(angle) * impulse + (burst ? (Math.random() - 0.5) * 3 : 0),
-        vy: Math.sin(angle) * impulse - Math.random() * (burst ? 4 : 2),
-        radius: 1.6 + Math.random() * (burst ? 4.2 : 2.6),
-        palette,
-        life: 420 + Math.random() * 420,
-        maxLife: 0,
-      };
-      droplet.maxLife = droplet.life;
-
-      if (this.reduceMotion) {
-        this.drawPool(
-          droplet.x + droplet.vx * 4,
-          droplet.y + droplet.vy * 4,
-          droplet.radius,
-          palette,
-          0.48
-        );
-      } else {
-        this.droplets.push(droplet);
-      }
-    }
-
-    if (!this.reduceMotion && this.droplets.length && !this.effectsFrame) {
-      this.lastEffectsTime = performance.now();
-      this.effectsFrame = requestAnimationFrame((time) => this.animateDroplets(time));
-    }
-  }
-
-  animateDroplets(time) {
-    const elapsed = clamp(time - this.lastEffectsTime, 8, 32);
-    const scale = elapsed / 16.67;
-    this.lastEffectsTime = time;
-    this.clearContext(this.effectsContext, this.effectsCanvas);
-
-    const remaining = [];
-    for (const droplet of this.droplets) {
-      droplet.x += droplet.vx * scale;
-      droplet.y += droplet.vy * scale;
-      droplet.vx *= Math.pow(0.985, scale);
-      droplet.vy = droplet.vy * Math.pow(0.985, scale) + 0.16 * scale;
-      droplet.life -= elapsed;
-
-      const inside = droplet.x >= 0 && droplet.x <= this.width && droplet.y >= 0 && droplet.y <= this.height;
-      if (droplet.life <= 0 || !inside) {
-        if (inside) this.drawPool(droplet.x, droplet.y, droplet.radius, droplet.palette, 0.5);
-        continue;
-      }
-
-      const alpha = Math.min(0.78, droplet.life / droplet.maxLife + 0.15);
-      const context = this.effectsContext;
-      context.save();
-      context.globalAlpha = alpha;
-      context.fillStyle = droplet.palette.base;
-      context.shadowColor = droplet.palette.deep;
-      context.shadowBlur = droplet.radius * 2;
-      context.beginPath();
-      context.ellipse(
-        droplet.x,
-        droplet.y,
-        droplet.radius,
-        droplet.radius * (1 + Math.min(Math.abs(droplet.vy) * 0.08, 0.8)),
-        Math.atan2(droplet.vy, droplet.vx),
-        0,
-        Math.PI * 2
-      );
-      context.fill();
-      context.restore();
-      remaining.push(droplet);
-    }
-
-    this.droplets = remaining;
-    if (remaining.length) {
-      this.effectsFrame = requestAnimationFrame((nextTime) => this.animateDroplets(nextTime));
-    } else {
-      this.effectsFrame = null;
-      this.clearContext(this.effectsContext, this.effectsCanvas);
-    }
   }
 
   clearContext(context, canvas) {
@@ -436,12 +278,8 @@ class SplashInkHero extends HTMLElement {
   clear(event) {
     event?.stopPropagation();
     this.stroke = null;
-    this.droplets = [];
     this.showTouchHint();
-    if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
-    this.effectsFrame = null;
     this.clearContext(this.context, this.canvas);
-    this.clearContext(this.effectsContext, this.effectsCanvas);
   }
 
   toggleExpanded(event) {

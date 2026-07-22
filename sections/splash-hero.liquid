@@ -34,10 +34,6 @@
     filter: saturate(1.08) contrast(1.03);
   }
 
-  .splash-hero-{{ section.id }} [data-ink-effects] {
-    z-index: 2;
-  }
-
   .splash-hero-{{ section.id }} > .page-width {
     position: relative;
     z-index: 20;
@@ -185,7 +181,6 @@
   data-original-height="{{ section_height }}"
 >
   <canvas data-ink-canvas aria-hidden="true"></canvas>
-  <canvas data-ink-effects aria-hidden="true"></canvas>
 
   <div class="page-width">
     <div class="splash-hero-inner">
