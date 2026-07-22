@@ -5,26 +5,44 @@
 
 <section
   class="sticker-collection-hero sticker-collection-hero--{{ section.settings.layout }}"
-  style="--collection-bg: {{ section.settings.background_color }}; --collection-primary: {{ section.settings.primary_color }}; --collection-secondary: {{ section.settings.secondary_color }}; --collection-pad-top: {{ section.settings.padding_top }}px; --collection-pad-bottom: {{ section.settings.padding_bottom }}px;"
+  style="--collection-bg: {{ section.settings.background_color }}; --collection-primary: {{ section.settings.primary_color }}; --collection-secondary: {{ section.settings.secondary_color }}; --collection-art-bg: {{ section.settings.art_background_color }}; --collection-art-accent: {{ section.settings.art_accent_color }}; --collection-pattern: {{ section.settings.pattern_color }}; --collection-pad-top: {{ section.settings.padding_top }}px; --collection-pad-bottom: {{ section.settings.padding_bottom }}px;"
 >
   <div class="sticker-collection-hero__inner">
     <div class="sticker-collection-hero__content">
-      <div class="sticker-collection-hero__brand" aria-label="AllTheStickers">
-        <span class="sticker-collection-hero__brand-mark" aria-hidden="true"></span>
-        <span>ALLTHESTICKERS</span>
-      </div>
+      {% if section.settings.show_brand and section.settings.brand_text != blank %}
+        <div class="sticker-collection-hero__brand" aria-label="{{ section.settings.brand_text | escape }}">
+          <span class="sticker-collection-hero__brand-mark" aria-hidden="true"></span>
+          <span>{{ section.settings.brand_text | escape }}</span>
+        </div>
+      {% endif %}
 
-      {% if hero_heading != blank %}
+      {% if section.settings.show_heading and hero_heading != blank %}
         <h1>{{ hero_heading | escape }}</h1>
       {% endif %}
     </div>
 
     <div class="sticker-collection-hero__art" aria-hidden="true">
-      <span class="sticker-collection-hero__splash-word">SPLASH</span>
-      <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--pink">STICKERS</span>
-      <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--gold">MAKE IT STICK</span>
-      <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--teal">ALL DAY</span>
-      <span class="sticker-collection-hero__art-meta">STICKER STUDIO / EST. 2024</span>
+      {% if section.settings.pattern_style != 'none' %}
+        <span class="sticker-collection-hero__pattern sticker-collection-hero__pattern--{{ section.settings.pattern_style }}"></span>
+      {% endif %}
+
+      {% if section.settings.show_splash_word and section.settings.splash_word != blank %}
+        <span class="sticker-collection-hero__splash-word">{{ section.settings.splash_word | escape }}</span>
+      {% endif %}
+
+      {% if section.settings.show_sticker_1 and section.settings.sticker_1_text != blank %}
+        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--one sticker-collection-hero__sticker--{{ section.settings.sticker_1_color }}">{{ section.settings.sticker_1_text | escape }}</span>
+      {% endif %}
+      {% if section.settings.show_sticker_2 and section.settings.sticker_2_text != blank %}
+        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--two sticker-collection-hero__sticker--{{ section.settings.sticker_2_color }}">{{ section.settings.sticker_2_text | escape }}</span>
+      {% endif %}
+      {% if section.settings.show_sticker_3 and section.settings.sticker_3_text != blank %}
+        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--three sticker-collection-hero__sticker--{{ section.settings.sticker_3_color }}">{{ section.settings.sticker_3_text | escape }}</span>
+      {% endif %}
+
+      {% if section.settings.show_art_meta and section.settings.art_meta_text != blank %}
+        <span class="sticker-collection-hero__art-meta">{{ section.settings.art_meta_text | escape }}</span>
+      {% endif %}
       <span class="sticker-collection-hero__dot sticker-collection-hero__dot--one"></span>
       <span class="sticker-collection-hero__dot sticker-collection-hero__dot--two"></span>
       <span class="sticker-collection-hero__dot sticker-collection-hero__dot--three"></span>
@@ -53,13 +71,8 @@
     align-items: center;
   }
 
-  .sticker-collection-hero--right .sticker-collection-hero__content {
-    order: 2;
-  }
-
-  .sticker-collection-hero--right .sticker-collection-hero__art {
-    order: 1;
-  }
+  .sticker-collection-hero--right .sticker-collection-hero__content { order: 2; }
+  .sticker-collection-hero--right .sticker-collection-hero__art { order: 1; }
 
   .sticker-collection-hero__brand {
     display: inline-flex;
@@ -96,7 +109,7 @@
     min-height: clamp(20rem, 38vw, 31rem);
     overflow: hidden;
     border-radius: 2rem 2rem 2rem 0.5rem;
-    background: linear-gradient(135deg, #6c5ce7 0%, #8d5eea 42%, #fd79a8 100%);
+    background: linear-gradient(135deg, var(--collection-art-bg), var(--collection-art-accent));
     box-shadow: 1rem 1rem 0 #fdcb6e;
     isolation: isolate;
   }
@@ -127,6 +140,28 @@
     opacity: 0.9;
   }
 
+  .sticker-collection-hero__pattern {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.22;
+  }
+
+  .sticker-collection-hero__pattern--dots {
+    background-image: radial-gradient(circle, var(--collection-pattern) 1px, transparent 1.5px);
+    background-size: 18px 18px;
+  }
+
+  .sticker-collection-hero__pattern--grid {
+    background-image: linear-gradient(var(--collection-pattern) 1px, transparent 1px), linear-gradient(90deg, var(--collection-pattern) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .sticker-collection-hero__pattern--bursts {
+    background-image: repeating-conic-gradient(from 0deg, var(--collection-pattern) 0deg 8deg, transparent 8deg 18deg);
+    mask-image: radial-gradient(circle at center, #000 0 55%, transparent 80%);
+  }
+
   .sticker-collection-hero__splash-word {
     position: absolute;
     top: 9%;
@@ -153,28 +188,15 @@
     letter-spacing: 0.04em;
     line-height: 1;
     white-space: nowrap;
+    will-change: transform;
   }
 
-  .sticker-collection-hero__sticker--pink {
-    top: 38%;
-    left: 9%;
-    background: #fd79a8;
-    transform: rotate(-12deg);
-  }
-
-  .sticker-collection-hero__sticker--gold {
-    top: 57%;
-    right: 8%;
-    background: #fdcb6e;
-    transform: rotate(8deg);
-  }
-
-  .sticker-collection-hero__sticker--teal {
-    bottom: 13%;
-    left: 24%;
-    background: #00cec9;
-    transform: rotate(-5deg);
-  }
+  .sticker-collection-hero__sticker--pink { background: #fd79a8; }
+  .sticker-collection-hero__sticker--gold { background: #fdcb6e; }
+  .sticker-collection-hero__sticker--teal { background: #00cec9; }
+  .sticker-collection-hero__sticker--one { top: 38%; left: 9%; animation: sticker-float-one 5.5s ease-in-out infinite; }
+  .sticker-collection-hero__sticker--two { top: 57%; right: 8%; animation: sticker-float-two 6.2s ease-in-out -1.6s infinite; }
+  .sticker-collection-hero__sticker--three { bottom: 13%; left: 24%; animation: sticker-float-three 5.8s ease-in-out -0.8s infinite; }
 
   .sticker-collection-hero__art-meta {
     position: absolute;
@@ -198,6 +220,21 @@
   .sticker-collection-hero__dot--two { top: 29%; right: 16%; width: 0.35rem; }
   .sticker-collection-hero__dot--three { top: 34%; right: 25%; width: 0.45rem; }
 
+  @keyframes sticker-float-one {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(-12deg); }
+    50% { transform: translate3d(0.45rem, -0.75rem, 0) rotate(-6deg); }
+  }
+
+  @keyframes sticker-float-two {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(8deg); }
+    50% { transform: translate3d(-0.55rem, 0.65rem, 0) rotate(14deg); }
+  }
+
+  @keyframes sticker-float-three {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(-5deg); }
+    50% { transform: translate3d(0.4rem, -0.5rem, 0) rotate(2deg); }
+  }
+
   @media screen and (max-width: 749px) {
     .sticker-collection-hero { padding-block: 32px 44px; }
     .sticker-collection-hero__inner { display: flex; min-height: 0; flex-direction: column; gap: 2.5rem; align-items: stretch; }
@@ -208,17 +245,43 @@
     .sticker-collection-hero__splash-word { font-size: clamp(3rem, 16vw, 5.5rem); }
     .sticker-collection-hero__art-meta { font-size: 0.52rem; }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sticker-collection-hero__sticker { animation: none; }
+  }
 {% endstylesheet %}
 
 {% schema %}
 {
   "name": "Sticker collection hero",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "info": "Leave blank to use the collection title." },
+    { "type": "checkbox", "id": "show_brand", "label": "Show brand lockup", "default": true },
+    { "type": "text", "id": "brand_text", "label": "Brand text", "default": "ALLTHESTICKERS" },
+    { "type": "checkbox", "id": "show_heading", "label": "Show collection heading", "default": true },
+    { "type": "text", "id": "heading", "label": "Collection heading", "info": "Leave blank to use the collection title." },
+    { "type": "header", "content": "Animated sticker card" },
+    { "type": "checkbox", "id": "show_splash_word", "label": "Show splash heading", "default": true },
+    { "type": "text", "id": "splash_word", "label": "Splash heading", "default": "SPLASH" },
+    { "type": "checkbox", "id": "show_sticker_1", "label": "Show sticker 1", "default": true },
+    { "type": "text", "id": "sticker_1_text", "label": "Sticker 1 text", "default": "STICKERS" },
+    { "type": "select", "id": "sticker_1_color", "label": "Sticker 1 color", "options": [{ "value": "pink", "label": "Pink" }, { "value": "gold", "label": "Gold" }, { "value": "teal", "label": "Teal" }], "default": "pink" },
+    { "type": "checkbox", "id": "show_sticker_2", "label": "Show sticker 2", "default": true },
+    { "type": "text", "id": "sticker_2_text", "label": "Sticker 2 text", "default": "MAKE IT STICK" },
+    { "type": "select", "id": "sticker_2_color", "label": "Sticker 2 color", "options": [{ "value": "pink", "label": "Pink" }, { "value": "gold", "label": "Gold" }, { "value": "teal", "label": "Teal" }], "default": "gold" },
+    { "type": "checkbox", "id": "show_sticker_3", "label": "Show sticker 3", "default": true },
+    { "type": "text", "id": "sticker_3_text", "label": "Sticker 3 text", "default": "ALL DAY" },
+    { "type": "select", "id": "sticker_3_color", "label": "Sticker 3 color", "options": [{ "value": "pink", "label": "Pink" }, { "value": "gold", "label": "Gold" }, { "value": "teal", "label": "Teal" }], "default": "teal" },
+    { "type": "checkbox", "id": "show_art_meta", "label": "Show card meta text", "default": true },
+    { "type": "text", "id": "art_meta_text", "label": "Card meta text", "default": "STICKER STUDIO / EST. 2024" },
+    { "type": "select", "id": "pattern_style", "label": "Card pattern", "options": [{ "value": "dots", "label": "Dots" }, { "value": "grid", "label": "Grid" }, { "value": "bursts", "label": "Bursts" }, { "value": "none", "label": "No pattern" }], "default": "dots" },
+    { "type": "color", "id": "pattern_color", "label": "Pattern color", "default": "#ffffff" },
+    { "type": "header", "content": "Layout and color" },
     { "type": "select", "id": "layout", "label": "Layout", "options": [{ "value": "left", "label": "Heading left" }, { "value": "right", "label": "Heading right" }], "default": "left" },
     { "type": "color", "id": "background_color", "label": "Background", "default": "#ffffff" },
     { "type": "color", "id": "primary_color", "label": "Primary brand color", "default": "#6c5ce7" },
     { "type": "color", "id": "secondary_color", "label": "Secondary brand color", "default": "#fd79a8" },
+    { "type": "color", "id": "art_background_color", "label": "Card background", "default": "#6c5ce7" },
+    { "type": "color", "id": "art_accent_color", "label": "Card accent", "default": "#fd79a8" },
     { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 48 },
     { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 56 }
   ],
