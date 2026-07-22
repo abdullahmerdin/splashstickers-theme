@@ -10,6 +10,15 @@ const INK_PALETTE = [
   { base: '#ffd21f', deep: '#b98200' },
 ];
 
+const blendHex = (from, to, amount) => {
+  const fromValue = Number.parseInt(from.slice(1), 16);
+  const toValue = Number.parseInt(to.slice(1), 16);
+  const mix = (shift) => Math.round(
+    ((fromValue >> shift) & 0xff) + (((toValue >> shift) & 0xff) - ((fromValue >> shift) & 0xff)) * amount
+  );
+  return `#${[16, 8, 0].map((shift) => mix(shift).toString(16).padStart(2, '0')).join('')}`;
+};
+
 class SplashInkHero extends HTMLElement {
   connectedCallback() {
     if (this.initialized) return;
@@ -191,7 +200,7 @@ class SplashInkHero extends HTMLElement {
   beginStroke(point) {
     this.showScrollButton();
     this.paletteIndex = (this.paletteIndex + 1) % INK_PALETTE.length;
-    const palette = INK_PALETTE[this.paletteIndex];
+    const palette = this.paletteAt(0);
     this.stroke = {
       palette,
       last: point,
@@ -217,6 +226,7 @@ class SplashInkHero extends HTMLElement {
     stroke.size = lerp(stroke.size, targetSize, 0.28);
     stroke.velocity = lerp(stroke.velocity, velocity, 0.35);
     stroke.distance += distance;
+    stroke.palette = this.paletteAt(stroke.distance / 240);
 
     const midpoint = {
       x: (stroke.last.x + point.x) / 2,
@@ -241,6 +251,18 @@ class SplashInkHero extends HTMLElement {
 
     stroke.last = point;
     stroke.midpoint = midpoint;
+  }
+
+  paletteAt(distanceCycle) {
+    const position = (this.paletteIndex + distanceCycle) % INK_PALETTE.length;
+    const fromIndex = Math.floor(position);
+    const amount = position - fromIndex;
+    const from = INK_PALETTE[fromIndex];
+    const to = INK_PALETTE[(fromIndex + 1) % INK_PALETTE.length];
+    return {
+      base: blendHex(from.base, to.base, amount),
+      deep: blendHex(from.deep, to.deep, amount),
+    };
   }
 
   drawInkPath(makePath, size, palette) {
@@ -486,6 +508,7 @@ class SplashInkHero extends HTMLElement {
 
     const hint = this.querySelector('[data-ink-touch-hint]') || document.createElement('div');
     const hasMarkupHint = hint.hasAttribute('data-ink-touch-hint');
+    const hintAnchor = this.querySelector('.splash-hero-subtext') || this.querySelector('.splash-hero-heading');
     hint.classList.add('splash-ink-touch-hint');
     hint.setAttribute('role', 'status');
     if (!hasMarkupHint) {
@@ -505,12 +528,20 @@ class SplashInkHero extends HTMLElement {
       whiteSpace: 'nowrap',
     });
     if (!hasMarkupHint) {
-      Object.assign(hint.style, {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-      });
+      if (hintAnchor) {
+        Object.assign(hint.style, {
+          position: 'relative',
+          margin: '-4px auto 2px',
+          minHeight: '76px',
+        });
+      } else {
+        Object.assign(hint.style, {
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        });
+      }
     }
 
     const visual = hint.querySelector('.splash-ink-touch-visual');
@@ -532,6 +563,7 @@ class SplashInkHero extends HTMLElement {
     });
 
     const finger = hint.querySelector('.splash-ink-touch-finger');
+    finger.textContent = '\u2192';
     Object.assign(finger.style, {
       position: 'relative',
       zIndex: '1',
@@ -541,7 +573,13 @@ class SplashInkHero extends HTMLElement {
       animation: this.reduceMotion ? 'none' : 'splash-ink-touch-swipe 1.8s ease-in-out infinite',
     });
 
-    if (!hasMarkupHint) this.append(hint);
+    if (hintAnchor?.parentNode) {
+      if (hint !== hintAnchor.nextElementSibling) {
+        hintAnchor.parentNode.insertBefore(hint, hintAnchor.nextSibling);
+      }
+    } else if (!hasMarkupHint) {
+      this.append(hint);
+    }
     this.touchHintStyle = style;
     this.touchHint = hint;
   }
