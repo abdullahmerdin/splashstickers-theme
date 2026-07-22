@@ -43,9 +43,6 @@
       {% if section.settings.show_art_meta and section.settings.art_meta_text != blank %}
         <span class="sticker-collection-hero__art-meta">{{ section.settings.art_meta_text | escape }}</span>
       {% endif %}
-      <span class="sticker-collection-hero__dot sticker-collection-hero__dot--one"></span>
-      <span class="sticker-collection-hero__dot sticker-collection-hero__dot--two"></span>
-      <span class="sticker-collection-hero__dot sticker-collection-hero__dot--three"></span>
     </div>
   </div>
 </section>
@@ -207,18 +204,6 @@
     font-weight: 800;
     letter-spacing: 0.12em;
   }
-
-  .sticker-collection-hero__dot {
-    position: absolute;
-    width: 0.65rem;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: #fff;
-  }
-
-  .sticker-collection-hero__dot--one { top: 24%; right: 22%; }
-  .sticker-collection-hero__dot--two { top: 29%; right: 16%; width: 0.35rem; }
-  .sticker-collection-hero__dot--three { top: 34%; right: 25%; width: 0.45rem; }
 
   @keyframes sticker-float-one {
     0%, 100% { transform: translate3d(0, 0, 0) rotate(-12deg); }
