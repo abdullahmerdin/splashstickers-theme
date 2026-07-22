@@ -487,8 +487,7 @@
   min-height: 0;
   margin-inline: calc(0px - var(--cfg-shell-pad));
   overflow: auto;
-  overscroll-behavior: contain;
-  overscroll-behavior-x: none;
+  overscroll-behavior: auto;
   /* The editor owns panning/zooming. Do not let a pinch fall through to
      browser/page zoom, which would scale the controls below the canvas too. */
   touch-action: none;
@@ -507,7 +506,6 @@
   /* The canvas is a clipped viewport; zoom changes only the stage inside it. */
   contain: layout paint;
   -webkit-overflow-scrolling: touch;
-  -webkit-touch-callout: none;
 }
 
 .sticker-configurator .canvas-wrap.is-panning,

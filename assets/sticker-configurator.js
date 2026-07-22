@@ -3061,12 +3061,6 @@ class InteractionManager {
       return;
     }
     if (e.touches.length !== 1) return;
-
-    // The canvas owns every single-finger gesture. Preventing the browser
-    // default at touch-start is important on iOS/Safari: waiting until the
-    // pointer crosses the drag threshold allows an edge swipe or pull-to-
-    // refresh to win before the editor can cancel it.
-    e.preventDefault();
     var t = e.touches[0];
     core.updateCanvasWH();
 
@@ -3075,6 +3069,7 @@ class InteractionManager {
       var cid = parseInt(itemEl.dataset.itemId);
 
       if (e.target.classList.contains('resize-handle')) {
+        e.preventDefault();
         if (core.state.selectedIds.indexOf(cid) === -1) {
           core.state.selectedIds = [cid];
           core.selectionManager.updateSelection();
