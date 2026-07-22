@@ -38,6 +38,7 @@ class SplashInkHero extends HTMLElement {
     this.handlePointerLeave = this.handlePointerLeave.bind(this);
     this.handleTouchMove = this.handleTouchMove.bind(this);
     this.clear = this.clear.bind(this);
+    this.scrollToContent = this.scrollToContent.bind(this);
     this.toggleExpanded = this.toggleExpanded.bind(this);
 
     // This surface is a drawing area, so it must own a touch sequence from
@@ -53,6 +54,7 @@ class SplashInkHero extends HTMLElement {
     this.addEventListener('touchmove', this.handleTouchMove, { passive: false, capture: true });
     this.querySelector('[data-ink-clear]')?.addEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.addEventListener('click', this.toggleExpanded);
+    this.createScrollButton();
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(this);
@@ -70,6 +72,9 @@ class SplashInkHero extends HTMLElement {
     this.removeEventListener('touchmove', this.handleTouchMove, { capture: true });
     this.querySelector('[data-ink-clear]')?.removeEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.removeEventListener('click', this.toggleExpanded);
+    this.scrollButton?.removeEventListener('click', this.scrollToContent);
+    this.scrollButton?.remove();
+    this.scrollButton = null;
     this.resizeObserver?.disconnect();
     if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
     this.initialized = false;
@@ -175,6 +180,7 @@ class SplashInkHero extends HTMLElement {
   }
 
   beginStroke(point) {
+    this.showScrollButton();
     this.paletteIndex = (this.paletteIndex + 1) % INK_PALETTE.length;
     const palette = INK_PALETTE[this.paletteIndex];
     this.stroke = {
@@ -400,6 +406,7 @@ class SplashInkHero extends HTMLElement {
     event?.stopPropagation();
     this.stroke = null;
     this.droplets = [];
+    this.hideScrollButton();
     if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
     this.effectsFrame = null;
     this.clearContext(this.context, this.canvas);
@@ -417,6 +424,60 @@ class SplashInkHero extends HTMLElement {
       button.setAttribute('aria-pressed', String(expanded));
       button.setAttribute('aria-label', expanded ? 'Collapse drawing area' : 'Expand drawing area');
       button.title = expanded ? 'Collapse drawing area' : 'Expand drawing area';
+    }
+  }
+
+  createScrollButton() {
+    if (this.scrollButton) return;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'splash-hero-scroll-down';
+    button.setAttribute('aria-label', 'Scroll to content below');
+    button.title = 'Scroll to content below';
+    button.innerHTML = '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7" /></svg>';
+    Object.assign(button.style, {
+      position: 'absolute',
+      top: '16px',
+      right: '16px',
+      zIndex: '30',
+      display: 'none',
+      width: '44px',
+      height: '44px',
+      padding: '0',
+      placeItems: 'center',
+      border: '1px solid rgba(255, 255, 255, 0.45)',
+      borderRadius: '50%',
+      color: '#ffffff',
+      background: 'rgba(31, 41, 55, 0.42)',
+      cursor: 'pointer',
+      touchAction: 'manipulation',
+      backdropFilter: 'blur(8px)',
+    });
+    button.addEventListener('click', this.scrollToContent);
+    this.append(button);
+    this.scrollButton = button;
+  }
+
+  showScrollButton() {
+    if (!this.scrollButton) return;
+    this.scrollButton.style.display = 'grid';
+  }
+
+  hideScrollButton() {
+    if (!this.scrollButton) return;
+    this.scrollButton.style.display = 'none';
+  }
+
+  scrollToContent(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const section = this.closest('.shopify-section') || this;
+    const nextSection = section.nextElementSibling;
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
     }
   }
 }
