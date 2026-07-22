@@ -6,8 +6,7 @@
  * or related systems. Please exercise caution as any changes
  * made to this file may be overwritten.
  * ------------------------------------------------------------
- */
-{
+ */{
   "sections": {
     "sticker_configurator_DtD3cf": {
       "type": "sticker-configurator",
@@ -158,7 +157,6 @@
                 "border_opacity": 100,
                 "border_color": "",
                 "border_radius": 0,
-                "link": "",
                 "open_in_new_tab": false,
                 "placeholder": "",
                 "padding-block-start": 0,
@@ -355,7 +353,6 @@
       "block_order": [
         "disclosures_g9mWze"
       ],
-      "disabled": true,
       "settings": {
         "content_width": "content-center-aligned",
         "desktop_media_position": "left",
