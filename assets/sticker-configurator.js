@@ -3983,16 +3983,19 @@ class StickerConfigurator extends HTMLElement {
       this.canvas.addEventListener('mouseup', function (e) { core.interactionManager.onMouseUp(e); }, { signal });
       this.canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); }, { signal });
 
-      this.canvas.addEventListener('touchstart', function (e) { core.interactionManager.onTouchStart(e); }, { signal, passive: false });
-      this.canvas.addEventListener('touchmove', function (e) { core.interactionManager.onTouchMove(e); }, { signal, passive: false });
-      this.canvas.addEventListener('touchend', function (e) { core.interactionManager.onTouchEnd(e); }, { signal, passive: true });
-      this.canvas.addEventListener('touchcancel', function () { core.interactionManager.onTouchCancel(); }, { signal, passive: true });
-
       this.canvas.addEventListener('drop', function (e) { core.handleCanvasDrop(e); }, { signal });
       this.canvas.addEventListener('dragover', function (e) { e.preventDefault(); }, { signal });
     }
 
     if (this.wrap) {
+      // Bind touch gestures to the viewport, not only the transformed canvas.
+      // After zooming, the viewport can expose empty space around the stage;
+      // that space must still belong to the editor so mobile browsers cannot
+      // interpret a drag as page navigation or pull-to-refresh.
+      this.wrap.addEventListener('touchstart', function (e) { core.interactionManager.onTouchStart(e); }, { signal, passive: false });
+      this.wrap.addEventListener('touchmove', function (e) { core.interactionManager.onTouchMove(e); }, { signal, passive: false });
+      this.wrap.addEventListener('touchend', function (e) { core.interactionManager.onTouchEnd(e); }, { signal, passive: true });
+      this.wrap.addEventListener('touchcancel', function () { core.interactionManager.onTouchCancel(); }, { signal, passive: true });
       this.wrap.addEventListener('wheel', function (e) { core.interactionManager.onWheel(e); }, { signal, passive: false });
       this.wrap.addEventListener('scroll', function () {
         core.state.panX = core.wrap.scrollLeft;
