@@ -31,8 +31,8 @@ class SplashInkHero extends HTMLElement {
     this.effectsFrame = null;
     this.lastEffectsTime = 0;
     this.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.isTouchDevice = navigator.maxTouchPoints > 0
-      || window.matchMedia('(pointer: coarse)').matches;
+    this.isTouchDevice = window.matchMedia('(max-width: 749px)').matches
+      && (navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches);
 
     this.handlePointerMove = this.handlePointerMove.bind(this);
     this.handlePointerDown = this.handlePointerDown.bind(this);
@@ -437,7 +437,7 @@ class SplashInkHero extends HTMLElement {
   }
 
   createScrollButton() {
-    if (this.scrollButton) return;
+    if (!this.isTouchDevice || this.scrollButton) return;
 
     const button = document.createElement('button');
     button.type = 'button';
@@ -473,9 +473,9 @@ class SplashInkHero extends HTMLElement {
 
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes splash-ink-touch-tap {
-        0%, 100% { transform: translateY(0) scale(1); }
-        50% { transform: translateY(5px) scale(0.94); }
+      @keyframes splash-ink-touch-swipe {
+        0%, 100% { transform: translateX(-10px) scale(0.94); }
+        50% { transform: translateX(10px) scale(1); }
       }
       @keyframes splash-ink-touch-ring {
         0% { opacity: 0.65; transform: scale(0.55); }
@@ -484,14 +484,14 @@ class SplashInkHero extends HTMLElement {
     `;
     this.append(style);
 
-    const hint = document.createElement('div');
-    hint.className = 'splash-ink-touch-hint';
+    const hint = this.querySelector('[data-ink-touch-hint]') || document.createElement('div');
+    const hasMarkupHint = hint.hasAttribute('data-ink-touch-hint');
+    hint.classList.add('splash-ink-touch-hint');
     hint.setAttribute('role', 'status');
-    hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger">👆</span></span><span>Buraya dokunarak çiz</span>';
+    if (!hasMarkupHint) {
+      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger">→</span></span><span>Swipe to draw</span>';
+    }
     Object.assign(hint.style, {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
       zIndex: '10',
       display: 'flex',
       flexDirection: 'column',
@@ -502,9 +502,16 @@ class SplashInkHero extends HTMLElement {
       fontWeight: '650',
       pointerEvents: 'none',
       userSelect: 'none',
-      transform: 'translate(-50%, -50%)',
       whiteSpace: 'nowrap',
     });
+    if (!hasMarkupHint) {
+      Object.assign(hint.style, {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+      });
+    }
 
     const visual = hint.querySelector('.splash-ink-touch-visual');
     Object.assign(visual.style, {
@@ -531,10 +538,10 @@ class SplashInkHero extends HTMLElement {
       fontSize: '2rem',
       lineHeight: '1',
       filter: 'drop-shadow(0 2px 3px rgba(31, 41, 55, 0.18))',
-      animation: this.reduceMotion ? 'none' : 'splash-ink-touch-tap 1.8s ease-in-out infinite',
+      animation: this.reduceMotion ? 'none' : 'splash-ink-touch-swipe 1.8s ease-in-out infinite',
     });
 
-    this.append(hint);
+    if (!hasMarkupHint) this.append(hint);
     this.touchHintStyle = style;
     this.touchHint = hint;
   }
