@@ -31,6 +31,8 @@ class SplashInkHero extends HTMLElement {
     this.effectsFrame = null;
     this.lastEffectsTime = 0;
     this.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.isTouchDevice = navigator.maxTouchPoints > 0
+      || window.matchMedia('(pointer: coarse)').matches;
 
     this.handlePointerMove = this.handlePointerMove.bind(this);
     this.handlePointerDown = this.handlePointerDown.bind(this);
@@ -55,6 +57,8 @@ class SplashInkHero extends HTMLElement {
     this.querySelector('[data-ink-clear]')?.addEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.addEventListener('click', this.toggleExpanded);
     this.createScrollButton();
+    this.createTouchHint();
+    this.showTouchHint();
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(this);
@@ -75,6 +79,10 @@ class SplashInkHero extends HTMLElement {
     this.scrollButton?.removeEventListener('click', this.scrollToContent);
     this.scrollButton?.remove();
     this.scrollButton = null;
+    this.touchHint?.remove();
+    this.touchHint = null;
+    this.touchHintStyle?.remove();
+    this.touchHintStyle = null;
     this.resizeObserver?.disconnect();
     if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
     this.initialized = false;
@@ -139,6 +147,7 @@ class SplashInkHero extends HTMLElement {
   handlePointerDown(event) {
     if (this.isInteractiveTarget(event.target)) return;
 
+    this.hideTouchHint();
     if (event.pointerType !== 'mouse') event.preventDefault();
     this.activePointer = event.pointerId;
     this.beginStroke(this.pointFromEvent(event));
@@ -406,7 +415,7 @@ class SplashInkHero extends HTMLElement {
     event?.stopPropagation();
     this.stroke = null;
     this.droplets = [];
-    this.hideScrollButton();
+    this.showTouchHint();
     if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
     this.effectsFrame = null;
     this.clearContext(this.context, this.canvas);
@@ -457,6 +466,87 @@ class SplashInkHero extends HTMLElement {
     button.addEventListener('click', this.scrollToContent);
     this.append(button);
     this.scrollButton = button;
+  }
+
+  createTouchHint() {
+    if (!this.isTouchDevice || this.touchHint) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes splash-ink-touch-tap {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(5px) scale(0.94); }
+      }
+      @keyframes splash-ink-touch-ring {
+        0% { opacity: 0.65; transform: scale(0.55); }
+        70%, 100% { opacity: 0; transform: scale(1.3); }
+      }
+    `;
+    this.append(style);
+
+    const hint = document.createElement('div');
+    hint.className = 'splash-ink-touch-hint';
+    hint.setAttribute('role', 'status');
+    hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger">👆</span></span><span>Buraya dokunarak çiz</span>';
+    Object.assign(hint.style, {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      zIndex: '10',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '8px',
+      color: 'rgba(31, 41, 55, 0.72)',
+      fontSize: '0.9rem',
+      fontWeight: '650',
+      pointerEvents: 'none',
+      userSelect: 'none',
+      transform: 'translate(-50%, -50%)',
+      whiteSpace: 'nowrap',
+    });
+
+    const visual = hint.querySelector('.splash-ink-touch-visual');
+    Object.assign(visual.style, {
+      position: 'relative',
+      display: 'grid',
+      width: '58px',
+      height: '58px',
+      placeItems: 'center',
+    });
+
+    const ring = hint.querySelector('.splash-ink-touch-ring');
+    Object.assign(ring.style, {
+      position: 'absolute',
+      inset: '4px',
+      border: '2px solid rgba(108, 92, 231, 0.55)',
+      borderRadius: '50%',
+      animation: this.reduceMotion ? 'none' : 'splash-ink-touch-ring 1.8s ease-out infinite',
+    });
+
+    const finger = hint.querySelector('.splash-ink-touch-finger');
+    Object.assign(finger.style, {
+      position: 'relative',
+      zIndex: '1',
+      fontSize: '2rem',
+      lineHeight: '1',
+      filter: 'drop-shadow(0 2px 3px rgba(31, 41, 55, 0.18))',
+      animation: this.reduceMotion ? 'none' : 'splash-ink-touch-tap 1.8s ease-in-out infinite',
+    });
+
+    this.append(hint);
+    this.touchHintStyle = style;
+    this.touchHint = hint;
+  }
+
+  showTouchHint() {
+    if (!this.touchHint) return;
+    this.touchHint.style.display = 'flex';
+  }
+
+  hideTouchHint() {
+    if (!this.touchHint) return;
+    this.touchHint.style.display = 'none';
   }
 
   showScrollButton() {
