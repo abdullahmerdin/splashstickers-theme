@@ -36,14 +36,21 @@ class SplashInkHero extends HTMLElement {
     this.handlePointerDown = this.handlePointerDown.bind(this);
     this.handlePointerEnd = this.handlePointerEnd.bind(this);
     this.handlePointerLeave = this.handlePointerLeave.bind(this);
+    this.handleTouchMove = this.handleTouchMove.bind(this);
     this.clear = this.clear.bind(this);
     this.toggleExpanded = this.toggleExpanded.bind(this);
 
+    // This surface is a drawing area, so it must own a touch sequence from
+    // its first frame. Keeping this inline also protects older published
+    // section markup whose stylesheet still allows vertical panning.
+    this.style.touchAction = 'none';
+    this.style.overscrollBehavior = 'none';
     this.addEventListener('pointermove', this.handlePointerMove);
     this.addEventListener('pointerdown', this.handlePointerDown);
     this.addEventListener('pointerup', this.handlePointerEnd);
     this.addEventListener('pointercancel', this.handlePointerEnd);
     this.addEventListener('pointerleave', this.handlePointerLeave);
+    this.addEventListener('touchmove', this.handleTouchMove, { passive: false, capture: true });
     this.querySelector('[data-ink-clear]')?.addEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.addEventListener('click', this.toggleExpanded);
 
@@ -60,6 +67,7 @@ class SplashInkHero extends HTMLElement {
     this.removeEventListener('pointerup', this.handlePointerEnd);
     this.removeEventListener('pointercancel', this.handlePointerEnd);
     this.removeEventListener('pointerleave', this.handlePointerLeave);
+    this.removeEventListener('touchmove', this.handleTouchMove, { capture: true });
     this.querySelector('[data-ink-clear]')?.removeEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.removeEventListener('click', this.toggleExpanded);
     this.resizeObserver?.disconnect();
@@ -126,6 +134,7 @@ class SplashInkHero extends HTMLElement {
   handlePointerDown(event) {
     if (this.isInteractiveTarget(event.target)) return;
 
+    if (event.pointerType !== 'mouse') event.preventDefault();
     this.activePointer = event.pointerId;
     this.beginStroke(this.pointFromEvent(event));
     if (event.pointerType !== 'mouse') this.setPointerCapture?.(event.pointerId);
@@ -137,6 +146,7 @@ class SplashInkHero extends HTMLElement {
       return;
     }
     if (event.pointerType !== 'mouse' && this.activePointer !== event.pointerId) return;
+    if (event.pointerType !== 'mouse') event.preventDefault();
 
     const events = event.getCoalescedEvents?.() || [event];
     for (const sample of events) {
@@ -148,8 +158,16 @@ class SplashInkHero extends HTMLElement {
 
   handlePointerEnd(event) {
     if (event.pointerType !== 'mouse' && this.activePointer !== event.pointerId) return;
+    if (event.pointerType !== 'mouse') event.preventDefault();
+    if (this.hasPointerCapture?.(event.pointerId)) this.releasePointerCapture(event.pointerId);
     this.activePointer = null;
     this.endStroke();
+  }
+
+  handleTouchMove(event) {
+    if (this.activePointer !== null && event.touches.length === 1) {
+      event.preventDefault();
+    }
   }
 
   handlePointerLeave(event) {
