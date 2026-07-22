@@ -11,27 +11,13 @@
     "section": {
       "type": "sticker-collection-hero",
       "settings": {
-        "status_label": "Built for the way you make",
-        "eyebrow": "The collection",
         "heading": "",
-        "subtext": "",
-        "chip_1": "Made to order",
-        "chip_2": "Low minimums",
-        "chip_3": "Fast proofing",
-        "cta_label": "Shop the collection",
-        "cta_link": "",
-        "panel_label": "At a glance",
-        "panel_heading": "Choose the finish that fits the job.",
-        "panel_text": "Start with the format, then dial in the details.",
-        "panel_item_1": "Pick your surface",
-        "panel_item_2": "Set size and quantity",
-        "panel_item_3": "Approve your proof",
         "layout": "left",
-        "background_color": "#f2eee7",
-        "accent_color": "#d34f32",
-        "panel_background_color": "#fffaf2",
-        "padding_top": 72,
-        "padding_bottom": 72
+        "background_color": "#ffffff",
+        "primary_color": "#6c5ce7",
+        "secondary_color": "#fd79a8",
+        "padding_top": 48,
+        "padding_bottom": 56
       }
     },
     "main": {
