@@ -353,8 +353,10 @@
       });
 
       document.addEventListener('touchmove', function(ev) {
+        var isDragging = false;
         items.forEach(function(item) {
           if (item.dragging) {
+            isDragging = true;
             var b = cta.getBoundingClientRect();
             var t = ev.touches[0];
             var cx = t.clientX - b.left - item.ox;
@@ -365,7 +367,8 @@
             item.el.style.top = item.y + 'px';
           }
         });
-      }, { passive: false });
+        if (isDragging) ev.preventDefault();
+      }, { passive: false, capture: true });
 
       document.addEventListener('touchend', function() {
         items.forEach(function(item) {
