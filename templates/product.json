@@ -347,6 +347,38 @@
         "padding-block-end": 0
       }
     },
+    "product_foundation": {
+      "type": "sticker-product-foundation",
+      "settings": {
+        "mockup_image": "",
+        "mockup_caption": "Use this space for a real production or application image.",
+        "status_label": "Product playbook",
+        "eyebrow": "Know what you are ordering",
+        "heading": "",
+        "subtext": "<p>A clear production brief helps you choose the right finish, size and quantity before you check out.</p>",
+        "tutorial_title": "How it works",
+        "tutorial_step_1": "Choose your material and finish",
+        "tutorial_step_2": "Upload artwork or send a brief",
+        "tutorial_step_3": "Approve the proof and we produce it",
+        "options_title": "Choose your setup",
+        "option_1_title": "Size",
+        "option_1_text": "Small to statement",
+        "option_2_title": "Quantity",
+        "option_2_text": "Samples to bulk",
+        "option_3_title": "Surface",
+        "option_3_text": "Pick your application",
+        "sample_pack_title": "Try the finishes first.",
+        "sample_pack_text": "A low-risk way to compare materials, color and feel.",
+        "sample_pack_button_label": "See sample packs",
+        "sample_pack_button_link": "",
+        "layout": "left",
+        "background_color": "#f2eee7",
+        "accent_color": "#d34f32",
+        "secondary_accent_color": "#253b35",
+        "padding_top": 80,
+        "padding_bottom": 80
+      }
+    },
     "product_recommendations_qggXJq": {
       "type": "product-recommendations",
       "blocks": {
@@ -494,6 +526,7 @@
     "sticker_configurator_DtD3cf",
     "collision_test_rtHcd8",
     "main",
+    "product_foundation",
     "product_recommendations_qggXJq"
   ]
 }
