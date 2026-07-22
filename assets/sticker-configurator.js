@@ -3928,11 +3928,7 @@ class StickerConfigurator extends HTMLElement {
     // guard some mobile browsers treat the same pinch as page zoom, which
     // scales the UI even though the canvas zoom itself is clamped at 100%.
     var preventViewportPinch = function (e) {
-      var target = e.target;
-      var isCanvasTouch = target && typeof target.closest === 'function'
-        && target.closest('.canvas-wrap');
-      if (e.type.indexOf('gesture') === 0
-          || (e.touches && (e.touches.length > 1 || isCanvasTouch))) {
+      if (e.type.indexOf('gesture') === 0 || (e.touches && e.touches.length > 1)) {
         e.preventDefault();
       }
     };
