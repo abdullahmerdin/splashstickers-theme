@@ -28,6 +28,28 @@ class InteractionManager {
     }
   }
 
+  moveDraggedItems(ds, dx, dy) {
+    var core = this.core;
+    var draggedItems = this._dragItems(ds.ids);
+    if (!draggedItems.length) return draggedItems;
+
+    var allowed = core.collisionEngine.constrainGroupDelta(
+      dx,
+      dy,
+      draggedItems,
+      core.state.items,
+      ds.ids
+    );
+    draggedItems.forEach(function (item) {
+      item.x += allowed.dx;
+      item.y += allowed.dy;
+      item.el.style.left = item.x + 'px';
+      item.el.style.top = item.y + 'px';
+    });
+    this._setMoveVisual(ds, false);
+    return draggedItems;
+  }
+
   onMouseDown(e) {
     var core = this.core;
     core.updateCanvasWH();
@@ -122,22 +144,7 @@ class InteractionManager {
       var dy = (e.clientY - prevY) / core.state.zoom;
       ds._lastX = e.clientX;
       ds._lastY = e.clientY;
-      var draggedItems = [];
-      ds.ids.forEach(function (id) {
-        var item = core.state.items.find(function (i) { return i.id === id; });
-        if (!item) return;
-        draggedItems.push(item);
-      });
-
-      // Keep movement free while dragging. Collision feedback is non-blocking;
-      // an illegal drop is restored to the exact starting position on release.
-      draggedItems.forEach(function (item) {
-        item.x += dx;
-        item.y += dy;
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-      });
-      im._setMoveVisual(ds, im._isMoveIllegal(ds));
+      var draggedItems = im.moveDraggedItems(ds, dx, dy);
 
       core.selectionManager.updateGuides(
         itemsArr.find(function (i) { return i.id === ds.ids[0]; }),
@@ -327,13 +334,14 @@ class InteractionManager {
       if (ds.illegal) {
         this._restoreMove(ds);
       } else if (core.state.snapEnabled) {
+        var beforeSnap = this._snapshotMovePositions(ds);
         var snapItems = [];
         ds.ids.forEach(function (id) {
           var dragged = core.state.items.find(function (i) { return i.id === id; });
           if (dragged) snapItems.push(dragged);
         });
         core.snapEngine.applySnap(snapItems);
-        if (this._isMoveIllegal(ds)) this._restoreMove(ds);
+        if (this._isMoveIllegal(ds)) this._restoreMovePositions(beforeSnap);
       }
       this._clearMoveVisual(ds);
       core.historyManager.saveState();
@@ -474,12 +482,33 @@ class InteractionManager {
     });
   }
 
+  _snapshotMovePositions(ds) {
+    var core = this.core;
+    return (ds.ids || []).map(function (id) {
+      var item = core.state.items.find(function (candidate) { return candidate.id === id; });
+      return item ? { id: id, x: item.x, y: item.y } : null;
+    }).filter(Boolean);
+  }
+
+  _restoreMovePositions(positions) {
+    var core = this.core;
+    (positions || []).forEach(function (position) {
+      var item = core.state.items.find(function (candidate) { return candidate.id === position.id; });
+      if (!item) return;
+      item.x = position.x;
+      item.y = position.y;
+      item.el.style.left = item.x + 'px';
+      item.el.style.top = item.y + 'px';
+    });
+  }
+
   _clearMoveVisual(ds) {
     var core = this.core;
     (ds && ds.ids || []).forEach(function (id) {
       var item = core.state.items.find(function (candidate) { return candidate.id === id; });
       if (!item || !item.el) return;
       item.el.classList.remove('is-illegal');
+      item.el.classList.remove('is-dragging');
       item.el.style.opacity = '';
       item.el.style.filter = '';
       item.el.style.outline = '';
@@ -515,10 +544,14 @@ class InteractionManager {
       pending.moved = true;
       e.preventDefault();
       core.state.touchStarted = null;
-      if (pending.id != null && !pending.locked &&
-          (pending.wasSelected || core.state.multiSelectMode)) {
-        if (core.state.multiSelectMode && !pending.wasSelected) {
-          core.selectionManager.toggleSelect(pending.id, true);
+      if (pending.id != null && !pending.locked) {
+        if (!pending.wasSelected) {
+          if (core.state.multiSelectMode) {
+            core.selectionManager.toggleSelect(pending.id, true);
+          } else {
+            core.state.selectedIds = [pending.id];
+            core.selectionManager.updateSelection();
+          }
         }
         this.startDrag({ clientX: pending.x, clientY: pending.y }, pending.id);
       } else {
@@ -542,10 +575,10 @@ class InteractionManager {
       core.wrap.scrollTop = ds.scrollY - (t.clientY - ds.oy);
       core.canvasRenderer.clampPan();
     } else if (ds.type === 'move') {
-      // Jitter threshold
+      // Ignore sub-pixel touch noise without making the first drag movement feel sticky.
       var mx = t.clientX - (ds._lastX || ds.ox);
       var my = t.clientY - (ds._lastY || ds.oy);
-      if (Math.abs(mx) < 2 && Math.abs(my) < 2) {
+      if (Math.abs(mx) < 0.5 && Math.abs(my) < 0.5) {
         ds._lastX = t.clientX;
         ds._lastY = t.clientY;
         return;
@@ -557,23 +590,7 @@ class InteractionManager {
 
       var dx = (t.clientX - ds._lastPrevX) / core.state.zoom;
       var dy = (t.clientY - ds._lastPrevY) / core.state.zoom;
-      var draggedItems = [];
-      ds.ids.forEach(function (id) {
-        var item = core.state.items.find(function (i) { return i.id === id; });
-        if (!item) return;
-        draggedItems.push(item);
-      });
-
-      // Movement is deliberately not constrained during the gesture. The
-      // dragged design becomes gray when the current position is illegal.
-      var itemsArr = core.state.items;
-      draggedItems.forEach(function (item) {
-        item.x += dx;
-        item.y += dy;
-        item.el.style.left = item.x + 'px';
-        item.el.style.top = item.y + 'px';
-      });
-      im._setMoveVisual(ds, im._isMoveIllegal(ds));
+      im.moveDraggedItems(ds, dx, dy);
     } else if (ds.type === 'resize') {
       this._applyResize(ds, t.clientX, t.clientY);
       return;
@@ -740,6 +757,7 @@ class InteractionManager {
       if (core.state.dragState.illegal) {
         this._restoreMove(core.state.dragState);
       } else if (core.state.snapEnabled) {
+        var beforeSnap = this._snapshotMovePositions(core.state.dragState);
         var snapItems = [];
         core.state.dragState.ids.forEach(function (id) {
           var dragged = core.state.items.find(function (i) { return i.id === id; });
@@ -747,12 +765,13 @@ class InteractionManager {
         });
         core.snapEngine.applySnap(snapItems);
         if (this._isMoveIllegal(core.state.dragState)) {
-          this._restoreMove(core.state.dragState);
+          this._restoreMovePositions(beforeSnap);
         }
       }
       this._clearMoveVisual(core.state.dragState);
       core.historyManager.saveState();
       core.growCanvas();
+      core.dispatchUpdateEvent();
     } else if (core.state.dragState && core.state.dragState.type === 'resize') {
       // Overlap check: nudge item to clear position before saving state
       var resizedItem = core.state.items.find(function (i) { return i.id === core.state.dragState.id; });
@@ -923,10 +942,15 @@ class InteractionManager {
     core.state.dragState = {
       type: 'move',
       ox: e.clientX, oy: e.clientY,
+      _lastX: e.clientX, _lastY: e.clientY,
       ids: ids,
       startPos: startPos,
       illegal: false
     };
+    ids.forEach(function (selectedId) {
+      var selected = core.state.items.find(function (candidate) { return candidate.id === selectedId; });
+      if (selected && selected.el) selected.el.classList.add('is-dragging');
+    });
   }
 
   startResize(e, id, handle) {

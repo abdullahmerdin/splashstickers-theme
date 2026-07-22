@@ -16,8 +16,7 @@
   class="splash-cta-section"
   style="background: linear-gradient(135deg, {{ gradient_start }}, {{ gradient_end }}); padding: {{ padding_top }}px 20px {{ padding_bottom }}px; text-align: center; position: relative;"
 >
-  <splash-cta-stickers class="splash-cta-stickers" aria-hidden="true">
-    <canvas data-sticker-ropes></canvas>
+  <splash-cta-stickers class="splash-cta-stickers">
     <img
       src="{{ 'cherry.svg' | asset_url }}"
       class="splash-cta-sticker splash-cta-sticker--one"
@@ -84,17 +83,9 @@
   .splash-cta-stickers {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: 3;
     display: block;
     overflow: hidden;
-    pointer-events: none;
-  }
-
-  .splash-cta-stickers canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
     pointer-events: none;
   }
 
@@ -107,13 +98,12 @@
     pointer-events: auto;
     touch-action: none;
     filter: drop-shadow(0 8px 10px rgb(31 41 55 / 18%));
-    transform: rotate(-3deg);
-    transition: filter 0.18s ease, transform 0.18s ease;
+    transition: filter 0.14s ease, transform 0.14s ease;
   }
 
-  .splash-cta-sticker--one { animation: splash-cta-sticker-float-one 5.5s ease-in-out infinite; }
-  .splash-cta-sticker--two { animation: splash-cta-sticker-float-two 6.2s ease-in-out -1.6s infinite; }
-  .splash-cta-sticker--three { animation: splash-cta-sticker-float-three 5.8s ease-in-out -0.8s infinite; }
+  .splash-cta-sticker--one { transform: rotate(-7deg); }
+  .splash-cta-sticker--two { transform: rotate(5deg); }
+  .splash-cta-sticker--three { transform: rotate(-4deg); }
 
   .splash-cta-sticker:hover,
   .splash-cta-sticker.is-dragging {
@@ -121,22 +111,6 @@
     cursor: grabbing;
     filter: drop-shadow(5px 8px 12px rgb(31 41 55 / 30%));
     transform: scale(0.96) rotate(5deg);
-    animation-play-state: paused;
-  }
-
-  @keyframes splash-cta-sticker-float-one {
-    0%, 100% { transform: translateY(0) rotate(-3deg); }
-    50% { transform: translateY(-8px) rotate(3deg); }
-  }
-
-  @keyframes splash-cta-sticker-float-two {
-    0%, 100% { transform: translateY(0) rotate(4deg); }
-    50% { transform: translateY(9px) rotate(-3deg); }
-  }
-
-  @keyframes splash-cta-sticker-float-three {
-    0%, 100% { transform: translateY(0) rotate(-5deg); }
-    50% { transform: translateY(-7px) rotate(2deg); }
   }
 
   @media (max-width: 749px) {
@@ -145,12 +119,6 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .splash-cta-sticker {
-      animation: none;
-      transition: none;
-    }
-  }
 {% endstylesheet %}
 
 <script src="{{ 'splash-cta-stickers.js' | asset_url }}" defer></script>

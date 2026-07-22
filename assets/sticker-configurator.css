@@ -581,6 +581,12 @@
   box-shadow: 0 0 0 2px var(--cfg-primary);
 }
 
+.sticker-configurator .canvas-item.is-dragging {
+  cursor: grabbing;
+  will-change: left, top;
+  transition: none;
+}
+
 .sticker-configurator .canvas-item img,
 .sticker-configurator .canvas-item .text-content {
   width: 100%;
