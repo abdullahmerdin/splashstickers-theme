@@ -82,8 +82,8 @@ class SplashInkHero extends HTMLElement {
     this.querySelector('[data-ink-expand]')?.removeEventListener('click', this.toggleExpanded);
     window.removeEventListener('resize', this.updateExpandedHeight);
     window.visualViewport?.removeEventListener('resize', this.updateExpandedHeight);
-    this.heightTransitionCleanup?.();
-    this.heightTransitionCleanup = null;
+    this.heightAnimation?.cancel();
+    this.heightAnimation = null;
     this.scrollButton?.removeEventListener('click', this.scrollToContent);
     this.scrollButton?.remove();
     this.scrollButton = null;
@@ -456,19 +456,15 @@ class SplashInkHero extends HTMLElement {
 
   toggleExpanded(event) {
     event?.stopPropagation();
-    this.heightTransitionCleanup?.();
-    this.heightTransitionCleanup = null;
-    this.heightTransitionToken = (this.heightTransitionToken || 0) + 1;
-    const transitionToken = this.heightTransitionToken;
+    this.heightAnimation?.cancel();
+    this.heightAnimation = null;
     const currentHeight = Math.max(1, Math.round(this.getBoundingClientRect().height));
 
-    // Keep the current height as an explicit transition start value before
-    // changing the expanded state; otherwise the browser has no pixel value
-    // to animate from.
+    // Keep a pixel height underneath the animation so the expanded CSS rule
+    // cannot make either direction jump straight to its final size.
     this.style.height = `${currentHeight}px`;
     this.style.minHeight = `${currentHeight}px`;
     this.style.maxHeight = `${currentHeight}px`;
-    this.offsetHeight;
 
     const expanded = this.toggleAttribute('data-expanded');
     let targetHeight;
@@ -484,21 +480,14 @@ class SplashInkHero extends HTMLElement {
       this.style.height = `${currentHeight}px`;
       this.style.minHeight = `${currentHeight}px`;
       this.style.maxHeight = `${currentHeight}px`;
-      this.offsetHeight;
     }
 
-    // Remove the temporary constraints so the explicit height can animate in
-    // either direction without the expanded min-height forcing a jump.
+    // Let the animation own the height, without the expanded min-height
+    // constraining an in-between frame.
     this.style.minHeight = '0px';
     this.style.maxHeight = 'none';
 
-    const finishTransition = (transitionEvent) => {
-      if (
-        transitionEvent
-        && (transitionEvent.target !== this || transitionEvent.propertyName !== 'height')
-      ) return;
-      this.removeEventListener('transitionend', finishTransition);
-      this.heightTransitionCleanup = null;
+    const settle = () => {
       if (expanded) {
         this.updateExpandedHeight();
       } else {
@@ -507,14 +496,30 @@ class SplashInkHero extends HTMLElement {
         this.style.removeProperty('max-height');
       }
     };
-    this.heightTransitionCleanup = () => this.removeEventListener('transitionend', finishTransition);
-    this.addEventListener('transitionend', finishTransition);
 
-    requestAnimationFrame(() => {
-      if (transitionToken !== this.heightTransitionToken) return;
+    if (this.reduceMotion || Math.abs(targetHeight - currentHeight) < 1 || !this.animate) {
       this.style.height = `${targetHeight}px`;
-      if (Math.abs(targetHeight - currentHeight) < 1) finishTransition();
-    });
+      settle();
+    } else {
+      const animation = this.animate(
+        [{ height: `${currentHeight}px` }, { height: `${targetHeight}px` }],
+        {
+          duration: 420,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          fill: 'forwards',
+        }
+      );
+      this.heightAnimation = animation;
+      animation.onfinish = () => {
+        if (this.heightAnimation !== animation) return;
+        this.heightAnimation = null;
+        settle();
+        animation.cancel();
+      };
+      animation.oncancel = () => {
+        if (this.heightAnimation === animation) this.heightAnimation = null;
+      };
+    }
 
     const button = this.querySelector('[data-ink-expand]');
     if (button) {
@@ -532,6 +537,7 @@ class SplashInkHero extends HTMLElement {
 
   updateExpandedHeight() {
     if (!this.hasAttribute('data-expanded')) return;
+    if (this.heightAnimation) return;
 
     const availableHeight = this.getAvailableExpandedHeight();
     this.style.height = `${availableHeight}px`;

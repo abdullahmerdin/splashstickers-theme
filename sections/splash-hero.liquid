@@ -24,7 +24,6 @@
     overscroll-behavior: none;
     user-select: none;
     -webkit-user-select: none;
-    transition: height 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .splash-hero-{{ section.id }}[data-expanded] {
@@ -172,10 +171,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .splash-hero-{{ section.id }} {
-      transition-duration: 0.01ms;
-    }
-
     .splash-hero-{{ section.id }} .splash-hero-button {
       transition-duration: 0.01ms;
     }
