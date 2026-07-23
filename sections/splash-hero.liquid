@@ -11,7 +11,8 @@
   .splash-hero-{{ section.id }} {
     position: relative;
     display: flex;
-    min-height: {{ section_height }}px;
+    box-sizing: border-box;
+    min-height: calc({{ section_height }}px + {{ padding_top }}px + {{ padding_bottom }}px);
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -23,6 +24,12 @@
     overscroll-behavior: none;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  .splash-hero-{{ section.id }}[data-expanded] {
+    height: 100svh;
+    min-height: 100svh;
+    max-height: 100svh;
   }
 
   .splash-hero-{{ section.id }} canvas {
@@ -173,7 +180,6 @@
 <splash-ink-hero
   class="splash-hero-{{ section.id }}"
   id="splash-hero-{{ section.id }}"
-  data-original-height="{{ section_height }}"
 >
   <canvas data-ink-canvas aria-hidden="true"></canvas>
   <canvas data-ink-effects aria-hidden="true"></canvas>
@@ -187,10 +193,13 @@
         <span class="splash-ink-touch-visual" aria-hidden="true">
           <span class="splash-ink-touch-ring"></span>
           <span class="splash-ink-touch-finger">
-            <svg viewBox="0 0 80 64" aria-hidden="true" focusable="false">
-              <path d="M30 54V18a5 5 0 0 1 10 0v15V10a5 5 0 0 1 10 0v23V16a5 5 0 0 1 10 0v20V22a5 5 0 0 1 10 0v20c0 11-9 18-20 18H41c-6 0-11-3-15-9l-6-9a5 5 0 0 1 8-6l2 3Z" />
-              <path class="splash-ink-touch-arrow" d="M9 28h16m0 0-6-6m6 6-6 6" />
-            </svg>
+            <img
+              src="https://static.thenounproject.com/png/hand-swipe-icon-4864496-512.png"
+              alt=""
+              width="512"
+              height="512"
+              decoding="async"
+            >
           </span>
         </span>
         <span class="splash-ink-touch-label">{{ draw_hint | escape }}</span>

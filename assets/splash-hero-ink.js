@@ -450,8 +450,10 @@ class SplashInkHero extends HTMLElement {
   toggleExpanded(event) {
     event?.stopPropagation();
     const expanded = this.toggleAttribute('data-expanded');
-    const originalHeight = Number(this.dataset.originalHeight) || 550;
-    this.style.minHeight = `${expanded ? window.innerHeight : originalHeight}px`;
+    // The expanded state is sized in CSS with svh and border-box so padding
+    // remains inside the viewport on both desktop and mobile.
+    this.style.removeProperty('height');
+    this.style.removeProperty('min-height');
 
     const button = this.querySelector('[data-ink-expand]');
     if (button) {
@@ -524,7 +526,7 @@ class SplashInkHero extends HTMLElement {
     hint.classList.add('splash-ink-touch-hint');
     hint.setAttribute('role', 'status');
     if (!hasMarkupHint) {
-      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger"><svg viewBox="0 0 80 64" aria-hidden="true" focusable="false"><path d="M30 54V18a5 5 0 0 1 10 0v15V10a5 5 0 0 1 10 0v23V16a5 5 0 0 1 10 0v20V22a5 5 0 0 1 10 0v20c0 11-9 18-20 18H41c-6 0-11-3-15-9l-6-9a5 5 0 0 1 8-6l2 3Z"/><path class="splash-ink-touch-arrow" d="M9 28h16m0 0-6-6m6 6-6 6"/></svg></span></span><span class="splash-ink-touch-label">Swipe to draw</span>';
+      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger"><img src="https://static.thenounproject.com/png/hand-swipe-icon-4864496-512.png" alt="" width="512" height="512" decoding="async"></span></span><span class="splash-ink-touch-label">Swipe to draw</span>';
     }
     Object.assign(hint.style, {
       zIndex: '10',
@@ -609,6 +611,16 @@ class SplashInkHero extends HTMLElement {
       }
       const arrow = fingerSvg.querySelector('.splash-ink-touch-arrow');
       if (arrow) arrow.setAttribute('stroke', '#6c5ce7');
+    }
+
+    const fingerImage = finger.querySelector('img');
+    if (fingerImage) {
+      Object.assign(fingerImage.style, {
+        display: 'block',
+        width: '58px',
+        height: '58px',
+        objectFit: 'contain',
+      });
     }
 
     if (hintAnchor?.parentNode) {
