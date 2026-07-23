@@ -1,9 +1,9 @@
 [
   {
     "name": "theme_info",
-    "theme_name": "Horizon",
+    "theme_name": "SplashStickers",
     "theme_version": "4.1.1",
-    "theme_author": "Shopify",
+    "theme_author": "SplashStickers",
     "theme_documentation_url": "https://help.shopify.com/manual/online-store/themes",
     "theme_support_url": "https://support.shopify.com/"
   },
@@ -2114,6 +2114,103 @@
           }
         ],
         "default": "equal-width-buttons"
+      }
+    ]
+  },
+  {
+    "name": "Splash brand system",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Splash colors"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_purple",
+        "label": "Purple",
+        "default": "#6C5CE7"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_pink",
+        "label": "Pink",
+        "default": "#FD79A8"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_yellow",
+        "label": "Yellow",
+        "default": "#FDCB6E"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_teal",
+        "label": "Teal",
+        "default": "#00CEC9"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_ink",
+        "label": "Ink text",
+        "default": "#2D3436"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_surface",
+        "label": "Warm white surface",
+        "default": "#FFFFFF"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_muted",
+        "label": "Muted text",
+        "default": "#636E72"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_line",
+        "label": "Line / border",
+        "default": "#E8E8E8"
+      },
+      {
+        "type": "color",
+        "id": "splash_color_focus",
+        "label": "Focus outline",
+        "default": "#2D3436"
+      },
+      {
+        "type": "header",
+        "content": "Splash geometry"
+      },
+      {
+        "type": "range",
+        "id": "splash_card_radius",
+        "label": "Card radius",
+        "min": 0,
+        "max": 32,
+        "step": 1,
+        "unit": "px",
+        "default": 18
+      },
+      {
+        "type": "range",
+        "id": "splash_control_radius",
+        "label": "Control radius",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "default": 14
+      },
+      {
+        "type": "range",
+        "id": "splash_section_spacing",
+        "label": "Section spacing",
+        "min": 24,
+        "max": 120,
+        "step": 4,
+        "unit": "px",
+        "default": 60
       }
     ]
   }

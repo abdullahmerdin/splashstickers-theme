@@ -1,0 +1,53 @@
+{% liquid
+  assign splash_color_purple = settings.splash_color_purple | default: '#6C5CE7'
+  assign splash_color_pink = settings.splash_color_pink | default: '#FD79A8'
+  assign splash_color_yellow = settings.splash_color_yellow | default: '#FDCB6E'
+  assign splash_color_teal = settings.splash_color_teal | default: '#00CEC9'
+  assign splash_color_ink = settings.splash_color_ink | default: '#2D3436'
+  assign splash_color_surface = settings.splash_color_surface | default: '#FFFFFF'
+  assign splash_color_muted = settings.splash_color_muted | default: '#636E72'
+  assign splash_color_line = settings.splash_color_line | default: '#E8E8E8'
+  assign splash_color_focus = settings.splash_color_focus | default: '#2D3436'
+%}
+
+{% style %}
+  :root {
+    /* Splash semantic color tokens */
+    --splash-color-purple: {{ splash_color_purple }};
+    --splash-color-purple-rgb: {{ splash_color_purple.rgb }};
+    --splash-color-pink: {{ splash_color_pink }};
+    --splash-color-pink-rgb: {{ splash_color_pink.rgb }};
+    --splash-color-yellow: {{ splash_color_yellow }};
+    --splash-color-yellow-rgb: {{ splash_color_yellow.rgb }};
+    --splash-color-teal: {{ splash_color_teal }};
+    --splash-color-teal-rgb: {{ splash_color_teal.rgb }};
+    --splash-color-ink: {{ splash_color_ink }};
+    --splash-color-ink-rgb: {{ splash_color_ink.rgb }};
+    --splash-color-surface: {{ splash_color_surface }};
+    --splash-color-surface-rgb: {{ splash_color_surface.rgb }};
+    --splash-color-muted: {{ splash_color_muted }};
+    --splash-color-muted-rgb: {{ splash_color_muted.rgb }};
+    --splash-color-line: {{ splash_color_line }};
+    --splash-color-line-rgb: {{ splash_color_line.rgb }};
+    --splash-color-focus: {{ splash_color_focus }};
+
+    /* Splash geometry and motion tokens */
+    --splash-radius-sm: 8px;
+    --splash-radius-card: {{ settings.splash_card_radius | default: 18 }}px;
+    --splash-radius-control: {{ settings.splash_control_radius | default: 14 }}px;
+    --splash-border-width: 1px;
+    --splash-space-section: {{ settings.splash_section_spacing | default: 60 }}px;
+    --splash-space-content: 32px;
+    --splash-shadow-card: 0 12px 36px rgb(var(--splash-color-ink-rgb) / 0.08);
+    --splash-shadow-lift: 0 10px 26px rgb(var(--splash-color-ink-rgb) / 0.18);
+    --splash-transition: 180ms cubic-bezier(0.33, 1, 0.68, 1);
+    --splash-gradient-primary: linear-gradient(135deg, var(--splash-color-purple), var(--splash-color-pink));
+    --splash-gradient-spectrum: linear-gradient(90deg, var(--splash-color-purple), var(--splash-color-pink), var(--splash-color-yellow), var(--splash-color-teal));
+
+    /* Splash typography tokens */
+    --splash-font-display: var(--font-heading--family);
+    --splash-font-body: var(--font-body--family);
+    --splash-font-meta-size: 0.78rem;
+    --splash-font-meta-tracking: 0.12em;
+  }
+{% endstyle %}

@@ -1,0 +1,329 @@
+/*
+ * SplashStickers design-system primitives.
+ *
+ * Theme-aware values are emitted by snippets/splash-theme-variables.liquid.
+ * Keep component rules in this namespace so Horizon behavior selectors remain
+ * available to Shopify's editor and storefront interactions.
+ */
+
+/* Buttons */
+.splash-button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: var(--splash-border-width) solid var(--splash-color-purple);
+  border-radius: var(--splash-radius-control);
+  background: var(--splash-color-purple);
+  color: var(--splash-color-surface);
+  font-family: var(--splash-font-body);
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: transform var(--splash-transition), box-shadow var(--splash-transition), background-color var(--splash-transition);
+}
+
+.splash-button:hover {
+  transform: translateY(-2px);
+  background: var(--splash-color-pink);
+  box-shadow: var(--splash-shadow-lift);
+}
+
+.splash-button--outline {
+  background: transparent;
+  color: var(--splash-color-purple);
+}
+
+.splash-button--outline:hover {
+  background: rgb(var(--splash-color-purple-rgb) / 0.08);
+  color: var(--splash-color-purple);
+}
+
+/* Badge / status */
+.splash-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--splash-radius-control);
+  background: var(--splash-color-pink);
+  color: var(--splash-color-surface);
+  font-family: var(--splash-font-body);
+  font-size: var(--splash-font-meta-size);
+  font-weight: 700;
+  letter-spacing: var(--splash-font-meta-tracking);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Card / sticker surfaces */
+.splash-card {
+  background: var(--splash-color-surface);
+  border: var(--splash-border-width) solid rgb(var(--splash-color-purple-rgb) / 0.14);
+  border-radius: var(--splash-radius-card);
+  box-shadow: var(--splash-shadow-card);
+}
+
+.splash-sticker-frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--splash-color-surface);
+  border: var(--splash-border-width) solid var(--splash-color-line);
+  border-radius: var(--splash-radius-card);
+  box-shadow: var(--splash-shadow-card);
+}
+
+.splash-sticker-frame::after {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgb(var(--splash-color-surface-rgb) / 0.75);
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+}
+
+/* Section heading / metadata */
+.splash-section-heading {
+  max-width: 680px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.splash-section-heading h2,
+.splash-section-heading p {
+  margin-block: 0;
+}
+
+.splash-section-heading h2 {
+  font-family: var(--splash-font-display);
+}
+
+.splash-section-heading h2 + p {
+  margin-top: 0.625rem;
+  color: var(--splash-color-muted);
+}
+
+.splash-section-eyebrow {
+  margin-bottom: 0.5rem;
+  color: var(--splash-color-purple);
+  font-family: var(--splash-font-body);
+  font-size: var(--splash-font-meta-size);
+  font-weight: 700;
+  letter-spacing: var(--splash-font-meta-tracking);
+  text-transform: uppercase;
+}
+
+/* Accent divider */
+.splash-accent-divider {
+  height: 4px;
+  border: 0;
+  background: var(--splash-gradient-spectrum);
+}
+
+/* Tokenized compatibility surface for the existing Splash sections. */
+.sticker-primary-link {
+  min-height: 48px;
+  padding: 0.75rem 1.75rem;
+  background: var(--splash-color-purple);
+  border-radius: var(--splash-radius-control);
+  color: var(--splash-color-surface);
+  transition: transform var(--splash-transition), box-shadow var(--splash-transition), background-color var(--splash-transition);
+}
+
+.sticker-primary-link:hover {
+  background: var(--splash-color-pink);
+  box-shadow: var(--splash-shadow-lift);
+}
+
+.splash-cta-button {
+  border-radius: var(--splash-radius-control);
+  transition: transform var(--splash-transition), box-shadow var(--splash-transition), background-color var(--splash-transition);
+}
+
+.splash-cta-button--solid {
+  color: var(--splash-color-purple);
+}
+
+.splash-cta-button:hover {
+  box-shadow: var(--splash-shadow-lift);
+}
+
+.sticker-process-card,
+.sticker-product-card {
+  border-radius: var(--splash-radius-card);
+  box-shadow: var(--splash-shadow-card);
+}
+
+.sticker-process-card {
+  border-color: rgb(var(--splash-color-purple-rgb) / 0.14);
+  background: var(--splash-color-surface);
+}
+
+.sticker-process-icon {
+  background: rgb(var(--splash-color-purple-rgb) / 0.1);
+  border-radius: var(--splash-radius-control);
+}
+
+.sticker-section-heading h2 + p,
+.sticker-process-card p,
+.sticker-section-empty {
+  color: var(--splash-color-muted);
+}
+
+.sticker-section-eyebrow {
+  color: var(--splash-color-purple);
+}
+
+/* Legacy utility classes now resolve through the semantic palette. */
+.bg-purple,
+.collection-card-badge.purple,
+.sticker-category-circle.purple,
+.trust-badge-icon.purple {
+  background-color: var(--splash-color-purple) !important;
+}
+
+.bg-pink,
+.collection-card-badge.pink,
+.sticker-category-circle.pink,
+.trust-badge-icon.pink {
+  background-color: var(--splash-color-pink) !important;
+}
+
+.bg-gold,
+.collection-card-badge.gold,
+.sticker-category-circle.gold,
+.trust-badge-icon.gold {
+  background-color: var(--splash-color-yellow) !important;
+}
+
+.bg-teal,
+.collection-card-badge.teal,
+.sticker-category-circle.teal,
+.trust-badge-icon.teal {
+  background-color: var(--splash-color-teal) !important;
+}
+
+.text-purple,
+.price-highlight,
+.gradient-text-purple-pink,
+.gradient-text-purple-teal {
+  color: var(--splash-color-purple) !important;
+}
+
+.text-pink,
+.sale-price-highlight,
+.gradient-text-gold-pink {
+  color: var(--splash-color-pink) !important;
+}
+
+.text-gold {
+  color: var(--splash-color-yellow) !important;
+}
+
+.text-teal {
+  color: var(--splash-color-teal) !important;
+}
+
+.bg-gradient-purple-pink,
+.btn-cta-gradient {
+  background: var(--splash-gradient-primary) !important;
+}
+
+.bg-gradient-gold-pink {
+  background: linear-gradient(135deg, var(--splash-color-yellow), var(--splash-color-pink)) !important;
+}
+
+.bg-gradient-purple-teal {
+  background: linear-gradient(135deg, var(--splash-color-purple), var(--splash-color-teal)) !important;
+}
+
+.gradient-text-purple-pink {
+  background: var(--splash-gradient-primary);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-gold-pink {
+  background: linear-gradient(135deg, var(--splash-color-yellow), var(--splash-color-pink));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-purple-teal {
+  background: linear-gradient(135deg, var(--splash-color-purple), var(--splash-color-teal));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.section-divider,
+.brand-header-bar,
+.footer-brand-bar {
+  background: var(--splash-gradient-spectrum);
+}
+
+.hero-overlay-brand {
+  background: linear-gradient(135deg, rgb(var(--splash-color-purple-rgb) / 0.15), rgb(var(--splash-color-pink-rgb) / 0.15)) !important;
+}
+
+.sticker-category-circle.purple {
+  background: linear-gradient(135deg, var(--splash-color-purple), rgb(var(--splash-color-purple-rgb) / 0.55)) !important;
+}
+
+.sticker-category-circle.pink {
+  background: linear-gradient(135deg, var(--splash-color-pink), rgb(var(--splash-color-pink-rgb) / 0.55)) !important;
+}
+
+.sticker-category-circle.gold {
+  background: linear-gradient(135deg, var(--splash-color-yellow), rgb(var(--splash-color-yellow-rgb) / 0.55)) !important;
+}
+
+.sticker-category-circle.teal {
+  background: linear-gradient(135deg, var(--splash-color-teal), rgb(var(--splash-color-teal-rgb) / 0.55)) !important;
+}
+
+.sticker-category-label,
+.trust-badge-title {
+  color: var(--splash-color-ink);
+}
+
+.trust-badge-desc {
+  color: var(--splash-color-muted);
+}
+
+.custom-upload-btn {
+  background: var(--splash-color-purple);
+  border-radius: var(--splash-radius-control);
+  color: var(--splash-color-surface);
+}
+
+.custom-upload-btn:hover {
+  background: var(--splash-color-pink);
+  box-shadow: var(--splash-shadow-lift);
+}
+
+.sticker-category-card:focus-visible,
+.sticker-primary-link:focus-visible,
+.splash-button:focus-visible,
+.splash-badge:focus-visible {
+  outline: 3px solid var(--splash-color-focus);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-button,
+  .sticker-primary-link,
+  .splash-cta-button,
+  .sticker-category-card,
+  .sticker-product-card {
+    transition-duration: 0.01ms;
+  }
+
+  .footer-brand-bar {
+    animation: none;
+  }
+}
