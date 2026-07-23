@@ -504,18 +504,10 @@ class SplashInkHero extends HTMLElement {
         0%, 100% { transform: translateX(-10px) scale(0.94); }
         50% { transform: translateX(10px) scale(1); }
       }
-      @keyframes splash-ink-touch-ring {
-        0% { opacity: 0.65; transform: scale(0.55); }
-        70%, 100% { opacity: 0; transform: scale(1.3); }
-      }
       @keyframes splash-ink-click {
         0%, 100% { transform: scale(1); }
         42% { transform: scale(0.78); }
         58% { transform: scale(1.04); }
-      }
-      @keyframes splash-ink-click-ring {
-        0%, 100% { opacity: 0.28; transform: scale(0.82); }
-        45% { opacity: 0.82; transform: scale(1.08); }
       }
     `;
     this.append(style);
@@ -526,8 +518,10 @@ class SplashInkHero extends HTMLElement {
     hint.classList.add('splash-ink-touch-hint');
     hint.setAttribute('role', 'status');
     if (!hasMarkupHint) {
-      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger"><img src="https://static.thenounproject.com/png/hand-swipe-icon-4864496-512.png" alt="" width="512" height="512" decoding="async"></span></span><span class="splash-ink-touch-label">Swipe to draw</span>';
+      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-finger"><img src="https://static.thenounproject.com/png/hand-swipe-icon-4864496-512.png" alt="" width="512" height="512" decoding="async"></span></span><span class="splash-ink-touch-label">Swipe to draw</span>';
     }
+    // Remove the old animated halo from previously saved section markup.
+    hint.querySelector('.splash-ink-touch-ring')?.remove();
     Object.assign(hint.style, {
       zIndex: '10',
       display: 'flex',
@@ -565,17 +559,6 @@ class SplashInkHero extends HTMLElement {
       width: '58px',
       height: '58px',
       placeItems: 'center',
-    });
-
-    const ring = hint.querySelector('.splash-ink-touch-ring');
-    Object.assign(ring.style, {
-      position: 'absolute',
-      inset: '4px',
-      border: '2px solid rgba(108, 92, 231, 0.55)',
-      borderRadius: '50%',
-      animation: this.reduceMotion
-        ? 'none'
-        : `${this.isTouchDevice ? 'splash-ink-touch-ring' : 'splash-ink-click-ring'} 1.8s ease-out infinite`,
     });
 
     const finger = hint.querySelector('.splash-ink-touch-finger');
@@ -620,6 +603,7 @@ class SplashInkHero extends HTMLElement {
         width: '58px',
         height: '58px',
         objectFit: 'contain',
+        filter: 'brightness(0) invert(1)',
       });
     }
 
