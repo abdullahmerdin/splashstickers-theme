@@ -494,7 +494,7 @@ class SplashInkHero extends HTMLElement {
   }
 
   createTouchHint() {
-    if (!this.isTouchDevice || this.touchHint) return;
+    if (this.touchHint) return;
 
     const style = document.createElement('style');
     style.textContent = `
@@ -506,6 +506,15 @@ class SplashInkHero extends HTMLElement {
         0% { opacity: 0.65; transform: scale(0.55); }
         70%, 100% { opacity: 0; transform: scale(1.3); }
       }
+      @keyframes splash-ink-click {
+        0%, 100% { transform: scale(1); }
+        42% { transform: scale(0.78); }
+        58% { transform: scale(1.04); }
+      }
+      @keyframes splash-ink-click-ring {
+        0%, 100% { opacity: 0.28; transform: scale(0.82); }
+        45% { opacity: 0.82; transform: scale(1.08); }
+      }
     `;
     this.append(style);
 
@@ -515,7 +524,7 @@ class SplashInkHero extends HTMLElement {
     hint.classList.add('splash-ink-touch-hint');
     hint.setAttribute('role', 'status');
     if (!hasMarkupHint) {
-      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger"><svg viewBox="0 0 80 64" aria-hidden="true" focusable="false"><path d="M30 54V18a5 5 0 0 1 10 0v15V10a5 5 0 0 1 10 0v23V16a5 5 0 0 1 10 0v20V22a5 5 0 0 1 10 0v20c0 11-9 18-20 18H41c-6 0-11-3-15-9l-6-9a5 5 0 0 1 8-6l2 3Z"/><path class="splash-ink-touch-arrow" d="M9 28h16m0 0-6-6m6 6-6 6"/></svg></span></span><span>Swipe to draw</span>';
+      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger"><svg viewBox="0 0 80 64" aria-hidden="true" focusable="false"><path d="M30 54V18a5 5 0 0 1 10 0v15V10a5 5 0 0 1 10 0v23V16a5 5 0 0 1 10 0v20V22a5 5 0 0 1 10 0v20c0 11-9 18-20 18H41c-6 0-11-3-15-9l-6-9a5 5 0 0 1 8-6l2 3Z"/><path class="splash-ink-touch-arrow" d="M9 28h16m0 0-6-6m6 6-6 6"/></svg></span></span><span class="splash-ink-touch-label">Swipe to draw</span>';
     }
     Object.assign(hint.style, {
       zIndex: '10',
@@ -562,17 +571,23 @@ class SplashInkHero extends HTMLElement {
       inset: '4px',
       border: '2px solid rgba(108, 92, 231, 0.55)',
       borderRadius: '50%',
-      animation: this.reduceMotion ? 'none' : 'splash-ink-touch-ring 1.8s ease-out infinite',
+      animation: this.reduceMotion
+        ? 'none'
+        : `${this.isTouchDevice ? 'splash-ink-touch-ring' : 'splash-ink-click-ring'} 1.8s ease-out infinite`,
     });
 
     const finger = hint.querySelector('.splash-ink-touch-finger');
-    finger.textContent = '\u2192';
     Object.assign(finger.style, {
       position: 'relative',
       zIndex: '1',
       filter: 'drop-shadow(0 2px 3px rgba(31, 41, 55, 0.18))',
-      animation: this.reduceMotion ? 'none' : 'splash-ink-touch-swipe 1.8s ease-in-out infinite',
+      animation: this.reduceMotion
+        ? 'none'
+        : `${this.isTouchDevice ? 'splash-ink-touch-swipe' : 'splash-ink-click'} 1.8s ease-in-out infinite`,
     });
+
+    const label = hint.querySelector('.splash-ink-touch-label');
+    if (!this.isTouchDevice && label) label.textContent = 'Click and drag to draw';
 
     const fingerSvg = finger.querySelector('svg');
     if (fingerSvg) {
