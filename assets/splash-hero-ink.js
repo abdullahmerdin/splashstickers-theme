@@ -176,7 +176,9 @@ class SplashInkHero extends HTMLElement {
       this.endStroke();
       return;
     }
-    if (event.pointerType !== 'mouse' && this.activePointer !== event.pointerId) return;
+    // Desktop drawing is press-and-drag. Without this guard, every ordinary
+    // mouse move after a completed stroke would silently start another one.
+    if (this.activePointer !== event.pointerId) return;
     if (event.pointerType !== 'mouse') event.preventDefault();
 
     const events = event.getCoalescedEvents?.() || [event];
@@ -189,7 +191,7 @@ class SplashInkHero extends HTMLElement {
   }
 
   handlePointerEnd(event) {
-    if (event.pointerType !== 'mouse' && this.activePointer !== event.pointerId) return;
+    if (this.activePointer !== event.pointerId) return;
     if (event.pointerType !== 'mouse') event.preventDefault();
     if (this.hasPointerCapture?.(event.pointerId)) this.releasePointerCapture(event.pointerId);
     this.activePointer = null;
@@ -203,7 +205,10 @@ class SplashInkHero extends HTMLElement {
   }
 
   handlePointerLeave(event) {
-    if (event.pointerType === 'mouse') this.endStroke();
+    if (event.pointerType === 'mouse' && this.activePointer === event.pointerId) {
+      this.endStroke();
+      this.activePointer = null;
+    }
   }
 
   beginStroke(point) {
