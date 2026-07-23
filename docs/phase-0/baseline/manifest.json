@@ -1,0 +1,26 @@
+{
+  "phase": "0",
+  "captured_at": null,
+  "capture_status": "source_contract_ready",
+  "external_dependency": "Shopify Preview or storefront session",
+  "commit_sha": null,
+  "viewports": [
+    { "id": "desktop-1440x900", "width": 1440, "height": 900 },
+    { "id": "tablet-768x1024", "width": 768, "height": 1024 },
+    { "id": "mobile-375x812", "width": 375, "height": 812 }
+  ],
+  "routes": [
+    { "id": "home", "path": "/", "template": "templates/index.json" },
+    { "id": "collection", "path": "/collections/:handle", "template": "templates/collection.json" },
+    { "id": "search", "path": "/search?q=sticker", "template": "templates/search.json" },
+    { "id": "product", "path": "/products/:handle", "template": "templates/product.json" },
+    { "id": "gangsheet-product", "path": "/products/:handle", "template": "templates/product.product-gangsheet.json" },
+    { "id": "cart", "path": "/cart", "template": "templates/cart.json" },
+    { "id": "about", "path": "/pages/about", "template": "templates/page.about.json" },
+    { "id": "contact", "path": "/pages/contact", "template": "templates/page.contact.json" },
+    { "id": "404", "path": "/__phase-0-invalid-route__", "template": "templates/404.json" },
+    { "id": "password", "path": "/password", "template": "templates/password.json" }
+  ],
+  "expected_artifact_pattern": "{route}/{viewport}.png",
+  "artifacts": []
+}
