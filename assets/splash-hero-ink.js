@@ -43,6 +43,7 @@ class SplashInkHero extends HTMLElement {
     this.clear = this.clear.bind(this);
     this.scrollToContent = this.scrollToContent.bind(this);
     this.toggleExpanded = this.toggleExpanded.bind(this);
+    this.updateExpandedHeight = this.updateExpandedHeight.bind(this);
 
     // This surface is a drawing area, so it must own a touch sequence from
     // its first frame. Keeping this inline also protects older published
@@ -57,6 +58,8 @@ class SplashInkHero extends HTMLElement {
     this.addEventListener('touchmove', this.handleTouchMove, { passive: false, capture: true });
     this.querySelector('[data-ink-clear]')?.addEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.addEventListener('click', this.toggleExpanded);
+    window.addEventListener('resize', this.updateExpandedHeight);
+    window.visualViewport?.addEventListener('resize', this.updateExpandedHeight);
     this.createScrollButton();
     this.createTouchHint();
     this.showTouchHint();
@@ -77,6 +80,8 @@ class SplashInkHero extends HTMLElement {
     this.removeEventListener('touchmove', this.handleTouchMove, { capture: true });
     this.querySelector('[data-ink-clear]')?.removeEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.removeEventListener('click', this.toggleExpanded);
+    window.removeEventListener('resize', this.updateExpandedHeight);
+    window.visualViewport?.removeEventListener('resize', this.updateExpandedHeight);
     this.scrollButton?.removeEventListener('click', this.scrollToContent);
     this.scrollButton?.remove();
     this.scrollButton = null;
@@ -450,10 +455,13 @@ class SplashInkHero extends HTMLElement {
   toggleExpanded(event) {
     event?.stopPropagation();
     const expanded = this.toggleAttribute('data-expanded');
-    // The expanded state is sized in CSS with svh and border-box so padding
-    // remains inside the viewport on both desktop and mobile.
-    this.style.removeProperty('height');
-    this.style.removeProperty('min-height');
+    if (expanded) {
+      this.updateExpandedHeight();
+    } else {
+      this.style.removeProperty('height');
+      this.style.removeProperty('min-height');
+      this.style.removeProperty('max-height');
+    }
 
     const button = this.querySelector('[data-ink-expand]');
     if (button) {
@@ -461,6 +469,17 @@ class SplashInkHero extends HTMLElement {
       button.setAttribute('aria-label', expanded ? 'Collapse drawing area' : 'Expand drawing area');
       button.title = expanded ? 'Collapse drawing area' : 'Expand drawing area';
     }
+  }
+
+  updateExpandedHeight() {
+    if (!this.hasAttribute('data-expanded')) return;
+
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const top = Math.max(0, this.getBoundingClientRect().top);
+    const availableHeight = Math.max(1, Math.round(viewportHeight - top));
+    this.style.height = `${availableHeight}px`;
+    this.style.minHeight = `${availableHeight}px`;
+    this.style.maxHeight = `${availableHeight}px`;
   }
 
   createScrollButton() {
