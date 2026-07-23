@@ -21,6 +21,8 @@
     padding: {{ padding_top }}px 20px {{ padding_bottom }}px;
     touch-action: none;
     overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .splash-hero-{{ section.id }} canvas {
@@ -71,6 +73,13 @@
     font-weight: 800;
     line-height: 0.98;
     letter-spacing: -0.04em;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Prevent an older saved section render from bringing back the removed copy. */
+  .splash-hero-{{ section.id }} .splash-hero-subtext {
+    display: none !important;
   }
 
   .splash-hero-{{ section.id }} .splash-hero-buttons {

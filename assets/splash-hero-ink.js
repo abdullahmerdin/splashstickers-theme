@@ -16,6 +16,7 @@ class SplashInkHero extends HTMLElement {
 
     this.canvas = this.querySelector('[data-ink-canvas]');
     this.effectsCanvas = this.querySelector('[data-ink-effects]');
+    this.querySelector('.splash-hero-subtext')?.remove();
     this.context = this.canvas?.getContext('2d');
     this.effectsContext = this.effectsCanvas?.getContext('2d');
     if (!this.context || !this.effectsContext) return;
@@ -165,7 +166,7 @@ class SplashInkHero extends HTMLElement {
     if (this.isInteractiveTarget(event.target)) return;
 
     this.hideTouchHint();
-    if (event.pointerType !== 'mouse') event.preventDefault();
+    event.preventDefault();
     this.activePointer = event.pointerId;
     this.beginStroke(this.pointFromEvent(event));
     if (event.pointerType !== 'mouse') this.setPointerCapture?.(event.pointerId);
@@ -179,7 +180,7 @@ class SplashInkHero extends HTMLElement {
     // Desktop drawing is press-and-drag. Without this guard, every ordinary
     // mouse move after a completed stroke would silently start another one.
     if (this.activePointer !== event.pointerId) return;
-    if (event.pointerType !== 'mouse') event.preventDefault();
+    event.preventDefault();
 
     const events = event.getCoalescedEvents?.() || [event];
     for (const sample of events) {
