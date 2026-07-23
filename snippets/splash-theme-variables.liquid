@@ -30,17 +30,34 @@
     --splash-color-line: {{ splash_color_line }};
     --splash-color-line-rgb: {{ splash_color_line.rgb }};
     --splash-color-focus: {{ splash_color_focus }};
+    --splash-color-purple-soft: color-mix(in srgb, var(--splash-color-purple) 55%, var(--splash-color-surface));
+    --splash-color-pink-soft: color-mix(in srgb, var(--splash-color-pink) 55%, var(--splash-color-surface));
+    --splash-color-yellow-soft: color-mix(in srgb, var(--splash-color-yellow) 55%, var(--splash-color-surface));
+    --splash-color-teal-soft: color-mix(in srgb, var(--splash-color-teal) 55%, var(--splash-color-surface));
+    --splash-color-yellow-ink: color-mix(in srgb, var(--splash-color-yellow) 60%, var(--splash-color-ink));
 
     /* Splash geometry and motion tokens */
     --splash-radius-sm: 8px;
+    --splash-radius-md: 12px;
     --splash-radius-card: {{ settings.splash_card_radius | default: 18 }}px;
     --splash-radius-control: {{ settings.splash_control_radius | default: 14 }}px;
+    --splash-radius-circle: 50%;
     --splash-border-width: 1px;
+    --splash-focus-width: 3px;
+    --splash-space-xs: 8px;
+    --splash-space-sm: 16px;
+    --splash-space-md: 20px;
+    --splash-space-lg: 24px;
     --splash-space-section: {{ settings.splash_section_spacing | default: 60 }}px;
     --splash-space-content: 32px;
     --splash-shadow-card: 0 12px 36px rgb(var(--splash-color-ink-rgb) / 0.08);
     --splash-shadow-lift: 0 10px 26px rgb(var(--splash-color-ink-rgb) / 0.18);
+    --splash-shadow-control: 0 4px 12px rgb(var(--splash-color-purple-rgb) / 0.3);
+    --splash-shadow-category: 0 8px 24px rgb(var(--splash-color-purple-rgb) / 0.25);
+    --splash-shadow-cta: 0 8px 24px rgb(var(--splash-color-purple-rgb) / 0.35);
+    --splash-shadow-product: 0 12px 32px rgb(var(--splash-color-purple-rgb) / 0.15);
     --splash-transition: 180ms cubic-bezier(0.33, 1, 0.68, 1);
+    --splash-transition-slow: 300ms cubic-bezier(0.33, 1, 0.68, 1);
     --splash-gradient-primary: linear-gradient(135deg, var(--splash-color-purple), var(--splash-color-pink));
     --splash-gradient-spectrum: linear-gradient(90deg, var(--splash-color-purple), var(--splash-color-pink), var(--splash-color-yellow), var(--splash-color-teal));
 
