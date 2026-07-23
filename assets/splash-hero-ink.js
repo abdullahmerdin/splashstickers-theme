@@ -505,7 +505,7 @@ class SplashInkHero extends HTMLElement {
 
     const hint = this.querySelector('[data-ink-touch-hint]') || document.createElement('div');
     const hasMarkupHint = hint.hasAttribute('data-ink-touch-hint');
-    const hintAnchor = this.querySelector('.splash-hero-subtext') || this.querySelector('.splash-hero-heading');
+    const hintAnchor = this.querySelector('.splash-hero-heading');
     hint.classList.add('splash-ink-touch-hint');
     hint.setAttribute('role', 'status');
     if (!hasMarkupHint) {
