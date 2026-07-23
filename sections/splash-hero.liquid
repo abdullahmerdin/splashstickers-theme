@@ -66,15 +66,6 @@
     justify-content: center;
   }
 
-  .splash-hero-{{ section.id }} .splash-hero-kicker {
-    margin: 0;
-    color: #6c5ce7;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
   .splash-hero-{{ section.id }} .splash-hero-heading {
     margin: 0;
     font-size: clamp(2.4rem, 5.5vw, 4.8rem);
@@ -189,7 +180,6 @@
 
   <div class="page-width">
     <div class="splash-hero-inner">
-      <p class="splash-hero-kicker">AllTheStickers</p>
       {% if heading != blank %}
         <h1 class="splash-hero-heading">{{ heading }}</h1>
       {% endif %}
@@ -200,7 +190,12 @@
       <div class="splash-hero-touch-hint" data-ink-touch-hint>
         <span class="splash-ink-touch-visual" aria-hidden="true">
           <span class="splash-ink-touch-ring"></span>
-          <span class="splash-ink-touch-finger">→</span>
+          <span class="splash-ink-touch-finger">
+            <svg viewBox="0 0 80 64" aria-hidden="true" focusable="false">
+              <path d="M30 54V18a5 5 0 0 1 10 0v15V10a5 5 0 0 1 10 0v23V16a5 5 0 0 1 10 0v20V22a5 5 0 0 1 10 0v20c0 11-9 18-20 18H41c-6 0-11-3-15-9l-6-9a5 5 0 0 1 8-6l2 3Z" />
+              <path class="splash-ink-touch-arrow" d="M9 28h16m0 0-6-6m6 6-6 6" />
+            </svg>
+          </span>
         </span>
         <span class="splash-ink-touch-label">{{ draw_hint | escape }}</span>
       </div>

@@ -509,7 +509,7 @@ class SplashInkHero extends HTMLElement {
     hint.classList.add('splash-ink-touch-hint');
     hint.setAttribute('role', 'status');
     if (!hasMarkupHint) {
-      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger">→</span></span><span>Swipe to draw</span>';
+      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-ring"></span><span class="splash-ink-touch-finger"><svg viewBox="0 0 80 64" aria-hidden="true" focusable="false"><path d="M30 54V18a5 5 0 0 1 10 0v15V10a5 5 0 0 1 10 0v23V16a5 5 0 0 1 10 0v20V22a5 5 0 0 1 10 0v20c0 11-9 18-20 18H41c-6 0-11-3-15-9l-6-9a5 5 0 0 1 8-6l2 3Z"/><path class="splash-ink-touch-arrow" d="M9 28h16m0 0-6-6m6 6-6 6"/></svg></span></span><span>Swipe to draw</span>';
     }
     Object.assign(hint.style, {
       zIndex: '10',
@@ -564,11 +564,31 @@ class SplashInkHero extends HTMLElement {
     Object.assign(finger.style, {
       position: 'relative',
       zIndex: '1',
-      fontSize: '2rem',
-      lineHeight: '1',
       filter: 'drop-shadow(0 2px 3px rgba(31, 41, 55, 0.18))',
       animation: this.reduceMotion ? 'none' : 'splash-ink-touch-swipe 1.8s ease-in-out infinite',
     });
+
+    const fingerSvg = finger.querySelector('svg');
+    if (fingerSvg) {
+      Object.assign(fingerSvg.style, {
+        display: 'block',
+        width: '58px',
+        height: '58px',
+        overflow: 'visible',
+      });
+      fingerSvg.setAttribute('fill', 'none');
+      fingerSvg.setAttribute('stroke', 'currentColor');
+      fingerSvg.setAttribute('stroke-width', '2.8');
+      fingerSvg.setAttribute('stroke-linecap', 'round');
+      fingerSvg.setAttribute('stroke-linejoin', 'round');
+      const hand = fingerSvg.querySelector('path:not(.splash-ink-touch-arrow)');
+      if (hand) {
+        hand.setAttribute('fill', 'rgba(108, 92, 231, 0.14)');
+        hand.setAttribute('stroke', 'currentColor');
+      }
+      const arrow = fingerSvg.querySelector('.splash-ink-touch-arrow');
+      if (arrow) arrow.setAttribute('stroke', '#6c5ce7');
+    }
 
     if (hintAnchor?.parentNode) {
       if (hint !== hintAnchor.nextElementSibling) {
