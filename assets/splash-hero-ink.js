@@ -82,6 +82,8 @@ class SplashInkHero extends HTMLElement {
     this.querySelector('[data-ink-expand]')?.removeEventListener('click', this.toggleExpanded);
     window.removeEventListener('resize', this.updateExpandedHeight);
     window.visualViewport?.removeEventListener('resize', this.updateExpandedHeight);
+    this.heightTransitionCleanup?.();
+    this.heightTransitionCleanup = null;
     this.scrollButton?.removeEventListener('click', this.scrollToContent);
     this.scrollButton?.remove();
     this.scrollButton = null;
@@ -454,14 +456,65 @@ class SplashInkHero extends HTMLElement {
 
   toggleExpanded(event) {
     event?.stopPropagation();
+    this.heightTransitionCleanup?.();
+    this.heightTransitionCleanup = null;
+    this.heightTransitionToken = (this.heightTransitionToken || 0) + 1;
+    const transitionToken = this.heightTransitionToken;
+    const currentHeight = Math.max(1, Math.round(this.getBoundingClientRect().height));
+
+    // Keep the current height as an explicit transition start value before
+    // changing the expanded state; otherwise the browser has no pixel value
+    // to animate from.
+    this.style.height = `${currentHeight}px`;
+    this.style.minHeight = `${currentHeight}px`;
+    this.style.maxHeight = `${currentHeight}px`;
+    this.offsetHeight;
+
     const expanded = this.toggleAttribute('data-expanded');
+    let targetHeight;
     if (expanded) {
-      this.updateExpandedHeight();
+      targetHeight = this.getAvailableExpandedHeight();
     } else {
-      this.style.removeProperty('height');
+      // Measure the normal section height while the expanded attribute is
+      // off, then restore the current pixel height for the transition start.
+      this.style.height = 'auto';
       this.style.removeProperty('min-height');
       this.style.removeProperty('max-height');
+      targetHeight = Math.max(1, Math.round(this.getBoundingClientRect().height));
+      this.style.height = `${currentHeight}px`;
+      this.style.minHeight = `${currentHeight}px`;
+      this.style.maxHeight = `${currentHeight}px`;
+      this.offsetHeight;
     }
+
+    // Remove the temporary constraints so the explicit height can animate in
+    // either direction without the expanded min-height forcing a jump.
+    this.style.minHeight = '0px';
+    this.style.maxHeight = 'none';
+
+    const finishTransition = (transitionEvent) => {
+      if (
+        transitionEvent
+        && (transitionEvent.target !== this || transitionEvent.propertyName !== 'height')
+      ) return;
+      this.removeEventListener('transitionend', finishTransition);
+      this.heightTransitionCleanup = null;
+      if (expanded) {
+        this.updateExpandedHeight();
+      } else {
+        this.style.removeProperty('height');
+        this.style.removeProperty('min-height');
+        this.style.removeProperty('max-height');
+      }
+    };
+    this.heightTransitionCleanup = () => this.removeEventListener('transitionend', finishTransition);
+    this.addEventListener('transitionend', finishTransition);
+
+    requestAnimationFrame(() => {
+      if (transitionToken !== this.heightTransitionToken) return;
+      this.style.height = `${targetHeight}px`;
+      if (Math.abs(targetHeight - currentHeight) < 1) finishTransition();
+    });
 
     const button = this.querySelector('[data-ink-expand]');
     if (button) {
@@ -471,12 +524,16 @@ class SplashInkHero extends HTMLElement {
     }
   }
 
+  getAvailableExpandedHeight() {
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const top = Math.max(0, this.getBoundingClientRect().top);
+    return Math.max(1, Math.round(viewportHeight - top));
+  }
+
   updateExpandedHeight() {
     if (!this.hasAttribute('data-expanded')) return;
 
-    const viewportHeight = window.visualViewport?.height || window.innerHeight;
-    const top = Math.max(0, this.getBoundingClientRect().top);
-    const availableHeight = Math.max(1, Math.round(viewportHeight - top));
+    const availableHeight = this.getAvailableExpandedHeight();
     this.style.height = `${availableHeight}px`;
     this.style.minHeight = `${availableHeight}px`;
     this.style.maxHeight = `${availableHeight}px`;
