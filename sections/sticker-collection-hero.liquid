@@ -52,9 +52,9 @@
     position: relative;
     overflow: hidden;
     border-top: 4px solid transparent;
-    border-image: linear-gradient(90deg, #6c5ce7, #fd79a8, #fdcb6e, #00cec9) 1;
+    border-image: var(--splash-gradient-spectrum) 1;
     background: var(--collection-bg);
-    color: #2d3436;
+    color: var(--splash-color-ink);
     padding-block: var(--collection-pad-top) var(--collection-pad-bottom);
   }
 
@@ -93,7 +93,7 @@
   .sticker-collection-hero h1 {
     max-width: 8ch;
     margin: 1.25rem 0 0;
-    color: #2d3436;
+    color: var(--splash-color-ink);
     font-size: clamp(3.8rem, 9vw, 9rem);
     font-weight: 900;
     letter-spacing: -0.09em;
@@ -107,7 +107,7 @@
     overflow: hidden;
     border-radius: 2rem 2rem 2rem 0.5rem;
     background: linear-gradient(135deg, var(--collection-art-bg), var(--collection-art-accent));
-    box-shadow: 1rem 1rem 0 #fdcb6e;
+    box-shadow: 1rem 1rem 0 var(--splash-color-yellow);
     isolation: isolate;
   }
 
@@ -124,7 +124,7 @@
     right: -12%;
     width: 58%;
     aspect-ratio: 1;
-    background: #00cec9;
+    background: var(--splash-color-teal);
     opacity: 0.85;
   }
 
@@ -133,7 +133,7 @@
     left: -18%;
     width: 65%;
     aspect-ratio: 1;
-    background: #fdcb6e;
+    background: var(--splash-color-yellow);
     opacity: 0.9;
   }
 
@@ -163,7 +163,7 @@
     position: absolute;
     top: 9%;
     left: 7%;
-    color: #fff;
+    color: var(--splash-color-surface);
     font-size: clamp(3rem, 8vw, 7rem);
     font-weight: 900;
     letter-spacing: -0.1em;
@@ -175,11 +175,11 @@
   .sticker-collection-hero__sticker {
     position: absolute;
     display: inline-block;
-    border: 0.45rem solid #fff;
+    border: 0.45rem solid var(--splash-color-surface);
     border-radius: 999px;
     padding: 0.8rem 1.1rem;
-    box-shadow: 0.35rem 0.45rem 0 rgb(45 52 54 / 22%);
-    color: #2d3436;
+    box-shadow: 0.35rem 0.45rem 0 rgb(var(--splash-color-ink-rgb) / 22%);
+    color: var(--splash-color-ink);
     font-size: clamp(0.7rem, 1.2vw, 1rem);
     font-weight: 900;
     letter-spacing: 0.04em;
@@ -188,9 +188,9 @@
     will-change: transform;
   }
 
-  .sticker-collection-hero__sticker--pink { background: #fd79a8; }
-  .sticker-collection-hero__sticker--gold { background: #fdcb6e; }
-  .sticker-collection-hero__sticker--teal { background: #00cec9; }
+  .sticker-collection-hero__sticker--pink { background: var(--splash-color-pink); }
+  .sticker-collection-hero__sticker--gold { background: var(--splash-color-yellow); }
+  .sticker-collection-hero__sticker--teal { background: var(--splash-color-teal); }
   .sticker-collection-hero__sticker--one { top: 38%; left: 9%; animation: sticker-float-one 5.5s ease-in-out infinite; }
   .sticker-collection-hero__sticker--two { top: 57%; right: 8%; animation: sticker-float-two 6.2s ease-in-out -1.6s infinite; }
   .sticker-collection-hero__sticker--three { bottom: 13%; left: 24%; animation: sticker-float-three 5.8s ease-in-out -0.8s infinite; }
@@ -199,7 +199,7 @@
     position: absolute;
     right: 8%;
     bottom: 7%;
-    color: #fff;
+    color: var(--splash-color-surface);
     font-size: 0.62rem;
     font-weight: 800;
     letter-spacing: 0.12em;
@@ -226,7 +226,7 @@
     .sticker-collection-hero--right .sticker-collection-hero__content,
     .sticker-collection-hero--right .sticker-collection-hero__art { order: initial; }
     .sticker-collection-hero h1 { max-width: 9ch; margin-top: 1rem; font-size: clamp(3.5rem, 18vw, 6rem); }
-    .sticker-collection-hero__art { min-height: 21rem; border-radius: 1.5rem 1.5rem 1.5rem 0.5rem; box-shadow: 0.65rem 0.65rem 0 #fdcb6e; }
+    .sticker-collection-hero__art { min-height: 21rem; border-radius: 1.5rem 1.5rem 1.5rem 0.5rem; box-shadow: 0.65rem 0.65rem 0 var(--splash-color-yellow); }
     .sticker-collection-hero__splash-word { font-size: clamp(3rem, 16vw, 5.5rem); }
     .sticker-collection-hero__art-meta { font-size: 0.52rem; }
   }

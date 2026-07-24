@@ -7,6 +7,11 @@
 ></script>
 
 {% liquid
+  assign has_search_results = false
+  if search.results_count > 0
+    assign has_search_results = true
+  endif
+
   if section.settings.background_color != blank
     render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
   endif
@@ -17,7 +22,7 @@
 ></div>
 
 <results-list
-  class="section product-grid-container spacing-style{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
+  class="section product-grid-container spacing-style{% unless has_search_results %} splash-search-results--empty{% endunless %}{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
   style="--padding-block-start: {{ section.settings.padding-block-start }}px; --padding-block-end: {{ section.settings.padding-block-end }}px;"
   section-id="{{ section.id }}"
   infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
@@ -34,10 +39,16 @@
     {% endif %}
 
     {% paginate search.results by products_per_page %}
-      {% if search.results_count > 0 %}
+      {% if has_search_results %}
         {% content_for 'block', type: 'filters', id: 'filters', results: search, results_size: search.results_count %}
         {% assign products = search.results | where: 'object_type', 'product' %}
       {% else %}
+        <div class="splash-search-empty" role="status">
+          <p class="splash-search-empty__eyebrow">{{ 'content.search_results' | t }}</p>
+          <h2>{{ 'content.no_products_found' | t }}</h2>
+          {% if search.terms != blank %}<p>No matches for “{{ search.terms | escape }}”.</p>{% endif %}
+          <a class="splash-button splash-button--outline" href="{{ routes.all_products_collection_url }}">Browse all stickers</a>
+        </div>
         {% assign collection = settings.empty_state_collection | default: collections.all %}
         {% assign default_title = 'content.search_results_resource_products' | t %}
         {% assign title = settings.empty_state_collection.title | default: default_title %}

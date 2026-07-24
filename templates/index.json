@@ -530,6 +530,7 @@
                   "category_cards",
                   "featured_stickers",
                   "sticker_process",
-                  "trust_section"
+                  "trust_section",
+                  "custom_cta"
               ]
 }
