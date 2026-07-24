@@ -364,6 +364,15 @@
   --splash-header-border: rgb(var(--splash-color-purple-rgb) / 0.14);
 }
 
+#header-component.splash-header + .splash-header__accent-strip {
+  height: 4px;
+  background: var(--splash-gradient-spectrum);
+}
+
+#header-component.splash-header[transparent] + .splash-header__accent-strip {
+  display: none;
+}
+
 #header-component.splash-header:not([transparent]) {
   --color-foreground: var(--splash-color-ink);
   --color-foreground-rgb: var(--splash-color-ink-rgb);
@@ -618,14 +627,6 @@
   overflow: hidden;
   background: var(--splash-color-ink);
   color: var(--splash-color-surface);
-}
-
-.splash-footer::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 5px;
-  background: var(--splash-gradient-spectrum);
-  content: '';
 }
 
 .splash-footer .footer-content {
