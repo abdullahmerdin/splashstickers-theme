@@ -434,3 +434,46 @@
   --cart-bubble-background: var(--splash-color-pink);
   --cart-bubble-text: var(--splash-color-surface);
 }
+
+/* Keep the shell branded without turning every control into a moving card. */
+#header-component.splash-header .header-actions__action,
+#header-component.splash-header .header__icon--menu,
+#header-component.splash-header .dropdown-localization__button {
+  min-width: 40px;
+  min-height: 40px;
+  padding-inline: 0.55rem;
+  border: 1px solid rgb(var(--splash-color-purple-rgb) / 0.18);
+  border-radius: var(--splash-radius-sm);
+  background: rgb(var(--splash-color-surface-rgb) / 0.78);
+  color: var(--color-foreground);
+  transition: none;
+}
+
+#header-component.splash-header .header-actions__action:hover,
+#header-component.splash-header .header__icon--menu:hover,
+#header-component.splash-header .dropdown-localization__button:hover {
+  border-color: rgb(var(--splash-color-purple-rgb) / 0.42);
+  background: rgb(var(--splash-color-purple-rgb) / 0.08);
+  color: var(--splash-color-purple);
+}
+
+#header-component.splash-header .menu-list__link::after {
+  display: none;
+  content: none;
+}
+
+#header-component.splash-header[transparent] .header-actions__action,
+#header-component.splash-header[transparent] .header__icon--menu,
+#header-component.splash-header[transparent] .dropdown-localization__button {
+  border-color: rgb(var(--color-transparent-text-rgb) / 0.42);
+  background: rgb(var(--splash-color-surface-rgb) / 0.16);
+  color: var(--color-transparent-text);
+}
+
+#header-component.splash-header[transparent] .header-actions__action:hover,
+#header-component.splash-header[transparent] .header__icon--menu:hover,
+#header-component.splash-header[transparent] .dropdown-localization__button:hover {
+  border-color: rgb(var(--color-transparent-text-rgb) / 0.7);
+  background: rgb(var(--splash-color-surface-rgb) / 0.3);
+  color: var(--color-transparent-text);
+}
