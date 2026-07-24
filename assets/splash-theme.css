@@ -364,16 +364,19 @@
   --splash-header-border: rgb(var(--splash-color-purple-rgb) / 0.14);
 }
 
-#header-component.splash-header .header {
-  border-top: 4px solid transparent;
-  border-image: linear-gradient(
-      90deg,
-      var(--splash-color-purple),
-      var(--splash-color-pink),
-      var(--splash-color-yellow),
-      var(--splash-color-teal)
-    )
-    1;
+#header-component.splash-header + .splash-header__accent-strip {
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--splash-color-purple),
+    var(--splash-color-pink),
+    var(--splash-color-yellow),
+    var(--splash-color-teal)
+  );
+}
+
+#header-component.splash-header[transparent] + .splash-header__accent-strip {
+  display: none;
 }
 
 #header-component.splash-header:not([transparent]) {
@@ -402,23 +405,70 @@
   z-index: 1;
 }
 
+#header-component.splash-header .header-logo {
+  position: relative;
+  isolation: isolate;
+  padding-inline: 0.35rem;
+  transition: transform var(--splash-transition);
+}
+
+#header-component.splash-header .header-logo::before {
+  position: absolute;
+  z-index: -1;
+  inset: 12% -0.25rem;
+  border-radius: 48% 42% 46% 54%;
+  background: rgb(var(--splash-color-yellow-rgb) / 0.34);
+  content: '';
+  transform: rotate(-2deg);
+  transition: background-color var(--splash-transition), transform var(--splash-transition);
+}
+
+#header-component.splash-header .header-logo:hover {
+  transform: translateY(-1px);
+}
+
+#header-component.splash-header .header-logo:hover::before {
+  background: rgb(var(--splash-color-pink-rgb) / 0.28);
+  transform: rotate(2deg) scale(1.04);
+}
+
 #header-component.splash-header .menu-list__link {
   color: var(--color-foreground);
   font-family: var(--splash-font-body);
   font-weight: 700;
   letter-spacing: 0.015em;
+  transition: color var(--splash-transition), transform var(--splash-transition);
 }
 
 #header-component.splash-header:not([transparent]) .menu-list__link[aria-current='page'] {
   color: var(--splash-color-purple);
 }
 
+#header-component.splash-header .menu-list__link:hover,
+#header-component.splash-header .menu-list__link[aria-expanded='true'] {
+  color: var(--splash-color-purple);
+  transform: translateY(-1px);
+}
+
 #header-component.splash-header .header-actions__action,
 #header-component.splash-header .header__icon--menu,
 #header-component.splash-header .dropdown-localization__button {
+  min-width: 40px;
+  min-height: 40px;
+  padding-inline: 0.55rem;
   border: 0;
+  border-radius: var(--splash-radius-sm);
   background: transparent;
   color: var(--color-foreground);
+  transition: color var(--splash-transition), transform var(--splash-transition), background-color var(--splash-transition);
+}
+
+#header-component.splash-header .header-actions__action:hover,
+#header-component.splash-header .header__icon--menu:hover,
+#header-component.splash-header .dropdown-localization__button:hover {
+  background: rgb(var(--splash-color-purple-rgb) / 0.08);
+  color: var(--splash-color-purple);
+  transform: translateY(-1px);
 }
 
 #header-component.splash-header .header-actions__action:focus-visible,
@@ -435,28 +485,6 @@
   --cart-bubble-text: var(--splash-color-surface);
 }
 
-/* Keep the shell branded without turning every control into a moving card. */
-#header-component.splash-header .header-actions__action,
-#header-component.splash-header .header__icon--menu,
-#header-component.splash-header .dropdown-localization__button {
-  min-width: 40px;
-  min-height: 40px;
-  padding-inline: 0.55rem;
-  border: 1px solid rgb(var(--splash-color-purple-rgb) / 0.18);
-  border-radius: var(--splash-radius-sm);
-  background: rgb(var(--splash-color-surface-rgb) / 0.78);
-  color: var(--color-foreground);
-  transition: none;
-}
-
-#header-component.splash-header .header-actions__action:hover,
-#header-component.splash-header .header__icon--menu:hover,
-#header-component.splash-header .dropdown-localization__button:hover {
-  border-color: rgb(var(--splash-color-purple-rgb) / 0.42);
-  background: rgb(var(--splash-color-purple-rgb) / 0.08);
-  color: var(--splash-color-purple);
-}
-
 #header-component.splash-header .menu-list__link::after {
   display: none;
   content: none;
@@ -465,15 +493,13 @@
 #header-component.splash-header[transparent] .header-actions__action,
 #header-component.splash-header[transparent] .header__icon--menu,
 #header-component.splash-header[transparent] .dropdown-localization__button {
-  border-color: rgb(var(--color-transparent-text-rgb) / 0.42);
-  background: rgb(var(--splash-color-surface-rgb) / 0.16);
+  background: transparent;
   color: var(--color-transparent-text);
 }
 
 #header-component.splash-header[transparent] .header-actions__action:hover,
 #header-component.splash-header[transparent] .header__icon--menu:hover,
 #header-component.splash-header[transparent] .dropdown-localization__button:hover {
-  border-color: rgb(var(--color-transparent-text-rgb) / 0.7);
-  background: rgb(var(--splash-color-surface-rgb) / 0.3);
-  color: var(--color-transparent-text);
+  background: rgb(var(--splash-color-surface-rgb) / 0.14);
+  color: var(--splash-color-surface);
 }
