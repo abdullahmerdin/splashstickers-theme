@@ -59,7 +59,9 @@
 
 <header-actions
   {% if display_style == 'text' %}
-    class="header-actions--text"
+    class="header-actions--text splash-header-actions"
+  {% else %}
+    class="splash-header-actions"
   {% endif %}
   {{- block.shopify_attributes -}}
 >
