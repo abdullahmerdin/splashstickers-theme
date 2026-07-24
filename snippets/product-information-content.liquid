@@ -86,7 +86,7 @@
   class="section-background{% if settings.background_color != blank %} color-custom-{{ section_id }}{% endif %}"
 ></div>
 <div
-  class="product-information section section--{{ content_width }} spacing-style{% if settings.background_color != blank %} color-custom-{{ section_id }}{% endif %} relative"
+  class="product-information splash-product-information section section--{{ content_width }} spacing-style{% if settings.background_color != blank %} color-custom-{{ section_id }}{% endif %} relative"
   style="{% render 'spacing-style', settings: settings %} --gap: {{ settings.gap }}px;"
   data-testid="product-information"
 >
@@ -95,7 +95,7 @@
     {% render 'skip-to-content-link', href: product_href, text: 'accessibility.skip_to_product_info' %}
   {% endif %}
   <product-component
-    class="{{ product_grid_class }}"
+    class="{{ product_grid_class }} splash-product-grid"
     data-product-grid-content
     {% # theme-check-disable UnknownFilter %}
     view-event-payload="{{ product | standard_event_data: 'view' | escape }}"

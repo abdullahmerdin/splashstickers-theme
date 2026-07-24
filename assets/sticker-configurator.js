@@ -2492,6 +2492,9 @@ class CartManager {
     // Keep the button clickable when product setup is incomplete so the
     // customer/merchant receives an actionable error instead of a dead button.
     button.disabled = this.busy || this.core.state.items.length === 0;
+    if (typeof button.setAttribute === 'function') {
+      button.setAttribute('aria-disabled', String(button.disabled));
+    }
   }
 
   toMm(value) {
@@ -2533,15 +2536,15 @@ class CartManager {
     var core = this.core;
     if (this.busy) return;
     if (!core.state.items.length) {
-      this.reportError('Add at least one design before continuing.');
+      this.reportError('Your sheet is empty. Add at least one design before continuing.');
       return;
     }
     if (!(Number(core.state.variantId) > 0)) {
-      this.reportError('No Shopify product variant is connected to this configurator.');
+      this.reportError('This sheet is not connected to a Shopify product variant yet.');
       return;
     }
     if (!core.state.variantAvailable) {
-      this.reportError('The selected Shopify product variant is unavailable or sold out.');
+      this.reportError('This sheet option is currently unavailable. Choose another option to continue.');
       return;
     }
 
@@ -2551,9 +2554,10 @@ class CartManager {
     this.updateButtonState();
     if (button) {
       button.classList.add('is-busy');
-      button.textContent = 'Adding to cart…';
+      if (typeof button.setAttribute === 'function') button.setAttribute('aria-busy', 'true');
+      button.textContent = 'Saving sheet…';
     }
-    this.setStatus('Adding the configured gangsheet to Shopify.');
+    this.setStatus('Saving your sheet details before checkout.');
 
     try {
       var sheetWidthMm = this.roundMm(core.CANVAS_W);
@@ -2594,7 +2598,7 @@ class CartManager {
         throw new Error(payload.description || payload.message || 'The design could not be added to cart.');
       }
 
-      this.setStatus('Design added to cart.', 'success');
+      this.setStatus('Sheet added to cart with its artwork count and physical size.', 'success');
       core.dispatchAddToCartEvent(payload);
       if (core.dataset.redirectToCart !== 'false') {
         window.location.assign(core.dataset.cartUrl || '/cart');
@@ -2606,6 +2610,7 @@ class CartManager {
       this.busy = false;
       if (button) {
         button.classList.remove('is-busy');
+        if (typeof button.removeAttribute === 'function') button.removeAttribute('aria-busy');
         button.innerHTML = originalMarkup;
       }
       this.updateButtonState();
