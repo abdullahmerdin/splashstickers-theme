@@ -45,11 +45,11 @@ class SplashInkHero extends HTMLElement {
     this.toggleExpanded = this.toggleExpanded.bind(this);
     this.updateExpandedHeight = this.updateExpandedHeight.bind(this);
 
-    // This surface is a drawing area, so it must own a touch sequence from
-    // its first frame. Keeping this inline also protects older published
-    // section markup whose stylesheet still allows vertical panning.
-    this.style.touchAction = 'none';
-    this.style.overscrollBehavior = 'none';
+    // Touch drawing needs to own the gesture, but desktop drawing must not
+    // turn the hero into a wheel-scroll trap. Keep the browser's normal page
+    // scrolling behaviour for mouse/trackpad users.
+    this.style.touchAction = this.isTouchDevice ? 'none' : 'auto';
+    this.style.overscrollBehavior = this.isTouchDevice ? 'none' : 'auto';
     this.addEventListener('pointermove', this.handlePointerMove);
     this.addEventListener('pointerdown', this.handlePointerDown);
     this.addEventListener('pointerup', this.handlePointerEnd);
