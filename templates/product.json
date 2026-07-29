@@ -8,46 +8,6 @@
  * ------------------------------------------------------------
  */{
   "sections": {
-    "sticker_configurator_DtD3cf": {
-      "type": "sticker-configurator",
-      "name": "Sticker Configurator",
-      "settings": {
-        "heading": "Design your sticker sheet",
-        "bg_color": "#f8f9fa",
-        "base_price": 2.5,
-        "product": "interactive-feather-wand-toy-for-cats",
-        "grid_size": 20,
-        "snap_enabled": true,
-        "gap_mm": 3,
-        "padding_top": 48,
-        "padding_bottom": 48,
-        "show_quick_start": true,
-        "quick_start_kicker": "Quick start",
-        "quick_start_heading": "Build your sheet in three steps",
-        "quick_start_step_1": "Upload a clear PNG, JPG or WebP design.",
-        "quick_start_step_2": "Choose its print size and number of copies.",
-        "quick_start_step_3": "Arrange the sheet, review it and add it to cart.",
-        "quick_start_dismiss": "Got it",
-        "resolution_low_text": "Low-resolution artwork at this print size. Use a larger file or reduce the size.",
-        "resolution_success_text": "Resolution looks suitable at this print size.",
-        "enable_clipboard": true,
-        "enable_export": true,
-        "export_dpi": 300,
-        "max_file_mb": 20,
-        "redirect_to_cart": true,
-        "enable_auto_arrange": true,
-        "enable_undo_redo": true,
-        "enable_analytics": true
-      }
-    },
-    "collision_test_rtHcd8": {
-      "type": "collision-test",
-      "name": "Collision Test",
-      "settings": {
-        "bg": "#1a1a2e",
-        "accent": "#00cec9"
-      }
-    },
     "main": {
       "type": "product-information",
       "blocks": {
@@ -509,8 +469,6 @@
     }
   },
   "order": [
-    "sticker_configurator_DtD3cf",
-    "collision_test_rtHcd8",
     "main",
     "product_recommendations_qggXJq"
   ]

@@ -46,4 +46,16 @@ const settings = configurator.settings || {};
   if (!(key in settings)) throw new Error(`Gangsheet template is missing ${key}.`);
 });
 
-console.log(`Phase 4 wiring checks passed (${checks.length + 1} groups).`);
+const defaultProductTemplate = readThemeJson('templates/product.json');
+if (defaultProductTemplate.sections?.main?.type !== 'product-information') {
+  throw new Error('Default product template must render product-information as its main section.');
+}
+
+const defaultSectionTypes = Object.values(defaultProductTemplate.sections || {}).map((section) => section.type);
+['sticker-configurator', 'collision-test'].forEach((sectionType) => {
+  if (defaultSectionTypes.includes(sectionType)) {
+    throw new Error(`Default product template must not include ${sectionType}.`);
+  }
+});
+
+console.log(`Phase 4 wiring checks passed (${checks.length + 2} groups).`);
