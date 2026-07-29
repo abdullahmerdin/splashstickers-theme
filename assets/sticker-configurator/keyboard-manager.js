@@ -9,25 +9,28 @@ class KeyboardManager {
 
   onKeyDown(e) {
     var core = this.core;
+    var features = core.dataset || {};
+    var undoEnabled = features.undoEnabled !== 'false';
+    var clipboardEnabled = features.clipboardEnabled !== 'false';
     if (core.state.exporting) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     // Ctrl/Cmd + Z — Undo
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    if (undoEnabled && (e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
       core.historyManager.undo();
       return;
     }
 
     // Ctrl/Cmd + Shift + Z — Redo
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+    if (undoEnabled && (e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
       e.preventDefault();
       core.historyManager.redo();
       return;
     }
 
     // Ctrl/Cmd + Y — Redo
-    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+    if (undoEnabled && (e.ctrlKey || e.metaKey) && e.key === 'y') {
       e.preventDefault();
       core.historyManager.redo();
       return;
@@ -40,14 +43,14 @@ class KeyboardManager {
     }
 
     // Ctrl/Cmd + C — Copy
-    if ((e.ctrlKey || e.metaKey) && e.key === 'c' && core.state.selectedIds.length) {
+    if (clipboardEnabled && (e.ctrlKey || e.metaKey) && e.key === 'c' && core.state.selectedIds.length) {
       e.preventDefault();
       core.clipboardManager.copy();
       return;
     }
 
     // Ctrl/Cmd + V — Paste
-    if ((e.ctrlKey || e.metaKey) && e.key === 'v' && core.state.clipboard) {
+    if (clipboardEnabled && (e.ctrlKey || e.metaKey) && e.key === 'v' && core.state.clipboard) {
       e.preventDefault();
       core.clipboardManager.paste();
       return;

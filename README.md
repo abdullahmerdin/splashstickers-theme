@@ -24,6 +24,7 @@ checks:
 ```powershell
 npm.cmd install
 npm.cmd run vendor:jspdf
+npm.cmd run check:phase4
 npm.cmd run check:configurator
 ```
 

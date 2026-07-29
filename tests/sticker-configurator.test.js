@@ -37,7 +37,7 @@ const context = {
 };
 
 vm.runInNewContext(
-  source + '\n;globalThis.__configuratorClasses = { Utils, CollisionEngine, CanvasRenderer, CartManager, StickerConfigurator, AlignmentEngine };',
+  source + '\n;globalThis.__configuratorClasses = { Utils, CollisionEngine, CanvasRenderer, CartManager, StickerConfigurator, AlignmentEngine, KeyboardManager };',
   context
 );
 
@@ -47,7 +47,8 @@ const {
   CanvasRenderer,
   CartManager,
   StickerConfigurator,
-  AlignmentEngine
+  AlignmentEngine,
+  KeyboardManager
 } = context.__configuratorClasses;
 
 test('millimetre conversion stays stable on the 600 px fallback workspace', () => {
@@ -327,6 +328,47 @@ test('variant setup errors remain clickable and surface an explicit message', as
 
   assert.equal(core.cache.submit.disabled, false);
   assert.match(modalMessage, /unavailable|sold out/i);
+});
+
+test('disabled feature flags do not hijack keyboard shortcuts', () => {
+  let prevented = 0;
+  let undoCalls = 0;
+  let redoCalls = 0;
+  let copyCalls = 0;
+  let pasteCalls = 0;
+  const core = {
+    dataset: { undoEnabled: 'false', clipboardEnabled: 'false' },
+    state: { exporting: false, selectedIds: [1], clipboard: [{}] },
+    historyManager: {
+      undo() { undoCalls += 1; },
+      redo() { redoCalls += 1; }
+    },
+    clipboardManager: {
+      copy() { copyCalls += 1; },
+      paste() { pasteCalls += 1; }
+    }
+  };
+  const keyboard = new KeyboardManager(core);
+  const press = (key, shiftKey = false) => keyboard.onKeyDown({
+    ctrlKey: true,
+    metaKey: false,
+    key,
+    shiftKey,
+    target: { tagName: 'BODY' },
+    preventDefault() { prevented += 1; }
+  });
+
+  press('z');
+  press('z', true);
+  press('y');
+  press('c');
+  press('v');
+
+  assert.equal(prevented, 0);
+  assert.equal(undoCalls, 0);
+  assert.equal(redoCalls, 0);
+  assert.equal(copyCalls, 0);
+  assert.equal(pasteCalls, 0);
 });
 
 test('long production canvases reduce both axes with one uniform scale', () => {

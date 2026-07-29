@@ -107,6 +107,7 @@ class ExportManager {
 
   async onExportPDF() {
     var core = this.core;
+    if ((core.dataset || {}).exportEnabled === 'false') return;
     if (core.state.exporting) return;
     this.setExporting(true);
     var errorMessage = '';

@@ -59,6 +59,9 @@
   data-grid-size="{{ section.settings.grid_size }}"
   data-snap-enabled="{{ section.settings.snap_enabled }}"
   data-gap-mm="{{ section.settings.gap_mm | default: 3 }}"
+  data-clipboard-enabled="{{ section.settings.enable_clipboard }}"
+  data-undo-enabled="{{ section.settings.enable_undo_redo }}"
+  data-auto-arrange-enabled="{{ section.settings.enable_auto_arrange }}"
   data-export-enabled="{{ section.settings.enable_export }}"
   data-export-dpi="{{ section.settings.export_dpi }}"
   data-jspdf-url="{{ 'jspdf.umd.min.js' | asset_url }}"
@@ -69,6 +72,9 @@
   data-resolution-low="{{ section.settings.resolution_low_text | escape }}"
   data-resolution-success="{{ section.settings.resolution_success_text | escape }}"
   aria-busy="true"
+  role="region"
+  aria-label="Splash Studio sticker sheet configurator"
+  {% unless heading == blank %}aria-labelledby="cfg-heading-{{ section.id }}"{% endunless %}
   class="splash-studio is-loading"
   style="
     --cfg-bg: {{ bg_color }};
@@ -102,7 +108,7 @@
   {%- unless heading == blank -%}
     <div class="cfg-header">
       <span class="cfg-eyebrow">Splash Studio</span>
-      <h2 class="cfg-heading">{{ heading | escape }}</h2>
+      <h2 class="cfg-heading" id="cfg-heading-{{ section.id }}">{{ heading | escape }}</h2>
     </div>
   {%- endunless -%}
 
@@ -124,16 +130,20 @@
   <div class="editor-wrap splash-studio__editor">
     <div class="toolbar" role="toolbar" aria-label="Splash Studio canvas tools">
       <!-- Toolbar buttons generated via JS delegation (data-action) -->
-      <button title="Undo" aria-label="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-      </button>
-      <button title="Redo" aria-label="Redo" data-action="redo" id="redo-btn-{{ section.id }}" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      </button>
-      <span class="toolbar-divider"></span>
-      <button title="Auto arrange" aria-label="Auto arrange" data-action="auto-arrange" id="auto-btn-{{ section.id }}">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      </button>
+      {% if section.settings.enable_undo_redo %}
+        <button title="Undo" aria-label="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+        <button title="Redo" aria-label="Redo" data-action="redo" id="redo-btn-{{ section.id }}" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <span class="toolbar-divider"></span>
+      {% endif %}
+      {% if section.settings.enable_auto_arrange %}
+        <button title="Auto arrange" aria-label="Auto arrange" data-action="auto-arrange" id="auto-btn-{{ section.id }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+      {% endif %}
       <button title="Delete selected" aria-label="Delete selected" data-action="delete" id="del-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
       </button>
@@ -173,8 +183,8 @@
     </div>
 
     <div class="cfg-info-bar">
-      <span id="item-count-{{ section.id }}">0 items</span>
-      <span id="sel-size-{{ section.id }}">&nbsp;</span>
+      <span id="item-count-{{ section.id }}" aria-live="polite" aria-atomic="true">0 items</span>
+      <span id="sel-size-{{ section.id }}" aria-live="polite" aria-atomic="true">&nbsp;</span>
       <span id="hint-text-{{ section.id }}">
         <span class="hint-desktop">Ctrl/Cmd + scroll to zoom &middot; Space + drag to pan</span>
         <span class="hint-mobile">Swipe toolbar for more tools &middot; Tap to select, then drag &middot; Pinch to zoom &middot; Drag empty canvas to pan</span>
@@ -227,9 +237,9 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Add design
         </button>
-        <div class="qty-group">
+        <div class="qty-group" role="group" aria-label="Sheet quantity">
           <button id="qty-down-{{ section.id }}" type="button" aria-label="Decrease quantity">&minus;</button>
-          <span class="qty-val" id="qty-display-{{ section.id }}">1</span>
+          <span class="qty-val" id="qty-display-{{ section.id }}" aria-live="polite" aria-atomic="true">1</span>
           <button id="qty-up-{{ section.id }}" type="button" aria-label="Increase quantity">+</button>
         </div>
         <span class="qty-label">sheets</span>
@@ -277,13 +287,14 @@
         </div>
         <div class="be-row">
           <span id="stats-{{ section.id }}" class="cfg-text-muted"></span>
+          <label class="visually-hidden" for="bg-color-{{ section.id }}">Sheet background color</label>
           <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF">
-          <button class="be-btn danger" id="clear-btn-{{ section.id }}">Clear</button>
+          <button class="be-btn danger" id="clear-btn-{{ section.id }}" type="button">Clear</button>
         </div>
       </details>
     </div>
 
-    <dialog id="modal-{{ section.id }}" class="cfg-modal" aria-labelledby="modal-title-{{ section.id }}">
+    <dialog id="modal-{{ section.id }}" class="cfg-modal" aria-modal="true" aria-labelledby="modal-title-{{ section.id }}">
       <div class="cfg-modal-box">
         <div class="cfg-modal-title-row">
           <div>
@@ -291,7 +302,7 @@
             <h3 class="cfg-modal-title" id="modal-title-{{ section.id }}">Add Design</h3>
           </div>
         </div>
-        <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}" role="button" tabindex="0" aria-label="Choose or drop a design file">
+        <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}" role="button" tabindex="0" aria-controls="file-input-{{ section.id }}" aria-label="Choose or drop a design file">
           <div class="cfg-modal-icon" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
           </div>

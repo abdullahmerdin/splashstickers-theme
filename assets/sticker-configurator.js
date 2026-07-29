@@ -2253,6 +2253,7 @@ class ExportManager {
 
   async onExportPDF() {
     var core = this.core;
+    if ((core.dataset || {}).exportEnabled === 'false') return;
     if (core.state.exporting) return;
     this.setExporting(true);
     var errorMessage = '';
@@ -2287,25 +2288,28 @@ class KeyboardManager {
 
   onKeyDown(e) {
     var core = this.core;
+    var features = core.dataset || {};
+    var undoEnabled = features.undoEnabled !== 'false';
+    var clipboardEnabled = features.clipboardEnabled !== 'false';
     if (core.state.exporting) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     // Ctrl/Cmd + Z — Undo
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    if (undoEnabled && (e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
       core.historyManager.undo();
       return;
     }
 
     // Ctrl/Cmd + Shift + Z — Redo
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+    if (undoEnabled && (e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
       e.preventDefault();
       core.historyManager.redo();
       return;
     }
 
     // Ctrl/Cmd + Y — Redo
-    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+    if (undoEnabled && (e.ctrlKey || e.metaKey) && e.key === 'y') {
       e.preventDefault();
       core.historyManager.redo();
       return;
@@ -2318,14 +2322,14 @@ class KeyboardManager {
     }
 
     // Ctrl/Cmd + C — Copy
-    if ((e.ctrlKey || e.metaKey) && e.key === 'c' && core.state.selectedIds.length) {
+    if (clipboardEnabled && (e.ctrlKey || e.metaKey) && e.key === 'c' && core.state.selectedIds.length) {
       e.preventDefault();
       core.clipboardManager.copy();
       return;
     }
 
     // Ctrl/Cmd + V — Paste
-    if ((e.ctrlKey || e.metaKey) && e.key === 'v' && core.state.clipboard) {
+    if (clipboardEnabled && (e.ctrlKey || e.metaKey) && e.key === 'v' && core.state.clipboard) {
       e.preventDefault();
       core.clipboardManager.paste();
       return;
@@ -4245,17 +4249,18 @@ class StickerConfigurator extends HTMLElement {
   /* ── Toolbar action router ── */
   _handleToolbarAction(action) {
     if (this.state.exporting && action !== 'export-pdf') return;
+    var features = this.dataset || {};
     switch (action) {
-      case 'undo': this.historyManager.undo(); break;
-      case 'redo': this.historyManager.redo(); break;
-      case 'auto-arrange': this.alignmentEngine.onAutoArrange(); break;
+      case 'undo': if (features.undoEnabled !== 'false') this.historyManager.undo(); break;
+      case 'redo': if (features.undoEnabled !== 'false') this.historyManager.redo(); break;
+      case 'auto-arrange': if (features.autoArrangeEnabled !== 'false') this.alignmentEngine.onAutoArrange(); break;
       case 'delete': this.itemManager.deleteSelected(); break;
       case 'duplicate': this.itemManager.duplicateSelected(); break;
       case 'flip-h': this.itemManager.flipH(); break;
       case 'flip-v': this.itemManager.flipV(); break;
       case 'add-text': this.interactionManager.onTextToolToggle(); break;
       case 'zoom-fit': this.canvasRenderer.zoomToFit(); break;
-      case 'export-pdf': this.exportManager.onExportPDF(); break;
+      case 'export-pdf': if (features.exportEnabled !== 'false') this.exportManager.onExportPDF(); break;
       case 'lock': this.itemManager.lockSelected(); break;
       case 'mobile': this.mobileHandler.onMobileToggle(); break;
       case 'multi-select':
