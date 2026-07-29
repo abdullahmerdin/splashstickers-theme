@@ -19,6 +19,7 @@
   <div
     class="
       section
+      splash-blog-section__surface
       {% if section.settings.background_color != blank %}color-custom-{{ section.id }}{% endif %}
       blog-posts
       spacing-style
@@ -164,6 +165,7 @@
 {% schema %}
 {
   "name": "t:names.blog_posts",
+  "class": "section-wrapper splash-blog-section",
   "blocks": [
     {
       "type": "@theme"

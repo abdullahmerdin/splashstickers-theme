@@ -9,13 +9,14 @@
 <div
   class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
 ></div>
-<div class="section{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}">
+<div class="section splash-blog-post-section__surface{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}">
   <div
     class="
       spacing-style
       layout-panel-flex
       layout-panel-flex--column
       section-content-wrapper
+      splash-blog-post-section__content
       mobile-column
     "
     style="
@@ -132,7 +133,7 @@
       "type": "_blog-post-content"
     }
   ],
-  "class": "section-wrapper",
+  "class": "section-wrapper splash-blog-post-section",
   "settings": [
     {
       "type": "select",

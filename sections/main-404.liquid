@@ -11,7 +11,7 @@
 ></div>
 <div
   class="
-    section section--{{ section.settings.section_width }}{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}
+    section splash-404-section__surface section--{{ section.settings.section_width }}{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}
     {% if section.settings.section_height != "" %} {{ section.settings.section_height | prepend: "section--height-" }}{% endif %}
   "
 >
@@ -22,6 +22,7 @@
         layout-panel-flex
         layout-panel-flex--column
         section-content-wrapper
+        splash-404-section__content
         mobile-column
       "
       style="
@@ -37,7 +38,7 @@
 {% schema %}
 {
   "name": "t:names.404",
-  "class": "section-wrapper",
+  "class": "section-wrapper splash-404-section",
   "blocks": [
     {
       "type": "@theme"

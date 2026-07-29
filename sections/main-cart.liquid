@@ -21,7 +21,7 @@
       class="section{% if custom_color %} color-custom-{{ section.id }}{% endif %} section--{{ section.settings.section_width }}"
     >
       <div
-        class="cart-page spacing-style{% if cart.empty? %} cart-page--empty{% endif %}"
+        class="cart-page splash-cart-page spacing-style{% if cart.empty? %} cart-page--empty{% endif %}"
         style="{% render 'spacing-style', settings: section.settings %}"
       >
         <div class="cart-page__title">
@@ -40,7 +40,7 @@
     class="section{% if custom_color %} color-custom-{{ section.id }}{% endif %} section--{{ section.settings.section_width }}"
   >
     <div
-      class="cart-page spacing-style{% if cart.empty? %} cart-page--empty{% endif %}"
+      class="cart-page splash-cart-page spacing-style{% if cart.empty? %} cart-page--empty{% endif %}"
       style="{% render 'spacing-style', settings: section.settings %}"
     >
       <div class="cart-page__title">
@@ -140,6 +140,7 @@
 {% schema %}
 {
   "name": "t:names.cart",
+  "class": "section-wrapper splash-cart-section",
   "disabled_on": {
     "groups": ["header", "footer"]
   },
