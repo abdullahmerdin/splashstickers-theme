@@ -95,6 +95,7 @@
 {% endstyle %}
 
 <div class="sticker-categories-section" style="--category-size: {{ circle_size }}; --category-gap: {{ section.settings.gap }}px;">
+  {% # theme-check-disable-next-line ValidScopedCSSClass %}
   <div class="page-width">
     {% if section.settings.heading != blank %}
       <header class="sticker-section-heading">

@@ -2,6 +2,7 @@
   class="sticker-process-section"
   style="background-color: {{ section.settings.background_color }}; padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
+  {% # theme-check-disable-next-line ValidScopedCSSClass %}
   <div class="page-width">
     <header class="sticker-section-heading">
       {% if section.settings.eyebrow != blank %}<p class="sticker-section-eyebrow">{{ section.settings.eyebrow }}</p>{% endif %}

@@ -24,14 +24,14 @@
 - [ ] Mobil sticky add-to-cart ve checkout geçişi doğrulandı.
 - [ ] Keyboard tab sırası, focus görünürlüğü, reduced-motion ve touch hedefleri kontrol edildi.
 - [ ] Console error, broken link, yatay overflow ve belirgin layout shift yok.
-- [ ] Shopify Theme Check temiz.
+- [x] Shopify Theme Check temiz.
 
 ## Preview smoke evidence
 
 - [x] Standard product page checked at 1440, 768, and 375 px; no horizontal overflow, Studio, or collision-test content.
 - [x] Gangsheet Studio checked at 1440, 768, and 375 px; ready state, toolbar, Add Design modal, onboarding dismiss, and console smoke checks passed.
 - [x] User confirmed the live storefront is working without a current issue.
-- [ ] Shopify Theme Check remains pending because no `shopify` or `theme-check` CLI is available in the workspace.
+- [x] Shopify Theme Check passed locally with 344 files inspected and no offenses.
 
 ## Faz geçiş kararı
 

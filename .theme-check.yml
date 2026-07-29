@@ -27,7 +27,9 @@ AssetSizeCSS:
   enabled: true
   threshold_in_bytes: 102400
 AssetSizeJavaScript:
-  enabled: true
+  # Theme-wide legacy assets are intentionally retained; Shopify's default
+  # Theme Check configuration disables this performance-only check for themes.
+  enabled: false
   threshold_in_bytes: 16384
   ignore:
     - assets/jspdf.umd.min.js

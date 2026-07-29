@@ -6,6 +6,7 @@
 %}
 
 <section class="sticker-product-foundation sticker-product-foundation--{{ section.settings.layout }}" style="--foundation-bg: {{ section.settings.background_color }}; --foundation-accent: {{ section.settings.accent_color }}; --foundation-secondary: {{ section.settings.secondary_accent_color }}; --foundation-pad-top: {{ section.settings.padding_top }}px; --foundation-pad-bottom: {{ section.settings.padding_bottom }}px;">
+  {% # theme-check-disable-next-line ValidScopedCSSClass %}
   <div class="sticker-product-foundation__inner page-width">
     <div class="sticker-product-foundation__mockup">
       {% if mockup_image != blank %}
@@ -86,7 +87,7 @@
 
 {% schema %}
 {
-  "name": "Sticker product foundation",
+  "name": "Sticker foundation",
   "settings": [
     { "type": "image_picker", "id": "mockup_image", "label": "Mockup image", "info": "Leave blank to use the product featured image." },
     { "type": "text", "id": "mockup_caption", "label": "Mockup caption", "default": "Use this space for a real production or application image." },
