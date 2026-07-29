@@ -1123,12 +1123,87 @@
 }
 
 .splash-collection-results .product-grid {
-  align-items: start;
+  align-items: stretch;
 }
 
 .splash-collection-results .product-grid__item {
+  display: flex;
   min-width: 0;
   border: 0;
+}
+
+/* Keep collection cards on a shared visual baseline, regardless of source image ratio. */
+.splash-collection-results .splash-product-card {
+  width: 100%;
+  height: 100%;
+}
+
+.splash-collection-results .splash-product-card > .product-card__content {
+  display: flex;
+  height: 100%;
+  min-height: 100%;
+  padding: var(--splash-space-xs) 0 var(--splash-space-sm);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.splash-collection-results .splash-product-card .card-gallery {
+  --gallery-aspect-ratio: 1 / 1 !important;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  border-radius: var(--splash-radius-card);
+}
+
+.splash-collection-results .splash-product-card .card-gallery > .contents {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.splash-collection-results .splash-product-card .card-gallery
+  :is(slideshow-component, slideshow-container, slideshow-slides, slideshow-slide, .product-media-container, .product-media) {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.splash-collection-results .splash-product-card .card-gallery
+  :is(slideshow-slide, .product-media-container.media-fit) {
+  --product-media-fit: contain !important;
+}
+
+.splash-collection-results .splash-product-card .card-gallery
+  :is(.product-media-container, .product-media) {
+  background: transparent;
+  aspect-ratio: auto;
+}
+
+.splash-collection-results .splash-product-card .card-gallery .product-media-container
+  :is(img, video, iframe, .deferred-media__poster-image) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.splash-collection-results .splash-product-card [ref='productTitleLink'] .text-block {
+  min-height: calc(2.5em + 0.25rem);
+}
+
+.splash-collection-results .splash-product-card [ref='productTitleLink'] .text-block > * {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.25;
+}
+
+.splash-collection-results .splash-product-card product-price {
+  display: block;
+  min-height: 1.5em;
+  margin-block-start: auto;
 }
 
 .splash-collection-results .main-collection-grid__empty {
