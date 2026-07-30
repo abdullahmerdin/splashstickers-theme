@@ -685,7 +685,7 @@ class SplashInkHero extends HTMLElement {
         width: '58px',
         height: '58px',
         objectFit: 'contain',
-        filter: 'brightness(0) invert(1)',
+        filter: 'brightness(0)',
       });
     }
 
