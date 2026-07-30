@@ -376,6 +376,52 @@
   display: block;
 }
 
+.sticker-configurator .cfg-toolbar-more {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 3px;
+}
+
+.sticker-configurator .cfg-toolbar-more > summary {
+  display: inline-grid;
+  flex: 0 0 var(--cfg-toolbar-size);
+  width: var(--cfg-toolbar-size);
+  height: var(--cfg-toolbar-size);
+  place-items: center;
+  color: #626670;
+  border-radius: var(--cfg-radius-sm);
+  cursor: pointer;
+  list-style: none;
+  touch-action: manipulation;
+}
+
+.sticker-configurator .cfg-toolbar-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sticker-configurator .cfg-toolbar-more > summary:hover,
+.sticker-configurator .cfg-toolbar-more[open] > summary {
+  color: var(--cfg-primary);
+  background: var(--cfg-surface);
+  box-shadow: 0 2px 8px rgba(25, 28, 38, 0.08);
+}
+
+.sticker-configurator .cfg-toolbar-more > summary:focus-visible {
+  outline: 2px solid var(--cfg-primary);
+  outline-offset: 2px;
+}
+
+.sticker-configurator .cfg-toolbar-more-controls {
+  display: none;
+  align-items: center;
+  gap: 3px;
+}
+
+.sticker-configurator .cfg-toolbar-more[open] .cfg-toolbar-more-controls {
+  display: flex;
+}
+
 .sticker-configurator .toolbar-divider {
   flex: 0 0 1px;
   width: 1px;
@@ -1232,6 +1278,12 @@ dialog.cfg-modal::backdrop {
   scroll-snap-align: start;
 }
 
+.sticker-configurator sticker-configurator.mobile-mode .cfg-toolbar-more > summary {
+  flex-basis: 48px;
+  width: 48px;
+  height: 48px;
+}
+
 .sticker-configurator sticker-configurator.mobile-mode .toolbar-divider {
   display: none;
 }
@@ -1415,6 +1467,12 @@ dialog.cfg-modal::backdrop {
   }
 
   .sticker-configurator .toolbar button {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .sticker-configurator .cfg-toolbar-more > summary {
     flex-basis: 48px;
     width: 48px;
     height: 48px;
