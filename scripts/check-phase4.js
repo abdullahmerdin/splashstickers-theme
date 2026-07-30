@@ -32,7 +32,7 @@ const checks = [
   ['sections/sticker-configurator.liquid', '"default": false'],
   ['sections/sticker-configurator.liquid', 'data-configurator-copy'],
   ['sections/sticker-configurator.liquid', 'sections.sticker-configurator.add_design_error'],
-  ['assets/splash-theme.css', 'Phase 4 product and configurator surfaces.'],
+  ['assets/splash-theme.css', '.splash-product-information .splash-product-details .add-to-cart-button.button'],
   ['assets/sticker-configurator.css', '.sticker-configurator > sticker-configurator.splash-studio'],
   ['assets/sticker-configurator.css', '.cfg-toolbar-more[open] .cfg-toolbar-more-controls'],
   ['assets/sticker-configurator.js', 'features.undoEnabled'],

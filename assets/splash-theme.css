@@ -318,123 +318,14 @@
   }
 }
 
-/* Legacy utility classes now resolve through the semantic palette. */
-.bg-purple,
-.collection-card-badge.purple,
-.sticker-category-circle.purple,
-.trust-badge-icon.purple {
-  background-color: var(--splash-color-purple) !important;
-}
-
-.bg-pink,
-.collection-card-badge.pink,
-.sticker-category-circle.pink,
-.trust-badge-icon.pink {
-  background-color: var(--splash-color-pink) !important;
-}
-
-.bg-gold,
-.collection-card-badge.gold,
-.sticker-category-circle.gold,
-.trust-badge-icon.gold {
-  background-color: var(--splash-color-yellow) !important;
-}
-
-.bg-teal,
-.collection-card-badge.teal,
-.sticker-category-circle.teal,
-.trust-badge-icon.teal {
-  background-color: var(--splash-color-teal) !important;
-}
-
-.text-purple,
-.price-highlight,
-.gradient-text-purple-pink,
-.gradient-text-purple-teal {
-  color: var(--splash-color-purple) !important;
-}
-
-.text-pink,
-.sale-price-highlight,
-.gradient-text-gold-pink {
-  color: var(--splash-color-pink) !important;
-}
-
-.text-gold {
-  color: var(--splash-color-yellow) !important;
-}
-
-.text-teal {
-  color: var(--splash-color-teal) !important;
-}
-
-.bg-gradient-purple-pink,
-.btn-cta-gradient {
-  background: var(--splash-gradient-primary) !important;
-}
-
-.bg-gradient-gold-pink {
-  background: linear-gradient(135deg, var(--splash-color-yellow), var(--splash-color-pink)) !important;
-}
-
-.bg-gradient-purple-teal {
-  background: linear-gradient(135deg, var(--splash-color-purple), var(--splash-color-teal)) !important;
-}
-
-.gradient-text-purple-pink {
-  background: var(--splash-gradient-primary);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.gradient-text-gold-pink {
-  background: linear-gradient(135deg, var(--splash-color-yellow), var(--splash-color-pink));
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.gradient-text-purple-teal {
-  background: linear-gradient(135deg, var(--splash-color-purple), var(--splash-color-teal));
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 .section-divider,
 .brand-header-bar,
 .footer-brand-bar {
   background: var(--splash-gradient-spectrum);
 }
 
-.hero-overlay-brand {
-  background: linear-gradient(135deg, rgb(var(--splash-color-purple-rgb) / 0.15), rgb(var(--splash-color-pink-rgb) / 0.15)) !important;
-}
-
-.sticker-category-circle.purple {
-  background: linear-gradient(135deg, var(--splash-color-purple), rgb(var(--splash-color-purple-rgb) / 0.55)) !important;
-}
-
-.sticker-category-circle.pink {
-  background: linear-gradient(135deg, var(--splash-color-pink), rgb(var(--splash-color-pink-rgb) / 0.55)) !important;
-}
-
-.sticker-category-circle.gold {
-  background: linear-gradient(135deg, var(--splash-color-yellow), rgb(var(--splash-color-yellow-rgb) / 0.55)) !important;
-}
-
-.sticker-category-circle.teal {
-  background: linear-gradient(135deg, var(--splash-color-teal), rgb(var(--splash-color-teal-rgb) / 0.55)) !important;
-}
-
-.sticker-category-label,
-.trust-badge-title {
+.sticker-category-label {
   color: var(--splash-color-ink);
-}
-
-.trust-badge-desc {
-  color: var(--splash-color-muted);
 }
 
 .custom-upload-btn {
@@ -470,7 +361,7 @@
   }
 }
 
-/* Global shell: announcement bar and header */
+/* Shell: announcement bar and header */
 .splash-announcement-bar {
   --color-foreground: var(--splash-color-ink);
   --color-foreground-rgb: var(--splash-color-ink-rgb);
@@ -640,7 +531,7 @@
   color: var(--splash-color-surface);
 }
 
-/* Phase 2 shell completion: mobile navigation, search, cart and footer. */
+/* Shell: navigation, search, cart drawer and footer */
 #header-component.splash-header .splash-header-drawer .menu-drawer {
   --color-background: var(--splash-color-ink);
   --color-background-rgb: var(--splash-color-ink-rgb);
@@ -815,7 +706,7 @@
   transform: translateY(-1px);
 }
 
-/* Phase 3 product/catalog surfaces. */
+/* Catalog: product cards and search results */
 .splash-product-card {
   position: relative;
   border-radius: var(--splash-radius-card);
@@ -952,7 +843,7 @@
   font-family: var(--splash-font-display);
 }
 
-/* Phase 3 collection controls and grid surfaces. */
+/* Collection: filters, sorting and grid */
 .splash-collection-results {
   --splash-collection-soft: color-mix(in srgb, var(--splash-color-purple) 4%, var(--splash-color-surface));
   --splash-collection-hover: rgb(var(--splash-color-purple-rgb) / 0.08);
@@ -1274,7 +1165,7 @@
   border: 0;
 }
 
-/* Keep collection cards on a shared visual baseline, regardless of source image ratio. */
+/* Collection: shared card media baseline */
 .splash-collection-results .splash-product-card {
   width: 100%;
   height: 100%;
@@ -1290,6 +1181,7 @@
   box-shadow: none;
 }
 
+/* Horizon media tokens: fixed collection geometry must override per-card inline defaults. */
 .splash-collection-results .splash-product-card .card-gallery {
   --gallery-aspect-ratio: 1 / 1 !important;
   width: 100%;
@@ -1313,6 +1205,7 @@
 
 .splash-collection-results .splash-product-card .card-gallery
   :is(slideshow-slide, .product-media-container.media-fit) {
+  /* Horizon media token override: collection cards always render artwork contained. */
   --product-media-fit: contain !important;
 }
 
@@ -1444,7 +1337,7 @@
   }
 }
 
-/* Phase 4 product and configurator surfaces. */
+/* Product: product details and configurator */
 .splash-product-information {
   --style-border-radius-buttons-primary: var(--splash-radius-control);
   --style-border-radius-buttons-secondary: var(--splash-radius-control);
@@ -1457,6 +1350,7 @@
   min-width: 0;
 }
 
+/* Horizon product tokens: product media and detail surfaces use the Splash geometry contract. */
 .splash-product-information .splash-product-media-gallery {
   --media-radius: var(--splash-radius-card) !important;
 }
@@ -1500,6 +1394,7 @@
   box-shadow: 0 0 0 2px rgb(var(--splash-color-purple-rgb) / 0.16);
 }
 
+/* Horizon product token override: the product detail card owns its border contract. */
 .splash-product-information .splash-product-details > .group-block {
   --border-style: solid !important;
   --border-width: 1px !important;
@@ -1525,6 +1420,7 @@
   line-height: 0.98;
 }
 
+/* Base price selector override: the product price remains in the Splash primary color. */
 .splash-product-information .splash-product-details product-price {
   display: block;
   color: var(--splash-color-purple) !important;
@@ -1642,6 +1538,7 @@
   border-radius: var(--splash-radius-control);
 }
 
+/* Shopify payment control override: keep the hosted button radius aligned with the product form. */
 .splash-product-information .splash-product-details :is(.shopify-payment-button__button, .shopify-payment-button__button--unbranded) {
   border-radius: var(--splash-radius-control) !important;
 }
@@ -1715,7 +1612,7 @@
   }
 }
 
-/* Phase 5 cart, content and utility surfaces. */
+/* Cart, content and account: route surfaces and shared forms */
 .splash-cart-section,
 .splash-content-section,
 .splash-blog-section,
@@ -1785,6 +1682,7 @@
   background: transparent;
 }
 
+/* Horizon cart shell: the summary surface owns its background inside the Splash card. */
 .splash-cart-section .cart-page__summary > .section-background {
   background: transparent !important;
   background-color: transparent !important;
