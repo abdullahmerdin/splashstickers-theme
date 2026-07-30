@@ -2540,7 +2540,7 @@ class CartManager {
     var core = this.core;
     if (this.busy) return;
     if (!core.state.items.length) {
-      this.reportError('Your sheet is empty. Add at least one design before continuing.');
+      this.reportError('Add a design before adding to cart.');
       return;
     }
     if (!(Number(core.state.variantId) > 0)) {
@@ -2559,9 +2559,9 @@ class CartManager {
     if (button) {
       button.classList.add('is-busy');
       if (typeof button.setAttribute === 'function') button.setAttribute('aria-busy', 'true');
-      button.textContent = 'Saving sheet…';
+      button.textContent = 'Adding to cart…';
     }
-    this.setStatus('Saving your sheet details before checkout.');
+    this.setStatus('Adding to cart…');
 
     try {
       var sheetWidthMm = this.roundMm(core.CANVAS_W);
@@ -2602,7 +2602,7 @@ class CartManager {
         throw new Error(payload.description || payload.message || 'The design could not be added to cart.');
       }
 
-      this.setStatus('Sheet added to cart with its artwork count and physical size.', 'success');
+      this.setStatus('Added to cart.', 'success');
       core.dispatchAddToCartEvent(payload);
       if (core.dataset.redirectToCart !== 'false') {
         window.location.assign(core.dataset.cartUrl || '/cart');

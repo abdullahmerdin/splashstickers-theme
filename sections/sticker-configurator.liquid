@@ -73,7 +73,7 @@
   data-resolution-success="{{ section.settings.resolution_success_text | escape }}"
   aria-busy="true"
   role="region"
-  aria-label="Sticker sheet configurator"
+  aria-label="Design editor"
   {% unless heading == blank %}aria-labelledby="cfg-heading-{{ section.id }}"{% endunless %}
   class="splash-studio is-loading"
   style="
@@ -107,7 +107,6 @@
   </div>
   {%- unless heading == blank -%}
     <div class="cfg-header">
-      <span class="cfg-eyebrow">Sticker sheet</span>
       <h2 class="cfg-heading" id="cfg-heading-{{ section.id }}">{{ heading | escape }}</h2>
     </div>
   {%- endunless -%}
@@ -115,7 +114,6 @@
   {% if section.settings.show_quick_start %}
     <aside class="cfg-onboarding" id="onboarding-{{ section.id }}" aria-labelledby="onboarding-title-{{ section.id }}">
       <div class="cfg-onboarding-copy">
-        <span class="cfg-onboarding-kicker">{{ section.settings.quick_start_kicker | escape }}</span>
         <h3 id="onboarding-title-{{ section.id }}">{{ section.settings.quick_start_heading | escape }}</h3>
         <ol>
           <li><span aria-hidden="true">1</span>{{ section.settings.quick_start_step_1 | escape }}</li>
@@ -128,7 +126,7 @@
   {% endif %}
 
   <div class="editor-wrap splash-studio__editor">
-    <div class="toolbar" role="toolbar" aria-label="Sticker sheet canvas tools">
+    <div class="toolbar" role="toolbar" aria-label="Canvas tools">
       <!-- Toolbar buttons generated via JS delegation (data-action) -->
       {% if section.settings.enable_undo_redo %}
         <button title="Undo" aria-label="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
@@ -199,7 +197,7 @@
       <span class="size-unit">mm</span>
     </div>
 
-    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}" role="region" aria-label="Sticker sheet canvas">
+    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}" role="region" aria-label="Canvas">
       <div class="canvas-stage" id="canvas-stage-{{ section.id }}">
         <div class="canvas-area" id="canvas-{{ section.id }}">
           <canvas class="grid-bg" id="grid-canvas-{{ section.id }}"></canvas>
@@ -237,7 +235,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Add design
         </button>
-        <div class="qty-group" role="group" aria-label="Sheet quantity">
+        <div class="qty-group" role="group" aria-label="Quantity">
           <button id="qty-down-{{ section.id }}" type="button" aria-label="Decrease quantity">&minus;</button>
           <span class="qty-val" id="qty-display-{{ section.id }}" aria-live="polite" aria-atomic="true">1</span>
           <button id="qty-up-{{ section.id }}" type="button" aria-label="Increase quantity">+</button>
@@ -252,15 +250,11 @@
       >
         Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
       </button>
-      <p class="cfg-cart-review-note">
-        <span aria-hidden="true">Final check</span>
-        Artwork count, sheet copies and physical sheet size are saved with this cart line.
-      </p>
       <p id="cart-status-{{ section.id }}" class="cfg-cart-status" role="status" aria-live="polite"></p>
 
       <details class="bottom-extra">
         <summary>
-          <span>Workspace settings</span>
+          <span>Options</span>
           <span class="bottom-extra-chevron" aria-hidden="true"></span>
         </summary>
         <div class="be-row">
@@ -298,7 +292,6 @@
       <div class="cfg-modal-box">
         <div class="cfg-modal-title-row">
           <div>
-            <span class="cfg-modal-kicker">New artwork</span>
             <h3 class="cfg-modal-title" id="modal-title-{{ section.id }}">Add Design</h3>
           </div>
         </div>
@@ -417,24 +410,18 @@
     },
     {
       "type": "header",
-      "content": "Quick start"
+      "content": "First visit guide"
     },
     {
       "type": "checkbox",
       "id": "show_quick_start",
-      "label": "Show first-visit quick start",
+      "label": "Show first-visit guide",
       "default": true
     },
     {
       "type": "text",
-      "id": "quick_start_kicker",
-      "label": "Quick start label",
-      "default": "Quick start"
-    },
-    {
-      "type": "text",
       "id": "quick_start_heading",
-      "label": "Quick start heading",
+      "label": "Guide heading",
       "default": "Build your sheet in three steps"
     },
     {

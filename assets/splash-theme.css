@@ -1849,32 +1849,6 @@
   content: '';
 }
 
-.splash-cart-section .splash-gangsheet-summary__heading,
-.splash-cart-drawer__dialog .splash-gangsheet-summary__heading {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.splash-cart-section .splash-gangsheet-summary__eyebrow,
-.splash-cart-drawer__dialog .splash-gangsheet-summary__eyebrow {
-  color: var(--splash-color-purple);
-  font-size: var(--splash-font-meta-size);
-  font-weight: 800;
-  letter-spacing: var(--splash-font-meta-tracking);
-  line-height: 1.1;
-  text-transform: uppercase;
-}
-
-.splash-cart-section .splash-gangsheet-summary__title,
-.splash-cart-drawer__dialog .splash-gangsheet-summary__title {
-  color: var(--splash-color-ink);
-  font-family: var(--splash-font-display);
-  font-size: clamp(1.15rem, 3vw, 1.45rem);
-  font-weight: 850;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-
 .splash-cart-section .splash-gangsheet-summary__details,
 .splash-cart-drawer__dialog .splash-gangsheet-summary__details {
   display: grid;

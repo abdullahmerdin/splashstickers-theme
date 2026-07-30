@@ -272,16 +272,6 @@
   margin: 0 2px 16px;
 }
 
-.sticker-configurator .cfg-eyebrow,
-.cfg-modal .cfg-modal-kicker {
-  color: var(--cfg-primary);
-  font-size: 0.66rem;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
 .sticker-configurator .cfg-heading {
   margin: 0;
   color: var(--cfg-ink);
@@ -1416,10 +1406,6 @@ dialog.cfg-modal::backdrop {
     margin: 0 2px 7px;
   }
 
-  .sticker-configurator .cfg-eyebrow {
-    display: none;
-  }
-
   .sticker-configurator .cfg-heading {
     flex-basis: 100%;
     overflow: hidden;
@@ -1598,16 +1584,6 @@ dialog.cfg-modal::backdrop {
   font-size: 1rem;
 }
 
-.sticker-configurator .cfg-onboarding-kicker {
-  display: block;
-  margin-bottom: 3px;
-  color: var(--cfg-accent, #6c5ce7);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
 .sticker-configurator .cfg-onboarding-copy ol {
   display: flex;
   flex-wrap: wrap;
@@ -1706,12 +1682,6 @@ dialog.cfg-modal::backdrop {
 
 .sticker-configurator .splash-studio__editor {
   position: relative;
-}
-
-.sticker-configurator .cfg-eyebrow,
-.cfg-modal .cfg-modal-kicker {
-  color: var(--splash-color-purple, var(--cfg-primary));
-  font-family: var(--splash-font-body, inherit);
 }
 
 .sticker-configurator .cfg-heading {
@@ -1829,26 +1799,6 @@ dialog.cfg-modal::backdrop {
   color: rgb(var(--splash-color-surface-rgb, 255 255 255) / 0.78);
   background: color-mix(in srgb, var(--splash-color-muted, #636e72) 72%, var(--splash-color-surface, #fff));
   border-color: transparent;
-}
-
-.sticker-configurator .cfg-cart-review-note {
-  flex-basis: 100%;
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-  margin: -2px 2px 0;
-  color: var(--splash-color-muted, var(--cfg-muted));
-  font-size: 0.7rem;
-  line-height: 1.4;
-}
-
-.sticker-configurator .cfg-cart-review-note span {
-  color: var(--splash-color-teal, #00cec9);
-  font-size: var(--splash-font-meta-size, 0.78rem);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
 .sticker-configurator .cfg-cart-status {
@@ -2008,14 +1958,6 @@ dialog.cfg-modal::backdrop {
     border-inline: 0;
   }
 
-  .sticker-configurator .cfg-cart-review-note {
-    align-items: flex-start;
-    gap: 5px;
-  }
-
-  .sticker-configurator .cfg-cart-review-note span {
-    font-size: 0.66rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
