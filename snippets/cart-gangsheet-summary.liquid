@@ -1,0 +1,26 @@
+{% liquid
+  assign design_id = item.properties['Design ID']
+  assign artwork_count = item.properties['Artwork count']
+  assign sheet_size = item.properties['Sheet size']
+%}
+
+<aside class="splash-gangsheet-summary" aria-label="Your sheet summary">
+  <div class="splash-gangsheet-summary__heading">
+    <span class="splash-gangsheet-summary__eyebrow">Splash Studio</span>
+    <h3 class="splash-gangsheet-summary__title">Your sheet</h3>
+  </div>
+  <dl class="splash-gangsheet-summary__details">
+    <div class="splash-gangsheet-summary__field splash-gangsheet-summary__field--design-id">
+      <dt>Design ID</dt>
+      <dd>{{ design_id | escape }}</dd>
+    </div>
+    <div class="splash-gangsheet-summary__field">
+      <dt>Artwork count</dt>
+      <dd>{{ artwork_count | escape }}</dd>
+    </div>
+    <div class="splash-gangsheet-summary__field">
+      <dt>Sheet size</dt>
+      <dd>{{ sheet_size | escape }}</dd>
+    </div>
+  </dl>
+</aside>

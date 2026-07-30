@@ -140,6 +140,14 @@
 
           <tbody role="rowgroup">
             {% for item in cart.items %}
+              {%- liquid
+                assign is_gangsheet_line = false
+                if item.product.template_suffix == 'product-gangsheet'
+                  if item.properties['Design ID'] != blank and item.properties['Artwork count'] != blank and item.properties['Sheet size'] != blank
+                    assign is_gangsheet_line = true
+                  endif
+                endif
+              -%}
               <tr
                 id="CartItem-{{ item.key }}"
                 role="row"
@@ -224,8 +232,12 @@
                           </li>
                         {%- endfor -%}
                       </ul>
-                    {%- endif -%}
-                  </div>
+                      {%- endif -%}
+
+                      {%- if is_gangsheet_line -%}
+                        {% render 'cart-gangsheet-summary', item: item %}
+                      {%- endif -%}
+                    </div>
 
                   <div class="cart-items__variants-wrapper">
                     {%- if item.product.has_only_default_variant == false
@@ -250,7 +262,13 @@
                         assign has_visible_properties = false
                         for property in item.properties
                           assign property_first_char = property.first | slice: 0
-                          if property.last != blank and property_first_char != '_'
+                          assign is_gangsheet_summary_property = false
+                          if is_gangsheet_line
+                            if property.first == 'Design ID' or property.first == 'Artwork count' or property.first == 'Sheet size'
+                              assign is_gangsheet_summary_property = true
+                            endif
+                          endif
+                          if property.last != blank and property_first_char != '_' and is_gangsheet_summary_property == false
                             assign has_visible_properties = true
                             break
                           endif
@@ -260,7 +278,15 @@
                         <dl class="cart-items__properties">
                           {%- for property in item.properties -%}
                             {%- assign property_first_char = property.first | slice: 0 -%}
-                            {%- if property.last != blank and property_first_char != '_' -%}
+                            {%- liquid
+                              assign is_gangsheet_summary_property = false
+                              if is_gangsheet_line
+                                if property.first == 'Design ID' or property.first == 'Artwork count' or property.first == 'Sheet size'
+                                  assign is_gangsheet_summary_property = true
+                                endif
+                              endif
+                            -%}
+                            {%- if property.last != blank and property_first_char != '_' and is_gangsheet_summary_property == false -%}
                               <div class="cart-items__property">
                                 <dt>{{ property.first }}:</dt>
                                 <dd>
