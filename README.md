@@ -40,10 +40,10 @@ not depend on a third-party CDN at runtime.
 
 ## Storefront conversion features
 
-The home page uses editable Shopify sections for categories, the three-step
-ordering flow, the custom-design call to action, and trust badges. Their text
-and links can be managed in the theme editor and translated per market with
-Shopify's locale tooling.
+The home page uses editable Shopify sections for the three-step ordering flow
+and the custom-design call to action. Optional category links render only when
+they have a real destination; their text and links can be managed in the theme
+editor and translated per market with Shopify's locale tooling.
 
 The gangsheet configurator includes a first-visit quick start and a print-size
 resolution check. When configurator analytics are enabled in the section

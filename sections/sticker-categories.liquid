@@ -1,7 +1,3 @@
-{%- liquid
-  assign circle_size = section.settings.circle_size | append: 'px'
--%}
-
 {% style %}
   .sticker-categories-section {
     background-color: {{ section.settings.background_color }};
@@ -94,7 +90,7 @@
   }
 {% endstyle %}
 
-<div class="sticker-categories-section" style="--category-size: {{ circle_size }}; --category-gap: {{ section.settings.gap }}px;">
+<div class="sticker-categories-section">
   {% # theme-check-disable-next-line ValidScopedCSSClass %}
   <div class="page-width">
     {% if section.settings.heading != blank %}
@@ -115,21 +111,15 @@
               role="listitem"
               {{ block.shopify_attributes }}
             >
-          {% else %}
-            <div
-              class="sticker-category-card sticker-category-card--{{ block.settings.color_style }}"
-              role="listitem"
-              {{ block.shopify_attributes }}
-            >
+              <span class="sticker-category-dot" aria-hidden="true"></span>
+              {% if block.settings.label != blank %}
+                <span class="sticker-category-label">{{ block.settings.label }}</span>
+              {% endif %}
+            </a>
           {% endif %}
-            <span class="sticker-category-dot" aria-hidden="true"></span>
-            {% if block.settings.label != blank %}
-              <span class="sticker-category-label">{{ block.settings.label }}</span>
-            {% endif %}
-          {% if block.settings.link != blank %}</a>{% else %}</div>{% endif %}
         {% endfor %}
       </div>
-    {% else %}
+    {% elsif request.design_mode %}
       <p class="sticker-section-empty">Add categories in the theme editor to get started.</p>
     {% endif %}
   </div>
@@ -143,8 +133,6 @@
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Shop by Category" },
     { "type": "text", "id": "subtext", "label": "Subtext", "default": "Find the format that fits your design." },
-    { "type": "range", "id": "circle_size", "label": "Circle size", "min": 60, "max": 140, "step": 10, "unit": "px", "default": 100 },
-    { "type": "range", "id": "gap", "label": "Gap between items", "min": 8, "max": 40, "step": 4, "unit": "px", "default": 16 },
     { "type": "color", "id": "background_color", "label": "Background", "default": "#FFFFFF" },
     { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 40 },
     { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 40 }
@@ -154,7 +142,6 @@
       "type": "category",
       "name": "Category",
       "settings": [
-        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "✦", "info": "Optional, unused in the clean layout" },
         { "type": "text", "id": "label", "label": "Label", "default": "Category" },
         { "type": "url", "id": "link", "label": "Link", "info": "Link to a collection or page" },
         {
@@ -177,10 +164,10 @@
       "name": "Category Links",
       "category": "Custom",
       "blocks": [
-        { "type": "category", "settings": { "icon": "", "label": "Die Cut", "color_style": "purple" } },
-        { "type": "category", "settings": { "icon": "", "label": "UV DTF", "color_style": "teal" } },
-        { "type": "category", "settings": { "icon": "", "label": "UV", "color_style": "pink" } },
-        { "type": "category", "settings": { "icon": "", "label": "Magnet", "color_style": "gold" } }
+        { "type": "category", "settings": { "label": "Die Cut", "color_style": "purple" } },
+        { "type": "category", "settings": { "label": "UV DTF", "color_style": "teal" } },
+        { "type": "category", "settings": { "label": "UV", "color_style": "pink" } },
+        { "type": "category", "settings": { "label": "Magnet", "color_style": "gold" } }
       ]
     }
   ]

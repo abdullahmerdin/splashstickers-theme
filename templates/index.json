@@ -47,82 +47,6 @@
         "padding_bottom": 72
       }
     },
-    "category_cards": {
-      "type": "sticker-categories",
-      "blocks": {
-        "cat_die_cut": {
-          "type": "category",
-          "settings": {
-            "icon": "",
-            "label": "Die Cut",
-            "link": "",
-            "color_style": "purple"
-          }
-        },
-        "cat_uv_dtf": {
-          "type": "category",
-          "settings": {
-            "icon": "",
-            "label": "UV DTF",
-            "link": "",
-            "color_style": "teal"
-          }
-        },
-        "cat_uv": {
-          "type": "category",
-          "settings": {
-            "icon": "",
-            "label": "UV",
-            "link": "",
-            "color_style": "pink"
-          }
-        },
-        "cat_magnet": {
-          "type": "category",
-          "settings": {
-            "icon": "",
-            "label": "Magnet",
-            "link": "",
-            "color_style": "gold"
-          }
-        },
-        "cat_emboss": {
-          "type": "category",
-          "settings": {
-            "icon": "",
-            "label": "Emboss",
-            "link": "",
-            "color_style": "purple"
-          }
-        },
-        "cat_textile": {
-          "type": "category",
-          "settings": {
-            "icon": "",
-            "label": "Tekstil",
-            "link": "",
-            "color_style": "teal"
-          }
-        }
-      },
-      "block_order": [
-        "cat_die_cut",
-        "cat_uv_dtf",
-        "cat_uv",
-        "cat_magnet",
-        "cat_emboss",
-        "cat_textile"
-      ],
-      "settings": {
-        "heading": "Shop by Product Type",
-        "subtext": "Start with the format that fits your print job.",
-        "circle_size": 100,
-        "gap": 16,
-        "background_color": "#ffffff",
-        "padding_top": 40,
-        "padding_bottom": 40
-      }
-    },
     "featured_stickers": {
       "type": "product-list",
       "blocks": {
@@ -385,7 +309,6 @@
   },
   "order": [
     "splash_drawing",
-    "category_cards",
     "featured_stickers",
     "sticker_process",
     "custom_cta"
