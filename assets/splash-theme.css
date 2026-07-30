@@ -1643,6 +1643,11 @@
   background: transparent;
 }
 
+.splash-cart-section .cart-page__summary > .section-background {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 .splash-cart-section .cart-page__summary .cart-summary--extend {
   border-color: transparent;
 }
@@ -1734,14 +1739,42 @@
   background: var(--splash-gradient-primary);
   color: var(--splash-color-surface);
   font-weight: 800;
-  transition: transform var(--splash-transition), box-shadow var(--splash-transition), background var(--splash-transition);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.splash-cart-section :is(.cart-items__empty-button, .cart__checkout-button)::before,
+.splash-cart-drawer__dialog :is(.cart-items__empty-button, .cart__checkout-button)::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--splash-color-pink), var(--splash-color-purple));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.splash-cart-section :is(.cart-items__empty-button, .cart__checkout-button) > *,
+.splash-cart-drawer__dialog :is(.cart-items__empty-button, .cart__checkout-button) > * {
+  position: relative;
+  z-index: 1;
 }
 
 .splash-cart-section :is(.cart-items__empty-button, .cart__checkout-button):hover:not(:disabled),
 .splash-cart-drawer__dialog :is(.cart-items__empty-button, .cart__checkout-button):hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--splash-color-pink), var(--splash-color-purple));
   box-shadow: var(--splash-shadow-cta);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+}
+
+.splash-cart-section :is(.cart-items__empty-button, .cart__checkout-button):hover:not(:disabled)::before,
+.splash-cart-drawer__dialog :is(.cart-items__empty-button, .cart__checkout-button):hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .splash-cart-section .cart-totals,
@@ -2401,6 +2434,11 @@ main[data-template='policy'] :is(input, select, textarea),
   .contact-form__input,
   .blog-post-comments__form-input,
   .splash-localization-form .localization-form__list-item {
+    transition-duration: 0.01ms;
+  }
+
+  .splash-cart-section :is(.cart__checkout-button, .cart-items__empty-button)::before,
+  .splash-cart-drawer__dialog :is(.cart__checkout-button, .cart-items__empty-button)::before {
     transition-duration: 0.01ms;
   }
 }
