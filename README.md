@@ -1,4 +1,9 @@
-# AllTheStickers Shopify theme
+# SplashStickers Shopify theme
+
+The theme preserves Horizon's Shopify behavior layer while exposing a namespaced
+Splash design system for the storefront shell, catalog, product studio, cart and
+content surfaces. `assets/base.css` remains the behavior foundation; branded
+overrides are loaded from `assets/splash-theme.css`.
 
 ## Gangsheet configurator setup
 
@@ -25,6 +30,8 @@ checks:
 npm.cmd install
 npm.cmd run vendor:jspdf
 npm.cmd run check:phase4
+npm.cmd run check:phase5
+npm.cmd run check:phase6
 npm.cmd run check:configurator
 ```
 
@@ -51,3 +58,14 @@ settings, privacy-safe events are pushed to `window.dataLayer`:
 - `configurator_abandon`
 
 No file name or artwork contents are included in these events.
+
+## Release readiness
+
+Before publishing a theme preview, check the home, collection, search, product,
+gangsheet studio, cart, account, policy, 404 and password routes at desktop,
+tablet and mobile widths. Confirm keyboard focus, reduced motion, empty/error
+states, variant pricing and cart payload behavior. Shopify Theme Check should be
+run from an environment with the Shopify CLI installed.
+
+The print-ready PDF remains available from the studio export action. Delivering
+that sheet into the order/production handoff is a separate integration follow-up.

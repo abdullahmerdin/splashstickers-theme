@@ -2,10 +2,10 @@
   {
     "name": "theme_info",
     "theme_name": "SplashStickers",
-    "theme_version": "4.1.1",
+    "theme_version": "6.0.0",
     "theme_author": "SplashStickers",
-    "theme_documentation_url": "https://help.shopify.com/manual/online-store/themes",
-    "theme_support_url": "https://support.shopify.com/"
+    "theme_documentation_url": "https://github.com/abdullahmerdin/splashstickers-theme",
+    "theme_support_url": "https://github.com/abdullahmerdin/splashstickers-theme/issues"
   },
   {
     "name": "t:names.logo_and_favicon",

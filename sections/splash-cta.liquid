@@ -103,8 +103,8 @@
     user-select: none;
     pointer-events: auto;
     touch-action: none;
-    filter: drop-shadow(0 8px 10px rgb(31 41 55 / 18%));
-    transition: filter 0.14s ease, transform 0.14s ease;
+    filter: drop-shadow(0 8px 10px rgb(var(--splash-color-ink-rgb) / 0.18));
+    transition: filter var(--splash-transition), transform var(--splash-transition);
   }
 
   .splash-cta-sticker--one { transform: rotate(-7deg); }
@@ -115,7 +115,7 @@
   .splash-cta-sticker.is-dragging {
     z-index: 3;
     cursor: grabbing;
-    filter: drop-shadow(5px 8px 12px rgb(31 41 55 / 30%));
+    filter: drop-shadow(5px 8px 12px rgb(var(--splash-color-ink-rgb) / 0.3));
     transform: scale(0.96) rotate(5deg);
   }
 

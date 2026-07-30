@@ -328,10 +328,10 @@
     min-height: 34px;
     padding: 0 10px;
     margin-inline: 4px;
-    border: 1px solid rgb(31 41 55 / 0.12);
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.84);
-    color: #1f2937;
+    border: var(--splash-border-width) solid rgb(var(--splash-color-ink-rgb) / 0.12);
+    border-radius: var(--splash-radius-control);
+    background: rgb(var(--splash-color-surface-rgb) / 0.84);
+    color: var(--splash-color-ink);
     font-family: var(--font-paragraph--family);
     font-size: 0.68rem;
     font-weight: 700;
@@ -341,7 +341,7 @@
     white-space: nowrap;
     flex-shrink: 0;
     pointer-events: none;
-    box-shadow: 0 8px 18px rgb(31 41 55 / 0.08);
+    box-shadow: 0 8px 18px rgb(var(--splash-color-ink-rgb) / 0.08);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
   }
