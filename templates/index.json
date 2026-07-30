@@ -18,8 +18,8 @@
             "button_label": "Shop Stickers",
             "button_link": "shopify://collections/all",
             "button_style": "solid",
-            "button_bg": "#6C5CE7",
-            "button_text": "#FFFFFF"
+            "button_bg": "#6c5ce7",
+            "button_text": "#ffffff"
           }
         },
         "button_custom": {
@@ -28,8 +28,8 @@
             "button_label": "Design Your Own",
             "button_link": "shopify://collections/custom-stickers",
             "button_style": "outline",
-            "button_bg": "#6C5CE7",
-            "button_text": "#6C5CE7"
+            "button_bg": "#6c5ce7",
+            "button_text": "#6c5ce7"
           }
         }
       },
@@ -41,7 +41,7 @@
       "settings": {
         "heading": "Your Vision, A Sticker",
         "draw_hint": "Swipe to draw",
-        "background_color": "#F8F9FA",
+        "background_color": "#f8f9fa",
         "section_height": 520,
         "padding_top": 72,
         "padding_bottom": 72
@@ -55,6 +55,7 @@
           "settings": {
             "icon": "",
             "label": "Die Cut",
+            "link": "",
             "color_style": "purple"
           }
         },
@@ -63,6 +64,7 @@
           "settings": {
             "icon": "",
             "label": "UV DTF",
+            "link": "",
             "color_style": "teal"
           }
         },
@@ -71,6 +73,7 @@
           "settings": {
             "icon": "",
             "label": "UV",
+            "link": "",
             "color_style": "pink"
           }
         },
@@ -79,6 +82,7 @@
           "settings": {
             "icon": "",
             "label": "Magnet",
+            "link": "",
             "color_style": "gold"
           }
         },
@@ -87,6 +91,7 @@
           "settings": {
             "icon": "",
             "label": "Emboss",
+            "link": "",
             "color_style": "purple"
           }
         },
@@ -95,6 +100,7 @@
           "settings": {
             "icon": "",
             "label": "Tekstil",
+            "link": "",
             "color_style": "teal"
           }
         }
@@ -112,7 +118,7 @@
         "subtext": "Start with the format that fits your print job.",
         "circle_size": 100,
         "gap": 16,
-        "background_color": "#FFFFFF",
+        "background_color": "#ffffff",
         "padding_top": 40,
         "padding_bottom": 40
       }
@@ -130,12 +136,23 @@
             "horizontal_alignment": "space-between",
             "vertical_alignment": "flex-end",
             "align_baseline": true,
+            "horizontal_alignment_flex_direction_column": "flex-start",
+            "vertical_alignment_flex_direction_column": "center",
             "gap": 12,
             "width": "fill",
+            "custom_width": 100,
+            "width_mobile": "fill",
+            "custom_width_mobile": 100,
             "height": "fit",
+            "custom_height": 100,
             "background_media": "none",
+            "background_color": "",
+            "video_position": "cover",
+            "background_image_position": "cover",
             "border": "none",
             "border_width": 1,
+            "border_opacity": 100,
+            "border_color": "",
             "border_radius": 0,
             "padding-block-start": 0,
             "padding-block-end": 0,
@@ -149,16 +166,23 @@
               "settings": {
                 "text": "<h2>Best Sellers</h2>",
                 "width": "fit-content",
+                "max_width": "normal",
                 "alignment": "left",
                 "type_preset": "h4",
                 "font": "var(--font-heading--family)",
+                "font_size": "1rem",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
                 "wrap": "pretty",
+                "text_color": "",
                 "background": false,
+                "background_color": "#00000026",
+                "corner_radius": 0,
                 "padding-block-start": 0,
-                "padding-block-end": 0
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
               },
               "blocks": {}
             },
@@ -169,7 +193,14 @@
                 "label": "View All",
                 "open_in_new_tab": false,
                 "style_class": "link",
-                "width": "fit-content"
+                "custom_button_background": "{{ settings.color_palette.foreground }}",
+                "custom_button_text": "{{ settings.color_palette.background }}",
+                "custom_button_border": "{{ settings.color_palette.background }}",
+                "link_text_color": "",
+                "width": "fit-content",
+                "custom_width": 100,
+                "width_mobile": "fit-content",
+                "custom_width_mobile": 100
               },
               "blocks": {}
             }
@@ -185,8 +216,11 @@
           "static": true,
           "settings": {
             "product_card_gap": 4,
+            "background_color": "",
             "border": "none",
             "border_width": 1,
+            "border_opacity": 100,
+            "border_color": "",
             "border_radius": 12,
             "padding-block-start": 0,
             "padding-block-end": 0,
@@ -201,6 +235,8 @@
                 "image_ratio": "square",
                 "border": "none",
                 "border_width": 1,
+                "border_opacity": 100,
+                "border_color": "",
                 "border_radius": 12,
                 "padding-block-start": 0,
                 "padding-block-end": 0,
@@ -214,12 +250,19 @@
               "name": "Title",
               "settings": {
                 "width": "100%",
+                "max_width": "normal",
                 "alignment": "center",
                 "type_preset": "rte",
                 "font": "var(--font-body--family)",
+                "font_size": "1rem",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
+                "wrap": "pretty",
+                "text_color": "",
+                "background": false,
+                "background_color": "#00000026",
+                "corner_radius": 0,
                 "padding-block-start": 8,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -238,9 +281,11 @@
                 "width": "100%",
                 "alignment": "center",
                 "font": "var(--font-body--family)",
+                "font_size": "1rem",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
+                "text_color": "",
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -272,25 +317,9 @@
         "section_width": "page-width",
         "horizontal_alignment": "flex-start",
         "gap": 28,
-        "background_color": "#FFFFFF",
+        "background_color": "#ffffff",
         "padding-block-start": 40,
         "padding-block-end": 40
-      }
-    },
-    "custom_cta": {
-      "type": "splash-cta",
-      "settings": {
-        "heading": "Can't Find What You're Looking For?",
-        "subtext": "Upload your own design and we'll turn it into a premium sticker.",
-        "button_label": "Create Your Custom Sticker",
-        "button_link": "shopify://collections/custom-stickers",
-        "button_style": "solid",
-        "gradient_start": "#6C5CE7",
-        "gradient_end": "#FD79A8",
-        "heading_color": "#FFFFFF",
-        "text_color": "#FFFFFF",
-        "padding_top": 80,
-        "padding_bottom": 80
       }
     },
     "sticker_process": {
@@ -316,7 +345,7 @@
           "type": "step",
           "settings": {
             "icon": "",
-            "title": "We print and ship",
+            "title": "Wait for shipment",
             "text": "Review your order, then follow production updates."
           }
         }
@@ -332,7 +361,7 @@
         "subtext": "Three steps from upload to shipped order.",
         "button_label": "Start designing",
         "button_link": "shopify://collections/custom-stickers",
-        "background_color": "#F8F9FA",
+        "background_color": "#f8f9fa",
         "padding_top": 56,
         "padding_bottom": 56
       }
@@ -387,9 +416,25 @@
         "heading": "Why choose us",
         "subtext": "Quality, speed, and clear production from start to finish.",
         "columns_desktop": "4",
-        "background_color": "#FFFFFF",
+        "background_color": "#ffffff",
         "padding_top": 48,
         "padding_bottom": 48
+      }
+    },
+    "custom_cta": {
+      "type": "splash-cta",
+      "settings": {
+        "heading": "Can't Find What You're Looking For?",
+        "subtext": "Upload your own design and we'll turn it into a premium sticker.",
+        "button_label": "Create Your Custom Sticker",
+        "button_link": "shopify://collections/custom-stickers",
+        "button_style": "solid",
+        "gradient_start": "#6c5ce7",
+        "gradient_end": "#fd79a8",
+        "heading_color": "#ffffff",
+        "text_color": "#ffffff",
+        "padding_top": 80,
+        "padding_bottom": 80
       }
     }
   },
