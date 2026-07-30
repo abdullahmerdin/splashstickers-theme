@@ -27,7 +27,7 @@
         "redirect_to_cart": true,
         "enable_auto_arrange": true,
         "enable_undo_redo": true,
-        "enable_analytics": true
+        "enable_analytics": false
       }
     }
   },

@@ -46,8 +46,9 @@ they have a real destination; their text and links can be managed in the theme
 editor and translated per market with Shopify's locale tooling.
 
 The gangsheet configurator includes a first-visit quick start and a print-size
-resolution check. When configurator analytics are enabled in the section
-settings, privacy-safe events are pushed to `window.dataLayer`:
+resolution check. Configurator analytics are opt-in. When enabled in the section
+settings, events are pushed only when the storefront already provides a
+`window.dataLayer` consumer:
 
 - `configurator_view`
 - `configurator_upload_open`
@@ -57,7 +58,8 @@ settings, privacy-safe events are pushed to `window.dataLayer`:
 - `configurator_add_to_cart`
 - `configurator_abandon`
 
-No file name or artwork contents are included in these events.
+No file name or artwork contents are included in these events, and the theme
+does not create a new data layer when no consumer is present.
 
 ## Release readiness
 

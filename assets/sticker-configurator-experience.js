@@ -5,7 +5,7 @@
   var MIN_PRINT_DPI = 150;
 
   function analyticsEnabled(component) {
-    return component.dataset.trackEnabled !== 'false';
+    return component.dataset.trackEnabled === 'true' && Array.isArray(window.dataLayer);
   }
 
   function publish(component, eventName, detail) {
@@ -19,7 +19,6 @@
       section_id: component.dataset.sectionId || ''
     }, detail || {});
 
-    window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(payload);
     component.dispatchEvent(new CustomEvent('sticker-configurator:analytics', {
       bubbles: true,
