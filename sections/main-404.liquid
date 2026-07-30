@@ -1,5 +1,4 @@
 {%- liquid
-  assign eyebrow = section.settings.eyebrow | default: 'Off the sheet'
   assign heading = section.settings.heading | default: 'This page wandered off.'
   assign message = section.settings.message | default: 'The link may be out of date, but there are still plenty of stickers waiting to be discovered.'
   assign primary_label = section.settings.primary_label | default: 'Shop all stickers'
@@ -28,7 +27,6 @@
     </div>
 
     <div class="splash-404__content">
-      <p class="splash-404__eyebrow">{{ eyebrow | escape }}</p>
       <h1 id="splash-404-title-{{ section.id }}">{{ heading | escape }}</h1>
       <p class="splash-404__message">{{ message | escape }}</p>
 
@@ -47,8 +45,12 @@
 {% stylesheet %}
   .splash-404 {
     position: relative;
+    display: flex;
+    min-height: max(620px, calc(100svh - var(--header-group-height, 0px)));
+    box-sizing: border-box;
     isolation: isolate;
     overflow: hidden;
+    align-items: center;
     padding: clamp(4.5rem, 10vw, 8rem) 0 clamp(4rem, 8vw, 6.5rem);
     background: linear-gradient(145deg, var(--splash-color-surface) 0%, rgb(var(--splash-color-purple-rgb) / 0.06) 55%, rgb(var(--splash-color-yellow-rgb) / 0.12) 100%);
   }
@@ -66,6 +68,7 @@
   }
 
   .splash-404__inner {
+    width: 100%;
     display: grid;
     grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1fr);
     gap: clamp(2rem, 7vw, 6rem);
@@ -198,20 +201,6 @@
     max-width: 38rem;
   }
 
-  .splash-404__eyebrow {
-    display: inline-flex;
-    margin: 0 0 1rem;
-    padding: 0.45rem 0.75rem;
-    border-radius: var(--splash-radius-control);
-    background: rgb(var(--splash-color-pink-rgb) / 0.14);
-    color: var(--splash-color-purple);
-    font-size: var(--splash-font-meta-size);
-    font-weight: 800;
-    letter-spacing: var(--splash-font-meta-tracking);
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
   .splash-404 h1 {
     max-width: 10ch;
     margin: 0;
@@ -249,6 +238,7 @@
 
   @media (max-width: 749px) {
     .splash-404 {
+      min-height: max(560px, calc(100svh - var(--header-group-height, 0px)));
       padding-top: 3.5rem;
     }
 
@@ -301,12 +291,6 @@
   "tag": "section",
   "class": "section-wrapper splash-404-section",
   "settings": [
-    {
-      "type": "text",
-      "id": "eyebrow",
-      "label": "Eyebrow",
-      "default": "Off the sheet"
-    },
     {
       "type": "text",
       "id": "heading",
