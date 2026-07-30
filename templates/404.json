@@ -12,8 +12,8 @@
     "main": {
       "type": "main-404",
       "settings": {
-        "heading": "This page wandered off.",
-        "message": "The link may be out of date, but there are still plenty of stickers waiting to be discovered.",
+        "heading": "This is awkward ...",
+        "message": "The link may be out of commission, but there are still many waiting to be discovered.",
         "primary_label": "Shop all stickers",
         "primary_link": "",
         "secondary_label": "Back to home"
