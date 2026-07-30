@@ -16,41 +16,29 @@
   class="splash-cta-section"
   style="background: linear-gradient(135deg, {{ gradient_start }}, {{ gradient_end }}); padding: {{ padding_top }}px 20px {{ padding_bottom }}px; text-align: center; position: relative;"
 >
-  <splash-cta-stickers class="splash-cta-stickers">
+  <div class="splash-cta-stickers" aria-hidden="true">
     <img
       src="{{ 'cherry.svg' | asset_url }}"
       class="splash-cta-sticker splash-cta-sticker--one"
-      data-sticker
-      data-x="0.06"
-      data-y="0.18"
       alt=""
       width="400"
       height="400"
-      draggable="false"
     >
     <img
       src="{{ 'bear.svg' | asset_url }}"
       class="splash-cta-sticker splash-cta-sticker--two"
-      data-sticker
-      data-x="0.78"
-      data-y="0.48"
       alt=""
       width="400"
       height="400"
-      draggable="false"
     >
     <img
       src="{{ 'deer.svg' | asset_url }}"
       class="splash-cta-sticker splash-cta-sticker--three"
-      data-sticker
-      data-x="0.35"
-      data-y="0.70"
       alt=""
       width="400"
       height="400"
-      draggable="false"
     >
-  </splash-cta-stickers>
+  </div>
 
   <div class="page-width">
     {% if heading != blank %}
@@ -99,25 +87,14 @@
     position: absolute;
     width: clamp(68px, 8vw, 96px);
     height: auto;
-    cursor: grab;
     user-select: none;
-    pointer-events: auto;
-    touch-action: none;
+    pointer-events: none;
     filter: drop-shadow(0 8px 10px rgb(var(--splash-color-ink-rgb) / 0.18));
-    transition: filter var(--splash-transition), transform var(--splash-transition);
   }
 
   .splash-cta-sticker--one { transform: rotate(-7deg); }
   .splash-cta-sticker--two { transform: rotate(5deg); }
   .splash-cta-sticker--three { transform: rotate(-4deg); }
-
-  .splash-cta-sticker:hover,
-  .splash-cta-sticker.is-dragging {
-    z-index: 3;
-    cursor: grabbing;
-    filter: drop-shadow(5px 8px 12px rgb(var(--splash-color-ink-rgb) / 0.3));
-    transform: scale(0.96) rotate(5deg);
-  }
 
   @media (max-width: 749px) {
     .splash-cta-sticker {
@@ -126,8 +103,6 @@
   }
 
 {% endstylesheet %}
-
-<script src="{{ 'splash-cta-stickers.js' | asset_url }}" defer></script>
 
 {% schema %}
 {
