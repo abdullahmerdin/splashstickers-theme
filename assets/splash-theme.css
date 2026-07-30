@@ -1836,6 +1836,55 @@
   background: linear-gradient(180deg, rgb(var(--splash-color-surface-rgb) / 0.7), var(--splash-color-surface));
 }
 
+/* Keep the desktop summary aligned with the cart content instead of the page top. */
+@media screen and (min-width: 750px) {
+  .splash-cart-section .cart-page {
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .splash-cart-section .cart-page__summary {
+    display: block;
+    grid-row: 2 / -1;
+    height: auto;
+    align-self: start;
+  }
+
+  .splash-cart-section .cart-page__summary .cart-summary--extend {
+    display: block;
+    height: auto;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .splash-cart-section .cart-page__summary .cart-summary--extend .cart-summary__inner {
+    position: sticky;
+    top: var(--header-height, 0);
+    width: auto;
+    height: auto;
+    padding: var(--splash-space-sm) 0 var(--splash-space-md) var(--splash-space-md);
+  }
+}
+
+.splash-cart-section .cart-page__summary .cart-summary {
+  border: 0;
+  box-shadow: none;
+  background: linear-gradient(160deg, rgb(var(--splash-color-yellow-rgb) / 0.1), rgb(var(--splash-color-purple-rgb) / 0.04));
+}
+
+.splash-cart-section .cart-page__summary .cart-summary__inner {
+  gap: var(--splash-space-sm);
+}
+
+.splash-cart-section .cart-page__summary .cart-actions,
+.splash-cart-section .cart-page__summary .cart-totals__total {
+  border-block: 0;
+}
+
+.splash-cart-section .cart-page__summary .cart-totals__total {
+  padding-block-start: 0;
+}
+
 /* Content, About, Contact and policy surfaces */
 .splash-content-section__surface .section-content-wrapper {
   width: min(100%, 900px);

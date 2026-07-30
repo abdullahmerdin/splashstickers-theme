@@ -17,6 +17,9 @@ function assertContains(relativePath, pattern) {
 const checks = [
   ['assets/splash-theme.css', 'Phase 5 cart, content and utility surfaces.'],
   ['assets/splash-theme.css', '.splash-cart-section'],
+  ['assets/splash-theme.css', 'grid-row: 2 / -1'],
+  ['assets/splash-theme.css', '.cart-page__summary .cart-summary--extend .cart-summary__inner'],
+  ['assets/splash-theme.css', '.cart-page__summary .cart-totals__total'],
   ['assets/splash-theme.css', '.splash-blog-section .blog-post-card'],
   ['assets/splash-theme.css', '.splash-404-section__surface'],
   ['assets/splash-theme.css', '.splash-password-section__surface'],
