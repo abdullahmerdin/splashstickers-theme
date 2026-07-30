@@ -11,99 +11,18 @@
   "sections": {
     "main": {
       "type": "main-404",
-      "blocks": {
-        "text_GqmVFf": {
-          "type": "text",
-          "name": "t:names.text",
-          "settings": {
-            "text": "<h1>Page not found</h1>",
-            "width": "100%",
-            "max_width": "normal",
-            "alignment": "center",
-            "type_preset": "h3",
-            "font": "var(--font-primary--family)",
-            "font_size": "1rem",
-            "line_height": "normal",
-            "letter_spacing": "normal",
-            "case": "none",
-            "wrap": "pretty",
-            "text_color": "",
-            "background": false,
-            "background_color": "#00000026",
-            "corner_radius": 0,
-            "padding-block-start": 0,
-            "padding-block-end": 0,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          },
-          "blocks": {}
-        },
-        "text_Ua9XAW": {
-          "type": "text",
-          "name": "t:names.text",
-          "settings": {
-            "text": "<p>The link may be incorrect, or the page has been removed. </p>",
-            "width": "100%",
-            "max_width": "normal",
-            "alignment": "center",
-            "type_preset": "rte",
-            "font": "var(--font-primary--family)",
-            "font_size": "1rem",
-            "line_height": "normal",
-            "letter_spacing": "normal",
-            "case": "none",
-            "wrap": "pretty",
-            "text_color": "",
-            "background": false,
-            "background_color": "#00000026",
-            "corner_radius": 0,
-            "padding-block-start": 0,
-            "padding-block-end": 16,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
-          },
-          "blocks": {}
-        },
-        "button_PAQMwR": {
-          "type": "button",
-          "name": "t:names.button",
-          "settings": {
-            "label": "Continue shopping",
-            "link": "shopify://collections/all",
-            "open_in_new_tab": false,
-            "style_class": "button",
-            "custom_button_background": "{{ settings.color_palette.foreground }}",
-            "custom_button_text": "{{ settings.color_palette.background }}",
-            "custom_button_border": "{{ settings.color_palette.background }}",
-            "link_text_color": "",
-            "width": "fit-content",
-            "custom_width": 100,
-            "width_mobile": "fit-content",
-            "custom_width_mobile": 100
-          },
-          "blocks": {}
-        }
-      },
-      "block_order": [
-        "text_GqmVFf",
-        "text_Ua9XAW",
-        "button_PAQMwR"
-      ],
-      "disabled": true,
       "settings": {
-        "content_direction": "column",
-        "section_width": "page-width",
-        "section_height": "small",
-        "horizontal_alignment_flex_direction_column": "center",
-        "vertical_alignment_flex_direction_column": "center",
-        "gap": 20,
-        "background_color": "{{ settings.color_palette.background }}",
-        "padding-block-start": 100,
-        "padding-block-end": 100
+        "eyebrow": "Off the sheet",
+        "heading": "This page wandered off.",
+        "message": "The link may be out of date, but there are still plenty of stickers waiting to be discovered.",
+        "primary_label": "Shop all stickers",
+        "primary_link": "shopify://collections/all",
+        "secondary_label": "Back to home"
       }
     },
     "hero_jGP7YK": {
       "type": "hero",
+      "disabled": true,
       "blocks": {
         "text_Ai7w68": {
           "type": "text",
@@ -252,7 +171,7 @@
               "type": "text",
               "name": "t:names.text",
               "settings": {
-                "text": "<p>Discover something new</p>",
+                "text": "<p>Explore more stickers</p>",
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
@@ -393,6 +312,7 @@
     },
     "section_XryYjp": {
       "type": "section",
+      "disabled": true,
       "blocks": {
         "text_kTNViF": {
           "type": "text",
@@ -477,8 +397,6 @@
   },
   "order": [
     "main",
-    "hero_jGP7YK",
-    "product_list_iA96Tq",
-    "section_XryYjp"
+    "product_list_iA96Tq"
   ]
 }

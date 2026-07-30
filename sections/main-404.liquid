@@ -1,196 +1,345 @@
+{%- liquid
+  assign eyebrow = section.settings.eyebrow | default: 'Off the sheet'
+  assign heading = section.settings.heading | default: 'This page wandered off.'
+  assign message = section.settings.message | default: 'The link may be out of date, but there are still plenty of stickers waiting to be discovered.'
+  assign primary_label = section.settings.primary_label | default: 'Shop all stickers'
+  assign primary_link = section.settings.primary_link | default: routes.all_products_collection_url
+  assign secondary_label = section.settings.secondary_label | default: 'Back to home'
+-%}
 
+<section class="splash-404 splash-404-section__surface" aria-labelledby="splash-404-title-{{ section.id }}">
+  <div class="splash-404__wash" aria-hidden="true"></div>
 
-{% liquid
-  if section.settings.background_color != blank
-    render 'contrast-override', background_color: section.settings.background_color, section_id: section.id
-  endif
-%}
+  <div class="page-width splash-404__inner">
+    <div class="splash-404__art" aria-hidden="true">
+      <span class="splash-404__burst splash-404__burst--one"></span>
+      <span class="splash-404__burst splash-404__burst--two"></span>
+      <span class="splash-404__spark splash-404__spark--one">✦</span>
+      <span class="splash-404__spark splash-404__spark--two">✦</span>
 
-<div
-  class="section-background{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}"
-></div>
-<div
-  class="
-    section splash-404-section__surface section--{{ section.settings.section_width }}{% if section.settings.background_color != blank %} color-custom-{{ section.id }}{% endif %}
-    {% if section.settings.section_height != "" %} {{ section.settings.section_height | prepend: "section--height-" }}{% endif %}
-  "
->
-  <div>
-    <div
-      class="
-        spacing-style
-        layout-panel-flex
-        layout-panel-flex--column
-        section-content-wrapper
-        splash-404-section__content
-        mobile-column
-      "
-      style="
-        {% render 'layout-panel-style', settings: section.settings %}
-        {% render 'spacing-style', settings: section.settings %}
-      "
-    >
-      {% content_for 'blocks' %}
+      <div class="splash-404__number">404</div>
+
+      <div class="splash-404__sticker splash-404__sticker--one">
+        <span>OOPS</span>
+      </div>
+      <div class="splash-404__sticker splash-404__sticker--two">
+        <span>✦</span>
+      </div>
+    </div>
+
+    <div class="splash-404__content">
+      <p class="splash-404__eyebrow">{{ eyebrow | escape }}</p>
+      <h1 id="splash-404-title-{{ section.id }}">{{ heading | escape }}</h1>
+      <p class="splash-404__message">{{ message | escape }}</p>
+
+      <div class="splash-404__actions">
+        <a class="splash-button" href="{{ primary_link | escape }}">
+          {{ primary_label | escape }}
+        </a>
+        <a class="splash-button splash-button--outline" href="{{ routes.root_url }}">
+          {{ secondary_label | escape }}
+        </a>
+      </div>
     </div>
   </div>
-</div>
+</section>
+
+{% stylesheet %}
+  .splash-404 {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: clamp(4.5rem, 10vw, 8rem) 0 clamp(4rem, 8vw, 6.5rem);
+    background: linear-gradient(145deg, var(--splash-color-surface) 0%, rgb(var(--splash-color-purple-rgb) / 0.06) 55%, rgb(var(--splash-color-yellow-rgb) / 0.12) 100%);
+  }
+
+  .splash-404__wash {
+    position: absolute;
+    z-index: -1;
+    top: -18rem;
+    right: -12rem;
+    width: 34rem;
+    height: 34rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(var(--splash-color-teal-rgb) / 0.2), transparent 68%);
+    pointer-events: none;
+  }
+
+  .splash-404__inner {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1fr);
+    gap: clamp(2rem, 7vw, 6rem);
+    align-items: center;
+  }
+
+  .splash-404__art {
+    position: relative;
+    display: grid;
+    min-height: clamp(18rem, 42vw, 30rem);
+    place-items: center;
+  }
+
+  .splash-404__art::before {
+    position: absolute;
+    width: min(74vw, 25rem);
+    aspect-ratio: 1;
+    border: 1px solid rgb(var(--splash-color-purple-rgb) / 0.18);
+    border-radius: 44% 56% 62% 38% / 48% 42% 58% 52%;
+    background: linear-gradient(145deg, rgb(var(--splash-color-purple-rgb) / 0.18), rgb(var(--splash-color-pink-rgb) / 0.24));
+    box-shadow: var(--splash-shadow-card);
+    content: '';
+    transform: rotate(-9deg);
+  }
+
+  .splash-404__art::after {
+    position: absolute;
+    width: min(58vw, 19rem);
+    aspect-ratio: 1;
+    border: 2px dashed rgb(var(--splash-color-purple-rgb) / 0.28);
+    border-radius: 50%;
+    content: '';
+    transform: rotate(18deg);
+  }
+
+  .splash-404__number {
+    position: relative;
+    z-index: 1;
+    color: transparent;
+    font-family: var(--splash-font-display);
+    font-size: clamp(6rem, 18vw, 12rem);
+    font-weight: 900;
+    letter-spacing: -0.1em;
+    line-height: 0.8;
+    text-shadow: 0 12px 0 rgb(var(--splash-color-surface-rgb) / 0.78);
+    background: var(--splash-gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    transform: translateX(-0.05em) rotate(-5deg);
+  }
+
+  .splash-404__sticker {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    width: clamp(4.5rem, 12vw, 6.5rem);
+    aspect-ratio: 1;
+    place-items: center;
+    border: 0.45rem solid var(--splash-color-surface);
+    border-radius: 34% 48% 40% 56%;
+    box-shadow: var(--splash-shadow-lift);
+    font-family: var(--splash-font-display);
+    font-size: clamp(0.72rem, 1.7vw, 1rem);
+    font-weight: 900;
+  }
+
+  .splash-404__sticker--one {
+    top: 8%;
+    left: 12%;
+    background: var(--splash-color-yellow);
+    color: var(--splash-color-ink);
+    transform: rotate(-14deg);
+  }
+
+  .splash-404__sticker--two {
+    right: 12%;
+    bottom: 9%;
+    background: var(--splash-color-teal);
+    color: var(--splash-color-surface);
+    font-size: 2rem;
+    transform: rotate(14deg);
+  }
+
+  .splash-404__burst {
+    position: absolute;
+    z-index: 1;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--splash-color-pink);
+    box-shadow: 0 0 0 0.5rem rgb(var(--splash-color-pink-rgb) / 0.16);
+  }
+
+  .splash-404__burst--one {
+    top: 25%;
+    right: 12%;
+  }
+
+  .splash-404__burst--two {
+    bottom: 22%;
+    left: 14%;
+    width: 0.7rem;
+    height: 0.7rem;
+    background: var(--splash-color-purple);
+    box-shadow: 0 0 0 0.45rem rgb(var(--splash-color-purple-rgb) / 0.16);
+  }
+
+  .splash-404__spark {
+    position: absolute;
+    z-index: 2;
+    color: var(--splash-color-purple);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .splash-404__spark--one {
+    top: 15%;
+    right: 26%;
+    transform: rotate(15deg);
+  }
+
+  .splash-404__spark--two {
+    bottom: 18%;
+    left: 28%;
+    color: var(--splash-color-pink);
+    font-size: 1.35rem;
+    transform: rotate(-15deg);
+  }
+
+  .splash-404__content {
+    max-width: 38rem;
+  }
+
+  .splash-404__eyebrow {
+    display: inline-flex;
+    margin: 0 0 1rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--splash-radius-control);
+    background: rgb(var(--splash-color-pink-rgb) / 0.14);
+    color: var(--splash-color-purple);
+    font-size: var(--splash-font-meta-size);
+    font-weight: 800;
+    letter-spacing: var(--splash-font-meta-tracking);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .splash-404 h1 {
+    max-width: 10ch;
+    margin: 0;
+    color: var(--splash-color-ink);
+    font-family: var(--splash-font-display);
+    font-size: clamp(2.7rem, 6vw, 5.3rem);
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 0.98;
+  }
+
+  .splash-404__message {
+    max-width: 35rem;
+    margin: 1.5rem 0 0;
+    color: var(--splash-color-muted);
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    line-height: 1.65;
+  }
+
+  .splash-404__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .splash-404__actions .splash-button {
+    min-width: 10.5rem;
+  }
+
+  .splash-404 .splash-button:focus-visible {
+    outline: var(--splash-focus-width) solid var(--splash-color-focus);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 749px) {
+    .splash-404 {
+      padding-top: 3.5rem;
+    }
+
+    .splash-404__inner {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .splash-404__art {
+      min-height: 15rem;
+      order: -1;
+    }
+
+    .splash-404__content {
+      text-align: center;
+    }
+
+    .splash-404 h1,
+    .splash-404__message {
+      margin-inline: auto;
+    }
+
+    .splash-404__actions {
+      justify-content: center;
+    }
+
+    .splash-404__sticker--one {
+      left: 10%;
+    }
+
+    .splash-404__sticker--two {
+      right: 10%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .splash-404__art::before,
+    .splash-404__art::after,
+    .splash-404__number,
+    .splash-404__sticker,
+    .splash-404__spark {
+      transform: none;
+    }
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:names.404",
+  "name": "404 page",
+  "tag": "section",
   "class": "section-wrapper splash-404-section",
-  "blocks": [
-    {
-      "type": "@theme"
-    },
-    {
-      "type": "@app"
-    },
-    {
-      "type": "_divider"
-    }
-  ],
   "settings": [
     {
-      "type": "select",
-      "id": "content_direction",
-      "label": "t:settings.direction",
-      "options": [
-        {
-          "value": "column",
-          "label": "t:options.vertical"
-        }
-      ],
-      "default": "column",
-      "visible_if": "{{ section.settings.horizontal_alignment_flex_direction_column == 'fake-value' }}"
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Off the sheet"
     },
     {
-      "type": "header",
-      "content": "t:content.layout"
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "This page wandered off."
     },
     {
-      "type": "select",
-      "id": "section_width",
-      "label": "t:settings.width",
-      "options": [
-        {
-          "value": "page-width",
-          "label": "t:options.page"
-        },
-        {
-          "value": "full-width",
-          "label": "t:options.full"
-        }
-      ],
-      "default": "page-width"
+      "type": "textarea",
+      "id": "message",
+      "label": "Message",
+      "default": "The link may be out of date, but there are still plenty of stickers waiting to be discovered."
     },
     {
-      "type": "select",
-      "id": "section_height",
-      "label": "t:settings.height",
-      "options": [
-        {
-          "value": "",
-          "label": "t:options.auto"
-        },
-        {
-          "value": "small",
-          "label": "t:options.small"
-        },
-        {
-          "value": "medium",
-          "label": "t:options.medium"
-        },
-        {
-          "value": "large",
-          "label": "t:options.large"
-        },
-        {
-          "value": "full-screen",
-          "label": "t:options.full_screen"
-        }
-      ],
-      "default": ""
+      "type": "text",
+      "id": "primary_label",
+      "label": "Primary button label",
+      "default": "Shop all stickers"
     },
     {
-      "type": "select",
-      "id": "horizontal_alignment_flex_direction_column",
-      "label": "t:settings.alignment",
-      "options": [
-        {
-          "value": "flex-start",
-          "label": "t:options.left"
-        },
-        {
-          "value": "center",
-          "label": "t:options.center"
-        },
-        {
-          "value": "flex-end",
-          "label": "t:options.right"
-        }
-      ],
-      "default": "center"
+      "type": "url",
+      "id": "primary_link",
+      "label": "Primary button link"
     },
     {
-      "type": "select",
-      "id": "vertical_alignment_flex_direction_column",
-      "label": "t:settings.position",
-      "options": [
-        {
-          "value": "flex-start",
-          "label": "t:options.top"
-        },
-        {
-          "value": "center",
-          "label": "t:options.center"
-        },
-        {
-          "value": "flex-end",
-          "label": "t:options.bottom"
-        }
-      ],
-      "default": "center"
-    },
+      "type": "text",
+      "id": "secondary_label",
+      "label": "Secondary button label",
+      "default": "Back to home"
+    }
+  ],
+  "presets": [
     {
-      "type": "range",
-      "id": "gap",
-      "label": "t:settings.gap",
-      "min": 0,
-      "max": 100,
-      "step": 1,
-      "unit": "px",
-      "default": 12
-    },
-    {
-      "type": "color",
-      "id": "background_color",
-      "label": "t:settings.background_color",
-      "placeholder": "t:settings.default"
-    },
-    {
-      "type": "header",
-      "content": "t:content.padding"
-    },
-    {
-      "type": "range",
-      "id": "padding-block-start",
-      "label": "t:settings.top",
-      "min": 0,
-      "max": 100,
-      "step": 1,
-      "unit": "px",
-      "default": 0
-    },
-    {
-      "type": "range",
-      "id": "padding-block-end",
-      "label": "t:settings.bottom",
-      "min": 0,
-      "max": 100,
-      "step": 1,
-      "unit": "px",
-      "default": 0
+      "name": "404 page"
     }
   ]
 }
