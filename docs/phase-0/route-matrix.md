@@ -25,7 +25,7 @@ Her normal storefront route’u `layout/theme.liquid` üzerinden aynı shell’i
 | Product `/products/:handle` | `templates/product.json` | `sticker-configurator`, `product-information`, recommendations | Variant/price, media, quantity, add-to-cart ve configurator entegrasyonu | P0 |
 | Gangsheet product `/products/:handle` | `templates/product.product-gangsheet.json` | `sticker-configurator` | Upload, canvas, zoom/pan, multi-select, collision, auto-arrange, PDF/cart payload | P0 |
 | Cart `/cart` | `templates/cart.json` | `main-cart`, `product-list` | Quantity, remove, discount, cart note, checkout CTA ve empty cart | P0 |
-| About `/pages/about` | `templates/page.about.json` | `main-page`, `asset-attribution` | Rich text, attribution ve responsive content width | P1 |
+| About `/pages/about` | `templates/page.about.json` | `main-page` | Rich text ve responsive content width | P1 |
 | Contact `/pages/contact` | `templates/page.contact.json` | `main-page`, `section` / contact form | Form validation, error/success, focus ve spam/submit durumu | P1 |
 | 404 | `templates/404.json` | `main-404`, `product-list` | Recovery CTA, recommendations, unavailable/empty state | P1 |
 | Password | `templates/password.json`, `layout/password.liquid` | `password` | Password dialog, email signup, error state ve mobile layout | P1 |

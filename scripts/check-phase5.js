@@ -36,7 +36,6 @@ const checks = [
   ['sections/main-404.liquid', '"class": "section-wrapper splash-404-section"'],
   ['sections/password.liquid', '"class": "section-wrapper section-password splash-password-section"'],
   ['sections/password-footer.liquid', '"class": "section-wrapper splash-password-footer"'],
-  ['sections/asset-attribution.liquid', 'splash-asset-attribution-section'],
   ['snippets/localization-form.liquid', 'class="splash-localization-form"'],
 ];
 

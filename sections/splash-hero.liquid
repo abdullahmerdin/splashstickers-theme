@@ -67,11 +67,17 @@
     display: none;
     position: relative;
     z-index: 21;
-    width: 100%;
-    min-height: 76px;
     margin: -4px 0 2px;
     align-items: center;
     justify-content: center;
+    color: rgb(var(--splash-color-ink-rgb) / 0.72);
+    font-size: 0.9rem;
+    font-weight: 650;
+    line-height: 1.3;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    white-space: nowrap;
   }
 
   .splash-hero-{{ section.id }} .splash-hero-heading {
@@ -82,11 +88,6 @@
     letter-spacing: -0.04em;
     user-select: none;
     -webkit-user-select: none;
-  }
-
-  /* Prevent an older saved section render from bringing back the removed copy. */
-  .splash-hero-{{ section.id }} .splash-hero-subtext {
-    display: none !important;
   }
 
   .splash-hero-{{ section.id }} .splash-hero-buttons {
@@ -171,6 +172,10 @@
     .splash-hero-{{ section.id }} .splash-hero-inner {
       min-height: min({{ section_height }}px, 64svh);
     }
+
+    .splash-hero-{{ section.id }} .splash-hero-touch-hint {
+      display: flex;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -193,21 +198,7 @@
       {% if heading != blank %}
         <h1 class="splash-hero-heading">{{ heading }}</h1>
       {% endif %}
-      <div class="splash-hero-touch-hint" data-ink-touch-hint>
-        <span class="splash-ink-touch-visual" aria-hidden="true">
-          <span class="splash-ink-touch-finger">
-            {% # theme-check-disable-next-line RemoteAsset %}
-            <img
-              src="https://static.thenounproject.com/png/hand-swipe-icon-4864496-512.png"
-              alt=""
-              width="512"
-              height="512"
-              decoding="async"
-            >
-          </span>
-        </span>
-        <span class="splash-ink-touch-label">{{ draw_hint | escape }}</span>
-      </div>
+      <p class="splash-hero-touch-hint">{{ draw_hint | escape }}</p>
 
       <div class="splash-hero-buttons">
         {% for block in section.blocks %}

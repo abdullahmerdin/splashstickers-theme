@@ -53,14 +53,9 @@
         "padding-block-start": 40,
         "padding-block-end": 80
       }
-    },
-    "asset-attribution": {
-      "type": "asset-attribution",
-      "settings": {}
     }
   },
   "order": [
-    "main",
-    "asset-attribution"
+    "main"
   ]
 }

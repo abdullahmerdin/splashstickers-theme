@@ -16,7 +16,6 @@ class SplashInkHero extends HTMLElement {
 
     this.canvas = this.querySelector('[data-ink-canvas]');
     this.effectsCanvas = this.querySelector('[data-ink-effects]');
-    this.querySelector('.splash-hero-subtext')?.remove();
     this.context = this.canvas?.getContext('2d');
     this.effectsContext = this.effectsCanvas?.getContext('2d');
     if (!this.context || !this.effectsContext) return;
@@ -41,7 +40,6 @@ class SplashInkHero extends HTMLElement {
     this.handlePointerLeave = this.handlePointerLeave.bind(this);
     this.handleTouchMove = this.handleTouchMove.bind(this);
     this.clear = this.clear.bind(this);
-    this.scrollToContent = this.scrollToContent.bind(this);
     this.toggleExpanded = this.toggleExpanded.bind(this);
     this.updateExpandedHeight = this.updateExpandedHeight.bind(this);
 
@@ -60,9 +58,6 @@ class SplashInkHero extends HTMLElement {
     this.querySelector('[data-ink-expand]')?.addEventListener('click', this.toggleExpanded);
     window.addEventListener('resize', this.updateExpandedHeight);
     window.visualViewport?.addEventListener('resize', this.updateExpandedHeight);
-    this.createScrollButton();
-    this.createTouchHint();
-    this.showTouchHint();
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(this);
@@ -84,13 +79,6 @@ class SplashInkHero extends HTMLElement {
     window.visualViewport?.removeEventListener('resize', this.updateExpandedHeight);
     this.heightAnimation?.cancel();
     this.heightAnimation = null;
-    this.scrollButton?.removeEventListener('click', this.scrollToContent);
-    this.scrollButton?.remove();
-    this.scrollButton = null;
-    this.touchHint?.remove();
-    this.touchHint = null;
-    this.touchHintStyle?.remove();
-    this.touchHintStyle = null;
     this.resizeObserver?.disconnect();
     if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
     this.initialized = false;
@@ -172,7 +160,6 @@ class SplashInkHero extends HTMLElement {
   handlePointerDown(event) {
     if (this.isInteractiveTarget(event.target)) return;
 
-    this.hideTouchHint();
     event.preventDefault();
     this.activePointer = event.pointerId;
     this.beginStroke(this.pointFromEvent(event));
@@ -220,7 +207,6 @@ class SplashInkHero extends HTMLElement {
   }
 
   beginStroke(point) {
-    this.showScrollButton();
     this.paletteIndex = (this.paletteIndex + 1) % INK_PALETTE.length;
     const palette = INK_PALETTE[this.paletteIndex];
     this.stroke = {
@@ -447,7 +433,6 @@ class SplashInkHero extends HTMLElement {
     event?.stopPropagation();
     this.stroke = null;
     this.droplets = [];
-    this.showTouchHint();
     if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
     this.effectsFrame = null;
     this.clearContext(this.context, this.canvas);
@@ -545,192 +530,6 @@ class SplashInkHero extends HTMLElement {
     this.style.maxHeight = `${availableHeight}px`;
   }
 
-  createScrollButton() {
-    if (!this.isTouchDevice || this.scrollButton) return;
-
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'splash-hero-scroll-down';
-    button.setAttribute('aria-label', 'Scroll to content below');
-    button.title = 'Scroll to content below';
-    button.innerHTML = '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7" /></svg>';
-    Object.assign(button.style, {
-      position: 'absolute',
-      top: '16px',
-      right: '16px',
-      zIndex: '30',
-      display: 'none',
-      width: '44px',
-      height: '44px',
-      padding: '0',
-      placeItems: 'center',
-      border: '1px solid rgba(255, 255, 255, 0.45)',
-      borderRadius: '50%',
-      color: '#ffffff',
-      background: 'rgba(31, 41, 55, 0.42)',
-      cursor: 'pointer',
-      touchAction: 'manipulation',
-      backdropFilter: 'blur(8px)',
-    });
-    button.addEventListener('click', this.scrollToContent);
-    this.append(button);
-    this.scrollButton = button;
-  }
-
-  createTouchHint() {
-    if (this.touchHint) return;
-
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes splash-ink-touch-swipe {
-        0%, 100% { transform: translateX(-10px) scale(0.94); }
-        50% { transform: translateX(10px) scale(1); }
-      }
-      @keyframes splash-ink-click {
-        0%, 100% { transform: scale(1); }
-        42% { transform: scale(0.78); }
-        58% { transform: scale(1.04); }
-      }
-    `;
-    this.append(style);
-
-    const hint = this.querySelector('[data-ink-touch-hint]') || document.createElement('div');
-    const hasMarkupHint = hint.hasAttribute('data-ink-touch-hint');
-    const hintAnchor = this.querySelector('.splash-hero-heading');
-    hint.classList.add('splash-ink-touch-hint');
-    hint.setAttribute('role', 'status');
-    if (!hasMarkupHint) {
-      hint.innerHTML = '<span class="splash-ink-touch-visual" aria-hidden="true"><span class="splash-ink-touch-finger"><img src="https://static.thenounproject.com/png/hand-swipe-icon-4864496-512.png" alt="" width="512" height="512" decoding="async"></span></span><span class="splash-ink-touch-label">Swipe to draw</span>';
-    }
-    // Remove the old animated halo from previously saved section markup.
-    hint.querySelector('.splash-ink-touch-ring')?.remove();
-    Object.assign(hint.style, {
-      zIndex: '10',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: '8px',
-      color: 'rgba(31, 41, 55, 0.72)',
-      fontSize: '0.9rem',
-      fontWeight: '650',
-      pointerEvents: 'none',
-      userSelect: 'none',
-      whiteSpace: 'nowrap',
-    });
-    if (!hasMarkupHint) {
-      if (hintAnchor) {
-        Object.assign(hint.style, {
-          position: 'relative',
-          margin: '-4px auto 2px',
-          minHeight: '76px',
-        });
-      } else {
-        Object.assign(hint.style, {
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        });
-      }
-    }
-
-    const visual = hint.querySelector('.splash-ink-touch-visual');
-    Object.assign(visual.style, {
-      position: 'relative',
-      display: 'grid',
-      width: '58px',
-      height: '58px',
-      placeItems: 'center',
-    });
-
-    const finger = hint.querySelector('.splash-ink-touch-finger');
-    Object.assign(finger.style, {
-      position: 'relative',
-      zIndex: '1',
-      filter: 'drop-shadow(0 2px 3px rgba(31, 41, 55, 0.18))',
-      animation: this.reduceMotion
-        ? 'none'
-        : `${this.isTouchDevice ? 'splash-ink-touch-swipe' : 'splash-ink-click'} 1.8s ease-in-out infinite`,
-    });
-
-    const label = hint.querySelector('.splash-ink-touch-label');
-    if (!this.isTouchDevice && label) label.textContent = 'Click and drag to draw';
-
-    const fingerSvg = finger.querySelector('svg');
-    if (fingerSvg) {
-      Object.assign(fingerSvg.style, {
-        display: 'block',
-        width: '58px',
-        height: '58px',
-        overflow: 'visible',
-      });
-      fingerSvg.setAttribute('fill', 'none');
-      fingerSvg.setAttribute('stroke', 'currentColor');
-      fingerSvg.setAttribute('stroke-width', '2.8');
-      fingerSvg.setAttribute('stroke-linecap', 'round');
-      fingerSvg.setAttribute('stroke-linejoin', 'round');
-      const hand = fingerSvg.querySelector('path:not(.splash-ink-touch-arrow)');
-      if (hand) {
-        hand.setAttribute('fill', 'rgba(108, 92, 231, 0.14)');
-        hand.setAttribute('stroke', 'currentColor');
-      }
-      const arrow = fingerSvg.querySelector('.splash-ink-touch-arrow');
-      if (arrow) arrow.setAttribute('stroke', '#6c5ce7');
-    }
-
-    const fingerImage = finger.querySelector('img');
-    if (fingerImage) {
-      Object.assign(fingerImage.style, {
-        display: 'block',
-        width: '58px',
-        height: '58px',
-        objectFit: 'contain',
-        filter: 'brightness(0)',
-      });
-    }
-
-    if (hintAnchor?.parentNode) {
-      if (hint !== hintAnchor.nextElementSibling) {
-        hintAnchor.parentNode.insertBefore(hint, hintAnchor.nextSibling);
-      }
-    } else if (!hasMarkupHint) {
-      this.append(hint);
-    }
-    this.touchHintStyle = style;
-    this.touchHint = hint;
-  }
-
-  showTouchHint() {
-    if (!this.touchHint) return;
-    this.touchHint.style.display = 'flex';
-  }
-
-  hideTouchHint() {
-    if (!this.touchHint) return;
-    this.touchHint.style.display = 'none';
-  }
-
-  showScrollButton() {
-    if (!this.scrollButton) return;
-    this.scrollButton.style.display = 'grid';
-  }
-
-  hideScrollButton() {
-    if (!this.scrollButton) return;
-    this.scrollButton.style.display = 'none';
-  }
-
-  scrollToContent(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const section = this.closest('.shopify-section') || this;
-    const nextSection = section.nextElementSibling;
-    if (nextSection) {
-      nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
-    }
-  }
 }
 
 if (!customElements.get('splash-ink-hero')) {

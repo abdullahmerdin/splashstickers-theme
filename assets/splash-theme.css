@@ -2582,36 +2582,6 @@ main[data-template='policy'] :is(input, select, textarea),
   opacity: 0.55;
 }
 
-.splash-asset-attribution-section {
-  padding-block: var(--splash-space-md) var(--splash-space-lg);
-  background: var(--splash-color-ink);
-}
-
-.splash-asset-attribution-section .asset-attribution {
-  overflow: hidden;
-  border: 1px solid rgb(var(--splash-color-surface-rgb) / 0.2);
-  border-radius: var(--splash-radius-card);
-  background: rgb(var(--splash-color-surface-rgb) / 0.06);
-}
-
-.splash-asset-attribution-section .asset-attribution summary {
-  padding-inline: var(--splash-space-sm);
-  color: var(--splash-color-surface);
-}
-
-.splash-asset-attribution-section .asset-attribution summary::after {
-  color: var(--splash-color-yellow);
-}
-
-.splash-asset-attribution-section .asset-attribution__content {
-  padding-inline: var(--splash-space-sm);
-  color: rgb(var(--splash-color-surface-rgb) / 0.72);
-}
-
-.splash-asset-attribution-section .asset-attribution__content a {
-  color: var(--splash-color-yellow);
-}
-
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .splash-blog-section .blog-post-card:hover {
     box-shadow: var(--splash-shadow-lift);
