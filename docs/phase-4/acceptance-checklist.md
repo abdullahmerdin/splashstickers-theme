@@ -28,7 +28,7 @@
 
 ## Preview smoke evidence
 
-- [x] Standard product page checked at 1440, 768, and 375 px; no horizontal overflow, Studio, or collision-test content.
+- [x] Standard product page checked at 1440, 768, and 375 px; no horizontal overflow or Studio content.
 - [x] Gangsheet Studio checked at 1440, 768, and 375 px; ready state, toolbar, Add Design modal, onboarding dismiss, and console smoke checks passed.
 - [x] User confirmed the live storefront is working without a current issue.
 - [x] Shopify Theme Check passed locally with 344 files inspected and no offenses.

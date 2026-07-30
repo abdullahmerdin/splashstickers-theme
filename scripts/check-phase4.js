@@ -52,7 +52,7 @@ if (defaultProductTemplate.sections?.main?.type !== 'product-information') {
 }
 
 const defaultSectionTypes = Object.values(defaultProductTemplate.sections || {}).map((section) => section.type);
-['sticker-configurator', 'collision-test'].forEach((sectionType) => {
+['sticker-configurator'].forEach((sectionType) => {
   if (defaultSectionTypes.includes(sectionType)) {
     throw new Error(`Default product template must not include ${sectionType}.`);
   }

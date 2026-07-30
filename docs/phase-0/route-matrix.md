@@ -22,7 +22,7 @@ Her normal storefront route’u `layout/theme.liquid` üzerinden aynı shell’i
 | Home `/` | `templates/index.json` | `hero`, `splash-hero`, `sticker-categories`, `product-list`, `splash-cta`, `sticker-process`, `trust-badges` | Transparent header geçişi, drawing canvas, category scroll, product hover/quick-add | P0 |
 | Collection `/collections/:handle` | `templates/collection.json` | `sticker-collection-hero`, `main-collection`, filters, product card | Filter/sort, pagination, unavailable/empty state, mobile grid | P0 |
 | Search `/search?q=...` | `templates/search.json` | `search-header`, `search-results` | Predictive search, no-result, loading, facets ve query persistence | P0 |
-| Product `/products/:handle` | `templates/product.json` | `sticker-configurator`, `collision-test`, `product-information`, recommendations | Variant/price, media, quantity, add-to-cart ve configurator entegrasyonu | P0 |
+| Product `/products/:handle` | `templates/product.json` | `sticker-configurator`, `product-information`, recommendations | Variant/price, media, quantity, add-to-cart ve configurator entegrasyonu | P0 |
 | Gangsheet product `/products/:handle` | `templates/product.product-gangsheet.json` | `sticker-configurator` | Upload, canvas, zoom/pan, multi-select, collision, auto-arrange, PDF/cart payload | P0 |
 | Cart `/cart` | `templates/cart.json` | `main-cart`, `product-list` | Quantity, remove, discount, cart note, checkout CTA ve empty cart | P0 |
 | About `/pages/about` | `templates/page.about.json` | `main-page`, `asset-attribution` | Rich text, attribution ve responsive content width | P1 |

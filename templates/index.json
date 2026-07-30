@@ -127,7 +127,7 @@
                                       },
                      "splash_drawing":  {
                                             "type":  "splash-hero",
-                                            "name":  "Hero",
+                                            "name":  "Splash Drawing Hero",
                                             "settings":  {
                                                              "heading":  "Your Vision, A Sticker",
                                                              "draw_hint":  "Swipe to draw",
