@@ -127,7 +127,7 @@
                                       },
                      "splash_drawing":  {
                                             "type":  "splash-hero",
-                                            "name":  "Clean Hero",
+                                            "name":  "Hero",
                                             "settings":  {
                                                              "heading":  "Your Vision, A Sticker",
                                                              "draw_hint":  "Swipe to draw",
@@ -472,7 +472,7 @@
                      "trust_section":  {
                                            "type":  "trust-badges",
                                            "settings":  {
-                                                            "heading":  "Why choose AllTheStickers",
+                                                            "heading":  "Why choose us",
                                                             "subtext":  "Quality, speed, and clear production from start to finish.",
                                                             "columns_desktop":  "4",
                                                             "background_color":  "#FFFFFF",

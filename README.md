@@ -1,4 +1,4 @@
-# SplashStickers Shopify theme
+# Splash Stickers Shopify theme
 
 The theme preserves Horizon's Shopify behavior layer while exposing a namespaced
 Splash design system for the storefront shell, catalog, product studio, cart and

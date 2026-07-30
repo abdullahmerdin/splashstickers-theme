@@ -4,10 +4,10 @@
 
 - [x] Product media/details surfaces Splash token’larına bağlandı.
 - [x] Sticky add-to-cart yüzeyi Splash token’larına bağlandı.
-- [x] Splash Studio editor, controls, modal ve feedback state’leri markalandı.
+- [x] Configurator editor, controls, modal ve feedback state’leri markalandı.
 - [x] Gangsheet template quick start, resolution feedback ve analytics ayarlarını içeriyor.
 - [x] Clipboard, undo/redo, auto-arrange ve PDF export toggle’ları çalışırken ayarları gözetiyor.
-- [x] Studio root, modal, quantity, live status ve focus erişilebilirlik işaretlerine sahip.
+- [x] Configurator root, modal, quantity, live status ve focus erişilebilirlik işaretlerine sahip.
 
 ## Otomatik doğrulama
 

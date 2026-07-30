@@ -73,7 +73,7 @@
   data-resolution-success="{{ section.settings.resolution_success_text | escape }}"
   aria-busy="true"
   role="region"
-  aria-label="Splash Studio sticker sheet configurator"
+  aria-label="Sticker sheet configurator"
   {% unless heading == blank %}aria-labelledby="cfg-heading-{{ section.id }}"{% endunless %}
   class="splash-studio is-loading"
   style="
@@ -107,7 +107,7 @@
   </div>
   {%- unless heading == blank -%}
     <div class="cfg-header">
-      <span class="cfg-eyebrow">Splash Studio</span>
+      <span class="cfg-eyebrow">Sticker sheet</span>
       <h2 class="cfg-heading" id="cfg-heading-{{ section.id }}">{{ heading | escape }}</h2>
     </div>
   {%- endunless -%}
@@ -128,7 +128,7 @@
   {% endif %}
 
   <div class="editor-wrap splash-studio__editor">
-    <div class="toolbar" role="toolbar" aria-label="Splash Studio canvas tools">
+    <div class="toolbar" role="toolbar" aria-label="Sticker sheet canvas tools">
       <!-- Toolbar buttons generated via JS delegation (data-action) -->
       {% if section.settings.enable_undo_redo %}
         <button title="Undo" aria-label="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
@@ -199,7 +199,7 @@
       <span class="size-unit">mm</span>
     </div>
 
-    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}" role="region" aria-label="Splash Studio sticker sheet canvas">
+    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}" role="region" aria-label="Sticker sheet canvas">
       <div class="canvas-stage" id="canvas-stage-{{ section.id }}">
         <div class="canvas-area" id="canvas-{{ section.id }}">
           <canvas class="grid-bg" id="grid-canvas-{{ section.id }}"></canvas>

@@ -31,7 +31,7 @@ const checks = [
   ['sections/splash-hero.liquid', 'var(--splash-color-ink)'],
   ['sections/asset-attribution.liquid', 'var(--splash-color-ink-rgb)'],
   ['snippets/header-actions.liquid', 'var(--splash-color-surface-rgb)'],
-  ['config/settings_schema.json', '"theme_name": "SplashStickers"'],
+  ['config/settings_schema.json', '"theme_name": "Splash Stickers"'],
   ['config/settings_schema.json', '"theme_version": "6.0.0"'],
   ['README.md', '## Release readiness'],
 ];

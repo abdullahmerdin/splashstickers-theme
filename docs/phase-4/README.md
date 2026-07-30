@@ -1,8 +1,8 @@
-# Faz 4 — Product ve Splash Studio polish
+# Faz 4 — Product ve configurator polish
 
 Güncelleme tarihi: 2026-07-29
 
-Bu paket, ürün detay sayfası ile gangsheet ürünündeki Splash Studio yüzeylerinin
+Bu paket, ürün detay sayfası ile gangsheet ürünündeki configurator yüzeylerinin
 marka token’ları, erişilebilirlik davranışları ve satış akışıyla birlikte
 doğrulanmasını tanımlar.
 
@@ -10,7 +10,7 @@ doğrulanmasını tanımlar.
 
 - Ürün medya galerisi, ürün detay kartı, varyant seçimi, fiyat, adet ve add-to-cart.
 - Mobil sticky add-to-cart.
-- Gangsheet ürün şablonundaki Splash Studio başlık, quick start, canvas, toolbar,
+- Gangsheet ürün şablonundaki configurator başlık, quick start, canvas, toolbar,
   artwork yükleme, çözünürlük uyarısı, PDF export ve cart durumları.
 - Feature toggle’ların gerçek davranışa bağlanması: clipboard, undo/redo,
   auto-arrange ve PDF export.

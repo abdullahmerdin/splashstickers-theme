@@ -1684,7 +1684,7 @@ dialog.cfg-modal::backdrop {
   }
 }
 
-/* Splash Studio finish: the editor, product surfaces and feedback states use
+/* Configurator finish: the editor, product surfaces and feedback states use
    the same tokens while the canvas interaction model stays unchanged. */
 .sticker-configurator > sticker-configurator.splash-studio {
   position: relative;

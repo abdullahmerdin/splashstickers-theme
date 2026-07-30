@@ -1,5 +1,5 @@
 /*
- * SplashStickers design-system primitives.
+ * Splash Stickers design-system primitives.
  *
  * Theme-aware values are emitted by snippets/splash-theme-variables.liquid.
  * Keep component rules in this namespace so Horizon behavior selectors remain
@@ -1444,7 +1444,7 @@
   }
 }
 
-/* Phase 4 product and Splash Studio surfaces. */
+/* Phase 4 product and configurator surfaces. */
 .splash-product-information {
   --style-border-radius-buttons-primary: var(--splash-radius-control);
   --style-border-radius-buttons-secondary: var(--splash-radius-control);

@@ -14,7 +14,7 @@ product studio and cart/content work.
 - Category, hero, header-version and asset-attribution surfaces now use Splash
   semantic color, motion, radius and focus tokens instead of legacy hard-coded
   brand values.
-- Theme metadata points to SplashStickers documentation/support and is versioned
+- Theme metadata points to Splash Stickers documentation/support and is versioned
   as `6.0.0`.
 - README and local release checks document the required preview QA.
 

@@ -26,7 +26,7 @@ const checks = [
   ['sections/sticker-configurator.liquid', 'data-clipboard-enabled'],
   ['sections/sticker-configurator.liquid', 'role="region"'],
   ['sections/sticker-configurator.liquid', 'aria-modal="true"'],
-  ['assets/splash-theme.css', 'Phase 4 product and Splash Studio surfaces.'],
+  ['assets/splash-theme.css', 'Phase 4 product and configurator surfaces.'],
   ['assets/sticker-configurator.css', '.sticker-configurator > sticker-configurator.splash-studio'],
   ['assets/sticker-configurator.js', 'features.undoEnabled'],
   ['assets/sticker-configurator.js', 'features.clipboardEnabled'],
