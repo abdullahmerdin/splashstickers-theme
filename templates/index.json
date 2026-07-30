@@ -345,8 +345,8 @@
           "type": "step",
           "settings": {
             "icon": "",
-            "title": "Wait for shipment",
-            "text": "Review your order, then follow production updates."
+            "title": "Review your order",
+            "text": "Check the size, copies, and spacing before you add it to your cart."
           }
         }
       },
@@ -356,9 +356,9 @@
         "step_ship"
       ],
       "settings": {
-        "eyebrow": "Simple from start to finish",
+        "eyebrow": "",
         "heading": "How it works",
-        "subtext": "Three steps from upload to shipped order.",
+        "subtext": "Add a design, choose the size and quantity, then review your order.",
         "button_label": "Start designing",
         "button_link": "shopify://collections/custom-stickers",
         "background_color": "#f8f9fa",
@@ -366,67 +366,12 @@
         "padding_bottom": 56
       }
     },
-    "trust_section": {
-      "type": "trust-badges",
-      "blocks": {
-        "badge_quality": {
-          "type": "badge",
-          "settings": {
-            "icon": "",
-            "title": "Premium quality",
-            "description": "Vibrant colors, durable vinyl and a weatherproof finish.",
-            "color_style": "purple"
-          }
-        },
-        "badge_turnaround": {
-          "type": "badge",
-          "settings": {
-            "icon": "",
-            "title": "Fast turnaround",
-            "description": "Clear production updates from upload to dispatch.",
-            "color_style": "pink"
-          }
-        },
-        "badge_shapes": {
-          "type": "badge",
-          "settings": {
-            "icon": "",
-            "title": "Custom shapes",
-            "description": "Die-cut to fit your artwork and chosen size.",
-            "color_style": "teal"
-          }
-        },
-        "badge_shipping": {
-          "type": "badge",
-          "settings": {
-            "icon": "",
-            "title": "Worldwide shipping",
-            "description": "Delivery options shown clearly at checkout.",
-            "color_style": "gold"
-          }
-        }
-      },
-      "block_order": [
-        "badge_quality",
-        "badge_turnaround",
-        "badge_shapes",
-        "badge_shipping"
-      ],
-      "settings": {
-        "heading": "Why choose us",
-        "subtext": "Quality, speed, and clear production from start to finish.",
-        "columns_desktop": "4",
-        "background_color": "#ffffff",
-        "padding_top": 48,
-        "padding_bottom": 48
-      }
-    },
     "custom_cta": {
       "type": "splash-cta",
       "settings": {
-        "heading": "Can't Find What You're Looking For?",
-        "subtext": "Upload your own design and we'll turn it into a premium sticker.",
-        "button_label": "Create Your Custom Sticker",
+        "heading": "Create a custom sticker",
+        "subtext": "Upload your design and choose the size and quantity you need.",
+        "button_label": "Start designing",
         "button_link": "shopify://collections/custom-stickers",
         "button_style": "solid",
         "gradient_start": "#6c5ce7",
@@ -443,7 +388,6 @@
     "category_cards",
     "featured_stickers",
     "sticker_process",
-    "trust_section",
     "custom_cta"
   ]
 }

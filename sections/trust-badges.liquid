@@ -20,20 +20,20 @@
           </article>
         {% endfor %}
       </div>
-    {% else %}
-      <p class="sticker-section-empty">Add trust badges in the theme editor.</p>
+    {% elsif request.design_mode %}
+      <p class="sticker-section-empty">Add product details in the theme editor.</p>
     {% endif %}
   </div>
 </div>
 
 {% schema %}
 {
-  "name": "Trust badges",
+  "name": "Product details",
   "tag": "section",
   "class": "trust-badges",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Why choose us" },
-    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Everything you need for stickers that look great and last." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Product options" },
+    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Choose the details that fit your order." },
     {
       "type": "select",
       "id": "columns_desktop",
@@ -52,11 +52,10 @@
   "blocks": [
     {
       "type": "badge",
-      "name": "Badge",
+      "name": "Detail",
       "settings": [
-        { "type": "text", "id": "icon", "label": "Emoji / icon", "default": "✦", "info": "Optional, unused in the clean layout" },
-        { "type": "text", "id": "title", "label": "Title", "default": "Feature" },
-        { "type": "textarea", "id": "description", "label": "Description", "default": "Short description of this feature" },
+        { "type": "text", "id": "title", "label": "Title", "default": "" },
+        { "type": "textarea", "id": "description", "label": "Description", "default": "" },
         {
           "type": "select",
           "id": "color_style",
@@ -74,13 +73,12 @@
   ],
   "presets": [
     {
-      "name": "Trust badges",
+      "name": "Product details",
       "category": "Custom",
       "blocks": [
-        { "type": "badge", "settings": { "icon": "✦", "title": "Premium quality", "description": "Vibrant colors, durable vinyl and a weatherproof finish.", "color_style": "teal" } },
-        { "type": "badge", "settings": { "icon": "✦", "title": "Fast turnaround", "description": "Clear production updates from upload to dispatch.", "color_style": "pink" } },
-        { "type": "badge", "settings": { "icon": "✦", "title": "Custom shapes", "description": "Die-cut to fit your artwork and chosen size.", "color_style": "purple" } },
-        { "type": "badge", "settings": { "icon": "✦", "title": "Worldwide shipping", "description": "Delivery options shown clearly at checkout.", "color_style": "gold" } }
+        { "type": "badge", "settings": { "title": "Upload a design", "description": "Add a PNG, JPG or WebP file.", "color_style": "teal" } },
+        { "type": "badge", "settings": { "title": "Choose size and quantity", "description": "Set dimensions, copies, and spacing.", "color_style": "pink" } },
+        { "type": "badge", "settings": { "title": "Review before checkout", "description": "Check the order details before you add them to your cart.", "color_style": "purple" } }
       ]
     }
   ]
