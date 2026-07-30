@@ -73,15 +73,22 @@ if (settings.enable_analytics !== false) {
 }
 
 const defaultProductTemplate = readThemeJson('templates/product.json');
-if (defaultProductTemplate.sections?.main?.type !== 'product-information') {
+const defaultMainSection = defaultProductTemplate.sections?.main;
+if (defaultMainSection?.type !== 'product-information') {
   throw new Error('Default product template must render product-information as its main section.');
 }
 
-const defaultSectionTypes = Object.values(defaultProductTemplate.sections || {}).map((section) => section.type);
-['sticker-configurator'].forEach((sectionType) => {
-  if (defaultSectionTypes.includes(sectionType)) {
-    throw new Error(`Default product template must not include ${sectionType}.`);
-  }
-});
+const defaultConfiguratorSections = Object.values(defaultProductTemplate.sections || {}).filter(
+  (section) => section.type === 'sticker-configurator'
+);
+if (defaultConfiguratorSections.length > 1) {
+  throw new Error('Default product template must not render multiple sticker-configurator sections.');
+}
+if (defaultMainSection.disabled === true && defaultConfiguratorSections.length === 0) {
+  throw new Error('Default product template must keep an active product surface.');
+}
+if (defaultMainSection.disabled !== true && defaultConfiguratorSections.length > 0) {
+  throw new Error('Default product template must not render product-information and sticker-configurator together.');
+}
 
 console.log(`Phase 4 wiring checks passed (${checks.length + 2} groups).`);
