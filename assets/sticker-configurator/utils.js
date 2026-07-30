@@ -1,3 +1,8 @@
+function configuratorText(core, key, fallback) {
+  var copy = core && core.copy;
+  return copy && copy[key] ? copy[key] : fallback;
+}
+
 /* ===========================================
    Utils — Unit conversion, size helpers
    =========================================== */

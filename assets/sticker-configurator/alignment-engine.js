@@ -156,7 +156,7 @@ class AlignmentEngine {
         item.el.style.top = item.y + 'px';
       });
       var stats = core.cache ? core.cache.stats : null;
-      if (stats) stats.textContent = 'A design is too wide for the 600 mm workspace.';
+      if (stats) stats.textContent = configuratorText(core, 'too_wide', 'A design is too wide for the 600 mm workspace.');
       return false;
     }
 

@@ -30,15 +30,30 @@ const checks = [
   ['sections/sticker-configurator.liquid', 'data-action="export-pdf"'],
   ['sections/sticker-configurator.liquid', '"id": "enable_analytics"'],
   ['sections/sticker-configurator.liquid', '"default": false'],
+  ['sections/sticker-configurator.liquid', 'data-configurator-copy'],
+  ['sections/sticker-configurator.liquid', 'sections.sticker-configurator.add_design_error'],
   ['assets/splash-theme.css', 'Phase 4 product and configurator surfaces.'],
   ['assets/sticker-configurator.css', '.sticker-configurator > sticker-configurator.splash-studio'],
   ['assets/sticker-configurator.css', '.cfg-toolbar-more[open] .cfg-toolbar-more-controls'],
   ['assets/sticker-configurator.js', 'features.undoEnabled'],
   ['assets/sticker-configurator.js', 'features.clipboardEnabled'],
   ['assets/sticker-configurator.js', "features.exportEnabled !== 'false'"],
+  ['assets/sticker-configurator.js', 'function configuratorText'],
 ];
 
 checks.forEach(([relativePath, pattern]) => assertContains(relativePath, pattern));
+
+const configuratorSource = read('sections/sticker-configurator.liquid');
+const configuratorSchema = JSON.parse(
+  configuratorSource.match(/{% schema %}([\s\S]*?){% endschema %}/)[1]
+);
+const localeReferences = [...configuratorSource.matchAll(/sections\.sticker-configurator\.([a-z0-9_]+)/g)]
+  .map((match) => match[1]);
+const missingLocaleKeys = [...new Set(localeReferences)]
+  .filter((key) => !(key in configuratorSchema.locales.en));
+if (missingLocaleKeys.length) {
+  throw new Error(`Configurator section locale is missing: ${missingLocaleKeys.join(', ')}`);
+}
 
 const gangsheetTemplate = readThemeJson('templates/product.product-gangsheet.json');
 const configurator = gangsheetTemplate.sections?.sticker_configurator;

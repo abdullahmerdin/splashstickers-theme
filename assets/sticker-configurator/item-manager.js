@@ -17,7 +17,7 @@ class ItemManager {
     var img = document.createElement('img');
     img.src = src;
     img.draggable = false;
-    img.alt = 'Sticker design';
+    img.alt = configuratorText(core, 'sticker_alt', 'Sticker design');
     el.appendChild(img);
 
     core.canvas.appendChild(el);
@@ -93,7 +93,7 @@ class ItemManager {
 
     // WCAG: role="img" and aria-label
     el.setAttribute('role', 'img');
-    el.setAttribute('aria-label', 'Text: ' + text);
+    el.setAttribute('aria-label', configuratorText(core, 'text_aria_prefix', 'Text') + ': ' + text);
 
     core.canvas.appendChild(el);
 
@@ -175,7 +175,7 @@ class ItemManager {
 
     // WCAG: role="img" and aria-label
     el.setAttribute('role', 'img');
-    el.setAttribute('aria-label', 'Sticker design item');
+    el.setAttribute('aria-label', configuratorText(this.core, 'sticker_item_aria', 'Sticker design item'));
 
     return el;
   }

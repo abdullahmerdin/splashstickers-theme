@@ -60,9 +60,9 @@ class ExportManager {
       script.async = true;
       script.onload = function () {
         if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
-        else reject(new Error('PDF library did not initialize.'));
+        else reject(new Error(configuratorText(core, 'pdf_library_error', 'Could not load the PDF library.')));
       };
-      script.onerror = function () { reject(new Error('Could not load the PDF library.')); };
+      script.onerror = function () { reject(new Error(configuratorText(core, 'pdf_library_error', 'Could not load the PDF library.'))); };
       document.body.appendChild(script);
     });
     return this._libraryPromise;
@@ -85,7 +85,7 @@ class ExportManager {
     var requestedRatio = widthMm / heightMm;
     var pageRatio = pageWidth / pageHeight;
     if (Math.abs(requestedRatio - pageRatio) > 0.001) {
-      throw new Error('The PDF page dimensions do not match the workspace.');
+      throw new Error(configuratorText(core, 'pdf_page_error', 'The PDF page dimensions do not match the workspace.'));
     }
 
     // A uniformly scaled pixel budget prevents very tall sheets from exhausting
@@ -95,10 +95,10 @@ class ExportManager {
       dpi: dpi,
       maxPixels: 45000000
     });
-    if (!canvas) throw new Error('Production canvas could not be created.');
+    if (!canvas) throw new Error(configuratorText(core, 'pdf_generate_error', 'Could not generate PDF.'));
     var canvasRatio = canvas.width / canvas.height;
     if (Math.abs(requestedRatio - canvasRatio) > 0.002) {
-      throw new Error('The production image dimensions do not match the workspace.');
+      throw new Error(configuratorText(core, 'pdf_image_error', 'The production image dimensions do not match the workspace.'));
     }
     var imgData = canvas.toDataURL('image/png');
     doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
@@ -123,7 +123,7 @@ class ExportManager {
       link.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     } catch (err) {
-      errorMessage = 'Could not generate PDF. Error: ' + err.message;
+      errorMessage = configuratorText(core, 'pdf_generate_error', 'Could not generate PDF.') + ' ' + err.message;
     } finally {
       this.setExporting(false);
     }

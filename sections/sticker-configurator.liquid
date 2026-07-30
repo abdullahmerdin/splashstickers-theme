@@ -73,7 +73,7 @@
   data-resolution-success="{{ section.settings.resolution_success_text | escape }}"
   aria-busy="true"
   role="region"
-  aria-label="Design editor"
+  aria-label="{{ 'sections.sticker-configurator.editor_aria_label' | t | escape }}"
   {% unless heading == blank %}aria-labelledby="cfg-heading-{{ section.id }}"{% endunless %}
   class="splash-studio is-loading"
   style="
@@ -82,13 +82,55 @@
     padding-block-end: {{ section.settings.padding_bottom }}px;
   "
 >
+  <script type="application/json" data-configurator-copy>
+    {
+      "add_design_error": {{ 'sections.sticker-configurator.add_design_error' | t | json }},
+      "product_variant_missing": {{ 'sections.sticker-configurator.product_variant_missing' | t | json }},
+      "variant_unavailable": {{ 'sections.sticker-configurator.variant_unavailable' | t | json }},
+      "adding_to_cart": {{ 'sections.sticker-configurator.adding_to_cart' | t | json }},
+      "design_added": {{ 'sections.sticker-configurator.design_added' | t | json }},
+      "design_add_failed": {{ 'sections.sticker-configurator.design_add_failed' | t | json }},
+      "cart_add_failed": {{ 'sections.sticker-configurator.cart_add_failed' | t | json }},
+      "choose_or_drop_design": {{ 'sections.sticker-configurator.choose_or_drop_design' | t | json }},
+      "file_type_error": {{ 'sections.sticker-configurator.file_type_error' | t | json }},
+      "file_size_error": {{ 'sections.sticker-configurator.file_size_error' | t: max_file_mb: section.settings.max_file_mb | json }},
+      "design_selected": {{ 'sections.sticker-configurator.design_selected' | t | json }},
+      "pdf_library_error": {{ 'sections.sticker-configurator.pdf_library_error' | t | json }},
+      "pdf_page_error": {{ 'sections.sticker-configurator.pdf_page_error' | t | json }},
+      "pdf_image_error": {{ 'sections.sticker-configurator.pdf_image_error' | t | json }},
+      "pdf_generate_error": {{ 'sections.sticker-configurator.pdf_generate_error' | t | json }},
+      "sticker_alt": {{ 'sections.sticker-configurator.sticker_alt' | t | json }},
+      "sticker_item_aria": {{ 'sections.sticker-configurator.sticker_item_aria' | t | json }},
+      "text_aria_prefix": {{ 'sections.sticker-configurator.text_aria_prefix' | t | json }},
+      "too_wide": {{ 'sections.sticker-configurator.too_wide' | t | json }},
+      "resolution_too_large": {{ 'sections.sticker-configurator.resolution_too_large' | t | json }},
+      "close": {{ 'sections.sticker-configurator.close' | t | json }},
+      "cancel": {{ 'sections.sticker-configurator.cancel' | t | json }},
+      "save": {{ 'sections.sticker-configurator.save' | t | json }},
+      "ok": {{ 'sections.sticker-configurator.ok' | t | json }},
+      "bold": {{ 'sections.sticker-configurator.bold' | t | json }},
+      "italic": {{ 'sections.sticker-configurator.italic' | t | json }},
+      "align_left": {{ 'sections.sticker-configurator.align_left' | t | json }},
+      "align_center": {{ 'sections.sticker-configurator.align_center' | t | json }},
+      "align_right": {{ 'sections.sticker-configurator.align_right' | t | json }},
+      "edit_text_title": {{ 'sections.sticker-configurator.edit_text_title' | t | json }},
+      "size_label": {{ 'sections.sticker-configurator.size_label' | t | json }},
+      "color_label": {{ 'sections.sticker-configurator.color_label' | t | json }},
+      "bg_label": {{ 'sections.sticker-configurator.bg_label' | t | json }},
+      "items": {{ 'sections.sticker-configurator.items' | t | json }},
+      "selected": {{ 'sections.sticker-configurator.selected' | t | json }},
+      "area_unit": {{ 'sections.sticker-configurator.area_unit' | t | json }},
+      "multi_select": {{ 'sections.sticker-configurator.multi_select' | t | json }},
+      "multi_select_exit": {{ 'sections.sticker-configurator.multi_select_exit' | t | json }}
+    }
+  </script>
   <div class="cfg-loading-skeleton" role="status" aria-live="polite">
     <div class="cfg-skeleton-heading"><span></span><span></span></div>
     <div class="cfg-skeleton-toolbar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="cfg-skeleton-canvas"><span></span></div>
     <div class="cfg-skeleton-actions"><span></span><span></span><span></span></div>
     <div class="cfg-loading-status">
-      <span>Preparing your workspace</span>
+      <span>{{ 'sections.sticker-configurator.loading_status' | t | escape }}</span>
       <span class="cfg-loading-progress"><i></i></span>
     </div>
   </div>
@@ -102,7 +144,7 @@
   >
     <div class="cfg-export-loader">
       <span class="cfg-export-spinner" aria-hidden="true"></span>
-      <span>Downloading PDF&hellip;</span>
+      <span>{{ 'sections.sticker-configurator.export_loading' | t | escape }}</span>
     </div>
   </div>
   {%- unless heading == blank -%}
@@ -126,60 +168,60 @@
   {% endif %}
 
   <div class="editor-wrap splash-studio__editor">
-    <div class="toolbar" role="toolbar" aria-label="Canvas tools">
+    <div class="toolbar" role="toolbar" aria-label="{{ 'sections.sticker-configurator.toolbar_aria_label' | t | escape }}">
       <!-- Toolbar buttons generated via JS delegation (data-action) -->
       {% if section.settings.enable_undo_redo %}
-        <button title="Undo" aria-label="Undo" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
+        <button title="{{ 'sections.sticker-configurator.undo' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.undo' | t | escape }}" data-action="undo" id="undo-btn-{{ section.id }}" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
         </button>
-        <button title="Redo" aria-label="Redo" data-action="redo" id="redo-btn-{{ section.id }}" disabled>
+        <button title="{{ 'sections.sticker-configurator.redo' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.redo' | t | escape }}" data-action="redo" id="redo-btn-{{ section.id }}" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
         <span class="toolbar-divider"></span>
       {% endif %}
       {% if section.settings.enable_auto_arrange %}
-        <button title="Auto arrange" aria-label="Auto arrange" data-action="auto-arrange" id="auto-btn-{{ section.id }}">
+        <button title="{{ 'sections.sticker-configurator.auto_arrange' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.auto_arrange' | t | escape }}" data-action="auto-arrange" id="auto-btn-{{ section.id }}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         </button>
       {% endif %}
-      <button title="Delete selected" aria-label="Delete selected" data-action="delete" id="del-btn-{{ section.id }}" disabled>
+      <button title="{{ 'sections.sticker-configurator.delete_selected' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.delete_selected_aria' | t | escape }}" data-action="delete" id="del-btn-{{ section.id }}" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
       </button>
       {% if section.settings.enable_export %}
-        <button title="Export PDF" aria-label="Export print-ready PDF" data-action="export-pdf" id="export-btn-{{ section.id }}">
+        <button title="{{ 'sections.sticker-configurator.export_pdf' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.export_aria' | t | escape }}" data-action="export-pdf" id="export-btn-{{ section.id }}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
       {% endif %}
       <details class="cfg-toolbar-more">
-        <summary title="{{ 'actions.more' | t | escape }}" aria-label="{{ 'actions.more' | t | escape }}">
+        <summary title="{{ 'sections.sticker-configurator.more_tools' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.more_tools' | t | escape }}">
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
         </summary>
         <div class="cfg-toolbar-more-controls">
-          <button title="Duplicate" aria-label="Duplicate selected" data-action="duplicate" id="dup-btn-{{ section.id }}" disabled>
+          <button title="{{ 'sections.sticker-configurator.duplicate' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.duplicate_selected' | t | escape }}" data-action="duplicate" id="dup-btn-{{ section.id }}" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
           <span class="toolbar-divider"></span>
-          <button title="Flip H" aria-label="Flip horizontally" data-action="flip-h" id="flip-h-{{ section.id }}" disabled>
+          <button title="{{ 'sections.sticker-configurator.flip_h' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.flip_horizontal' | t | escape }}" data-action="flip-h" id="flip-h-{{ section.id }}" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><polyline points="7 8 3 12 7 16"/><polyline points="17 8 21 12 17 16"/></svg>
           </button>
-          <button title="Flip V" aria-label="Flip vertically" data-action="flip-v" id="flip-v-{{ section.id }}" disabled>
+          <button title="{{ 'sections.sticker-configurator.flip_v' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.flip_vertical' | t | escape }}" data-action="flip-v" id="flip-v-{{ section.id }}" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg>
           </button>
           <span class="toolbar-divider"></span>
-          <button title="Add text" aria-label="Add text" data-action="add-text" id="text-btn-{{ section.id }}">
+          <button title="{{ 'sections.sticker-configurator.add_text' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.add_text' | t | escape }}" data-action="add-text" id="text-btn-{{ section.id }}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
           </button>
-          <button title="Zoom to fit" aria-label="Zoom to fit" data-action="zoom-fit" id="zoom-fit-{{ section.id }}">
+          <button title="{{ 'sections.sticker-configurator.zoom_to_fit' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.zoom_to_fit' | t | escape }}" data-action="zoom-fit" id="zoom-fit-{{ section.id }}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
           </button>
           <span class="toolbar-divider"></span>
-          <button title="Lock" aria-label="Lock selected items" data-action="lock" id="lock-btn-{{ section.id }}" disabled>
+          <button title="{{ 'sections.sticker-configurator.lock' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.lock_selected' | t | escape }}" data-action="lock" id="lock-btn-{{ section.id }}" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </button>
-          <button title="Mobile" aria-label="Toggle mobile workspace" data-action="mobile" id="mobile-btn-{{ section.id }}">
+          <button title="{{ 'sections.sticker-configurator.mobile' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.toggle_mobile' | t | escape }}" data-action="mobile" id="mobile-btn-{{ section.id }}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
           </button>
-          <button title="Multi-select" aria-label="Toggle multiple selection" data-action="multi-select" id="multi-select-btn-{{ section.id }}" aria-pressed="false">
+          <button title="{{ 'sections.sticker-configurator.multi_select' | t | escape }}" aria-label="{{ 'sections.sticker-configurator.toggle_multi_select' | t | escape }}" data-action="multi-select" id="multi-select-btn-{{ section.id }}" aria-pressed="false">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="11" height="11" rx="2"/><path d="M9 20h9a2 2 0 0 0 2-2V9"/></svg>
           </button>
         </div>
@@ -188,27 +230,27 @@
     </div>
 
     <div class="cfg-info-bar">
-      <span id="item-count-{{ section.id }}" aria-live="polite" aria-atomic="true">0 items</span>
+      <span id="item-count-{{ section.id }}" aria-live="polite" aria-atomic="true">0 {{ 'sections.sticker-configurator.items_count' | t | escape }}</span>
       <span id="sel-size-{{ section.id }}" aria-live="polite" aria-atomic="true">&nbsp;</span>
       <span id="hint-text-{{ section.id }}">
-        <span class="hint-desktop">Ctrl/Cmd + scroll to zoom &middot; Space + drag to pan</span>
-        <span class="hint-mobile">Swipe toolbar for more tools &middot; Tap to select, then drag &middot; Pinch to zoom &middot; Drag empty canvas to pan</span>
+        <span class="hint-desktop">{{ 'sections.sticker-configurator.hint_text_desktop' | t | escape }}</span>
+        <span class="hint-mobile">{{ 'sections.sticker-configurator.hint_text_mobile' | t | escape }}</span>
       </span>
     </div>
 
     <div class="size-inputs" id="size-inputs-{{ section.id }}">
-      <label for="w-input-{{ section.id }}">W:</label>
+      <label for="w-input-{{ section.id }}">{{ 'sections.sticker-configurator.w_label' | t | escape }}:</label>
       <input id="w-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
-      <label for="h-input-{{ section.id }}">H:</label>
+      <label for="h-input-{{ section.id }}">{{ 'sections.sticker-configurator.h_label' | t | escape }}:</label>
       <input id="h-input-{{ section.id }}" type="number" min="10" max="600" step="1" class="cfg-inline-input">
-      <span class="size-unit">mm</span>
+      <span class="size-unit">{{ 'sections.sticker-configurator.mm' | t | escape }}</span>
     </div>
 
-    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}" role="region" aria-label="Canvas">
+    <div class="canvas-wrap" id="canvas-wrap-{{ section.id }}" role="region" aria-label="{{ 'sections.sticker-configurator.canvas' | t | escape }}">
       <div class="canvas-stage" id="canvas-stage-{{ section.id }}">
         <div class="canvas-area" id="canvas-{{ section.id }}">
           <canvas class="grid-bg" id="grid-canvas-{{ section.id }}"></canvas>
-          <div class="canvas-hint" id="hint-{{ section.id }}">Add a design or press T to add text</div>
+          <div class="canvas-hint" id="hint-{{ section.id }}">{{ 'sections.sticker-configurator.canvas_hint' | t | escape }}</div>
           <div class="sel-box" aria-hidden="true"></div>
           <div class="guide-line h" id="guide-h-{{ section.id }}"></div>
           <div class="guide-line v" id="guide-v-{{ section.id }}"></div>
@@ -218,10 +260,10 @@
   </div>
 
     <div class="cfg-controls splash-studio__controls">
-      <input type="file" accept="image/png,image/jpeg,image/webp" id="file-input-{{ section.id }}" aria-label="Choose a design file" hidden>
+      <input type="file" accept="image/png,image/jpeg,image/webp" id="file-input-{{ section.id }}" aria-label="{{ 'sections.sticker-configurator.choose_design' | t | escape }}" hidden>
       {% if configurator_product != blank and configurator_product.has_only_default_variant == false %}
         <label class="cfg-variant-field" for="variant-select-{{ section.id }}">
-          <span>Product option</span>
+          <span>{{ 'sections.sticker-configurator.product_option' | t | escape }}</span>
           <select id="variant-select-{{ section.id }}">
             {% for variant in configurator_product.variants %}
               <option
@@ -240,14 +282,14 @@
       <div class="upload-btn-area">
         <button id="add-btn-{{ section.id }}" class="cfg-add-design" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Add design
+          {{ 'sections.sticker-configurator.add_design' | t | escape }}
         </button>
-        <div class="qty-group" role="group" aria-label="Quantity">
-          <button id="qty-down-{{ section.id }}" type="button" aria-label="Decrease quantity">&minus;</button>
+        <div class="qty-group" role="group" aria-label="{{ 'sections.sticker-configurator.quantity' | t | escape }}">
+          <button id="qty-down-{{ section.id }}" type="button" aria-label="{{ 'sections.sticker-configurator.decrease_quantity' | t | escape }}">&minus;</button>
           <span class="qty-val" id="qty-display-{{ section.id }}" aria-live="polite" aria-atomic="true">1</span>
-          <button id="qty-up-{{ section.id }}" type="button" aria-label="Increase quantity">+</button>
+          <button id="qty-up-{{ section.id }}" type="button" aria-label="{{ 'sections.sticker-configurator.increase_quantity' | t | escape }}">+</button>
         </div>
-        <span class="qty-label">sheets</span>
+        <span class="qty-label">{{ 'sections.sticker-configurator.pieces' | t | escape }}</span>
       </div>
       <button
         id="submit-{{ section.id }}"
@@ -255,23 +297,23 @@
         type="button"
         disabled
       >
-        Add to Cart &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
+        {{ 'sections.sticker-configurator.add_to_cart' | t | escape }} &mdash; <span id="price-display-{{ section.id }}">$0.00</span>
       </button>
       <p id="cart-status-{{ section.id }}" class="cfg-cart-status" role="status" aria-live="polite"></p>
 
       <details class="bottom-extra">
         <summary>
-          <span>Options</span>
+          <span>{{ 'sections.sticker-configurator.options' | t | escape }}</span>
           <span class="bottom-extra-chevron" aria-hidden="true"></span>
         </summary>
         <div class="be-row">
-          <span class="be-label">Snap</span>
+          <span class="be-label">{{ 'sections.sticker-configurator.snap' | t | escape }}</span>
           <input
             type="checkbox"
             id="snap-btm-{{ section.id }}"
             {% if section.settings.snap_enabled %}checked{% endif %}
           >
-          <span class="be-unit">Grid</span>
+          <span class="be-unit">{{ 'sections.sticker-configurator.grid' | t | escape }}</span>
           <input
             type="number"
             id="grid-size-{{ section.id }}"
@@ -281,16 +323,16 @@
             step="5"
             class="cfg-inline-sm"
           >
-          <span class="be-unit">mm</span>
-          <span class="be-label">Gap</span>
+          <span class="be-unit">{{ 'sections.sticker-configurator.mm' | t | escape }}</span>
+          <span class="be-label">{{ 'sections.sticker-configurator.gap' | t | escape }}</span>
           <input type="number" id="gap-size-{{ section.id }}" value="3" min="3" max="50" step="1" class="cfg-inline-sm">
-          <span class="be-unit">mm</span>
+          <span class="be-unit">{{ 'sections.sticker-configurator.mm' | t | escape }}</span>
         </div>
         <div class="be-row">
           <span id="stats-{{ section.id }}" class="cfg-text-muted"></span>
-          <label class="visually-hidden" for="bg-color-{{ section.id }}">Sheet background color</label>
+          <label class="visually-hidden" for="bg-color-{{ section.id }}">{{ 'sections.sticker-configurator.sheet_background' | t | escape }}</label>
           <input type="color" id="bg-color-{{ section.id }}" value="#FFFFFF">
-          <button class="be-btn danger" id="clear-btn-{{ section.id }}" type="button">Clear</button>
+          <button class="be-btn danger" id="clear-btn-{{ section.id }}" type="button">{{ 'sections.sticker-configurator.clear_all' | t | escape }}</button>
         </div>
       </details>
     </div>
@@ -299,40 +341,40 @@
       <div class="cfg-modal-box">
         <div class="cfg-modal-title-row">
           <div>
-            <h3 class="cfg-modal-title" id="modal-title-{{ section.id }}">Add Design</h3>
+            <h3 class="cfg-modal-title" id="modal-title-{{ section.id }}">{{ 'sections.sticker-configurator.add_design_modal_title' | t | escape }}</h3>
           </div>
         </div>
-        <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}" role="button" tabindex="0" aria-controls="file-input-{{ section.id }}" aria-label="Choose or drop a design file">
+        <div class="cfg-modal-zone" id="modal-zone-{{ section.id }}" role="button" tabindex="0" aria-controls="file-input-{{ section.id }}" aria-label="{{ 'sections.sticker-configurator.choose_or_drop_design' | t | escape }}">
           <div class="cfg-modal-icon" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
           </div>
-          <div class="cfg-modal-text">Choose a file or drop it here</div>
+          <div class="cfg-modal-text">{{ 'sections.sticker-configurator.choose_or_drop_design' | t | escape }}</div>
           <div class="cfg-modal-note">
-            PNG, JPG or WebP · up to {{ section.settings.max_file_mb }} MB
+            {{ 'sections.sticker-configurator.file_types_note' | t: max_file_mb: section.settings.max_file_mb | escape }}
           </div>
           <div class="cfg-modal-fname" id="modal-fname-{{ section.id }}"></div>
           <p class="cfg-resolution-warning" id="resolution-warning-{{ section.id }}" role="status" aria-live="polite"></p>
         </div>
         <div class="cfg-modal-fields">
           <div class="cfg-modal-row">
-            <label for="modal-w-{{ section.id }}">Width</label>
+            <label for="modal-w-{{ section.id }}">{{ 'sections.sticker-configurator.width' | t | escape }}</label>
             <input type="number" id="modal-w-{{ section.id }}" value="50" min="10" max="600" step="1">
-            <span>mm</span>
+            <span>{{ 'sections.sticker-configurator.mm' | t | escape }}</span>
           </div>
           <div class="cfg-modal-row">
-            <label for="modal-h-{{ section.id }}">Height</label>
+            <label for="modal-h-{{ section.id }}">{{ 'sections.sticker-configurator.height' | t | escape }}</label>
             <input type="number" id="modal-h-{{ section.id }}" value="50" min="10" max="600" step="1">
-            <span>mm</span>
+            <span>{{ 'sections.sticker-configurator.mm' | t | escape }}</span>
           </div>
           <div class="cfg-modal-row">
-            <label for="modal-qty-{{ section.id }}">Copies</label>
+            <label for="modal-qty-{{ section.id }}">{{ 'sections.sticker-configurator.copies_label' | t | escape }}</label>
             <input type="number" id="modal-qty-{{ section.id }}" value="3" min="1" max="50" step="1">
-            <span>pcs</span>
+            <span>{{ 'sections.sticker-configurator.pieces_unit' | t | escape }}</span>
           </div>
         </div>
         <div class="cfg-modal-actions">
-          <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec" type="button">Cancel</button>
-          <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" type="button" disabled>Add to Canvas</button>
+          <button id="modal-cancel-{{ section.id }}" class="cfg-btn-sec" type="button">{{ 'sections.sticker-configurator.cancel' | t | escape }}</button>
+          <button id="modal-add-{{ section.id }}" class="cfg-btn-pry" type="button" disabled>{{ 'sections.sticker-configurator.add_to_canvas' | t | escape }}</button>
         </div>
       </div>
     </dialog>
@@ -557,14 +599,23 @@
   "locales": {
     "en": {
       "heading": "Add designs",
+      "loading_status": "Preparing your workspace",
+      "export_loading": "Downloading PDF…",
+      "editor_aria_label": "Design editor",
+      "toolbar_aria_label": "Canvas tools",
       "undo": "Undo",
       "redo": "Redo",
       "auto_arrange": "Auto arrange",
       "delete_selected": "Delete selected",
+      "delete_selected_aria": "Delete selected",
       "duplicate": "Duplicate",
+      "duplicate_selected": "Duplicate selected",
       "flip_h": "Flip H",
+      "flip_horizontal": "Flip horizontally",
       "flip_v": "Flip V",
+      "flip_vertical": "Flip vertically",
       "align_left": "Align left",
+      "align_center": "Align center",
       "align_center_h": "Align center H",
       "align_right": "Align right",
       "align_top": "Align top",
@@ -575,14 +626,36 @@
       "add_text": "Add text",
       "zoom_to_fit": "Zoom to fit",
       "export_pdf": "Export PDF",
+      "export_aria": "Export print-ready PDF",
       "lock": "Lock",
+      "lock_selected": "Lock selected items",
       "mobile": "Mobile",
+      "toggle_mobile": "Toggle mobile workspace",
+      "multi_select": "Multi-select",
+      "toggle_multi_select": "Toggle multiple selection",
+      "more_tools": "More tools",
+      "options": "Options",
       "add_design": "Add design",
+      "add_design_error": "Add a design before adding to cart.",
+      "product_option": "Product option",
+      "product_variant_missing": "This sheet is not connected to a Shopify product variant yet.",
+      "variant_unavailable": "This sheet option is currently unavailable. Choose another option to continue.",
       "pieces": "sheets",
+      "quantity": "Quantity",
+      "decrease_quantity": "Decrease quantity",
+      "increase_quantity": "Increase quantity",
       "add_to_cart": "Add to Cart",
+      "adding_to_cart": "Adding to cart…",
+      "design_added": "Added to cart.",
+      "design_add_failed": "The design could not be added to cart.",
+      "cart_add_failed": "Could not add to cart.",
       "add_design_modal_title": "Add Design",
       "cancel": "Cancel",
       "add_to_canvas": "Add to Canvas",
+      "choose_or_drop_design": "Choose or drop a design file",
+      "file_type_error": "Use a PNG, JPG, or WebP artwork file.",
+      "file_size_error": "Artwork files must be smaller than {{ max_file_mb }} MB.",
+      "file_types_note": "PNG, JPG or WebP · up to {{ max_file_mb }} MB",
       "clear_canvas_confirm": "Clear all designs?",
       "clear_all": "Clear",
       "items": "items",
@@ -591,19 +664,42 @@
       "mm": "mm",
       "w_label": "W",
       "h_label": "H",
+      "width": "Width",
+      "height": "Height",
       "copies_label": "Copies",
+      "pieces_unit": "pcs",
       "snap_grid": "Grid",
+      "snap": "Snap",
+      "grid": "Grid",
       "gap": "Gap",
+      "sheet_background": "Sheet background color",
+      "canvas": "Canvas",
       "canvas_hint": "Add a design or press T to add text",
-      "hint_text": "Ctrl/Cmd + scroll to zoom | Space + drag to pan",
+      "hint_text_desktop": "Ctrl/Cmd + scroll to zoom · Space + drag to pan",
+      "hint_text_mobile": "Swipe toolbar for more tools · Tap to select, then drag · Pinch to zoom · Drag empty canvas to pan",
       "pdf_load_error": "Could not load PDF library. Check internet connection.",
+      "pdf_library_error": "Could not load the PDF library.",
+      "pdf_page_error": "The PDF page dimensions do not match the workspace.",
+      "pdf_image_error": "The production image dimensions do not match the workspace.",
+      "pdf_generate_error": "Could not generate PDF.",
       "edit_text_title": "Edit Text",
+      "choose_design": "Choose a design file",
+      "sticker_alt": "Sticker design",
+      "sticker_item_aria": "Sticker design item",
+      "text_aria_prefix": "Text",
+      "too_wide": "A design is too wide for the 600 mm workspace.",
+      "resolution_too_large": "Artwork resolution is too large. The maximum is 50 megapixels.",
+      "close": "Close",
+      "ok": "OK",
+      "bold": "Bold",
+      "italic": "Italic",
+      "area_unit": "cm²",
+      "multi_select_exit": "Exit multi-select",
       "size_label": "SIZE",
       "color_label": "COLOR",
       "bg_label": "BG",
       "save": "Save",
-      "design_selected": "File selected",
-      "choose_design": "Click to choose a design file"
+      "design_selected": "File selected"
     }
   }
 }

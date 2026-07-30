@@ -94,15 +94,15 @@ class CartManager {
     var core = this.core;
     if (this.busy) return;
     if (!core.state.items.length) {
-      this.reportError('Add a design before adding to cart.');
+      this.reportError(configuratorText(core, 'add_design_error', 'Add a design before adding to cart.'));
       return;
     }
     if (!(Number(core.state.variantId) > 0)) {
-      this.reportError('This sheet is not connected to a Shopify product variant yet.');
+      this.reportError(configuratorText(core, 'product_variant_missing', 'This sheet is not connected to a Shopify product variant yet.'));
       return;
     }
     if (!core.state.variantAvailable) {
-      this.reportError('This sheet option is currently unavailable. Choose another option to continue.');
+      this.reportError(configuratorText(core, 'variant_unavailable', 'This sheet option is currently unavailable. Choose another option to continue.'));
       return;
     }
 
@@ -113,9 +113,9 @@ class CartManager {
     if (button) {
       button.classList.add('is-busy');
       if (typeof button.setAttribute === 'function') button.setAttribute('aria-busy', 'true');
-      button.textContent = 'Adding to cart…';
+      button.textContent = configuratorText(core, 'adding_to_cart', 'Adding to cart\u2026');
     }
-    this.setStatus('Adding to cart…');
+    this.setStatus(configuratorText(core, 'adding_to_cart', 'Adding to cart\u2026'));
 
     try {
       var sheetWidthMm = this.roundMm(core.CANVAS_W);
@@ -153,17 +153,19 @@ class CartManager {
         payload = {};
       }
       if (!response.ok) {
-        throw new Error(payload.description || payload.message || 'The design could not be added to cart.');
+        throw new Error(payload.description || payload.message || configuratorText(core, 'design_add_failed', 'The design could not be added to cart.'));
       }
 
-      this.setStatus('Added to cart.', 'success');
+      this.setStatus(configuratorText(core, 'design_added', 'Added to cart.'), 'success');
       core.dispatchAddToCartEvent(payload);
       if (core.dataset.redirectToCart !== 'false') {
         window.location.assign(core.dataset.cartUrl || '/cart');
       }
     } catch (error) {
-      var message = error && error.message ? error.message : 'The design could not be added to cart.';
-      this.reportError('Could not add to cart. ' + message);
+      var message = error && error.message
+        ? error.message
+        : configuratorText(core, 'design_add_failed', 'The design could not be added to cart.');
+      this.reportError(configuratorText(core, 'cart_add_failed', 'Could not add to cart.') + ' ' + message);
     } finally {
       this.busy = false;
       if (button) {

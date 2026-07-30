@@ -1,3 +1,8 @@
+function configuratorText(core, key, fallback) {
+  var copy = core && core.copy;
+  return copy && copy[key] ? copy[key] : fallback;
+}
+
 /* ===========================================
    Utils — Unit conversion, size helpers
    =========================================== */
@@ -813,7 +818,7 @@ class ItemManager {
     var img = document.createElement('img');
     img.src = src;
     img.draggable = false;
-    img.alt = 'Sticker design';
+    img.alt = configuratorText(core, 'sticker_alt', 'Sticker design');
     el.appendChild(img);
 
     core.canvas.appendChild(el);
@@ -889,7 +894,7 @@ class ItemManager {
 
     // WCAG: role="img" and aria-label
     el.setAttribute('role', 'img');
-    el.setAttribute('aria-label', 'Text: ' + text);
+    el.setAttribute('aria-label', configuratorText(core, 'text_aria_prefix', 'Text') + ': ' + text);
 
     core.canvas.appendChild(el);
 
@@ -971,7 +976,7 @@ class ItemManager {
 
     // WCAG: role="img" and aria-label
     el.setAttribute('role', 'img');
-    el.setAttribute('aria-label', 'Sticker design item');
+    el.setAttribute('aria-label', configuratorText(this.core, 'sticker_item_aria', 'Sticker design item'));
 
     return el;
   }
@@ -1641,7 +1646,7 @@ class AlignmentEngine {
         item.el.style.top = item.y + 'px';
       });
       var stats = core.cache ? core.cache.stats : null;
-      if (stats) stats.textContent = 'A design is too wide for the 600 mm workspace.';
+      if (stats) stats.textContent = configuratorText(core, 'too_wide', 'A design is too wide for the 600 mm workspace.');
       return false;
     }
 
@@ -1804,7 +1809,7 @@ class ModalManager {
     if (modalZone) {
       var textEl = modalZone.querySelector('.cfg-modal-text');
       var iconEl = modalZone.querySelector('.cfg-modal-icon');
-      if (textEl) textEl.textContent = 'Choose a file or drop it here';
+      if (textEl) textEl.textContent = configuratorText(core, 'choose_or_drop_design', 'Choose a file or drop it here');
       if (iconEl) {
         iconEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
       }
@@ -1833,6 +1838,7 @@ class ModalManager {
   }
 
   showEditTextModal(item, callback) {
+    var core = this.core;
     var curText = item.text || '';
     var curSize = item.fontSize || 16;
     var curColor = item.color || '#2D3436';
@@ -1852,13 +1858,13 @@ class ModalManager {
 
     var title = document.createElement('h3');
     title.className = 'cfg-modal-title';
-    title.textContent = 'Edit Text';
+    title.textContent = configuratorText(core, 'edit_text_title', 'Edit Text');
     titleRow.appendChild(title);
 
     var closeBtn = document.createElement('button');
     closeBtn.className = 'cfg-modal-close';
     closeBtn.dataset.action = 'close';
-    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.setAttribute('aria-label', configuratorText(core, 'close', 'Close'));
     closeBtn.textContent = '\u00D7';
     titleRow.appendChild(closeBtn);
     box.appendChild(titleRow);
@@ -1873,7 +1879,7 @@ class ModalManager {
     row1.className = 'cfg-et-row';
 
     // SIZE field
-    var sizeField = this._createField('SIZE');
+    var sizeField = this._createField(configuratorText(core, 'size_label', 'SIZE'));
     var sizeInput = document.createElement('input');
     sizeInput.className = 'cfg-et-input';
     sizeInput.dataset.field = 'size';
@@ -1885,7 +1891,7 @@ class ModalManager {
     row1.appendChild(sizeField);
 
     // COLOR field
-    var colorField = this._createField('COLOR');
+    var colorField = this._createField(configuratorText(core, 'color_label', 'COLOR'));
     var colorInput = document.createElement('input');
     colorInput.className = 'cfg-et-input cfg-et-color';
     colorInput.dataset.field = 'color';
@@ -1895,7 +1901,7 @@ class ModalManager {
     row1.appendChild(colorField);
 
     // BG field
-    var bgField = this._createField('BG');
+    var bgField = this._createField(configuratorText(core, 'bg_label', 'BG'));
     var bgInput = document.createElement('input');
     bgInput.className = 'cfg-et-input cfg-et-color';
     bgInput.dataset.field = 'bg';
@@ -1913,14 +1919,14 @@ class ModalManager {
     var boldBtn = document.createElement('button');
     boldBtn.className = 'cfg-et-style-btn' + (curWeight === 'bold' ? ' active' : '');
     boldBtn.dataset.style = 'bold';
-    boldBtn.setAttribute('aria-label', 'Bold');
+    boldBtn.setAttribute('aria-label', configuratorText(core, 'bold', 'Bold'));
     boldBtn.textContent = 'B';
     etToolbar.appendChild(boldBtn);
 
     var italicBtn = document.createElement('button');
     italicBtn.className = 'cfg-et-style-btn' + (curStyle === 'italic' ? ' active' : '');
     italicBtn.dataset.style = 'italic';
-    italicBtn.setAttribute('aria-label', 'Italic');
+    italicBtn.setAttribute('aria-label', configuratorText(core, 'italic', 'Italic'));
     italicBtn.textContent = 'I';
     etToolbar.appendChild(italicBtn);
 
@@ -1930,7 +1936,11 @@ class ModalManager {
 
     // Align buttons
     var aligns = ['left', 'center', 'right'];
-    ['Align left', 'Align center', 'Align right'].forEach(function (label, i) {
+    [
+      configuratorText(core, 'align_left', 'Align left'),
+      configuratorText(core, 'align_center', 'Align center'),
+      configuratorText(core, 'align_right', 'Align right')
+    ].forEach(function (label, i) {
       var alignBtn = document.createElement('button');
       alignBtn.className = 'cfg-et-align-btn' + (curAlign === aligns[i] ? ' active' : '');
       alignBtn.dataset.align = aligns[i];
@@ -1949,13 +1959,13 @@ class ModalManager {
     var cancelBtn2 = document.createElement('button');
     cancelBtn2.className = 'cfg-btn-sec';
     cancelBtn2.dataset.action = 'cancel';
-    cancelBtn2.textContent = 'Cancel';
+    cancelBtn2.textContent = configuratorText(core, 'cancel', 'Cancel');
     actions.appendChild(cancelBtn2);
 
     var saveBtn = document.createElement('button');
     saveBtn.className = 'cfg-btn-pry';
     saveBtn.dataset.action = 'save';
-    saveBtn.textContent = 'Save';
+    saveBtn.textContent = configuratorText(core, 'save', 'Save');
     actions.appendChild(saveBtn);
 
     box.appendChild(actions);
@@ -2022,6 +2032,7 @@ class ModalManager {
   }
 
   showConfirmModal(msg, callback) {
+    var core = this.core;
     var modal = this.createModal('');
 
     var box = document.createElement('div');
@@ -2037,12 +2048,12 @@ class ModalManager {
 
     var cancelBtn = document.createElement('button');
     cancelBtn.className = 'cfg-btn-sec';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = configuratorText(core, 'cancel', 'Cancel');
     actions.appendChild(cancelBtn);
 
     var confirmBtn = document.createElement('button');
     confirmBtn.className = 'cfg-btn-danger';
-    confirmBtn.textContent = 'OK';
+    confirmBtn.textContent = configuratorText(core, 'ok', 'OK');
     actions.appendChild(confirmBtn);
 
     box.appendChild(actions);
@@ -2062,6 +2073,7 @@ class ModalManager {
   }
 
   showErrorModal(msg) {
+    var core = this.core;
     var modal = this.createModal('');
 
     var box = document.createElement('div');
@@ -2077,7 +2089,7 @@ class ModalManager {
 
     var closeBtn = document.createElement('button');
     closeBtn.className = 'cfg-btn-pry';
-    closeBtn.textContent = 'OK';
+    closeBtn.textContent = configuratorText(core, 'ok', 'OK');
     actions.appendChild(closeBtn);
 
     box.appendChild(actions);
@@ -2206,9 +2218,9 @@ class ExportManager {
       script.async = true;
       script.onload = function () {
         if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
-        else reject(new Error('PDF library did not initialize.'));
+        else reject(new Error(configuratorText(core, 'pdf_library_error', 'Could not load the PDF library.')));
       };
-      script.onerror = function () { reject(new Error('Could not load the PDF library.')); };
+      script.onerror = function () { reject(new Error(configuratorText(core, 'pdf_library_error', 'Could not load the PDF library.'))); };
       document.body.appendChild(script);
     });
     return this._libraryPromise;
@@ -2231,7 +2243,7 @@ class ExportManager {
     var requestedRatio = widthMm / heightMm;
     var pageRatio = pageWidth / pageHeight;
     if (Math.abs(requestedRatio - pageRatio) > 0.001) {
-      throw new Error('The PDF page dimensions do not match the workspace.');
+      throw new Error(configuratorText(core, 'pdf_page_error', 'The PDF page dimensions do not match the workspace.'));
     }
 
     // A uniformly scaled pixel budget prevents very tall sheets from exhausting
@@ -2241,10 +2253,10 @@ class ExportManager {
       dpi: dpi,
       maxPixels: 45000000
     });
-    if (!canvas) throw new Error('Production canvas could not be created.');
+    if (!canvas) throw new Error(configuratorText(core, 'pdf_generate_error', 'Could not generate PDF.'));
     var canvasRatio = canvas.width / canvas.height;
     if (Math.abs(requestedRatio - canvasRatio) > 0.002) {
-      throw new Error('The production image dimensions do not match the workspace.');
+      throw new Error(configuratorText(core, 'pdf_image_error', 'The production image dimensions do not match the workspace.'));
     }
     var imgData = canvas.toDataURL('image/png');
     doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
@@ -2269,7 +2281,7 @@ class ExportManager {
       link.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     } catch (err) {
-      errorMessage = 'Could not generate PDF. Error: ' + err.message;
+      errorMessage = configuratorText(core, 'pdf_generate_error', 'Could not generate PDF.') + ' ' + err.message;
     } finally {
       this.setExporting(false);
     }
@@ -2540,15 +2552,15 @@ class CartManager {
     var core = this.core;
     if (this.busy) return;
     if (!core.state.items.length) {
-      this.reportError('Add a design before adding to cart.');
+      this.reportError(configuratorText(core, 'add_design_error', 'Add a design before adding to cart.'));
       return;
     }
     if (!(Number(core.state.variantId) > 0)) {
-      this.reportError('This sheet is not connected to a Shopify product variant yet.');
+      this.reportError(configuratorText(core, 'product_variant_missing', 'This sheet is not connected to a Shopify product variant yet.'));
       return;
     }
     if (!core.state.variantAvailable) {
-      this.reportError('This sheet option is currently unavailable. Choose another option to continue.');
+      this.reportError(configuratorText(core, 'variant_unavailable', 'This sheet option is currently unavailable. Choose another option to continue.'));
       return;
     }
 
@@ -2559,9 +2571,9 @@ class CartManager {
     if (button) {
       button.classList.add('is-busy');
       if (typeof button.setAttribute === 'function') button.setAttribute('aria-busy', 'true');
-      button.textContent = 'Adding to cart…';
+      button.textContent = configuratorText(core, 'adding_to_cart', 'Adding to cart\u2026');
     }
-    this.setStatus('Adding to cart…');
+    this.setStatus(configuratorText(core, 'adding_to_cart', 'Adding to cart\u2026'));
 
     try {
       var sheetWidthMm = this.roundMm(core.CANVAS_W);
@@ -2599,17 +2611,19 @@ class CartManager {
         payload = {};
       }
       if (!response.ok) {
-        throw new Error(payload.description || payload.message || 'The design could not be added to cart.');
+        throw new Error(payload.description || payload.message || configuratorText(core, 'design_add_failed', 'The design could not be added to cart.'));
       }
 
-      this.setStatus('Added to cart.', 'success');
+      this.setStatus(configuratorText(core, 'design_added', 'Added to cart.'), 'success');
       core.dispatchAddToCartEvent(payload);
       if (core.dataset.redirectToCart !== 'false') {
         window.location.assign(core.dataset.cartUrl || '/cart');
       }
     } catch (error) {
-      var message = error && error.message ? error.message : 'The design could not be added to cart.';
-      this.reportError('Could not add to cart. ' + message);
+      var message = error && error.message
+        ? error.message
+        : configuratorText(core, 'design_add_failed', 'The design could not be added to cart.');
+      this.reportError(configuratorText(core, 'cart_add_failed', 'Could not add to cart.') + ' ' + message);
     } finally {
       this.busy = false;
       if (button) {
@@ -2650,8 +2664,10 @@ class PriceManager {
     var core = this.core;
     if (!core.countEl) return;
     var sel = core.state.selectedIds.length;
-    core.countEl.textContent = core.state.items.length + ' items' +
-      (sel ? ' (' + sel + ' selected)' : '');
+    var itemsLabel = configuratorText(core, 'items', 'items');
+    var selectedLabel = configuratorText(core, 'selected', 'selected');
+    core.countEl.textContent = core.state.items.length + ' ' + itemsLabel +
+      (sel ? ' (' + sel + ' ' + selectedLabel + ')' : '');
   }
 
   updateStats() {
@@ -2665,7 +2681,8 @@ class PriceManager {
       areaMm += widthMm * heightMm;
     });
     var areaCm = Math.round(areaMm / 100);
-    el.textContent = core.state.items.length + ' items \u00b7 ' + areaCm + ' cm\u00b2';
+    el.textContent = core.state.items.length + ' ' + configuratorText(core, 'items', 'items')
+      + ' \u00b7 ' + areaCm + ' ' + configuratorText(core, 'area_unit', 'cm\u00b2');
   }
 
   qtyDown() {
@@ -3771,6 +3788,15 @@ class StickerConfigurator extends HTMLElement {
       this.abortController = new AbortController();
     }
     this.sid = this.dataset.sectionId;
+    this.copy = {};
+    var copyScript = this.querySelector('[data-configurator-copy]');
+    if (copyScript) {
+      try {
+        this.copy = JSON.parse(copyScript.textContent || '{}');
+      } catch (_error) {
+        this.copy = {};
+      }
+    }
 
     // DOM caching (V07 fix): cache all commonly-queried elements
     this.cache = {};
@@ -4268,7 +4294,9 @@ class StickerConfigurator extends HTMLElement {
         if (this.multiSelectBtn) {
           this.multiSelectBtn.classList.toggle('active', this.state.multiSelectMode);
           this.multiSelectBtn.setAttribute('aria-pressed', String(this.state.multiSelectMode));
-          this.multiSelectBtn.title = this.state.multiSelectMode ? 'Exit multi-select' : 'Multi-select';
+          this.multiSelectBtn.title = this.state.multiSelectMode
+            ? configuratorText(this, 'multi_select_exit', 'Exit multi-select')
+            : configuratorText(this, 'multi_select', 'Multi-select');
         }
         break;
       default: break;
@@ -4376,14 +4404,16 @@ class StickerConfigurator extends HTMLElement {
     var allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
     var maxBytes = Math.max(2, Number(this.dataset.maxFileMb) || 20) * 1024 * 1024;
     if (allowedTypes.indexOf(file.type) === -1) {
-      this.modalManager.showErrorModal('Use a PNG, JPG, or WebP artwork file.');
+      this.modalManager.showErrorModal(configuratorText(this, 'file_type_error', 'Use a PNG, JPG, or WebP artwork file.'));
       if (this.fileInput) this.fileInput.value = '';
       return;
     }
     if (file.size > maxBytes) {
-      this.modalManager.showErrorModal(
+      this.modalManager.showErrorModal(configuratorText(
+        this,
+        'file_size_error',
         'Artwork files must be smaller than ' + (Number(this.dataset.maxFileMb) || 20) + ' MB.'
-      );
+      ));
       if (this.fileInput) this.fileInput.value = '';
       return;
     }
@@ -4400,7 +4430,7 @@ class StickerConfigurator extends HTMLElement {
     if (modalZone) {
       var textEl = modalZone.querySelector('.cfg-modal-text');
       var iconEl = modalZone.querySelector('.cfg-modal-icon');
-      if (textEl) textEl.textContent = 'File selected';
+      if (textEl) textEl.textContent = configuratorText(this, 'design_selected', 'File selected');
       if (iconEl) {
         iconEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
       }
@@ -4418,7 +4448,7 @@ class StickerConfigurator extends HTMLElement {
         if (modalAddBtn) modalAddBtn.disabled = true;
         URL.revokeObjectURL(objectUrl);
         core.modalManager.closeModal(core.modalEl);
-        core.modalManager.showErrorModal('Artwork resolution is too large. The maximum is 50 megapixels.');
+        core.modalManager.showErrorModal(configuratorText(core, 'resolution_too_large', 'Artwork resolution is too large. The maximum is 50 megapixels.'));
         return;
       }
       var fitted = core._fitModalImageSize(

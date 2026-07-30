@@ -24,7 +24,7 @@ class ModalManager {
     if (modalZone) {
       var textEl = modalZone.querySelector('.cfg-modal-text');
       var iconEl = modalZone.querySelector('.cfg-modal-icon');
-      if (textEl) textEl.textContent = 'Choose a file or drop it here';
+      if (textEl) textEl.textContent = configuratorText(core, 'choose_or_drop_design', 'Choose a file or drop it here');
       if (iconEl) {
         iconEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
       }
@@ -53,6 +53,7 @@ class ModalManager {
   }
 
   showEditTextModal(item, callback) {
+    var core = this.core;
     var curText = item.text || '';
     var curSize = item.fontSize || 16;
     var curColor = item.color || '#2D3436';
@@ -72,13 +73,13 @@ class ModalManager {
 
     var title = document.createElement('h3');
     title.className = 'cfg-modal-title';
-    title.textContent = 'Edit Text';
+    title.textContent = configuratorText(core, 'edit_text_title', 'Edit Text');
     titleRow.appendChild(title);
 
     var closeBtn = document.createElement('button');
     closeBtn.className = 'cfg-modal-close';
     closeBtn.dataset.action = 'close';
-    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.setAttribute('aria-label', configuratorText(core, 'close', 'Close'));
     closeBtn.textContent = '\u00D7';
     titleRow.appendChild(closeBtn);
     box.appendChild(titleRow);
@@ -93,7 +94,7 @@ class ModalManager {
     row1.className = 'cfg-et-row';
 
     // SIZE field
-    var sizeField = this._createField('SIZE');
+    var sizeField = this._createField(configuratorText(core, 'size_label', 'SIZE'));
     var sizeInput = document.createElement('input');
     sizeInput.className = 'cfg-et-input';
     sizeInput.dataset.field = 'size';
@@ -105,7 +106,7 @@ class ModalManager {
     row1.appendChild(sizeField);
 
     // COLOR field
-    var colorField = this._createField('COLOR');
+    var colorField = this._createField(configuratorText(core, 'color_label', 'COLOR'));
     var colorInput = document.createElement('input');
     colorInput.className = 'cfg-et-input cfg-et-color';
     colorInput.dataset.field = 'color';
@@ -115,7 +116,7 @@ class ModalManager {
     row1.appendChild(colorField);
 
     // BG field
-    var bgField = this._createField('BG');
+    var bgField = this._createField(configuratorText(core, 'bg_label', 'BG'));
     var bgInput = document.createElement('input');
     bgInput.className = 'cfg-et-input cfg-et-color';
     bgInput.dataset.field = 'bg';
@@ -133,14 +134,14 @@ class ModalManager {
     var boldBtn = document.createElement('button');
     boldBtn.className = 'cfg-et-style-btn' + (curWeight === 'bold' ? ' active' : '');
     boldBtn.dataset.style = 'bold';
-    boldBtn.setAttribute('aria-label', 'Bold');
+    boldBtn.setAttribute('aria-label', configuratorText(core, 'bold', 'Bold'));
     boldBtn.textContent = 'B';
     etToolbar.appendChild(boldBtn);
 
     var italicBtn = document.createElement('button');
     italicBtn.className = 'cfg-et-style-btn' + (curStyle === 'italic' ? ' active' : '');
     italicBtn.dataset.style = 'italic';
-    italicBtn.setAttribute('aria-label', 'Italic');
+    italicBtn.setAttribute('aria-label', configuratorText(core, 'italic', 'Italic'));
     italicBtn.textContent = 'I';
     etToolbar.appendChild(italicBtn);
 
@@ -150,7 +151,11 @@ class ModalManager {
 
     // Align buttons
     var aligns = ['left', 'center', 'right'];
-    ['Align left', 'Align center', 'Align right'].forEach(function (label, i) {
+    [
+      configuratorText(core, 'align_left', 'Align left'),
+      configuratorText(core, 'align_center', 'Align center'),
+      configuratorText(core, 'align_right', 'Align right')
+    ].forEach(function (label, i) {
       var alignBtn = document.createElement('button');
       alignBtn.className = 'cfg-et-align-btn' + (curAlign === aligns[i] ? ' active' : '');
       alignBtn.dataset.align = aligns[i];
@@ -169,13 +174,13 @@ class ModalManager {
     var cancelBtn2 = document.createElement('button');
     cancelBtn2.className = 'cfg-btn-sec';
     cancelBtn2.dataset.action = 'cancel';
-    cancelBtn2.textContent = 'Cancel';
+    cancelBtn2.textContent = configuratorText(core, 'cancel', 'Cancel');
     actions.appendChild(cancelBtn2);
 
     var saveBtn = document.createElement('button');
     saveBtn.className = 'cfg-btn-pry';
     saveBtn.dataset.action = 'save';
-    saveBtn.textContent = 'Save';
+    saveBtn.textContent = configuratorText(core, 'save', 'Save');
     actions.appendChild(saveBtn);
 
     box.appendChild(actions);
@@ -242,6 +247,7 @@ class ModalManager {
   }
 
   showConfirmModal(msg, callback) {
+    var core = this.core;
     var modal = this.createModal('');
 
     var box = document.createElement('div');
@@ -257,12 +263,12 @@ class ModalManager {
 
     var cancelBtn = document.createElement('button');
     cancelBtn.className = 'cfg-btn-sec';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = configuratorText(core, 'cancel', 'Cancel');
     actions.appendChild(cancelBtn);
 
     var confirmBtn = document.createElement('button');
     confirmBtn.className = 'cfg-btn-danger';
-    confirmBtn.textContent = 'OK';
+    confirmBtn.textContent = configuratorText(core, 'ok', 'OK');
     actions.appendChild(confirmBtn);
 
     box.appendChild(actions);
@@ -282,6 +288,7 @@ class ModalManager {
   }
 
   showErrorModal(msg) {
+    var core = this.core;
     var modal = this.createModal('');
 
     var box = document.createElement('div');
@@ -297,7 +304,7 @@ class ModalManager {
 
     var closeBtn = document.createElement('button');
     closeBtn.className = 'cfg-btn-pry';
-    closeBtn.textContent = 'OK';
+    closeBtn.textContent = configuratorText(core, 'ok', 'OK');
     actions.appendChild(closeBtn);
 
     box.appendChild(actions);

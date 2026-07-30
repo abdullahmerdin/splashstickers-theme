@@ -26,8 +26,10 @@ class PriceManager {
     var core = this.core;
     if (!core.countEl) return;
     var sel = core.state.selectedIds.length;
-    core.countEl.textContent = core.state.items.length + ' items' +
-      (sel ? ' (' + sel + ' selected)' : '');
+    var itemsLabel = configuratorText(core, 'items', 'items');
+    var selectedLabel = configuratorText(core, 'selected', 'selected');
+    core.countEl.textContent = core.state.items.length + ' ' + itemsLabel +
+      (sel ? ' (' + sel + ' ' + selectedLabel + ')' : '');
   }
 
   updateStats() {
@@ -41,7 +43,8 @@ class PriceManager {
       areaMm += widthMm * heightMm;
     });
     var areaCm = Math.round(areaMm / 100);
-    el.textContent = core.state.items.length + ' items \u00b7 ' + areaCm + ' cm\u00b2';
+    el.textContent = core.state.items.length + ' ' + configuratorText(core, 'items', 'items')
+      + ' \u00b7 ' + areaCm + ' ' + configuratorText(core, 'area_unit', 'cm\u00b2');
   }
 
   qtyDown() {
