@@ -22,7 +22,9 @@ function readThemeJson(relativePath) {
 const checks = [
   ['snippets/stylesheets.liquid', "'splash-theme.css' | asset_url | stylesheet_tag"],
   ['snippets/product-information-content.liquid', 'splash-product-information'],
-  ['sections/product-information.liquid', 'splash-sticky-add-to-cart'],
+  ['sections/product-information.liquid', "render 'sticky-add-to-cart'"],
+  ['snippets/sticky-add-to-cart.liquid', 'splash-sticky-add-to-cart'],
+  ['snippets/sticky-add-to-cart.liquid', '{% stylesheet %}'],
   ['sections/sticker-configurator.liquid', 'data-clipboard-enabled'],
   ['sections/sticker-configurator.liquid', 'role="region"'],
   ['sections/sticker-configurator.liquid', 'aria-modal="true"'],
