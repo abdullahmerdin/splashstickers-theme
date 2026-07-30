@@ -1,411 +1,404 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
-    "sections":  {
-                     "splash_drawing":  {
-                                            "type":  "splash-hero",
-                                            "name":  "Splash Drawing Hero",
-                                            "settings":  {
-                                                             "heading":  "Your Vision, A Sticker",
-                                                             "draw_hint":  "Swipe to draw",
-                                                             "background_color":  "#F8F9FA",
-                                                             "section_height":  520,
-                                                             "padding_top":  72,
-                                                             "padding_bottom":  72
-                                                         },
-                                            "blocks":  {
-                                                           "button_shop":  {
-                                                                               "type":  "button",
-                                                                               "settings":  {
-                                                                                                "button_label":  "Shop Stickers",
-                                                                                                "button_link":  "shopify://collections/all",
-                                                                                                "button_style":  "solid",
-                                                                                                "button_bg":  "#6C5CE7",
-                                                                                                "button_text":  "#FFFFFF"
-                                                                                            }
-                                                                           },
-                                                           "button_custom":  {
-                                                                                 "type":  "button",
-                                                                                 "settings":  {
-                                                                                                  "button_label":  "Design Your Own",
-                                                                                                  "button_link":  "shopify://collections/custom-stickers",
-                                                                                                  "button_style":  "outline",
-                                                                                                  "button_bg":  "#6C5CE7",
-                                                                                                  "button_text":  "#6C5CE7"
-                                                                                              }
-                                                                             }
-                                                       },
-                                            "block_order":  [
-                                                                "button_shop",
-                                                                "button_custom"
-                                                            ]
-                                        },
-                     "category_cards":  {
-                                            "type":  "sticker-categories",
-                                            "settings":  {
-                                                             "heading":  "Shop by Product Type",
-                                                             "subtext":  "Start with the format that fits your print job.",
-                                                             "circle_size":  100,
-                                                             "gap":  16,
-                                                             "background_color":  "#FFFFFF",
-                                                             "padding_top":  40,
-                                                             "padding_bottom":  40
-                                                         },
-                                            "blocks":  {
-                                                           "cat_die_cut":  {
-                                                                               "type":  "category",
-                                                                               "settings":  {
-                                                                                                "icon":  "",
-                                                                                                "label":  "Die Cut",
-                                                                                                "color_style":  "purple"
-                                                                                            }
-                                                                           },
-                                                           "cat_uv_dtf":  {
-                                                                              "type":  "category",
-                                                                              "settings":  {
-                                                                                               "icon":  "",
-                                                                                               "label":  "UV DTF",
-                                                                                               "color_style":  "teal"
-                                                                                           }
-                                                                          },
-                                                           "cat_uv":  {
-                                                                          "type":  "category",
-                                                                          "settings":  {
-                                                                                           "icon":  "",
-                                                                                           "label":  "UV",
-                                                                                           "color_style":  "pink"
-                                                                                       }
-                                                                      },
-                                                           "cat_magnet":  {
-                                                                              "type":  "category",
-                                                                              "settings":  {
-                                                                                               "icon":  "",
-                                                                                               "label":  "Magnet",
-                                                                                               "color_style":  "gold"
-                                                                                           }
-                                                                          },
-                                                           "cat_emboss":  {
-                                                                              "type":  "category",
-                                                                              "settings":  {
-                                                                                               "icon":  "",
-                                                                                               "label":  "Emboss",
-                                                                                               "color_style":  "purple"
-                                                                                           }
-                                                                          },
-                                                           "cat_textile":  {
-                                                                               "type":  "category",
-                                                                               "settings":  {
-                                                                                                "icon":  "",
-                                                                                                "label":  "Tekstil",
-                                                                                                "color_style":  "teal"
-                                                                                            }
-                                                                           }
-                                                       },
-                                            "block_order":  [
-                                                                "cat_die_cut",
-                                                                "cat_uv_dtf",
-                                                                "cat_uv",
-                                                                "cat_magnet",
-                                                                "cat_emboss",
-                                                                "cat_textile"
-                                                            ]
-                                        },
-                     "featured_stickers":  {
-                                               "type":  "product-list",
-                                               "blocks":  {
-                                                              "static-header":  {
-                                                                                    "type":  "_product-list-content",
-                                                                                    "name":  "Header",
-                                                                                    "static":  true,
-                                                                                    "settings":  {
-                                                                                                     "content_direction":  "row",
-                                                                                                     "vertical_on_mobile":  false,
-                                                                                                     "horizontal_alignment":  "space-between",
-                                                                                                     "vertical_alignment":  "flex-end",
-                                                                                                     "align_baseline":  true,
-                                                                                                     "gap":  12,
-                                                                                                     "width":  "fill",
-                                                                                                     "height":  "fit",
-                                                                                                     "background_media":  "none",
-                                                                                                     "border":  "none",
-                                                                                                     "border_width":  1,
-                                                                                                     "border_radius":  0,
-                                                                                                     "padding-block-start":  0,
-                                                                                                     "padding-block-end":  0,
-                                                                                                     "padding-inline-start":  0,
-                                                                                                     "padding-inline-end":  0
-                                                                                                 },
-                                                                                    "blocks":  {
-                                                                                                   "heading":  {
-                                                                                                                   "type":  "_product-list-text",
-                                                                                                                   "name":  "Heading",
-                                                                                                                   "settings":  {
-                                                                                                                                    "text":  "\u003ch2\u003eBest Sellers\u003c/h2\u003e",
-                                                                                                                                    "width":  "fit-content",
-                                                                                                                                    "alignment":  "left",
-                                                                                                                                    "type_preset":  "h4",
-                                                                                                                                    "font":  "var(--font-heading--family)",
-                                                                                                                                    "line_height":  "normal",
-                                                                                                                                    "letter_spacing":  "normal",
-                                                                                                                                    "case":  "none",
-                                                                                                                                    "wrap":  "pretty",
-                                                                                                                                    "background":  false,
-                                                                                                                                    "padding-block-start":  0,
-                                                                                                                                    "padding-block-end":  0
-                                                                                                                                },
-                                                                                                                   "blocks":  {
-
-                                                                                                                              }
-                                                                                                               },
-                                                                                                   "view_all":  {
-                                                                                                                    "type":  "_product-list-button",
-                                                                                                                    "name":  "View All",
-                                                                                                                    "settings":  {
-                                                                                                                                     "label":  "View All",
-                                                                                                                                     "open_in_new_tab":  false,
-                                                                                                                                     "style_class":  "link",
-                                                                                                                                     "width":  "fit-content"
-                                                                                                                                 },
-                                                                                                                    "blocks":  {
-
-                                                                                                                               }
-                                                                                                                }
-                                                                                               },
-                                                                                    "block_order":  [
-                                                                                                        "heading",
-                                                                                                        "view_all"
-                                                                                                    ]
-                                                                                },
-                                                              "static-product-card":  {
-                                                                                          "type":  "_product-card",
-                                                                                          "name":  "Product Card",
-                                                                                          "static":  true,
-                                                                                          "settings":  {
-                                                                                                           "product_card_gap":  4,
-                                                                                                           "border":  "none",
-                                                                                                           "border_width":  1,
-                                                                                                           "border_radius":  12,
-                                                                                                           "padding-block-start":  0,
-                                                                                                           "padding-block-end":  0,
-                                                                                                           "padding-inline-start":  0,
-                                                                                                           "padding-inline-end":  0
-                                                                                                       },
-                                                                                          "blocks":  {
-                                                                                                         "product_card_gallery":  {
-                                                                                                                                      "type":  "_product-card-gallery",
-                                                                                                                                      "name":  "Media",
-                                                                                                                                      "settings":  {
-                                                                                                                                                       "image_ratio":  "square",
-                                                                                                                                                       "border":  "none",
-                                                                                                                                                       "border_width":  1,
-                                                                                                                                                       "border_radius":  12,
-                                                                                                                                                       "padding-block-start":  0,
-                                                                                                                                                       "padding-block-end":  0,
-                                                                                                                                                       "padding-inline-start":  0,
-                                                                                                                                                       "padding-inline-end":  0
-                                                                                                                                                   },
-                                                                                                                                      "blocks":  {
-
-                                                                                                                                                 }
-                                                                                                                                  },
-                                                                                                         "product_title":  {
-                                                                                                                               "type":  "product-title",
-                                                                                                                               "name":  "Title",
-                                                                                                                               "settings":  {
-                                                                                                                                                "width":  "100%",
-                                                                                                                                                "alignment":  "center",
-                                                                                                                                                "type_preset":  "rte",
-                                                                                                                                                "font":  "var(--font-body--family)",
-                                                                                                                                                "line_height":  "normal",
-                                                                                                                                                "letter_spacing":  "normal",
-                                                                                                                                                "case":  "none",
-                                                                                                                                                "padding-block-start":  8,
-                                                                                                                                                "padding-block-end":  0,
-                                                                                                                                                "padding-inline-start":  0,
-                                                                                                                                                "padding-inline-end":  0
-                                                                                                                                            },
-                                                                                                                               "blocks":  {
-
-                                                                                                                                          }
-                                                                                                                           },
-                                                                                                         "price":  {
-                                                                                                                       "type":  "price",
-                                                                                                                       "name":  "Price",
-                                                                                                                       "settings":  {
-                                                                                                                                        "show_sale_price_first":  true,
-                                                                                                                                        "show_installments":  false,
-                                                                                                                                        "show_tax_info":  false,
-                                                                                                                                        "type_preset":  "h6",
-                                                                                                                                        "width":  "100%",
-                                                                                                                                        "alignment":  "center",
-                                                                                                                                        "font":  "var(--font-body--family)",
-                                                                                                                                        "line_height":  "normal",
-                                                                                                                                        "letter_spacing":  "normal",
-                                                                                                                                        "case":  "none",
-                                                                                                                                        "padding-block-start":  0,
-                                                                                                                                        "padding-block-end":  0,
-                                                                                                                                        "padding-inline-start":  0,
-                                                                                                                                        "padding-inline-end":  0
-                                                                                                                                    },
-                                                                                                                       "blocks":  {
-
-                                                                                                                                  }
-                                                                                                                   }
-                                                                                                     },
-                                                                                          "block_order":  [
-                                                                                                              "product_card_gallery",
-                                                                                                              "product_title",
-                                                                                                              "price"
-                                                                                                          ]
-                                                                                      }
-                                                          },
-                                               "name":  "Best Sellers",
-                                               "settings":  {
-                                                                "collection":  "all",
-                                                                "layout_type":  "grid",
-                                                                "carousel_on_mobile":  false,
-                                                                "max_products":  4,
-                                                                "columns":  4,
-                                                                "mobile_columns":  "2",
-                                                                "mobile_card_size":  "60cqw",
-                                                                "columns_gap":  16,
-                                                                "rows_gap":  20,
-                                                                "icons_style":  "none",
-                                                                "icons_shape":  "none",
-                                                                "section_width":  "page-width",
-                                                                "horizontal_alignment":  "flex-start",
-                                                                "gap":  28,
-                                                                "background_color":  "#FFFFFF",
-                                                                "padding-block-start":  40,
-                                                                "padding-block-end":  40
-                                                            }
-                                           },
-                     "custom_cta":  {
-                                        "type":  "splash-cta",
-                                        "settings":  {
-                                                         "heading":  "Can\u0027t Find What You\u0027re Looking For?",
-                                                         "subtext":  "Upload your own design and we\u0027ll turn it into a premium sticker.",
-                                                         "button_label":  "Create Your Custom Sticker",
-                                                         "button_link":  "shopify://collections/custom-stickers",
-                                                         "button_style":  "solid",
-                                                         "gradient_start":  "#6C5CE7",
-                                                         "gradient_end":  "#FD79A8",
-                                                         "heading_color":  "#FFFFFF",
-                                                         "text_color":  "#FFFFFF",
-                                                         "padding_top":  80,
-                                                         "padding_bottom":  80
-                                                     },
-                                        "blocks":  {
-
-                                                   },
-                                        "block_order":  [
-
-                                                        ]
-                                    },
-                     "sticker_process":  {
-                                             "type":  "sticker-process",
-                                             "settings":  {
-                                                              "eyebrow":  "Simple from start to finish",
-                                                              "heading":  "How it works",
-                                                              "subtext":  "Three steps from upload to shipped order.",
-                                                              "button_label":  "Start designing",
-                                                              "button_link":  "shopify://collections/custom-stickers",
-                                                              "background_color":  "#F8F9FA",
-                                                              "padding_top":  56,
-                                                              "padding_bottom":  56
-                                                          },
-                                             "blocks":  {
-                                                            "step_upload":  {
-                                                                                "type":  "step",
-                                                                                "settings":  {
-                                                                                                 "icon":  "",
-                                                                                                 "title":  "Upload your artwork",
-                                                                                                 "text":  "Choose a clear PNG, JPG or WebP file."
-                                                                                             }
-                                                                            },
-                                                            "step_arrange":  {
-                                                                                 "type":  "step",
-                                                                                 "settings":  {
-                                                                                                  "icon":  "",
-                                                                                                  "title":  "Choose size and quantity",
-                                                                                                  "text":  "Set size, copies, and spacing."
-                                                                                              }
-                                                                             },
-                                                            "step_ship":  {
-                                                                              "type":  "step",
-                                                                              "settings":  {
-                                                                                               "icon":  "",
-                                                                                               "title":  "We print and ship",
-                                                                                               "text":  "Review your order, then follow production updates."
-                                                                                           }
-                                                                          }
-                                                        },
-                                             "block_order":  [
-                                                                 "step_upload",
-                                                                 "step_arrange",
-                                                                 "step_ship"
-                                                             ]
-                                         },
-                     "trust_section":  {
-                                           "type":  "trust-badges",
-                                           "settings":  {
-                                                            "heading":  "Why choose us",
-                                                            "subtext":  "Quality, speed, and clear production from start to finish.",
-                                                            "columns_desktop":  "4",
-                                                            "background_color":  "#FFFFFF",
-                                                            "padding_top":  48,
-                                                            "padding_bottom":  48
-                                                        },
-                                           "blocks":  {
-                                                          "badge_quality":  {
-                                                                                "type":  "badge",
-                                                                                "settings":  {
-                                                                                                 "icon":  "",
-                                                                                                 "title":  "Premium quality",
-                                                                                                 "description":  "Vibrant colors, durable vinyl and a weatherproof finish.",
-                                                                                                 "color_style":  "purple"
-                                                                                             }
-                                                                            },
-                                                          "badge_turnaround":  {
-                                                                                   "type":  "badge",
-                                                                                   "settings":  {
-                                                                                                    "icon":  "",
-                                                                                                    "title":  "Fast turnaround",
-                                                                                                    "description":  "Clear production updates from upload to dispatch.",
-                                                                                                    "color_style":  "pink"
-                                                                                                }
-                                                                               },
-                                                          "badge_shapes":  {
-                                                                               "type":  "badge",
-                                                                               "settings":  {
-                                                                                                "icon":  "",
-                                                                                                "title":  "Custom shapes",
-                                                                                                "description":  "Die-cut to fit your artwork and chosen size.",
-                                                                                                "color_style":  "teal"
-                                                                                            }
-                                                                           },
-                                                          "badge_shipping":  {
-                                                                                 "type":  "badge",
-                                                                                 "settings":  {
-                                                                                                  "icon":  "",
-                                                                                                  "title":  "Worldwide shipping",
-                                                                                                  "description":  "Delivery options shown clearly at checkout.",
-                                                                                                  "color_style":  "gold"
-                                                                                              }
-                                                                             }
-                                                      },
-                                           "block_order":  [
-                                                               "badge_quality",
-                                                               "badge_turnaround",
-                                                               "badge_shapes",
-                                                               "badge_shipping"
-                                                           ]
-                                       }
-                 },
-    "order":  [
-                  "splash_drawing",
-                  "category_cards",
-                  "featured_stickers",
-                  "sticker_process",
-                  "trust_section",
-                  "custom_cta"
-              ]
+  "sections": {
+    "splash_drawing": {
+      "type": "splash-hero",
+      "blocks": {
+        "button_shop": {
+          "type": "button",
+          "settings": {
+            "button_label": "Shop Stickers",
+            "button_link": "shopify://collections/all",
+            "button_style": "solid",
+            "button_bg": "#6C5CE7",
+            "button_text": "#FFFFFF"
+          }
+        },
+        "button_custom": {
+          "type": "button",
+          "settings": {
+            "button_label": "Design Your Own",
+            "button_link": "shopify://collections/custom-stickers",
+            "button_style": "outline",
+            "button_bg": "#6C5CE7",
+            "button_text": "#6C5CE7"
+          }
+        }
+      },
+      "block_order": [
+        "button_shop",
+        "button_custom"
+      ],
+      "name": "Splash Drawing Hero",
+      "settings": {
+        "heading": "Your Vision, A Sticker",
+        "draw_hint": "Swipe to draw",
+        "background_color": "#F8F9FA",
+        "section_height": 520,
+        "padding_top": 72,
+        "padding_bottom": 72
+      }
+    },
+    "category_cards": {
+      "type": "sticker-categories",
+      "blocks": {
+        "cat_die_cut": {
+          "type": "category",
+          "settings": {
+            "icon": "",
+            "label": "Die Cut",
+            "color_style": "purple"
+          }
+        },
+        "cat_uv_dtf": {
+          "type": "category",
+          "settings": {
+            "icon": "",
+            "label": "UV DTF",
+            "color_style": "teal"
+          }
+        },
+        "cat_uv": {
+          "type": "category",
+          "settings": {
+            "icon": "",
+            "label": "UV",
+            "color_style": "pink"
+          }
+        },
+        "cat_magnet": {
+          "type": "category",
+          "settings": {
+            "icon": "",
+            "label": "Magnet",
+            "color_style": "gold"
+          }
+        },
+        "cat_emboss": {
+          "type": "category",
+          "settings": {
+            "icon": "",
+            "label": "Emboss",
+            "color_style": "purple"
+          }
+        },
+        "cat_textile": {
+          "type": "category",
+          "settings": {
+            "icon": "",
+            "label": "Tekstil",
+            "color_style": "teal"
+          }
+        }
+      },
+      "block_order": [
+        "cat_die_cut",
+        "cat_uv_dtf",
+        "cat_uv",
+        "cat_magnet",
+        "cat_emboss",
+        "cat_textile"
+      ],
+      "settings": {
+        "heading": "Shop by Product Type",
+        "subtext": "Start with the format that fits your print job.",
+        "circle_size": 100,
+        "gap": 16,
+        "background_color": "#FFFFFF",
+        "padding_top": 40,
+        "padding_bottom": 40
+      }
+    },
+    "featured_stickers": {
+      "type": "product-list",
+      "blocks": {
+        "static-header": {
+          "type": "_product-list-content",
+          "name": "Header",
+          "static": true,
+          "settings": {
+            "content_direction": "row",
+            "vertical_on_mobile": false,
+            "horizontal_alignment": "space-between",
+            "vertical_alignment": "flex-end",
+            "align_baseline": true,
+            "gap": 12,
+            "width": "fill",
+            "height": "fit",
+            "background_media": "none",
+            "border": "none",
+            "border_width": 1,
+            "border_radius": 0,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {
+            "heading": {
+              "type": "_product-list-text",
+              "name": "Heading",
+              "settings": {
+                "text": "<h2>Best Sellers</h2>",
+                "width": "fit-content",
+                "alignment": "left",
+                "type_preset": "h4",
+                "font": "var(--font-heading--family)",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "wrap": "pretty",
+                "background": false,
+                "padding-block-start": 0,
+                "padding-block-end": 0
+              },
+              "blocks": {}
+            },
+            "view_all": {
+              "type": "_product-list-button",
+              "name": "View All",
+              "settings": {
+                "label": "View All",
+                "open_in_new_tab": false,
+                "style_class": "link",
+                "width": "fit-content"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading",
+            "view_all"
+          ]
+        },
+        "static-product-card": {
+          "type": "_product-card",
+          "name": "Product Card",
+          "static": true,
+          "settings": {
+            "product_card_gap": 4,
+            "border": "none",
+            "border_width": 1,
+            "border_radius": 12,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {
+            "product_card_gallery": {
+              "type": "_product-card-gallery",
+              "name": "Media",
+              "settings": {
+                "image_ratio": "square",
+                "border": "none",
+                "border_width": 1,
+                "border_radius": 12,
+                "padding-block-start": 0,
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
+              },
+              "blocks": {}
+            },
+            "product_title": {
+              "type": "product-title",
+              "name": "Title",
+              "settings": {
+                "width": "100%",
+                "alignment": "center",
+                "type_preset": "rte",
+                "font": "var(--font-body--family)",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "padding-block-start": 8,
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
+              },
+              "blocks": {}
+            },
+            "price": {
+              "type": "price",
+              "name": "Price",
+              "settings": {
+                "show_sale_price_first": true,
+                "show_installments": false,
+                "show_tax_info": false,
+                "type_preset": "h6",
+                "width": "100%",
+                "alignment": "center",
+                "font": "var(--font-body--family)",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "padding-block-start": 0,
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_card_gallery",
+            "product_title",
+            "price"
+          ]
+        }
+      },
+      "name": "Best Sellers",
+      "settings": {
+        "collection": "all",
+        "layout_type": "grid",
+        "carousel_on_mobile": false,
+        "max_products": 4,
+        "columns": 4,
+        "mobile_columns": "2",
+        "mobile_card_size": "60cqw",
+        "columns_gap": 16,
+        "rows_gap": 20,
+        "icons_style": "none",
+        "icons_shape": "none",
+        "section_width": "page-width",
+        "horizontal_alignment": "flex-start",
+        "gap": 28,
+        "background_color": "#FFFFFF",
+        "padding-block-start": 40,
+        "padding-block-end": 40
+      }
+    },
+    "custom_cta": {
+      "type": "splash-cta",
+      "settings": {
+        "heading": "Can't Find What You're Looking For?",
+        "subtext": "Upload your own design and we'll turn it into a premium sticker.",
+        "button_label": "Create Your Custom Sticker",
+        "button_link": "shopify://collections/custom-stickers",
+        "button_style": "solid",
+        "gradient_start": "#6C5CE7",
+        "gradient_end": "#FD79A8",
+        "heading_color": "#FFFFFF",
+        "text_color": "#FFFFFF",
+        "padding_top": 80,
+        "padding_bottom": 80
+      }
+    },
+    "sticker_process": {
+      "type": "sticker-process",
+      "blocks": {
+        "step_upload": {
+          "type": "step",
+          "settings": {
+            "icon": "",
+            "title": "Upload your artwork",
+            "text": "Choose a clear PNG, JPG or WebP file."
+          }
+        },
+        "step_arrange": {
+          "type": "step",
+          "settings": {
+            "icon": "",
+            "title": "Choose size and quantity",
+            "text": "Set size, copies, and spacing."
+          }
+        },
+        "step_ship": {
+          "type": "step",
+          "settings": {
+            "icon": "",
+            "title": "We print and ship",
+            "text": "Review your order, then follow production updates."
+          }
+        }
+      },
+      "block_order": [
+        "step_upload",
+        "step_arrange",
+        "step_ship"
+      ],
+      "settings": {
+        "eyebrow": "Simple from start to finish",
+        "heading": "How it works",
+        "subtext": "Three steps from upload to shipped order.",
+        "button_label": "Start designing",
+        "button_link": "shopify://collections/custom-stickers",
+        "background_color": "#F8F9FA",
+        "padding_top": 56,
+        "padding_bottom": 56
+      }
+    },
+    "trust_section": {
+      "type": "trust-badges",
+      "blocks": {
+        "badge_quality": {
+          "type": "badge",
+          "settings": {
+            "icon": "",
+            "title": "Premium quality",
+            "description": "Vibrant colors, durable vinyl and a weatherproof finish.",
+            "color_style": "purple"
+          }
+        },
+        "badge_turnaround": {
+          "type": "badge",
+          "settings": {
+            "icon": "",
+            "title": "Fast turnaround",
+            "description": "Clear production updates from upload to dispatch.",
+            "color_style": "pink"
+          }
+        },
+        "badge_shapes": {
+          "type": "badge",
+          "settings": {
+            "icon": "",
+            "title": "Custom shapes",
+            "description": "Die-cut to fit your artwork and chosen size.",
+            "color_style": "teal"
+          }
+        },
+        "badge_shipping": {
+          "type": "badge",
+          "settings": {
+            "icon": "",
+            "title": "Worldwide shipping",
+            "description": "Delivery options shown clearly at checkout.",
+            "color_style": "gold"
+          }
+        }
+      },
+      "block_order": [
+        "badge_quality",
+        "badge_turnaround",
+        "badge_shapes",
+        "badge_shipping"
+      ],
+      "settings": {
+        "heading": "Why choose us",
+        "subtext": "Quality, speed, and clear production from start to finish.",
+        "columns_desktop": "4",
+        "background_color": "#FFFFFF",
+        "padding_top": 48,
+        "padding_bottom": 48
+      }
+    }
+  },
+  "order": [
+    "splash_drawing",
+    "category_cards",
+    "featured_stickers",
+    "sticker_process",
+    "trust_section",
+    "custom_cta"
+  ]
 }
