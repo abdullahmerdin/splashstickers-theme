@@ -40,16 +40,19 @@
   </head>
 
   <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
-    {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
+    {% if request.page_type != '404' %}
+      {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
 
-    {% render 'chat-drawer' %}
+      {% render 'chat-drawer' %}
+    {% endif %}
 
     <div class="page-wrapper">
-      <div id="header-group">
-        {% sections 'header-group' %}
-      </div>
+      {% if request.page_type != '404' %}
+        <div id="header-group">
+          {% sections 'header-group' %}
+        </div>
 
-      <script>
+        <script>
         // Inline header height and menu style calculations to prevent layout shift
         // Note: Updates in calculateHeaderGroupHeight(), updateTransparentHeaderOffset() and setHeaderMenuStyle() utilities.js should be kept in sync with this function
         (function setHeaderHeighCustomProperties() {
@@ -115,7 +118,8 @@
             headerComponent.dataset.menuStyle = isTouchDevice || hasReachedMinimum ? 'drawer' : 'menu';
           }
         })();
-      </script>
+        </script>
+      {% endif %}
 
       <main
         id="MainContent"
@@ -128,18 +132,22 @@
         {{ content_for_layout }}
       </main>
 
-      <footer>
-        {% sections 'footer-group' %}
-      </footer>
+      {% if request.page_type != '404' %}
+        <footer>
+          {% sections 'footer-group' %}
+        </footer>
+      {% endif %}
     </div>
 
-    {% render 'cart-drawer', render_wrapper: true %}
-    {% render 'theme-drawer' %}
+    {% if request.page_type != '404' %}
+      {% render 'cart-drawer', render_wrapper: true %}
+      {% render 'theme-drawer' %}
 
-    {% render 'search-modal' %}
+      {% render 'search-modal' %}
 
-    {% if settings.quick_add or settings.mobile_quick_add %}
-      {% render 'quick-add-modal' %}
+      {% if settings.quick_add or settings.mobile_quick_add %}
+        {% render 'quick-add-modal' %}
+      {% endif %}
     {% endif %}
   </body>
 </html>
