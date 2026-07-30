@@ -2,9 +2,9 @@
   "sections": {
     "sticker_configurator": {
       "type": "sticker-configurator",
-      "name": "Sticker Configurator",
+      "name": "Design editor",
       "settings": {
-        "heading": "Design your sticker sheet",
+        "heading": "Add designs",
         "bg_color": "#f8f9fa",
         "base_price": 2.5,
         "grid_size": 20,
@@ -13,7 +13,7 @@
         "padding_top": 32,
         "padding_bottom": 32,
         "show_quick_start": true,
-        "quick_start_heading": "Build your sheet in three steps",
+        "quick_start_heading": "Three steps",
         "quick_start_step_1": "Upload a clear PNG, JPG or WebP design.",
         "quick_start_step_2": "Choose its print size and number of copies.",
         "quick_start_step_3": "Arrange the sheet, review it and add it to cart.",

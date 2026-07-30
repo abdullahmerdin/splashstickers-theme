@@ -1,4 +1,4 @@
-/* Sticker Configurator
+/* Design editor
    A deliberately small stacking system:
    grid (0) < items (10) < selection (20) < guides (30) < chrome (40).
    Native dialogs render in the browser top layer and do not compete here. */
