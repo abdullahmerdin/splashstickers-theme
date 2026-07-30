@@ -1885,6 +1885,7 @@
 .splash-cart-section .splash-gangsheet-summary__field,
 .splash-cart-drawer__dialog .splash-gangsheet-summary__field {
   display: grid;
+  align-content: start;
   min-width: 0;
   gap: 0.3rem;
   padding: 0.65rem 0.75rem;
@@ -1911,6 +1912,24 @@
   font-weight: 800;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+/* A drawer can stay narrow even when the viewport is desktop-sized. */
+@container cart-items (max-width: 560px) {
+  .splash-cart-section .splash-gangsheet-summary__details,
+  .splash-cart-drawer__dialog .splash-gangsheet-summary__details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .splash-cart-section .splash-gangsheet-summary__field--design-id,
+  .splash-cart-drawer__dialog .splash-gangsheet-summary__field--design-id {
+    grid-column: 1 / -1;
+  }
+
+  .splash-cart-section .splash-gangsheet-summary__field dd,
+  .splash-cart-drawer__dialog .splash-gangsheet-summary__field dd {
+    font-size: 0.86rem;
+  }
 }
 
 .splash-cart-section .cart-items__details,
