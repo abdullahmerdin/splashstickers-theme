@@ -11,23 +11,6 @@
   "type": "footer",
   "name": "Footer",
   "sections": {
-    "splash_cta_GG4D6q": {
-      "type": "splash-cta",
-      "name": "Call to action",
-      "settings": {
-        "heading": "Create Your Own Sticker",
-        "subtext": "Upload any design and we'll turn it into a premium, die-cut sticker. Free proof included!",
-        "button_label": "Start Designing",
-        "button_link": "shopify://collections",
-        "button_style": "solid",
-        "gradient_start": "#00CEC9",
-        "gradient_end": "#6C5CE7",
-        "heading_color": "#FFFFFF",
-        "text_color": "#FFFFFF",
-        "padding_top": 80,
-        "padding_bottom": 80
-      }
-    },
     "footer_m9NzUG": {
       "type": "footer",
       "blocks": {
@@ -163,6 +146,7 @@
         "group_H6VpwJ",
         "email_signup_crihX7"
       ],
+      "disabled": true,
       "name": "t:names.footer",
       "settings": {
         "section_width": "page-width",
@@ -220,6 +204,7 @@
         "footer_policy_list_VCdnpa",
         "social_links_Ew63Kq"
       ],
+      "disabled": true,
       "name": "t:names.utilities",
       "settings": {
         "section_width": "page-width",
@@ -233,7 +218,6 @@
     }
   },
   "order": [
-    "splash_cta_GG4D6q",
     "footer_m9NzUG",
     "footer_utilities_jLGE8U"
   ]
