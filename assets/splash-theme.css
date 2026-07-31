@@ -115,13 +115,6 @@
   text-transform: uppercase;
 }
 
-/* Accent divider */
-.splash-accent-divider {
-  height: 4px;
-  border: 0;
-  background: var(--splash-gradient-spectrum);
-}
-
 /* Tokenized compatibility surface for the existing Splash sections. */
 .sticker-categories-scroll {
   display: flex;
@@ -318,12 +311,6 @@
   }
 }
 
-.section-divider,
-.brand-header-bar,
-.footer-brand-bar {
-  background: var(--splash-gradient-spectrum);
-}
-
 .sticker-category-label {
   color: var(--splash-color-ink);
 }
@@ -356,9 +343,6 @@
     transition-duration: 0.01ms;
   }
 
-  .footer-brand-bar {
-    animation: none;
-  }
 }
 
 /* Shell: announcement bar and header */
@@ -1183,6 +1167,7 @@
 
 /* Horizon media tokens: fixed collection geometry must override per-card inline defaults. */
 .splash-collection-results .splash-product-card .card-gallery {
+  /* Intentional !important: the card ratio is emitted as an inline block setting. */
   --gallery-aspect-ratio: 1 / 1 !important;
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -1205,7 +1190,7 @@
 
 .splash-collection-results .splash-product-card .card-gallery
   :is(slideshow-slide, .product-media-container.media-fit) {
-  /* Horizon media token override: collection cards always render artwork contained. */
+  /* Intentional !important: the media-fit setting is emitted inline by Horizon. */
   --product-media-fit: contain !important;
 }
 
@@ -1344,10 +1329,8 @@
   --style-border-radius-inputs: var(--splash-radius-sm);
   --splash-product-soft: color-mix(in srgb, var(--splash-color-purple) 5%, var(--splash-color-surface));
   --splash-product-border: rgb(var(--splash-color-purple-rgb) / 0.18);
-  --splash-product-section-gap: clamp(16px, 2vw, 28px);
   --splash-product-content-gap: clamp(10px, 1.25vw, 16px);
   --splash-product-card-padding: clamp(12px, 1.5vw, 20px);
-  --gap: var(--splash-product-section-gap) !important;
 }
 
 .splash-product-information .product-information__media {
@@ -1356,6 +1339,7 @@
 
 /* Horizon product tokens: product media and detail surfaces use the Splash geometry contract. */
 .splash-product-information .splash-product-media-gallery {
+  /* Intentional !important: product media radius is emitted as an inline block setting. */
   --media-radius: var(--splash-radius-card) !important;
 }
 
@@ -1400,24 +1384,11 @@
 
 /* Horizon product token override: the product detail card owns its border contract. */
 .splash-product-information .product-details > .group-block {
-  --border-style: solid !important;
-  --border-width: 1px !important;
-  --border-color: var(--splash-product-border) !important;
-  --border-radius: var(--splash-radius-card) !important;
-  --padding-block-start: var(--splash-product-card-padding) !important;
-  --padding-block-end: var(--splash-product-card-padding) !important;
-  --padding-inline-start: var(--splash-product-card-padding) !important;
-  --padding-inline-end: var(--splash-product-card-padding) !important;
   max-width: min(100%, 42rem);
   margin-inline: auto;
   overflow: hidden;
   background: linear-gradient(160deg, var(--splash-color-surface), var(--splash-product-soft));
   box-shadow: var(--splash-shadow-card);
-}
-
-.splash-product-information .product-details > .group-block > .group-block-content {
-  --gap: var(--splash-product-content-gap) !important;
-  gap: var(--splash-product-content-gap) !important;
 }
 
 .splash-product-information .product-details .text-block h1,
@@ -1438,7 +1409,7 @@
 /* Base price selector override: the product price remains in the Splash primary color. */
 .splash-product-information .product-details product-price {
   display: block;
-  color: var(--splash-color-purple) !important;
+  color: var(--splash-color-purple);
 }
 
 .splash-product-information .product-details product-price .price {
@@ -1555,6 +1526,7 @@
 
 /* Shopify payment control override: keep the hosted button radius aligned with the product form. */
 .splash-product-information .product-details :is(.shopify-payment-button__button, .shopify-payment-button__button--unbranded) {
+  /* Intentional !important: Shopify owns the hosted control's inline radius. */
   border-radius: var(--splash-radius-control) !important;
 }
 
@@ -1699,6 +1671,7 @@
 
 /* Horizon cart shell: the summary surface owns its background inside the Splash card. */
 .splash-cart-section .cart-page__summary > .section-background {
+  /* Intentional !important: Theme Editor emits the section background inline. */
   background: transparent !important;
   background-color: transparent !important;
 }
@@ -1751,15 +1724,6 @@
     radial-gradient(circle at 100% 0, rgb(var(--splash-color-yellow-rgb) / 0.2), transparent 38%),
     linear-gradient(135deg, rgb(var(--splash-color-purple-rgb) / 0.08), rgb(var(--splash-color-pink-rgb) / 0.08));
   box-shadow: 0 8px 24px rgb(var(--splash-color-purple-rgb) / 0.1);
-}
-
-.splash-cart-section .splash-gangsheet-summary::before,
-.splash-cart-drawer__dialog .splash-gangsheet-summary::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 4px;
-  background: var(--splash-gradient-spectrum);
-  content: '';
 }
 
 .splash-cart-section .splash-gangsheet-summary__details,

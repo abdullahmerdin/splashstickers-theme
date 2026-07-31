@@ -29,10 +29,12 @@ checks:
 ```powershell
 npm.cmd install
 npm.cmd run vendor:jspdf
+npm.cmd run build:configurator
 npm.cmd run check:phase4
 npm.cmd run check:phase5
 npm.cmd run check:phase6
 npm.cmd run check:configurator
+npm.cmd run check:storefront
 ```
 
 The vendored `assets/jspdf.umd.min.js` file is committed so the storefront does

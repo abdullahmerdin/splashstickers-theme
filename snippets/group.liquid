@@ -6,6 +6,7 @@
   @param {string} shopify_attributes - String with Shopify attributes for the editor.
   @param {string} [class] - Custom classes for the group block.
   @param {string} [style] - Custom inline styles for the group block.
+  @param {string} [content_style] - Custom inline styles for the group content.
   @param {string} [background_color] - The background color of the group block.
   @param {string} [block_id] - The ID of the group block.
 
@@ -73,7 +74,7 @@
       layout-panel-flex--{{ settings.content_direction | default: 'column' }}
       {% if settings.vertical_on_mobile %} mobile-column{% endif %}
     "
-    style="{% render 'layout-panel-style', settings: settings %}"
+    style="{% render 'layout-panel-style', settings: settings %}{{ content_style }}"
   >
     {{- children -}}
   </div>

@@ -30,7 +30,8 @@ class SplashInkHero extends HTMLElement {
     this.activePointer = null;
     this.effectsFrame = null;
     this.lastEffectsTime = 0;
-    this.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    this.reduceMotion = this.motionQuery.matches;
     this.isTouchDevice = window.matchMedia('(max-width: 749px)').matches
       && (navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches);
 
@@ -39,6 +40,8 @@ class SplashInkHero extends HTMLElement {
     this.handlePointerEnd = this.handlePointerEnd.bind(this);
     this.handlePointerLeave = this.handlePointerLeave.bind(this);
     this.handleTouchMove = this.handleTouchMove.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleMotionPreferenceChange = this.handleMotionPreferenceChange.bind(this);
     this.clear = this.clear.bind(this);
     this.toggleExpanded = this.toggleExpanded.bind(this);
     this.updateExpandedHeight = this.updateExpandedHeight.bind(this);
@@ -46,14 +49,17 @@ class SplashInkHero extends HTMLElement {
     // Touch drawing needs to own the gesture, but desktop drawing must not
     // turn the hero into a wheel-scroll trap. Keep the browser's normal page
     // scrolling behaviour for mouse/trackpad users.
-    this.style.touchAction = this.isTouchDevice ? 'none' : 'auto';
-    this.style.overscrollBehavior = this.isTouchDevice ? 'none' : 'auto';
+    this.style.touchAction = this.isTouchDevice ? 'pan-y' : 'auto';
+    this.style.overscrollBehavior = 'auto';
     this.addEventListener('pointermove', this.handlePointerMove);
     this.addEventListener('pointerdown', this.handlePointerDown);
     this.addEventListener('pointerup', this.handlePointerEnd);
     this.addEventListener('pointercancel', this.handlePointerEnd);
     this.addEventListener('pointerleave', this.handlePointerLeave);
     this.addEventListener('touchmove', this.handleTouchMove, { passive: false, capture: true });
+    this.addEventListener('keydown', this.handleKeyDown);
+    this.motionQuery.addEventListener?.('change', this.handleMotionPreferenceChange);
+    this.motionQuery.addListener?.(this.handleMotionPreferenceChange);
     this.querySelector('[data-ink-clear]')?.addEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.addEventListener('click', this.toggleExpanded);
     window.addEventListener('resize', this.updateExpandedHeight);
@@ -73,6 +79,9 @@ class SplashInkHero extends HTMLElement {
     this.removeEventListener('pointercancel', this.handlePointerEnd);
     this.removeEventListener('pointerleave', this.handlePointerLeave);
     this.removeEventListener('touchmove', this.handleTouchMove, { capture: true });
+    this.removeEventListener('keydown', this.handleKeyDown);
+    this.motionQuery?.removeEventListener?.('change', this.handleMotionPreferenceChange);
+    this.motionQuery?.removeListener?.(this.handleMotionPreferenceChange);
     this.querySelector('[data-ink-clear]')?.removeEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.removeEventListener('click', this.toggleExpanded);
     window.removeEventListener('resize', this.updateExpandedHeight);
@@ -148,6 +157,26 @@ class SplashInkHero extends HTMLElement {
     return target instanceof Element && Boolean(target.closest('a, button'));
   }
 
+  handleMotionPreferenceChange(event) {
+    const reduceMotion = Boolean(event?.matches ?? this.motionQuery?.matches);
+    if (this.reduceMotion === reduceMotion) return;
+
+    this.reduceMotion = reduceMotion;
+    if (reduceMotion) {
+      if (this.effectsFrame) cancelAnimationFrame(this.effectsFrame);
+      this.effectsFrame = null;
+      this.droplets = [];
+      this.renderEffectsLayer();
+    }
+  }
+
+  handleKeyDown(event) {
+    if (event.key !== 'Escape' || !this.hasAttribute('data-expanded')) return;
+
+    event.preventDefault();
+    this.toggleExpanded(event);
+  }
+
   pointFromEvent(event) {
     const bounds = this.getBoundingClientRect();
     return {
@@ -159,6 +188,7 @@ class SplashInkHero extends HTMLElement {
 
   handlePointerDown(event) {
     if (this.isInteractiveTarget(event.target)) return;
+    if (event.button !== undefined && event.button !== 0) return;
 
     event.preventDefault();
     this.activePointer = event.pointerId;
@@ -508,7 +538,7 @@ class SplashInkHero extends HTMLElement {
 
     const button = this.querySelector('[data-ink-expand]');
     if (button) {
-      button.setAttribute('aria-pressed', String(expanded));
+      button.setAttribute('aria-expanded', String(expanded));
       button.setAttribute('aria-label', expanded ? 'Collapse drawing area' : 'Expand drawing area');
       button.title = expanded ? 'Collapse drawing area' : 'Expand drawing area';
     }
