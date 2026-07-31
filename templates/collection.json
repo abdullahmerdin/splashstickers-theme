@@ -12,7 +12,7 @@
     "section": {
       "type": "sticker-collection-hero",
       "settings": {
-        "show_brand": true,
+        "show_brand": false,
         "brand_text": "Splash Stickers",
         "show_heading": true,
         "heading": "",
