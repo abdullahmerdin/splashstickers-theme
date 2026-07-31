@@ -43,6 +43,8 @@ assertContains('assets/splash-theme.css', 'splash-header__accent-strip');
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__splash-word');
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__art-meta');
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__sticker--one');
+assertContains('sections/sticker-collection-hero.liquid', "assign splash_word = section.settings.splash_word | default: 'SPLASH'");
+assertContains('sections/sticker-collection-hero.liquid', 'z-index: 1;');
 assertContains('sections/sticker-collection-hero.liquid', 'prefers-reduced-motion: reduce');
 assertContains('templates/collection.json', '"splash_word": "SPLASH"');
 assertContains('templates/collection.json', '"sticker_1_text": "STICKERS"');
