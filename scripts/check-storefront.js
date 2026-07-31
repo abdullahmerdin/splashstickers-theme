@@ -34,16 +34,21 @@ assert.equal(collectionTemplate.sections.section.type, 'sticker-collection-hero'
   ['templates/index.json', 'splash_cta_j4yGQL'],
   ['templates/index.json', 'section_nebJeq'],
   ['templates/index.json', 'Made with care'],
-  ['templates/collection.json', 'show_sticker_'],
-  ['templates/collection.json', 'art_meta_text'],
-  ['sections/sticker-collection-hero.liquid', 'show_sticker_'],
-  ['sections/sticker-collection-hero.liquid', 'splash-word'],
   ['sections/sticker-process.liquid', 'section.settings.eyebrow'],
   ['assets/splash-theme.css', 'splash-gangsheet-summary::before'],
 ].forEach(([relativePath, pattern]) => assertNotContains(relativePath, pattern));
 
 assertContains('sections/header.liquid', 'splash-header__accent-strip');
 assertContains('assets/splash-theme.css', 'splash-header__accent-strip');
+assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__splash-word');
+assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__art-meta');
+assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__sticker--one');
+assertContains('sections/sticker-collection-hero.liquid', 'prefers-reduced-motion: reduce');
+assertContains('templates/collection.json', '"splash_word": "SPLASH"');
+assertContains('templates/collection.json', '"sticker_1_text": "STICKERS"');
+assertContains('templates/collection.json', '"sticker_2_text": "BADGES"');
+assertContains('templates/collection.json', '"sticker_3_text": "TEXTILE"');
+assertContains('templates/collection.json', '"art_meta_text": "EST. 2026"');
 assertContains('sections/splash-hero.liquid', 'role="group"');
 assertContains('sections/splash-hero.liquid', 'aria-describedby="splash-hero-hint-{{ section.id }}"');
 assertContains('sections/splash-hero.liquid', 'aria-expanded="false"');
