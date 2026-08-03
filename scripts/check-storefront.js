@@ -46,6 +46,7 @@ assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-he
 assertContains('sections/sticker-collection-hero.liquid', "{{ 'sticker-collection-hero.css' | asset_url | stylesheet_tag }}");
 assertNotContains('sections/sticker-collection-hero.liquid', '{% stylesheet %}');
 assertContains('sections/sticker-collection-hero.liquid', "assign splash_word = section.settings.splash_word | default: 'SPLASH'");
+assertContains('sections/sticker-collection-hero.liquid', '"id": "splash_word", "label": "Accent word", "default": "SPLASH"');
 assertContains('sections/sticker-collection-hero.liquid', "assign sticker_1_text = section.settings.sticker_1_text | default: 'STICKERS'");
 assertContains('sections/sticker-collection-hero.liquid', "assign art_meta_text = section.settings.art_meta_text | default: 'EST. 2026'");
 assertNotContains('sections/sticker-collection-hero.liquid', 'section.settings.show_splash_word');
