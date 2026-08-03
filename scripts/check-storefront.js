@@ -43,6 +43,7 @@ assertContains('assets/splash-theme.css', 'splash-header__accent-strip');
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__splash-word');
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__art-meta');
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__sticker--one');
+assertContains('sections/sticker-collection-hero.liquid', 'data-splash-card-copy-version="2026-08-03"');
 assertContains('sections/sticker-collection-hero.liquid', "assign splash_word = section.settings.splash_word | default: 'SPLASH'");
 assertContains('sections/sticker-collection-hero.liquid', 'z-index: 1;');
 assertContains('sections/sticker-collection-hero.liquid', 'prefers-reduced-motion: reduce');
