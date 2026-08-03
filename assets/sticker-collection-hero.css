@@ -1,0 +1,270 @@
+.sticker-collection-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--collection-bg);
+  color: var(--splash-color-ink);
+  padding-block: var(--collection-pad-top) var(--collection-pad-bottom);
+}
+
+.sticker-collection-hero__inner {
+  display: grid;
+  width: min(100% - (var(--page-margin, 16px) * 2), var(--normal-page-width, 120rem));
+  min-height: clamp(24rem, 48vw, 38rem);
+  margin-inline: auto;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.9fr);
+  gap: clamp(2rem, 7vw, 8rem);
+  align-items: center;
+}
+
+.sticker-collection-hero--right .sticker-collection-hero__content {
+  order: 2;
+}
+
+.sticker-collection-hero--right .sticker-collection-hero__art {
+  order: 1;
+}
+
+.sticker-collection-hero__brand {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+  color: var(--collection-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.sticker-collection-hero__brand-mark {
+  display: block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50% 50% 50% 0;
+  background: var(--collection-secondary);
+  transform: rotate(-45deg);
+}
+
+.sticker-collection-hero h1 {
+  max-width: 8ch;
+  margin: 1.25rem 0 0;
+  color: var(--splash-color-ink);
+  font-size: clamp(3.8rem, 9vw, 9rem);
+  font-weight: 900;
+  letter-spacing: -0.09em;
+  line-height: 0.82;
+  text-wrap: balance;
+}
+
+.sticker-collection-hero__art {
+  position: relative;
+  min-height: clamp(20rem, 38vw, 31rem);
+  overflow: hidden;
+  border-radius: 2rem 2rem 2rem 0.5rem;
+  background: linear-gradient(135deg, var(--collection-art-bg), var(--collection-art-accent));
+  box-shadow: 1rem 1rem 0 var(--splash-color-yellow);
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sticker-collection-hero__art::before,
+.sticker-collection-hero__art::after {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  content: '';
+}
+
+.sticker-collection-hero__art::before {
+  top: -18%;
+  right: -12%;
+  width: 58%;
+  aspect-ratio: 1;
+  background: var(--splash-color-teal);
+  opacity: 0.85;
+}
+
+.sticker-collection-hero__art::after {
+  bottom: -28%;
+  left: -18%;
+  width: 65%;
+  aspect-ratio: 1;
+  background: var(--splash-color-yellow);
+  opacity: 0.9;
+}
+
+.sticker-collection-hero__pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.22;
+}
+
+.sticker-collection-hero__pattern--dots {
+  background-image: radial-gradient(circle, var(--collection-pattern) 1px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+
+.sticker-collection-hero__pattern--grid {
+  background-image: linear-gradient(var(--collection-pattern) 1px, transparent 1px),
+    linear-gradient(90deg, var(--collection-pattern) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.sticker-collection-hero__pattern--bursts {
+  background-image: repeating-conic-gradient(
+    from 0deg,
+    var(--collection-pattern) 0deg 8deg,
+    transparent 8deg 18deg
+  );
+  mask-image: radial-gradient(circle at center, #000 0 55%, transparent 80%);
+}
+
+.sticker-collection-hero__splash-word {
+  position: absolute;
+  top: 9%;
+  left: 7%;
+  z-index: 1;
+  color: var(--splash-color-surface);
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 900;
+  letter-spacing: -0.1em;
+  line-height: 0.8;
+  opacity: 0.92;
+  transform: rotate(-8deg);
+}
+
+.sticker-collection-hero__sticker {
+  position: absolute;
+  z-index: 1;
+  display: inline-block;
+  border: 0.45rem solid var(--splash-color-surface);
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  box-shadow: 0.35rem 0.45rem 0 rgb(var(--splash-color-ink-rgb) / 22%);
+  color: var(--splash-color-ink);
+  font-size: clamp(0.7rem, 1.2vw, 1rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.sticker-collection-hero__sticker--pink {
+  background: var(--splash-color-pink);
+}
+
+.sticker-collection-hero__sticker--gold {
+  background: var(--splash-color-yellow);
+}
+
+.sticker-collection-hero__sticker--teal {
+  background: var(--splash-color-teal);
+}
+
+.sticker-collection-hero__sticker--one {
+  top: 38%;
+  left: 9%;
+  animation: sticker-float-one 5.5s ease-in-out infinite;
+}
+
+.sticker-collection-hero__sticker--two {
+  top: 57%;
+  right: 8%;
+  animation: sticker-float-two 6.2s ease-in-out -1.6s infinite;
+}
+
+.sticker-collection-hero__sticker--three {
+  bottom: 13%;
+  left: 24%;
+  animation: sticker-float-three 5.8s ease-in-out -0.8s infinite;
+}
+
+.sticker-collection-hero__art-meta {
+  position: absolute;
+  right: 8%;
+  bottom: 7%;
+  z-index: 1;
+  color: var(--splash-color-surface);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+@keyframes sticker-float-one {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-12deg);
+  }
+
+  50% {
+    transform: translate3d(0.45rem, -0.75rem, 0) rotate(-6deg);
+  }
+}
+
+@keyframes sticker-float-two {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(8deg);
+  }
+
+  50% {
+    transform: translate3d(-0.55rem, 0.65rem, 0) rotate(14deg);
+  }
+}
+
+@keyframes sticker-float-three {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-5deg);
+  }
+
+  50% {
+    transform: translate3d(0.4rem, -0.5rem, 0) rotate(2deg);
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .sticker-collection-hero {
+    padding-block: 32px 44px;
+  }
+
+  .sticker-collection-hero__inner {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    gap: 2.5rem;
+    align-items: stretch;
+  }
+
+  .sticker-collection-hero--right .sticker-collection-hero__content,
+  .sticker-collection-hero--right .sticker-collection-hero__art {
+    order: initial;
+  }
+
+  .sticker-collection-hero h1 {
+    max-width: 9ch;
+    margin-top: 1rem;
+    font-size: clamp(3.5rem, 18vw, 6rem);
+  }
+
+  .sticker-collection-hero__art {
+    min-height: 21rem;
+    border-radius: 1.5rem 1.5rem 1.5rem 0.5rem;
+    box-shadow: 0.65rem 0.65rem 0 var(--splash-color-yellow);
+  }
+
+  .sticker-collection-hero__splash-word {
+    font-size: clamp(3rem, 16vw, 5.5rem);
+  }
+
+  .sticker-collection-hero__art-meta {
+    font-size: 0.52rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker-collection-hero__sticker {
+    animation: none;
+  }
+}
