@@ -285,11 +285,28 @@
         "padding_top": 56,
         "padding_bottom": 56
       }
+    },
+    "custom_cta": {
+      "type": "splash-cta",
+      "settings": {
+        "heading": "Create a custom sticker",
+        "subtext": "Upload your design and choose the size and quantity you need.",
+        "button_label": "Start designing",
+        "button_link": "shopify://collections/custom-stickers",
+        "button_style": "solid",
+        "gradient_start": "#6c5ce7",
+        "gradient_end": "#fd79a8",
+        "heading_color": "#ffffff",
+        "text_color": "#ffffff",
+        "padding_top": 80,
+        "padding_bottom": 80
+      }
     }
   },
   "order": [
     "splash_drawing",
     "featured_stickers",
-    "sticker_process"
+    "sticker_process",
+    "custom_cta"
   ]
 }

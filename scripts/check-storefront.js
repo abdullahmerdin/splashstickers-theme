@@ -27,11 +27,11 @@ const indexTemplate = readThemeJson('templates/index.json');
 const collectionTemplate = readThemeJson('templates/collection.json');
 const splashStyles = read('assets/splash-theme.css');
 
-assert.deepEqual(indexTemplate.order, ['splash_drawing', 'featured_stickers', 'sticker_process']);
+assert.deepEqual(indexTemplate.order, ['splash_drawing', 'featured_stickers', 'sticker_process', 'custom_cta']);
 assert.equal(collectionTemplate.sections.section.type, 'sticker-collection-hero');
+assert.equal(indexTemplate.sections.custom_cta.type, 'splash-cta');
 
 [
-  ['templates/index.json', 'splash_cta_j4yGQL'],
   ['templates/index.json', 'section_nebJeq'],
   ['templates/index.json', 'Made with care'],
   ['sections/sticker-process.liquid', 'section.settings.eyebrow'],
@@ -55,6 +55,7 @@ assertContains('templates/collection.json', '"art_meta_text": "EST. 2026"');
 assertContains('sections/splash-hero.liquid', 'role="group"');
 assertContains('sections/splash-hero.liquid', 'aria-describedby="splash-hero-hint-{{ section.id }}"');
 assertContains('sections/splash-hero.liquid', 'aria-expanded="false"');
+assertContains('sections/splash-hero.liquid', 'cursor: crosshair;');
 assertContains('sections/splash-hero.liquid', 'touch-action: pan-y;');
 assertContains('assets/splash-hero-ink.js', 'prefers-reduced-motion: reduce');
 assertContains('assets/splash-hero-ink.js', 'handleMotionPreferenceChange');
@@ -62,6 +63,9 @@ assertContains('assets/splash-hero-ink.js', 'handleKeyDown');
 assertContains('assets/splash-hero-ink.js', "event.key !== 'Escape'");
 assertContains('assets/splash-hero-ink.js', "this.style.touchAction = this.isTouchDevice ? 'pan-y' : 'auto';");
 assertContains('assets/splash-hero-ink.js', "button.setAttribute('aria-expanded', String(expanded))");
+assertContains('sections/splash-cta.liquid', 'splash-cta-stickers.js');
+assertContains('sections/splash-cta.liquid', 'data-sticker');
+assertContains('assets/splash-cta-stickers.js', 'class SplashCtaStickers');
 
 assertContains('snippets/group.liquid', '@param {string} [content_style]');
 assertContains('snippets/group.liquid', '{{ content_style }}');
