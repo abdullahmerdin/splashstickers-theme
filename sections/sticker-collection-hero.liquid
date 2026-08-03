@@ -1,43 +1,10 @@
 {% liquid
   assign current_collection = collection | default: closest.collection
   assign hero_heading = section.settings.heading | default: current_collection.title
-  assign splash_word = section.settings.splash_word
-  if splash_word == blank
-    assign splash_word = 'SPLASH'
-  endif
-  assign sticker_1_text = section.settings.sticker_1_text
-  if sticker_1_text == blank
-    assign sticker_1_text = 'STICKERS'
-  endif
-  assign sticker_1_color = section.settings.sticker_1_color
-  if sticker_1_color == blank
-    assign sticker_1_color = 'pink'
-  endif
-  assign sticker_2_text = section.settings.sticker_2_text
-  if sticker_2_text == blank
-    assign sticker_2_text = 'BADGES'
-  endif
-  assign sticker_2_color = section.settings.sticker_2_color
-  if sticker_2_color == blank
-    assign sticker_2_color = 'gold'
-  endif
-  assign sticker_3_text = section.settings.sticker_3_text
-  if sticker_3_text == blank
-    assign sticker_3_text = 'TEXTILE'
-  endif
-  assign sticker_3_color = section.settings.sticker_3_color
-  if sticker_3_color == blank
-    assign sticker_3_color = 'teal'
-  endif
-  assign art_meta_text = section.settings.art_meta_text
-  if art_meta_text == blank
-    assign art_meta_text = 'EST. 2026'
-  endif
 %}
 
 <section
   class="sticker-collection-hero sticker-collection-hero--{{ section.settings.layout }}"
-  data-splash-card-copy-version="2026-08-03-r2"
   style="--collection-bg: {{ section.settings.background_color }}; --collection-primary: {{ section.settings.primary_color }}; --collection-secondary: {{ section.settings.secondary_color }}; --collection-art-bg: {{ section.settings.art_background_color }}; --collection-art-accent: {{ section.settings.art_accent_color }}; --collection-pattern: {{ section.settings.pattern_color }}; --collection-pad-top: {{ section.settings.padding_top }}px; --collection-pad-bottom: {{ section.settings.padding_bottom }}px;"
 >
   <div class="sticker-collection-hero__inner">
@@ -59,16 +26,23 @@
         <span class="sticker-collection-hero__pattern sticker-collection-hero__pattern--{{ section.settings.pattern_style }}"></span>
       {% endif %}
 
-      <div class="sticker-collection-hero__copy-layer">
-        <span class="sticker-collection-hero__splash-word">{{ splash_word | escape }}</span>
+      {% if section.settings.show_splash_word and section.settings.splash_word != blank %}
+        <span class="sticker-collection-hero__splash-word">{{ section.settings.splash_word | escape }}</span>
+      {% endif %}
 
-        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--one sticker-collection-hero__sticker--{{ sticker_1_color }}">{{ sticker_1_text | escape }}</span>
-        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--two sticker-collection-hero__sticker--{{ sticker_2_color }}">{{ sticker_2_text | escape }}</span>
-        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--three sticker-collection-hero__sticker--{{ sticker_3_color }}">{{ sticker_3_text | escape }}</span>
+      {% if section.settings.show_sticker_1 and section.settings.sticker_1_text != blank %}
+        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--one sticker-collection-hero__sticker--{{ section.settings.sticker_1_color }}">{{ section.settings.sticker_1_text | escape }}</span>
+      {% endif %}
+      {% if section.settings.show_sticker_2 and section.settings.sticker_2_text != blank %}
+        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--two sticker-collection-hero__sticker--{{ section.settings.sticker_2_color }}">{{ section.settings.sticker_2_text | escape }}</span>
+      {% endif %}
+      {% if section.settings.show_sticker_3 and section.settings.sticker_3_text != blank %}
+        <span class="sticker-collection-hero__sticker sticker-collection-hero__sticker--three sticker-collection-hero__sticker--{{ section.settings.sticker_3_color }}">{{ section.settings.sticker_3_text | escape }}</span>
+      {% endif %}
 
-        <span class="sticker-collection-hero__art-meta">{{ art_meta_text | escape }}</span>
-      </div>
-
+      {% if section.settings.show_art_meta and section.settings.art_meta_text != blank %}
+        <span class="sticker-collection-hero__art-meta">{{ section.settings.art_meta_text | escape }}</span>
+      {% endif %}
     </div>
   </div>
 </section>
@@ -185,18 +159,10 @@
     mask-image: radial-gradient(circle at center, #000 0 55%, transparent 80%);
   }
 
-  .sticker-collection-hero__copy-layer {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-  }
-
   .sticker-collection-hero__splash-word {
     position: absolute;
     top: 9%;
     left: 7%;
-    z-index: 1;
     color: var(--splash-color-surface);
     font-size: clamp(3rem, 8vw, 7rem);
     font-weight: 900;
@@ -219,7 +185,6 @@
     letter-spacing: 0.04em;
     line-height: 1;
     white-space: nowrap;
-    z-index: 1;
     will-change: transform;
   }
 
@@ -234,7 +199,6 @@
     position: absolute;
     right: 8%;
     bottom: 7%;
-    z-index: 1;
     color: var(--splash-color-surface);
     font-size: 0.62rem;
     font-weight: 800;
@@ -280,10 +244,9 @@
     { "type": "text", "id": "brand_text", "label": "Brand text", "default": "Splash Stickers" },
     { "type": "checkbox", "id": "show_heading", "label": "Show collection heading", "default": true },
     { "type": "text", "id": "heading", "label": "Collection heading", "info": "Leave blank to use the collection title." },
-    { "type": "header", "content": "Card text" },
-    { "type": "checkbox", "id": "show_splash_word", "label": "Show accent word", "default": true },
+    { "type": "header", "content": "Animated sticker card" },
+    { "type": "checkbox", "id": "show_splash_word", "label": "Show accent word", "default": false },
     { "type": "text", "id": "splash_word", "label": "Accent word", "default": "" },
-    { "type": "header", "content": "Sticker labels" },
     { "type": "checkbox", "id": "show_sticker_1", "label": "Show sticker 1", "default": true },
     { "type": "text", "id": "sticker_1_text", "label": "Sticker 1 text", "default": "STICKERS" },
     { "type": "select", "id": "sticker_1_color", "label": "Sticker 1 color", "options": [{ "value": "pink", "label": "Pink" }, { "value": "gold", "label": "Gold" }, { "value": "teal", "label": "Teal" }], "default": "pink" },
@@ -294,7 +257,7 @@
     { "type": "text", "id": "sticker_3_text", "label": "Sticker 3 text", "default": "ALL DAY" },
     { "type": "select", "id": "sticker_3_color", "label": "Sticker 3 color", "options": [{ "value": "pink", "label": "Pink" }, { "value": "gold", "label": "Gold" }, { "value": "teal", "label": "Teal" }], "default": "teal" },
     { "type": "checkbox", "id": "show_art_meta", "label": "Show card meta text", "default": true },
-    { "type": "text", "id": "art_meta_text", "label": "Card meta text", "default": "" },
+    { "type": "text", "id": "art_meta_text", "label": "Card meta text", "default": "Splash Stickers" },
     { "type": "select", "id": "pattern_style", "label": "Card pattern", "options": [{ "value": "dots", "label": "Dots" }, { "value": "grid", "label": "Grid" }, { "value": "bursts", "label": "Bursts" }, { "value": "none", "label": "No pattern" }], "default": "dots" },
     { "type": "color", "id": "pattern_color", "label": "Pattern color", "default": "#ffffff" },
     { "type": "header", "content": "Layout and color" },
