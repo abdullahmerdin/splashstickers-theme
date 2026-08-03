@@ -43,26 +43,6 @@
         "padding-block-end": 15
       }
     },
-    "sticker_collection_hero_jYA9gH": {
-      "type": "sticker-collection-hero",
-      "name": "Sticker collection hero",
-      "settings": {
-        "show_brand": false,
-        "brand_text": "Splash Stickers",
-        "show_heading": true,
-        "heading": "AAAAAAA",
-        "pattern_style": "dots",
-        "pattern_color": "#ffffff",
-        "layout": "left",
-        "background_color": "#ffffff",
-        "primary_color": "#6c5ce7",
-        "secondary_color": "#fd79a8",
-        "art_background_color": "#6c5ce7",
-        "art_accent_color": "#fd79a8",
-        "padding_top": 48,
-        "padding_bottom": 56
-      }
-    },
     "header_section": {
       "type": "header",
       "blocks": {
@@ -149,7 +129,6 @@
   },
   "order": [
     "header_announcements_9jGBFp",
-    "sticker_collection_hero_jYA9gH",
     "header_section"
   ]
 }
