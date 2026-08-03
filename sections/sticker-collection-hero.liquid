@@ -1,14 +1,38 @@
 {% liquid
   assign current_collection = collection | default: closest.collection
   assign hero_heading = section.settings.heading | default: current_collection.title
-  assign splash_word = section.settings.splash_word | default: 'SPLASH'
-  assign sticker_1_text = section.settings.sticker_1_text | default: 'STICKERS'
-  assign sticker_1_color = section.settings.sticker_1_color | default: 'pink'
-  assign sticker_2_text = section.settings.sticker_2_text | default: 'BADGES'
-  assign sticker_2_color = section.settings.sticker_2_color | default: 'gold'
-  assign sticker_3_text = section.settings.sticker_3_text | default: 'TEXTILE'
-  assign sticker_3_color = section.settings.sticker_3_color | default: 'teal'
-  assign art_meta_text = section.settings.art_meta_text | default: 'EST. 2026'
+  assign splash_word = section.settings.splash_word
+  if splash_word == blank
+    assign splash_word = 'SPLASH'
+  endif
+  assign sticker_1_text = section.settings.sticker_1_text
+  if sticker_1_text == blank
+    assign sticker_1_text = 'STICKERS'
+  endif
+  assign sticker_1_color = section.settings.sticker_1_color
+  if sticker_1_color == blank
+    assign sticker_1_color = 'pink'
+  endif
+  assign sticker_2_text = section.settings.sticker_2_text
+  if sticker_2_text == blank
+    assign sticker_2_text = 'BADGES'
+  endif
+  assign sticker_2_color = section.settings.sticker_2_color
+  if sticker_2_color == blank
+    assign sticker_2_color = 'gold'
+  endif
+  assign sticker_3_text = section.settings.sticker_3_text
+  if sticker_3_text == blank
+    assign sticker_3_text = 'TEXTILE'
+  endif
+  assign sticker_3_color = section.settings.sticker_3_color
+  if sticker_3_color == blank
+    assign sticker_3_color = 'teal'
+  endif
+  assign art_meta_text = section.settings.art_meta_text
+  if art_meta_text == blank
+    assign art_meta_text = 'EST. 2026'
+  endif
 %}
 
 <section

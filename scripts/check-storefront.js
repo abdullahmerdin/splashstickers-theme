@@ -45,7 +45,12 @@ assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-he
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__sticker--one');
 assertContains('sections/sticker-collection-hero.liquid', 'data-splash-card-copy-version="2026-08-03-r2"');
 assertContains('sections/sticker-collection-hero.liquid', 'sticker-collection-hero__copy-layer');
-assertContains('sections/sticker-collection-hero.liquid', "assign splash_word = section.settings.splash_word | default: 'SPLASH'");
+assertContains('sections/sticker-collection-hero.liquid', 'assign splash_word = section.settings.splash_word');
+assertContains('sections/sticker-collection-hero.liquid', "assign splash_word = 'SPLASH'");
+assertContains('sections/sticker-collection-hero.liquid', "assign sticker_1_text = 'STICKERS'");
+assertContains('sections/sticker-collection-hero.liquid', "assign sticker_2_text = 'BADGES'");
+assertContains('sections/sticker-collection-hero.liquid', "assign sticker_3_text = 'TEXTILE'");
+assertContains('sections/sticker-collection-hero.liquid', "assign art_meta_text = 'EST. 2026'");
 assertContains('sections/sticker-collection-hero.liquid', 'z-index: 1;');
 assertContains('sections/sticker-collection-hero.liquid', 'prefers-reduced-motion: reduce');
 assertContains('templates/collection.json', '"splash_word": "SPLASH"');
