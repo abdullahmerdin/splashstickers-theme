@@ -86,6 +86,8 @@ html[data-theme='dark'] {
   --splash-shadow-card: 0 12px 36px rgb(0 0 0 / 0.34);
   --splash-shadow-lift: 0 12px 30px rgb(0 0 0 / 0.45);
   --splash-surface-soft: #20232b;
+  --collection-product-title-color: #e4e7ed;
+  --collection-product-title-hover: #a99fff;
 }
 
 html[data-theme='dark'] body {
@@ -95,7 +97,8 @@ html[data-theme='dark'] body {
 
 /* Theme-editor custom colors are light-mode inputs. Normalize their semantic
    surface tokens in dark mode so every generic section/block participates. */
-html[data-theme='dark'] :where([class*='color-custom-']) {
+html[data-theme='dark']
+  :where([class*='color-custom-']):not([data-large-logo-color-target], [data-large-logo-color-surface]) {
   --color-background: #15181e !important;
   --color-background-rgb: 21 24 30 !important;
   --color: #f5f7fa !important;
@@ -111,8 +114,31 @@ html[data-theme='dark'] :where([class*='color-custom-']) {
   --input-disabled-text-color: rgb(245 247 250 / 0.42) !important;
 }
 
-html[data-theme='dark'] :where(.section-background[class*='color-custom-'], .section[class*='color-custom-']) {
+html[data-theme='dark']
+  :where(.section-background[class*='color-custom-'], .section[class*='color-custom-']):not(
+    [data-large-logo-color-target],
+    [data-large-logo-color-surface]
+  ) {
   background-color: var(--color-background) !important;
+}
+
+/* Collection banners opt into their own runtime palette. Product titles need
+   an explicit token because merchant text-color settings can otherwise remain
+   dark through an inline custom property. */
+html[data-theme='dark'] .splash-collection-results .splash-product-card [ref='productTitleLink'],
+html[data-theme='dark'] .splash-collection-results .splash-product-card [ref='productTitleLink'] .text-block,
+html[data-theme='dark'] .splash-collection-results .splash-product-card [ref='productTitleLink'] .text-block > * {
+  --color: var(--collection-product-title-color) !important;
+  --color-rgb: 228 231 237 !important;
+  color: var(--collection-product-title-color) !important;
+}
+
+html[data-theme='dark'] .splash-collection-results .splash-product-card [ref='productTitleLink']:hover,
+html[data-theme='dark'] .splash-collection-results .splash-product-card [ref='productTitleLink']:hover .text-block,
+html[data-theme='dark'] .splash-collection-results .splash-product-card [ref='productTitleLink']:hover .text-block > * {
+  --color: var(--collection-product-title-hover) !important;
+  --color-rgb: 169 159 255 !important;
+  color: var(--collection-product-title-hover) !important;
 }
 
 html[data-theme='dark'] :where(.sticker-categories-section, .sticker-process-section, .trust-badges-section) {
