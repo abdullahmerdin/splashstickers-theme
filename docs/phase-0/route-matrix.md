@@ -8,7 +8,7 @@ Her normal storefront route’u `layout/theme.liquid` üzerinden aynı shell’i
 | --- | --- | --- |
 | Announcement bar | `sections/header-group.json` → `sections/header-announcements.liquid` | İçerik, divider, hareket ve canlı bölge davranışı |
 | Header / logo / navigation | `sections/header-group.json` → `sections/header.liquid` | Desktop menü, mobil drawer, transparent header, localization |
-| Header actions | `snippets/header-actions.liquid`, `snippets/site-version-badge.liquid` | Search, account, cart bubble ve sürüm rozeti |
+| Header actions | `snippets/header-actions.liquid` | Search, account ve cart bubble |
 | Global style loading | `snippets/stylesheets.liquid` | `base.css`, `custom.css`, overflow style sırası |
 | Theme tokens | `snippets/theme-styles-variables.liquid`, `config/settings_*.json` | Renk, typography, spacing, radius, border ve shadow kaynakları |
 | Cart / search overlays | `snippets/cart-drawer.liquid`, `snippets/search-modal.liquid`, `snippets/theme-drawer.liquid` | Aç/kapat, focus trap, loading, empty ve error durumları |
