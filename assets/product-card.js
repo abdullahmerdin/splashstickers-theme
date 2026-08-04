@@ -69,6 +69,7 @@ export class ProductCardLink extends ProductComponent {
    */
   #setImageSrcset(image) {
     if (!this.featuredMediaUrl) return;
+    if (document.documentElement.dataset.theme === 'dark' && image.matches('[data-theme-media]')) return;
 
     const currentImageUrl = new URL(image.currentSrc);
 

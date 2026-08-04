@@ -13,8 +13,38 @@
 {%- enddoc -%}
 
 {% liquid
+  assign visible_resource_media = resource.media
+  assign dark_mode_media = nil
+  assign dark_mode_light_media = nil
+  assign visible_featured_media = resource.featured_media
+
+  if resource_type == 'product'
+    assign visible_resource_media = '' | split: ','
+    for media in resource.media
+      assign media_filename = media.preview_image.src | split: '?' | first | split: '/' | last | downcase
+      assign is_dark_mode_media = false
+      if media.media_type == 'image' and media_filename contains '--dark'
+        assign is_dark_mode_media = true
+        if dark_mode_media == blank
+          assign dark_mode_media = media
+        endif
+      endif
+
+      unless is_dark_mode_media
+        assign current_media = resource.media | where: 'id', media.id
+        assign visible_resource_media = visible_resource_media | concat: current_media
+      endunless
+    endfor
+
+    assign dark_mode_light_media = visible_resource_media.first
+    assign visible_featured_media = visible_resource_media | where: 'id', resource.featured_media.id | first
+    if visible_featured_media == blank
+      assign visible_featured_media = dark_mode_light_media
+    endif
+  endif
+
   if image_aspect_ratio == blank or image_aspect_ratio == 'adapt'
-    assign ratio = resource.featured_image.aspect_ratio
+    assign ratio = visible_featured_media.preview_image.aspect_ratio | default: resource.featured_image.aspect_ratio
   else
     assign ratio = image_aspect_ratio
   endif
@@ -79,11 +109,15 @@
 
         resource.featured_image is needed for collections with a single thumbnail
       {% endcomment %}
-      {% assign featured_image = resource.featured_media.preview_image | default: resource.featured_image %}
+      {% assign featured_image = visible_featured_media.preview_image | default: resource.featured_image %}
       {% liquid
         assign primary_focal_point_style = ''
-        if resource.media[0].presentation.focal_point != blank
-          assign primary_focal_point_style = 'object-position: ' | append: resource.media[0].presentation.focal_point | append: ';'
+        if visible_featured_media.presentation.focal_point != blank
+          assign primary_focal_point_style = 'object-position: ' | append: visible_featured_media.presentation.focal_point | append: ';'
+        endif
+        assign rendered_dark_mode_media = nil
+        if visible_featured_media.id == dark_mode_light_media.id
+          assign rendered_dark_mode_media = dark_mode_media
         endif
       %}
       {%- if featured_image != blank -%}
@@ -103,17 +137,28 @@
             sizes: image_sizes,
             ref: ref_image_to_transition,
             data-media-id: featured_image.id,
+            data_theme_media: rendered_dark_mode_media.id,
             style: primary_focal_point_style
         }}
-        {%- if image_hover and resource.media.size > 1 -%}
+        {% if rendered_dark_mode_media %}
+          <template data-theme-media-dark>
+            {{
+              rendered_dark_mode_media.preview_image
+              | image_url: width: image_width
+              | image_tag: loading: 'lazy', alt: '', widths: widths, sizes: image_sizes
+            }}
+          </template>
+        {% endif %}
+        {%- if image_hover and visible_resource_media.size > 1 -%}
           {% liquid
+            assign secondary_media = visible_resource_media[1]
             assign secondary_focal_point_style = ''
-            if resource.media[1].presentation.focal_point != blank
-              assign secondary_focal_point_style = 'object-position: ' | append: resource.media[1].presentation.focal_point | append: ';'
+            if secondary_media.presentation.focal_point != blank
+              assign secondary_focal_point_style = 'object-position: ' | append: secondary_media.presentation.focal_point | append: ';'
             endif
           %}
           {{
-            resource.media[1]
+            secondary_media.preview_image
             | image_url: width: image_width
             | image_tag:
               loading: 'lazy',
@@ -121,7 +166,7 @@
               widths: widths,
               sizes: image_sizes,
               ref: ref_image_to_transition,
-              data-media-id: resource.media[1].id,
+              data-media-id: secondary_media.id,
               style: secondary_focal_point_style
           }}
         {%- endif -%}

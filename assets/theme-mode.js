@@ -1,6 +1,51 @@
 (() => {
 const STORAGE_KEY = 'splash-color-mode';
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const lightMediaSources = new WeakMap();
+
+function readImageSource(image) {
+  return {
+    src: image.getAttribute('src'),
+    srcset: image.getAttribute('srcset'),
+    sizes: image.getAttribute('sizes'),
+    maxResolution: image.getAttribute('data-max-resolution'),
+  };
+}
+
+function writeImageSource(image, source) {
+  for (const [attribute, value] of [
+    ['sizes', source.sizes],
+    ['srcset', source.srcset],
+    ['src', source.src],
+    ['data-max-resolution', source.maxResolution],
+  ]) {
+    if (value) {
+      image.setAttribute(attribute, value);
+    } else {
+      image.removeAttribute(attribute);
+    }
+  }
+}
+
+function updateThemeMedia(mode, root = document) {
+  const images = [];
+
+  if (root instanceof HTMLImageElement && root.matches('[data-theme-media]')) images.push(root);
+  if (root instanceof Document || root instanceof DocumentFragment || root instanceof Element) {
+    images.push(...root.querySelectorAll('img[data-theme-media]'));
+  }
+
+  for (const image of images) {
+    const darkTemplate = image.nextElementSibling;
+    if (!(darkTemplate instanceof HTMLTemplateElement) || !darkTemplate.matches('[data-theme-media-dark]')) continue;
+
+    const darkImage = darkTemplate.content.querySelector('img');
+    if (!(darkImage instanceof HTMLImageElement)) continue;
+
+    if (!lightMediaSources.has(image)) lightMediaSources.set(image, readImageSource(image));
+    writeImageSource(image, mode === 'dark' ? readImageSource(darkImage) : lightMediaSources.get(image));
+  }
+}
 
 function readSavedMode() {
   try {
@@ -38,6 +83,7 @@ function applyMode(mode) {
   document.documentElement.style.colorScheme = mode;
   updateThemeColor(mode);
   updateControls(mode);
+  updateThemeMedia(mode);
   document.dispatchEvent(new CustomEvent('theme:change', { detail: { mode } }));
 }
 
@@ -58,9 +104,26 @@ document.addEventListener('click', (event) => {
   applyMode(mode);
 });
 
-document.addEventListener('shopify:section:load', () => {
-  updateControls(document.documentElement.dataset.theme || 'light');
+document.addEventListener('shopify:section:load', (event) => {
+  const mode = document.documentElement.dataset.theme || 'light';
+  updateControls(mode);
+  updateThemeMedia(mode, event.target);
 });
+
+const themeMediaObserver = new MutationObserver((mutations) => {
+  const mode = document.documentElement.dataset.theme || 'light';
+
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (node instanceof Element) updateThemeMedia(mode, node);
+    }
+  }
+});
+
+function observeThemeMedia() {
+  if (!document.body) return;
+  themeMediaObserver.observe(document.body, { childList: true, subtree: true });
+}
 
 window.addEventListener('pageshow', () => {
   applyMode(document.documentElement.dataset.theme || 'light');
@@ -77,8 +140,12 @@ if (mediaQuery.addEventListener) {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => applyMode(document.documentElement.dataset.theme || 'light'));
+  document.addEventListener('DOMContentLoaded', () => {
+    applyMode(document.documentElement.dataset.theme || 'light');
+    observeThemeMedia();
+  });
 } else {
   applyMode(document.documentElement.dataset.theme || 'light');
+  observeThemeMedia();
 }
 })();

@@ -26,8 +26,31 @@
 {%- endif -%}
 {%- liquid
   assign selected_product = closest.product
+  assign visible_product_media = '' | split: ','
+  assign dark_mode_media = nil
+
+  for media in selected_product.media
+    assign media_filename = media.preview_image.src | split: '?' | first | split: '/' | last | downcase
+    assign is_dark_mode_media = false
+    if media.media_type == 'image' and media_filename contains '--dark'
+      assign is_dark_mode_media = true
+      if dark_mode_media == blank
+        assign dark_mode_media = media
+      endif
+    endif
+
+    unless is_dark_mode_media
+      assign current_media = selected_product.media | where: 'id', media.id
+      assign visible_product_media = visible_product_media | concat: current_media
+    endunless
+  endfor
+
+  assign dark_mode_light_media = visible_product_media.first
   assign selected_variant_media = selected_product.selected_or_first_available_variant.featured_media
-  assign first_3d_model = selected_product.media | where: 'media_type', 'model' | first
+  if selected_variant_media
+    assign selected_variant_media = visible_product_media | where: 'id', selected_variant_media.id | first
+  endif
+  assign first_3d_model = visible_product_media | where: 'media_type', 'model' | first
 
   if block_settings.hide_variants
     assign variant_images = selected_product.images | where: 'attached_to_variant?', true | map: 'src'
@@ -63,13 +86,13 @@
 
   assign slideshow_controls_style = block_settings.slideshow_controls_style
   # Use a counter instead of dots when there are many images to avoid cropping/overflow.
-  if slideshow_controls_style == 'dots' and selected_product.media.size > 15
+  if slideshow_controls_style == 'dots' and visible_product_media.size > 15
     assign slideshow_controls_style = 'counter'
   endif
 
   assign render_slideshow_arrows = false
 
-  if selected_product.media.size <= 1
+  if visible_product_media.size <= 1
     assign slideshow_class = 'product-media-gallery__slideshow--single-media slideshow--single-media'
   else
     assign slideshow_class = ''
@@ -103,20 +126,20 @@
 
   assign sorted_media = '' | split: ','
   if selected_variant_media
-    assign sorted_media = sorted_media | concat: selected_product.media | where: 'id', selected_variant_media.id
+    assign sorted_media = sorted_media | concat: visible_product_media | where: 'id', selected_variant_media.id
 
-    for media in selected_product.media
+    for media in visible_product_media
       if block_settings.hide_variants and variant_images contains media.src and sorted_media.size > 0
         continue
       endif
 
       if media.id != selected_variant_media.id
-        assign found_media = selected_product.media | where: 'id', media.id
+        assign found_media = visible_product_media | where: 'id', media.id
         assign sorted_media = sorted_media | concat: found_media
       endif
     endfor
   else
-    assign sorted_media = selected_product.media
+    assign sorted_media = visible_product_media
   endif
   assign has_image_drop = sorted_media | has: 'media_type', 'image'
 
@@ -360,6 +383,10 @@
       {% for media in sorted_media %}
         {% capture children %}
           {%- liquid
+              assign rendered_dark_mode_media = nil
+              if media.id == dark_mode_light_media.id
+                assign rendered_dark_mode_media = dark_mode_media
+              endif
               if needs_both_sizes and forloop.first
                 assign media_sizes = sizes_single
               else
@@ -369,10 +396,10 @@
           {% if block_settings.aspect_ratio != 'adapt' and block_settings.constrain_to_viewport %}
             <div
               class="product-media-constraint-wrapper">
-              {%- render 'product-media', media: media, sizes: media_sizes, is_main_product_media: forloop.first -%}
+              {%- render 'product-media', media: media, dark_mode_media: rendered_dark_mode_media, sizes: media_sizes, is_main_product_media: forloop.first -%}
             </div>
           {% else %}
-            {%- render 'product-media', media: media, sizes: media_sizes, is_main_product_media: forloop.first -%}
+            {%- render 'product-media', media: media, dark_mode_media: rendered_dark_mode_media, sizes: media_sizes, is_main_product_media: forloop.first -%}
           {% endif %}
         {% endcapture %}
         {% capture class %}
@@ -452,6 +479,12 @@
         data-testid="media-gallery-grid"
       >
         {% for media in sorted_media %}
+          {% liquid
+            assign rendered_dark_mode_media = nil
+            if media.id == dark_mode_light_media.id
+              assign rendered_dark_mode_media = dark_mode_media
+            endif
+          %}
           <li
             ref="media[]"
             class="{{ product_media_container_class }} product-media-container--{{ media.media_type }} {% unless block_settings.aspect_ratio == 'adapt' %}product-media-container--force-aspect{% endunless %}"
@@ -483,10 +516,10 @@
             -%}
             {% if block_settings.aspect_ratio != 'adapt' and block_settings.constrain_to_viewport %}
               <div class="product-media-constraint-wrapper">
-                {%- render 'product-media', media: media, sizes: media_sizes, is_main_product_media: forloop.first -%}
+                {%- render 'product-media', media: media, dark_mode_media: rendered_dark_mode_media, sizes: media_sizes, is_main_product_media: forloop.first -%}
               </div>
             {% else %}
-              {%- render 'product-media', media: media, sizes: media_sizes, is_main_product_media: forloop.first -%}
+              {%- render 'product-media', media: media, dark_mode_media: rendered_dark_mode_media, sizes: media_sizes, is_main_product_media: forloop.first -%}
             {% endif %}
           </li>
         {% endfor %}
@@ -563,6 +596,12 @@
             class="dialog-zoomed-gallery list-unstyled"
           >
             {%- for media in sorted_media -%}
+              {% liquid
+                assign rendered_dark_mode_media = nil
+                if media.id == dark_mode_light_media.id
+                  assign rendered_dark_mode_media = dark_mode_media
+                endif
+              %}
               <li
                 id="product-{{ media.id}}-{{ forloop.index }}"
                 class="{{ product_media_container_class | remove: 'media-fit-cover' }} product-media-container--{{ media.media_type }}{% if media.media_type == 'image' %} product-media-container--zoomable{% endif %}"
@@ -576,6 +615,7 @@
                   <drag-zoom-wrapper class="product-media__drag-zoom-wrapper">
                     {%- render 'product-media',
                       media: media,
+                      dark_mode_media: rendered_dark_mode_media,
                       sizes: '100vw',
                       loading: 'lazy',
                       is_main_product_media: forloop.first,
@@ -585,6 +625,7 @@
                 {% else %}
                   {%- render 'product-media',
                     media: media,
+                    dark_mode_media: rendered_dark_mode_media,
                     sizes: '100vw',
                     loading: 'lazy',
                     is_main_product_media: forloop.first

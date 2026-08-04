@@ -12,6 +12,30 @@
   assign product = closest.product
   assign block_settings = block.settings
   assign image_sizes = '(min-width: 750px) 50vw, 100vw'
+  assign visible_product_media = '' | split: ','
+  assign dark_mode_media = nil
+
+  for media in product.media
+    assign media_filename = media.preview_image.src | split: '?' | first | split: '/' | last | downcase
+    assign is_dark_mode_media = false
+    if media.media_type == 'image' and media_filename contains '--dark'
+      assign is_dark_mode_media = true
+      if dark_mode_media == blank
+        assign dark_mode_media = media
+      endif
+    endif
+
+    unless is_dark_mode_media
+      assign current_media = product.media | where: 'id', media.id
+      assign visible_product_media = visible_product_media | concat: current_media
+    endunless
+  endfor
+
+  assign dark_mode_light_media = visible_product_media.first
+  assign visible_featured_media = visible_product_media | where: 'id', product.featured_media.id | first
+  if visible_featured_media == blank
+    assign visible_featured_media = dark_mode_light_media
+  endif
 
   # Check if product has badges and determine position
   assign has_badges = false
@@ -52,7 +76,7 @@
     when 'square'
       assign ratio = '1'
     when 'adapt'
-      assign ratio = product.featured_media.preview_image.aspect_ratio | default: '1'
+      assign ratio = visible_featured_media.preview_image.aspect_ratio | default: '1'
   endcase
 
   if block_settings.image_ratio == 'adapt' and block_settings.constrain_to_viewport
@@ -82,19 +106,26 @@
   data-image-ratio="{{ block_settings.image_ratio }}"
   {{ block.shopify_attributes }}
 >
-  {%- if product.media.size > 0 -%}
+  {%- if visible_product_media.size > 0 -%}
     {% liquid
       # Check if there are generic media that are not variant images
       assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src'
-      assign generic_media_size = product.media.size | minus: variant_images.size
+      assign visible_variant_image_count = 0
+      for media in visible_product_media
+        if variant_images contains media.src
+          assign visible_variant_image_count = visible_variant_image_count | plus: 1
+        endif
+      endfor
+      assign generic_media_size = visible_product_media.size | minus: visible_variant_image_count
 
       # Sort media so product.featured_media.preview_image comes first as that is the most relevant image to display
       # product.featured_media updates based on search context and filters applied
 
-      assign other_media = product.media | reject: 'src', product.featured_media
-      assign media_list_to_show = product.featured_media | concat: other_media
+      assign featured_media_list = visible_product_media | where: 'id', visible_featured_media.id
+      assign other_media = visible_product_media | reject: 'id', visible_featured_media.id
+      assign media_list_to_show = featured_media_list | concat: other_media
 
-      if product.media.size > 2 and generic_media_size > 0
+      if visible_product_media.size > 2 and generic_media_size > 0
         assign show_arrows = true
       endif
 
@@ -145,7 +176,11 @@
           endif
 
           capture slideshow_children
-            render 'product-media', media: media, sizes: sizes, loading: loading, preview_image_only: true
+            assign rendered_dark_mode_media = nil
+            if media.id == dark_mode_light_media.id
+              assign rendered_dark_mode_media = dark_mode_media
+            endif
+            render 'product-media', media: media, dark_mode_media: rendered_dark_mode_media, sizes: sizes, loading: loading, preview_image_only: true
           endcapture
 
           render 'slideshow-slide', slide_id: media.id, index: forloop.index0, hidden: hidden, class: class, attributes: attributes, children: slideshow_children, media_fit: media_fit
@@ -172,7 +207,7 @@
         attributes: slideshow_attributes
       %}
     </a>
-  {% elsif product != blank and product.media.size == 0 %}
+  {% elsif product != blank and visible_product_media.size == 0 %}
     <div class="product-card-gallery__title-placeholder">
       <a
         class="contents"
