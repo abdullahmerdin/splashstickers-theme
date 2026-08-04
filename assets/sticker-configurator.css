@@ -1880,14 +1880,6 @@ dialog.cfg-modal::backdrop {
   box-shadow: var(--splash-shadow-lift, 0 10px 26px rgb(45 52 54 / 0.18));
 }
 
-.cfg-modal .cfg-modal-box::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 4px;
-  content: '';
-  background: var(--splash-gradient-spectrum, linear-gradient(90deg, #6c5ce7, #fd79a8, #fdcb6e, #00cec9));
-}
-
 .cfg-modal .cfg-modal-zone {
   border-color: rgb(var(--splash-color-teal-rgb, 0 206 201) / 0.42);
   border-radius: var(--splash-radius-control, var(--cfg-radius));
