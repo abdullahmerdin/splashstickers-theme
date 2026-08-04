@@ -103,12 +103,17 @@
 
   .logo-block--collection-title {
     width: 100%;
+    height: 100%;
+    align-items: center;
     justify-content: flex-end;
   }
 
   .layout-panel-flex--row > .shopify-block:has(> .logo-block--collection-title) {
     flex: 1 1 auto;
     min-width: 0;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
   }
 
   .logo-block--collection-title jumbo-text {
