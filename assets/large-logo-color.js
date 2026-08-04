@@ -7,7 +7,26 @@
 
   const TARGET_SELECTOR = '[data-large-logo-color-target]';
   const LAST_COLOR_STORAGE_KEY = 'large-logo-color:last';
-  const DEFAULT_PALETTE = ['#6C5CE7', '#FD79A8', '#FDCB6E', '#00CEC9', '#2D3436', '#FFFFFF'];
+  const DEFAULT_PALETTE = [
+    '#6C5CE7',
+    '#FD79A8',
+    '#FDCB6E',
+    '#00CEC9',
+    '#2D3436',
+    '#FFFFFF',
+    '#FF6B6B',
+    '#FF8C42',
+    '#E76F51',
+    '#2A9D8F',
+    '#0B132B',
+    '#1D3557',
+    '#264653',
+    '#1B4332',
+    '#3A0CA3',
+    '#4A1942',
+    '#7F1D1D',
+    '#111827',
+  ];
 
   function parseColor(value) {
     if (!value) {
@@ -88,12 +107,15 @@
   }
 
   function getPalette(target) {
-    const palette = (target.dataset.largeLogoColorPalette || '')
+    const configuredPalette = (target.dataset.largeLogoColorPalette || '')
       .split('|')
       .map((color) => color.trim())
       .filter(Boolean);
+    const palette = [...configuredPalette, ...DEFAULT_PALETTE].filter(
+      (color, index, colors) => colors.indexOf(color) === index
+    );
 
-    return (palette.length ? palette : DEFAULT_PALETTE)
+    return palette
       .map((color) => ({ raw: color, parsed: parseColor(color) }))
       .filter(({ parsed }) => parsed && parsed.a > 0);
   }
