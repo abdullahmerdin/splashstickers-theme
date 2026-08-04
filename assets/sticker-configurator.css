@@ -1728,16 +1728,6 @@ dialog.cfg-modal::backdrop {
     var(--splash-color-surface, #fff);
 }
 
-.sticker-configurator > sticker-configurator.splash-studio::before {
-  position: absolute;
-  z-index: var(--cfg-z-chrome);
-  inset: 0 0 auto;
-  height: 4px;
-  content: '';
-  background: var(--splash-gradient-spectrum, linear-gradient(90deg, #6c5ce7, #fd79a8, #fdcb6e, #00cec9));
-  pointer-events: none;
-}
-
 .sticker-configurator .splash-studio__editor {
   position: relative;
 }
