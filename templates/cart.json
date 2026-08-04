@@ -12,6 +12,20 @@
     "cart-section": {
       "type": "main-cart",
       "blocks": {
+        "spacer_U3fLCd": {
+          "type": "spacer",
+          "name": "t:names.spacer",
+          "settings": {
+            "size": "pixel",
+            "percent_size": 100,
+            "pixel_size": 156,
+            "custom_mobile_size": false,
+            "size_mobile": "percent",
+            "percent_size_mobile": 100,
+            "pixel_size_mobile": 120
+          },
+          "blocks": {}
+        },
         "cart-page-title": {
           "type": "_cart-title",
           "static": true,
@@ -43,7 +57,7 @@
             "border_width": 0,
             "border_radius": 0,
             "padding-block-start": 0,
-            "padding-block-end": 35,
+            "padding-block-end": 0,
             "padding-inline-start": 0,
             "padding-inline-end": 0
           },
@@ -56,8 +70,8 @@
             "extend_summary": false,
             "background_color": "{{ settings.color_palette.color2 }}",
             "text_color": "",
-            "border": "none",
-            "border_width": 1,
+            "border": "solid",
+            "border_width": 0,
             "border_opacity": 100,
             "border_color": "",
             "border_radius": 0
@@ -65,6 +79,9 @@
           "blocks": {}
         }
       },
+      "block_order": [
+        "spacer_U3fLCd"
+      ],
       "settings": {
         "section_width": "page-width",
         "background_color": "{{ settings.color_palette.background }}",
