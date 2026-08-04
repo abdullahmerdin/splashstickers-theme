@@ -179,6 +179,12 @@ class JumboText extends Component {
       return;
     }
 
+    if (this.hasAttribute('data-fixed-font-size')) {
+      this.classList.add('ready');
+      this.#firstResize = false;
+      return;
+    }
+
     if (containerWidth === undefined) {
       containerWidth = this.offsetWidth;
     }

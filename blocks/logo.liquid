@@ -78,7 +78,11 @@
       {{ logo_image }}
     </div>
   {% else %}
-    {% render 'jumbo-text', text: logo_text, text_alignment: collection_title_alignment %}
+    {% render 'jumbo-text',
+      text: logo_text,
+      text_alignment: collection_title_alignment,
+      fixed_font_size: is_collection_title
+    %}
   {% endif %}
 </div>
 
@@ -119,6 +123,13 @@
   .logo-block--collection-title jumbo-text {
     --margin-left-nudge: 0;
     --margin-right-nudge: -0.04em;
+    font-size: var(--font-h2--size);
+  }
+
+  .logo-block--collection-title jumbo-text .jumbo-text-line {
+    display: block;
+    white-space: normal;
+    text-wrap: balance;
   }
 
   .logo-block__image-wrapper {

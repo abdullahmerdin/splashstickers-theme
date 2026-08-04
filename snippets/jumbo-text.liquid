@@ -5,6 +5,7 @@
   @param {object} [block_settings] - The block settings object, defaults to block.settings
   @param {block} [block] - The block object, used for settings fallback and Shopify editor attributes.
   @param {string} [text_alignment] - Optional text alignment override.
+  @param {boolean} [fixed_font_size] - Prevents automatic text fitting when true.
 
   @example
   {% render 'jumbo-text', text: block.settings.text %}
@@ -62,6 +63,7 @@
     --text-trim: {{text_trim}};
   "
   data-cap-text="{{ cap_text }}"
+  {% if fixed_font_size %}data-fixed-font-size{% endif %}
   {{ block.shopify_attributes }}
 {% endcapture %}
 
