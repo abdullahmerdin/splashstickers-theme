@@ -7,6 +7,13 @@
   if block_settings.inverse and settings.logo_inverse
     assign image = settings.logo_inverse
   endif
+
+  assign logo_text = shop.name
+  if collection != blank and collection.title != blank
+    assign logo_text = collection.title
+  elsif closest.collection != blank and closest.collection.title != blank
+    assign logo_text = closest.collection.title
+  endif
 %}
 
 {%- if image -%}
@@ -37,7 +44,7 @@
       {% if image %}
         --logo-width: {{ image.width | times: 1.00 | divided_by: image.height | times: block_settings.pixel_height }}px;
       {% else %}
-        --logo-width: {{ shop.name.size | times: 0.65 }}em;
+        --logo-width: {{ logo_text.size | times: 0.65 }}em;
         --logo-height: {{ block_settings.pixel_height }}px;
       {% endif %}
     {% endif %}
@@ -50,7 +57,7 @@
         {% if image %}
           --logo-width-mobile: {{ image.width | times: 1.00 | divided_by: image.height | times: block_settings.pixel_height_mobile }}px;
           {% else %}
-            --logo-width-mobile: {{ shop.name.size | times: 0.65 }}em;
+            --logo-width-mobile: {{ logo_text.size | times: 0.65 }}em;
             --logo-height-mobile: {{ block_settings.pixel_height_mobile }}px;
         {% endif %}
       {% endif %}
@@ -64,7 +71,7 @@
       {{ logo_image }}
     </div>
   {% else %}
-    {% render 'jumbo-text', text: shop.name %}
+    {% render 'jumbo-text', text: logo_text %}
   {% endif %}
 </div>
 

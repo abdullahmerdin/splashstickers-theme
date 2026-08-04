@@ -261,6 +261,14 @@
       "visible_if": "{{ section.settings.background_media == 'none' }}"
     },
     {
+      "type": "checkbox",
+      "id": "enable_dynamic_logo_color",
+      "label": "Change Large logo color on each page load",
+      "info": "Applies to this section when it contains a Logo block. When disabled, the Background color setting is used as the fixed color.",
+      "default": true,
+      "visible_if": "{{ section.settings.background_media == 'none' }}"
+    },
+    {
       "type": "video",
       "id": "video",
       "label": "t:settings.video",

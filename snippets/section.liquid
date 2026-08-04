@@ -8,6 +8,19 @@
 {%- enddoc -%}
 
 {% liquid
+  assign has_logo_block = false
+  for section_block in section.blocks
+    if section_block.type == 'logo'
+      assign has_logo_block = true
+      break
+    endif
+  endfor
+
+  assign large_logo_color_target = false
+  if has_logo_block and section.settings.background_media == 'none'
+    assign large_logo_color_target = true
+  endif
+
   assign skip_contrast = false
   if section.settings.background_media != blank and section.settings.background_media != 'none'
     assign skip_contrast = true
@@ -23,6 +36,13 @@
 <div
   class="section section--{{ section.settings.section_width }} color-custom-{{ section_id }}"
   data-testid="ui-test-section"
+
+  {% if large_logo_color_target %}
+    data-large-logo-color-target
+    data-large-logo-color-randomize="{{ section.settings.enable_dynamic_logo_color }}"
+    data-large-logo-color-fixed="{{ background_color | escape }}"
+    data-large-logo-color-palette="{{ settings.splash_color_purple | default: '#6C5CE7' }}|{{ settings.splash_color_pink | default: '#FD79A8' }}|{{ settings.splash_color_yellow | default: '#FDCB6E' }}|{{ settings.splash_color_teal | default: '#00CEC9' }}|{{ settings.splash_color_ink | default: '#2D3436' }}|{{ settings.splash_color_surface | default: '#FFFFFF' }}"
+  {% endif %}
 
   {% if request.visual_preview_mode %}
     data-shopify-visual-preview
@@ -108,4 +128,13 @@
   .custom-section-content {
     z-index: var(--layer-flat);
   }
+
+  [data-large-logo-color-target] .logo-block__image,
+  [data-large-logo-color-target] .logo-section__image {
+    transition: filter 180ms ease;
+  }
 {% endstylesheet %}
+
+{% if large_logo_color_target %}
+  <script src="{{ 'large-logo-color.js' | asset_url }}" defer></script>
+{% endif %}
