@@ -135,9 +135,39 @@ class JumboText extends Component {
    */
   #clampFontSize = (fontSize) => {
     const minFontSize = 1;
-    const maxFontSize = 500;
+    const configuredMaxFontSizeValue = getComputedStyle(this)
+      .getPropertyValue('--jumbo-text-max-font-size')
+      .trim();
+    const configuredMaxFontSize = this.#resolveFontSize(configuredMaxFontSizeValue);
+    const maxFontSize = Number.isFinite(configuredMaxFontSize) ? Math.max(configuredMaxFontSize, minFontSize) : 500;
 
     return `${Math.min(Math.max(fontSize, minFontSize), maxFontSize)}px`;
+  };
+
+  /**
+   * Resolves the supported CSS viewport/root units used by a jumbo text cap.
+   * @param {string} value
+   * @returns {number}
+   */
+  #resolveFontSize = (value) => {
+    const match = value.match(/^([\d.]+)(px|vh|vw|rem)$/);
+
+    if (!match) {
+      return Number.NaN;
+    }
+
+    const numericValue = Number(match[1]);
+
+    switch (match[2]) {
+      case 'vh':
+        return (window.innerHeight * numericValue) / 100;
+      case 'vw':
+        return (window.innerWidth * numericValue) / 100;
+      case 'rem':
+        return numericValue * Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      default:
+        return numericValue;
+    }
   };
 
   /**

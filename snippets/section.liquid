@@ -16,8 +16,13 @@
     endif
   endfor
 
+  assign large_logo_section = false
+  if has_logo_block or template.name == 'collection'
+    assign large_logo_section = true
+  endif
+
   assign large_logo_color_target = false
-  if has_logo_block and section.settings.background_media == 'none'
+  if large_logo_section and section.settings.background_media == 'none'
     assign large_logo_color_target = true
   endif
 
@@ -44,6 +49,10 @@
     data-large-logo-color-palette="{{ settings.splash_color_purple | default: '#6C5CE7' }}|{{ settings.splash_color_pink | default: '#FD79A8' }}|{{ settings.splash_color_yellow | default: '#FDCB6E' }}|{{ settings.splash_color_teal | default: '#00CEC9' }}|{{ settings.splash_color_ink | default: '#2D3436' }}|{{ settings.splash_color_surface | default: '#FFFFFF' }}"
   {% endif %}
 
+  {% if large_logo_section and section.settings.section_height == '' %}
+    data-large-logo-auto-height
+  {% endif %}
+
   {% if request.visual_preview_mode %}
     data-shopify-visual-preview
   {% endif %}
@@ -60,6 +69,10 @@
     {% if section.settings.section_height != '' %}
      --section-preview-height: 600px;
      {% endif %}
+
+    {% if large_logo_section and section.settings.section_height == '' %}
+      --large-logo-auto-height: 5vh;
+    {% endif %}
   "
 >
   <div class="custom-section-background">
@@ -133,8 +146,31 @@
   [data-large-logo-color-target] .logo-section__image {
     transition: filter 180ms ease;
   }
-{% endstylesheet %}
 
-{% if large_logo_color_target %}
-  <script src="{{ 'large-logo-color.js' | asset_url }}" defer></script>
-{% endif %}
+  [data-large-logo-auto-height] {
+    height: var(--large-logo-auto-height);
+    min-height: var(--large-logo-auto-height);
+  }
+
+  [data-large-logo-auto-height] .custom-section-content,
+  [data-large-logo-auto-height] .section-content-wrapper {
+    height: 100%;
+    min-height: 0;
+  }
+
+  [data-large-logo-auto-height] .section-content-wrapper {
+    padding-block: 0;
+  }
+
+  [data-large-logo-auto-height] .logo-block,
+  [data-large-logo-auto-height] .logo-section {
+    height: 100%;
+    max-height: 100%;
+    align-items: center;
+  }
+
+  [data-large-logo-auto-height] .logo-block jumbo-text,
+  [data-large-logo-auto-height] .logo-section jumbo-text {
+    --jumbo-text-max-font-size: var(--large-logo-auto-height);
+  }
+{% endstylesheet %}
