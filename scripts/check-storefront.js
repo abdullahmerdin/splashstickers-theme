@@ -48,7 +48,7 @@ assertNotContains('sections/sticker-collection-hero.liquid', '{% stylesheet %}')
 assertContains('sections/sticker-collection-hero.liquid', "assign splash_word = section.settings.splash_word | default: 'SPLASH'");
 assertContains('sections/sticker-collection-hero.liquid', '"id": "splash_word", "label": "Accent word", "default": "SPLASH"');
 assertContains('sections/sticker-collection-hero.liquid', "assign sticker_1_text = section.settings.sticker_1_text | default: 'STICKERS'");
-assertContains('sections/sticker-collection-hero.liquid', "assign art_meta_text = section.settings.art_meta_text | default: 'EST. 2026'");
+assertContains('sections/sticker-collection-hero.liquid', "assign art_meta_text = section.settings.art_meta_text | default: 'SPLASH STICKERS EST. 2026'");
 assertNotContains('sections/sticker-collection-hero.liquid', 'section.settings.show_splash_word');
 assertNotContains('sections/sticker-collection-hero.liquid', 'section.settings.show_sticker_1');
 assertNotContains('sections/sticker-collection-hero.liquid', 'section.settings.show_sticker_2');
@@ -60,9 +60,9 @@ assertContains('assets/sticker-collection-hero.css', '@keyframes sticker-float-o
 assertContains('assets/sticker-collection-hero.css', 'prefers-reduced-motion: reduce');
 assertContains('templates/collection.json', '"splash_word": "SPLASH"');
 assertContains('templates/collection.json', '"sticker_1_text": "STICKERS"');
-assertContains('templates/collection.json', '"sticker_2_text": "BADGES"');
-assertContains('templates/collection.json', '"sticker_3_text": "TEXTILE"');
-assertContains('templates/collection.json', '"art_meta_text": "EST. 2026"');
+assertContains('templates/collection.json', '"sticker_2_text": "TEXTILE"');
+assertContains('templates/collection.json', '"sticker_3_text": "QUALITY PRINT"');
+assertContains('templates/collection.json', '"art_meta_text": "SPLASH STICKERS EST. 2026"');
 assertContains('sections/splash-hero.liquid', 'role="group"');
 assertContains('sections/splash-hero.liquid', 'aria-describedby="splash-hero-hint-{{ section.id }}"');
 assertContains('sections/splash-hero.liquid', 'aria-expanded="false"');

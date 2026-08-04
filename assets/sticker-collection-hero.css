@@ -189,6 +189,7 @@
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 
 @keyframes sticker-float-one {
