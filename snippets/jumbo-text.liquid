@@ -4,6 +4,7 @@
   @param {string} [text] - The text to be rendered.
   @param {object} [block_settings] - The block settings object, defaults to block.settings
   @param {block} [block] - The block object, used for settings fallback and Shopify editor attributes.
+  @param {string} [text_alignment] - Optional text alignment override.
 
   @example
   {% render 'jumbo-text', text: block.settings.text %}
@@ -11,6 +12,7 @@
 
 {% liquid
   assign block_settings = block_settings | default: block.settings
+  assign text_alignment = text_alignment | default: block_settings.alignment | default: 'left'
   assign shown_text = text | default: block_settings.text
   assign descenders = 'alphabetic'
   assign trim = 'trim-both'
@@ -48,10 +50,10 @@
     {% else %}
       --color: var(--color-foreground);
     {% endif %}
-    --text-align: {{ block_settings.alignment | default: 'left' }};
-    {% if block_settings.alignment == "left" %}
+    --text-align: {{ text_alignment }};
+    {% if text_alignment == "left" %}
       --margin-left-nudge: {{nudge}};
-    {% elsif block_settings.alignment == "right" %}
+    {% elsif text_alignment == "right" %}
       --margin-right-nudge: {{nudge}};
     {% endif %}
     --line-height: {{ block_settings.line_height | default: '1' }};

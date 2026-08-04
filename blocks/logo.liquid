@@ -9,10 +9,16 @@
   endif
 
   assign logo_text = shop.name
+  assign is_collection_title = false
+  assign collection_title_alignment = 'left'
   if collection != blank and collection.title != blank
     assign logo_text = collection.title
+    assign is_collection_title = true
+    assign collection_title_alignment = 'right'
   elsif closest.collection != blank and closest.collection.title != blank
     assign logo_text = closest.collection.title
+    assign is_collection_title = true
+    assign collection_title_alignment = 'right'
   endif
 %}
 
@@ -35,6 +41,7 @@
 <div
   class="
     logo-block
+    {% if is_collection_title and image == blank %}logo-block--collection-title{% endif %}
     spacing-style
   "
   style="
@@ -71,7 +78,7 @@
       {{ logo_image }}
     </div>
   {% else %}
-    {% render 'jumbo-text', text: logo_text %}
+    {% render 'jumbo-text', text: logo_text, text_alignment: collection_title_alignment %}
   {% endif %}
 </div>
 
@@ -91,6 +98,27 @@
       width: calc(
         var(--logo-width-mobile, var(--logo-width)) + var(--padding-inline-start) + var(--padding-inline-end)
       );
+    }
+  }
+
+  .logo-block--collection-title {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .layout-panel-flex--row > .shopify-block:has(> .logo-block--collection-title) {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .logo-block--collection-title jumbo-text {
+    --margin-left-nudge: 0;
+    --margin-right-nudge: -0.04em;
+  }
+
+  @media screen and (max-width: 749px) {
+    .layout-panel-flex.mobile-column > .shopify-block:has(> .logo-block--collection-title) {
+      width: 100%;
     }
   }
 
