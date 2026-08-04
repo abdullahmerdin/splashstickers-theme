@@ -1,0 +1,286 @@
+/*
+ * Global color-mode contract.
+ *
+ * New storefront UI should consume the semantic tokens below (or derive
+ * component tokens from them). This keeps future sections, app surfaces and
+ * interaction states dark-mode compatible without selector-by-selector fixes.
+ */
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-background: #0f1115;
+  --color-background-rgb: 15 17 21;
+  --color-foreground: #f5f7fa;
+  --color-foreground-rgb: 245 247 250;
+  --color: #f5f7fa;
+  --color-rgb: 245 247 250;
+  --color-border: #3a3f4b;
+  --color-border-rgb: 58 63 75;
+  --color-foreground-muted: rgb(245 247 250 / 0.72);
+  --color-foreground-subdued: rgb(245 247 250 / 0.62);
+  --color-shadow-rgb: 0 0 0;
+  --palette-lightest: #ffffff;
+  --palette-lightest-rgb: 255 255 255;
+  --palette-darkest: #0f1115;
+  --palette-darkest-rgb: 15 17 21;
+
+  --color-primary-button-text: #ffffff;
+  --color-primary-button-background: #6c5ce7;
+  --color-primary-button-border: #6c5ce7;
+  --color-primary-button-focus-outline: #a99fff;
+  --color-primary-button-hover-text: #ffffff;
+  --color-primary-button-hover-background: #5b4ac8;
+  --color-primary-button-hover-border: #5b4ac8;
+  --color-secondary-button-text: #b7afff;
+  --color-secondary-button-background: transparent;
+  --color-secondary-button-border: #6c5ce7;
+  --color-secondary-button-hover-text: #ffffff;
+  --color-secondary-button-hover-background: #5b4ac8;
+  --color-secondary-button-hover-border: #5b4ac8;
+
+  --color-input-background: #191c23;
+  --color-input-text: #f5f7fa;
+  --color-input-text-rgb: 245 247 250;
+  --color-input-border: #3a3f4b;
+  --color-variant-background: #191c23;
+  --color-variant-text: #f5f7fa;
+  --color-variant-text-rgb: 245 247 250;
+  --color-variant-border: #3a3f4b;
+  --color-variant-hover-background: #242832;
+  --color-variant-hover-text: #ffffff;
+  --color-variant-hover-border: #6257c9;
+  --color-selected-variant-background: #6c5ce7;
+  --color-selected-variant-text: #ffffff;
+  --color-selected-variant-border: #6c5ce7;
+  --color-selected-variant-hover-background: #5b4ac8;
+  --color-selected-variant-hover-text: #ffffff;
+  --color-selected-variant-hover-border: #5b4ac8;
+  --input-disabled-background-color: rgb(245 247 250 / 0.08);
+  --input-disabled-border-color: rgb(245 247 250 / 0.12);
+  --input-disabled-text-color: rgb(245 247 250 / 0.42);
+  --checkbox-border: 1px solid rgb(245 247 250 / 0.45);
+  --color-error: #ff8a80;
+  --color-success: #6ee7a8;
+
+  --splash-color-ink: #f5f7fa;
+  --splash-color-ink-rgb: 245 247 250;
+  --splash-color-purple: #6c5ce7;
+  --splash-color-purple-rgb: 108 92 231;
+  --splash-color-pink: #b83f73;
+  --splash-color-pink-rgb: 184 63 115;
+  --splash-color-surface: #191c23;
+  --splash-color-surface-rgb: 25 28 35;
+  --splash-color-on-accent: #ffffff;
+  --splash-color-on-accent-rgb: 255 255 255;
+  --splash-color-on-light-accent: #17191f;
+  --splash-color-on-light-accent-rgb: 23 25 31;
+  --splash-color-inverse-surface: #090b0f;
+  --splash-color-inverse-surface-rgb: 9 11 15;
+  --splash-color-muted: #aeb4c0;
+  --splash-color-muted-rgb: 174 180 192;
+  --splash-color-line: #3a3f4b;
+  --splash-color-line-rgb: 58 63 75;
+  --splash-color-focus: #a99fff;
+  --splash-color-yellow-ink: var(--splash-color-on-light-accent);
+  --splash-shadow-card: 0 12px 36px rgb(0 0 0 / 0.34);
+  --splash-shadow-lift: 0 12px 30px rgb(0 0 0 / 0.45);
+  --splash-surface-soft: #20232b;
+}
+
+html[data-theme='dark'] body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* Theme-editor custom colors are light-mode inputs. Normalize their semantic
+   surface tokens in dark mode so every generic section/block participates. */
+html[data-theme='dark'] :where([class*='color-custom-']) {
+  --color-background: #15181e !important;
+  --color-background-rgb: 21 24 30 !important;
+  --color: #f5f7fa !important;
+  --color-rgb: 245 247 250 !important;
+  --color-foreground: #f5f7fa !important;
+  --color-foreground-rgb: 245 247 250 !important;
+  --color-foreground-muted: rgb(245 247 250 / 0.72) !important;
+  --color-foreground-subdued: rgb(245 247 250 / 0.62) !important;
+  --color-border: #3a3f4b !important;
+  --color-border-rgb: 58 63 75 !important;
+  --input-disabled-background-color: rgb(245 247 250 / 0.08) !important;
+  --input-disabled-border-color: rgb(245 247 250 / 0.12) !important;
+  --input-disabled-text-color: rgb(245 247 250 / 0.42) !important;
+}
+
+html[data-theme='dark'] :where(.section-background[class*='color-custom-'], .section[class*='color-custom-']) {
+  background-color: var(--color-background) !important;
+}
+
+html[data-theme='dark'] :where(.sticker-categories-section, .sticker-process-section, .trust-badges-section) {
+  background-color: var(--color-background) !important;
+  color: var(--color-foreground);
+}
+
+html[data-theme='dark'] .sticker-collection-hero {
+  --collection-bg: var(--color-background) !important;
+}
+
+html[data-theme='dark'] .shopify-section.splash-hero > [class^='splash-hero-'] {
+  background: var(--color-background) !important;
+}
+
+html[data-theme='dark'] :where(input, textarea, select) {
+  color-scheme: dark;
+}
+
+html[data-theme='dark'] .text-block--background {
+  --text-background-color: #20232b !important;
+}
+
+html[data-theme='dark'] :where(dialog, [role='dialog'], .drawer, .popover, .quick-add-modal) {
+  --color-background: #191c23;
+  --color-background-rgb: 25 28 35;
+  --color-foreground: #f5f7fa;
+  --color-foreground-rgb: 245 247 250;
+  --color-border: #3a3f4b;
+  --color-border-rgb: 58 63 75;
+}
+
+/* The configurator canvas remains the chosen output color; only its interface
+   chrome changes with the site theme. */
+html[data-theme='dark'] .sticker-configurator {
+  --cfg-danger: #ff8a80;
+  --cfg-shadow: 0 18px 50px rgb(0 0 0 / 0.42);
+}
+
+html[data-theme='dark'] .sticker-configurator :where(.toolbar, .cfg-controls) {
+  background: rgb(25 28 35 / 0.94);
+}
+
+html[data-theme='dark'] .sticker-configurator .cfg-export-overlay {
+  background: rgb(15 17 21 / 0.78);
+}
+
+html[data-theme='dark'] .sticker-configurator :where(.cfg-loading-skeleton, .cfg-onboarding-copy li > span) {
+  background: var(--cfg-surface) !important;
+}
+
+html[data-theme='dark'] .sticker-configurator sticker-configurator.mobile-mode .size-inputs:not([hidden]) {
+  background: rgb(25 28 35 / 0.94);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.36);
+}
+
+html[data-theme='dark'] .sticker-configurator :where(.cfg-skeleton-heading span, .cfg-skeleton-toolbar i, .cfg-skeleton-canvas span, .cfg-skeleton-actions span) {
+  background: linear-gradient(100deg, #242832 15%, #313641 35%, #242832 55%);
+  background-size: 220% 100%;
+}
+
+html[data-theme='dark'] .sticker-configurator .cfg-skeleton-canvas {
+  background:
+    linear-gradient(to right, rgb(245 247 250 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(245 247 250 / 0.07) 1px, transparent 1px),
+    #11141a;
+  background-size: 20px 20px;
+}
+
+html[data-theme='dark'] .sticker-configurator :where(.toolbar button, .cfg-toolbar-more > summary) {
+  color: var(--cfg-muted);
+}
+
+html[data-theme='dark'] .sticker-configurator :where(.cfg-cart-status[data-state='error'], .cfg-resolution-warning[data-state='warning']) {
+  color: #ff9b91;
+}
+
+html[data-theme='dark'] .sticker-configurator :where(.cfg-cart-status[data-state='success'], .cfg-resolution-warning[data-state='success']) {
+  color: #6ee7a8;
+}
+
+html[data-theme='dark'] .cfg-modal .cfg-modal-box {
+  color: var(--splash-color-ink);
+  background: #191c23;
+  border-color: #3a3f4b;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 0.55);
+}
+
+html[data-theme='dark'] .cfg-modal :where(.cfg-modal-title, .cfg-modal-text, .cfg-confirm-text, .cfg-error-text) {
+  color: #f5f7fa;
+}
+
+html[data-theme='dark'] .cfg-modal :where(.cfg-modal-note, .cfg-modal-row label, .cfg-modal-row span, .cfg-et-label) {
+  color: #aeb4c0;
+}
+
+html[data-theme='dark'] .cfg-modal :where(.cfg-modal-close, .cfg-btn-sec, .cfg-et-toolbar) {
+  color: #d6dae2;
+  background: #242832;
+}
+
+html[data-theme='dark'] .cfg-modal :where(.cfg-modal-zone, .cfg-modal-row input, .cfg-et-input, .cfg-et-text) {
+  color: #f5f7fa;
+  background: #11141a;
+  border-color: #3a3f4b;
+}
+
+html[data-theme='dark'] .cfg-modal :where(.cfg-et-style-btn, .cfg-et-align-btn) {
+  color: #aeb4c0;
+}
+
+html[data-theme='dark'] .cfg-modal :where(.cfg-et-style-btn.active, .cfg-et-align-btn.active) {
+  color: #b7afff;
+  background: #313641;
+}
+
+html[data-theme='dark'] .cfg-modal .cfg-et-divider {
+  background: #3a3f4b;
+}
+
+/* Accessible global toggle. Header placement inherits Horizon action sizing;
+   standalone layouts use the fixed variant. */
+.theme-mode-toggle {
+  display: inline-grid;
+  place-items: center;
+  color: inherit;
+  cursor: pointer;
+}
+
+.theme-mode-toggle__icon,
+.theme-mode-toggle__icon svg {
+  width: var(--icon-size-md, 20px);
+  height: var(--icon-size-md, 20px);
+}
+
+.theme-mode-toggle__icon--sun,
+html[data-theme='dark'] .theme-mode-toggle__icon--moon {
+  display: none;
+}
+
+html[data-theme='dark'] .theme-mode-toggle__icon--sun {
+  display: block;
+}
+
+.theme-mode-toggle--floating {
+  position: fixed;
+  z-index: 1000;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  color: var(--color-foreground);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-popover, 0 4px 20px rgb(0 0 0 / 0.15));
+}
+
+.theme-mode-toggle:focus-visible {
+  outline: 3px solid var(--splash-color-focus, var(--color-foreground));
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .page-wrapper,
+  .section-background,
+  .theme-mode-toggle--floating {
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  }
+}

@@ -6,6 +6,7 @@
   lang="{{ request.locale.iso_code }}"
 >
   <head>
+    {%- render 'theme-mode-init' -%}
     {%- if settings.favicon != blank -%}
       <link
         rel="icon"
@@ -40,6 +41,10 @@
   </head>
 
   <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
+    {% if request.page_type == '404' %}
+      {%- render 'theme-toggle', floating: true -%}
+    {% endif %}
+
     {% if request.page_type != '404' %}
       {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
 

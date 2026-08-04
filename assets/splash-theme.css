@@ -17,7 +17,7 @@
   border: var(--splash-border-width) solid var(--splash-color-purple);
   border-radius: var(--splash-radius-control);
   background: var(--splash-color-purple);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-family: var(--splash-font-body);
   font-weight: 700;
   line-height: 1.2;
@@ -49,7 +49,7 @@
   padding: 0.35rem 0.7rem;
   border-radius: var(--splash-radius-control);
   background: var(--splash-color-pink);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-family: var(--splash-font-body);
   font-size: var(--splash-font-meta-size);
   font-weight: 700;
@@ -78,7 +78,7 @@
 .splash-sticker-frame::after {
   position: absolute;
   inset: 0;
-  border: 2px solid rgb(var(--splash-color-surface-rgb) / 0.75);
+  border: 2px solid rgb(var(--splash-color-on-accent-rgb) / 0.75);
   border-radius: inherit;
   content: '';
   pointer-events: none;
@@ -148,7 +148,7 @@
   justify-content: center;
   background: var(--splash-color-purple);
   border-radius: var(--splash-radius-control);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 700;
   text-decoration: none;
   transition: transform var(--splash-transition), box-shadow var(--splash-transition), background-color var(--splash-transition);
@@ -165,7 +165,7 @@
   align-items: center;
   justify-content: center;
   padding: 0.75rem 2rem;
-  border: 2px solid var(--splash-color-surface);
+  border: 2px solid var(--splash-color-on-accent);
   border-radius: var(--splash-radius-control);
   font-size: 1.05rem;
   font-weight: 700;
@@ -179,7 +179,7 @@
 
 .splash-cta-button--outline {
   background: transparent;
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-cta-button:hover {
@@ -318,7 +318,7 @@
 .custom-upload-btn {
   background: var(--splash-color-purple);
   border-radius: var(--splash-radius-control);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .custom-upload-btn:hover {
@@ -493,7 +493,7 @@
 
 #header-component.splash-header[data-bubble-style='default'] .cart-bubble {
   --cart-bubble-background: var(--splash-color-pink);
-  --cart-bubble-text: var(--splash-color-surface);
+  --cart-bubble-text: var(--splash-color-on-accent);
 }
 
 #header-component.splash-header .menu-list__link::after {
@@ -512,25 +512,25 @@
 #header-component.splash-header[transparent] .header__icon--menu:hover,
 #header-component.splash-header[transparent] .dropdown-localization__button:hover {
   background: rgb(var(--splash-color-surface-rgb) / 0.14);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 /* Shell: navigation, search, cart drawer and footer */
 #header-component.splash-header .splash-header-drawer .menu-drawer {
-  --color-background: var(--splash-color-ink);
-  --color-background-rgb: var(--splash-color-ink-rgb);
-  --color-foreground: var(--splash-color-surface);
-  --color-foreground-rgb: var(--splash-color-surface-rgb);
-  --color-border: rgb(var(--splash-color-surface-rgb) / 0.18);
+  --color-background: var(--splash-color-inverse-surface);
+  --color-background-rgb: var(--splash-color-inverse-surface-rgb);
+  --color-foreground: var(--splash-color-on-accent);
+  --color-foreground-rgb: var(--splash-color-on-accent-rgb);
+  --color-border: rgb(var(--splash-color-on-accent-rgb) / 0.18);
   border-inline-end: 5px solid var(--splash-color-pink);
-  background: var(--splash-color-ink);
-  color: var(--splash-color-surface);
+  background: var(--splash-color-inverse-surface);
+  color: var(--splash-color-on-accent);
 }
 
 #header-component.splash-header .splash-header-drawer .menu-drawer__menu-item {
   min-height: 48px;
-  border-block-end: 1px solid rgb(var(--splash-color-surface-rgb) / 0.12);
-  color: var(--splash-color-surface);
+  border-block-end: 1px solid rgb(var(--splash-color-on-accent-rgb) / 0.12);
+  color: var(--splash-color-on-accent);
   font-family: var(--splash-font-body);
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -540,13 +540,13 @@
 #header-component.splash-header .splash-header-drawer .menu-drawer__menu-item:hover,
 #header-component.splash-header .splash-header-drawer .menu-drawer__menu-item--active {
   background: rgb(var(--splash-color-pink-rgb) / 0.18);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   transform: translateX(3px);
 }
 
 #header-component.splash-header .splash-header-drawer .menu-drawer__close-button,
 #header-component.splash-header .splash-header-drawer .menu-drawer__back-button {
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 #header-component.splash-header .splash-header-drawer :is(.menu-drawer__close-button, .menu-drawer__back-button):focus-visible,
@@ -614,7 +614,7 @@
 
 .splash-cart-drawer__dialog .theme-drawer__badge {
   background: var(--splash-color-pink);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-cart-drawer__dialog .cart__checkout-button,
@@ -623,7 +623,7 @@
   border: 0;
   border-radius: var(--splash-radius-control);
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 800;
   transition: transform var(--splash-transition), box-shadow var(--splash-transition);
 }
@@ -642,8 +642,8 @@
 .splash-footer {
   position: relative;
   overflow: hidden;
-  background: var(--splash-color-ink);
-  color: var(--splash-color-surface);
+  background: var(--splash-color-inverse-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-footer .footer-content {
@@ -652,7 +652,7 @@
 }
 
 .splash-footer :is(h1, h2, h3, h4, h5, h6, p, a, button, label) {
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-footer a:hover,
@@ -661,27 +661,27 @@
 }
 
 .splash-footer :is(input, textarea) {
-  border-color: rgb(var(--splash-color-surface-rgb) / 0.36);
+  border-color: rgb(var(--splash-color-on-accent-rgb) / 0.36);
   border-radius: var(--splash-radius-control);
-  background: rgb(var(--splash-color-surface-rgb) / 0.1);
-  color: var(--splash-color-surface);
+  background: rgb(var(--splash-color-on-accent-rgb) / 0.1);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-footer :is(input, textarea)::placeholder {
-  color: rgb(var(--splash-color-surface-rgb) / 0.68);
+  color: rgb(var(--splash-color-on-accent-rgb) / 0.68);
 }
 
 .splash-footer-utilities {
-  background: var(--splash-color-ink);
-  color: rgb(var(--splash-color-surface-rgb) / 0.74);
+  background: var(--splash-color-inverse-surface);
+  color: rgb(var(--splash-color-on-accent-rgb) / 0.74);
 }
 
 .splash-footer-utilities .utilities {
-  border-top-color: rgb(var(--splash-color-surface-rgb) / 0.2);
+  border-top-color: rgb(var(--splash-color-on-accent-rgb) / 0.2);
 }
 
 .splash-footer-utilities :is(a, button) {
-  color: rgb(var(--splash-color-surface-rgb) / 0.74);
+  color: rgb(var(--splash-color-on-accent-rgb) / 0.74);
   transition: color var(--splash-transition), transform var(--splash-transition);
 }
 
@@ -738,12 +738,12 @@
 
 .splash-product-card .product-badges__badge.color-custom-badge-sale {
   background: var(--splash-color-pink);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-product-card .product-badges__badge.color-custom-badge-sold-out {
   background: var(--splash-color-yellow);
-  color: var(--splash-color-ink);
+  color: var(--splash-color-on-light-accent);
 }
 
 .splash-product-card .quick-add__button {
@@ -758,7 +758,7 @@
 .splash-product-card .quick-add__button:hover,
 .splash-product-card .quick-add__button:focus-visible {
   background: var(--splash-color-purple);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -905,7 +905,7 @@
 
 .splash-collection-results .facets__pill-input:checked + .facets__pill-label {
   background: var(--splash-color-purple);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-collection-results .facets__pill-label:hover {
@@ -915,7 +915,7 @@
 }
 
 .splash-collection-results .facets__pill-input:checked + .facets__pill-label:hover {
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-collection-results .facets .checkbox .icon-checkmark {
@@ -1008,7 +1008,7 @@
   border: 0;
   border-radius: var(--splash-radius-control);
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-family: var(--splash-font-body);
   font-weight: 800;
   box-shadow: none;
@@ -1023,7 +1023,7 @@
 .splash-collection-results .filter-count-bubble {
   width: 24px;
   border: 0;
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 800;
 }
 
@@ -1131,7 +1131,7 @@
 
 .splash-collection-results .facets--drawer .facets__see-results {
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   box-shadow: var(--splash-shadow-cta);
 }
 
@@ -1254,7 +1254,7 @@
 }
 
 .splash-collection-results .pagination__link[aria-current='page'] {
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 800;
 }
 
@@ -1456,7 +1456,7 @@
 .splash-product-information .product-details .variant-option__button-label:has(:checked) {
   border-color: var(--splash-color-purple);
   background-color: var(--splash-color-purple);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-product-information .product-details .variant-option__button-label:has(:focus-visible) {
@@ -1508,7 +1508,7 @@
   border: 1px solid var(--splash-color-purple);
   border-radius: var(--splash-radius-control);
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   box-shadow: var(--splash-shadow-cta);
   font-weight: 800;
 }
@@ -1566,7 +1566,7 @@
 .splash-sticky-add-to-cart .sticky-add-to-cart__button {
   border-radius: var(--splash-radius-control);
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 800;
 }
 
@@ -1838,7 +1838,7 @@
   border: 1px solid var(--splash-color-purple);
   border-radius: var(--splash-radius-control);
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 800;
   position: relative;
   isolation: isolate;
@@ -1934,7 +1934,7 @@
 .splash-cart-drawer__dialog .cart-discount__button {
   border-radius: var(--splash-radius-sm);
   background: var(--splash-color-teal);
-  color: var(--splash-color-ink);
+  color: var(--splash-color-on-light-accent);
   font-weight: 800;
 }
 
@@ -2316,7 +2316,7 @@
   border: 1px solid var(--splash-color-purple);
   border-radius: var(--splash-radius-control);
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 800;
 }
 
@@ -2325,12 +2325,12 @@
 }
 
 .splash-password-footer .password-footer {
-  background: var(--splash-color-ink);
-  color: rgb(var(--splash-color-surface-rgb) / 0.78);
+  background: var(--splash-color-inverse-surface);
+  color: rgb(var(--splash-color-on-accent-rgb) / 0.78);
 }
 
 .splash-password-footer .password-footer :is(a, button) {
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
 }
 
 .splash-password-footer .password-footer :is(a, button):hover {
@@ -2366,7 +2366,7 @@
 .password-dialog .password-dialog__submit-button {
   border-radius: var(--splash-radius-control);
   background: var(--splash-gradient-primary);
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-weight: 800;
 }
 

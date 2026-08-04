@@ -3,6 +3,7 @@
 <!doctype html>
 <html lang="{{ request.locale.iso_code }}">
   <head>
+    {%- render 'theme-mode-init' -%}
     {%- render 'stylesheets' -%}
     {{ 'template-giftcard.css' | asset_url | stylesheet_tag }}
 
@@ -110,6 +111,7 @@
   </head>
 
   <body class="gift-card">
+    {%- render 'theme-toggle', floating: true -%}
     <header>
       <div class="gift-card__text-wrapper">
         <h1>{{ shop.name }}</h1>

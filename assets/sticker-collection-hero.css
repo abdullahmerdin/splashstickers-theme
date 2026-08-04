@@ -124,7 +124,7 @@
   top: 9%;
   left: 7%;
   z-index: 1;
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-size: clamp(3rem, 8vw, 7rem);
   font-weight: 900;
   letter-spacing: -0.1em;
@@ -137,11 +137,11 @@
   position: absolute;
   z-index: 1;
   display: inline-block;
-  border: 0.45rem solid var(--splash-color-surface);
+  border: 0.45rem solid var(--splash-color-on-accent);
   border-radius: 999px;
   padding: 0.8rem 1.1rem;
   box-shadow: 0.35rem 0.45rem 0 rgb(var(--splash-color-ink-rgb) / 22%);
-  color: var(--splash-color-ink);
+  color: var(--splash-color-on-light-accent);
   font-size: clamp(0.7rem, 1.2vw, 1rem);
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -185,7 +185,7 @@
   right: 8%;
   bottom: 7%;
   z-index: 1;
-  color: var(--splash-color-surface);
+  color: var(--splash-color-on-accent);
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.12em;

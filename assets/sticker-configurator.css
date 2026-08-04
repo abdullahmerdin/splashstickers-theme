@@ -1746,7 +1746,7 @@ dialog.cfg-modal::backdrop {
 .sticker-configurator .toolbar button:hover:not(:disabled),
 .sticker-configurator .toolbar button.active,
 .sticker-configurator .toolbar button[aria-pressed='true'] {
-  color: var(--splash-color-surface, #fff);
+  color: var(--splash-color-on-accent, #fff);
   background: var(--splash-color-purple, var(--cfg-primary));
   box-shadow: var(--splash-shadow-control, 0 4px 12px rgb(108 92 231 / 0.3));
 }
@@ -1784,7 +1784,7 @@ dialog.cfg-modal::backdrop {
 .sticker-configurator .resize-handle,
 .sticker-configurator .rot-handle {
   background: var(--splash-color-pink, var(--cfg-primary));
-  border-color: var(--splash-color-surface, var(--cfg-surface));
+  border-color: var(--splash-color-on-accent, var(--cfg-surface));
 }
 
 .sticker-configurator .sel-box {

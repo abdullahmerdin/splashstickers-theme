@@ -1,0 +1,25 @@
+{% comment %}
+  Apply the saved/system color mode before styles paint to avoid a light-mode flash.
+  Keep this snippet before every layout's stylesheet tags.
+{% endcomment %}
+<meta name="color-scheme" content="light dark">
+<script>
+  (() => {
+    const storageKey = 'splash-color-mode';
+    let savedMode;
+
+    try {
+      savedMode = localStorage.getItem(storageKey);
+    } catch (error) {
+      savedMode = null;
+    }
+
+    const mode = savedMode === 'light' || savedMode === 'dark'
+      ? savedMode
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+    document.documentElement.dataset.theme = mode;
+    document.documentElement.style.colorScheme = mode;
+  })();
+</script>
+<script src="{{ 'theme-mode.js' | asset_url }}" defer></script>

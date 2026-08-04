@@ -63,6 +63,8 @@
   {% endif %}
   {{- block.shopify_attributes -}}
 >
+  {%- render 'theme-toggle' -%}
+
   {% if shop.customer_accounts_enabled %}
     {% liquid
       assign account_actions_style = ''

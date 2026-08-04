@@ -663,7 +663,11 @@ export function resetShimmer(container = document.body) {
 export function changeMetaThemeColor(color) {
   const metaThemeColor = document.head.querySelector('meta[name="theme-color"]');
   if (metaThemeColor && color) {
-    metaThemeColor.setAttribute('content', color);
+    metaThemeColor.dataset.lightThemeColor = color;
+    metaThemeColor.setAttribute(
+      'content',
+      document.documentElement.dataset.theme === 'dark' ? '#0f1115' : color
+    );
   }
 }
 
