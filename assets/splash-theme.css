@@ -386,6 +386,10 @@
   background: var(--splash-gradient-spectrum);
 }
 
+body:has(.shopify-section.sticker-configurator) #header-component.splash-header + .splash-header__accent-strip {
+  display: none;
+}
+
 #header-component.splash-header[transparent] + .splash-header__accent-strip {
   display: none;
 }
