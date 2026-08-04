@@ -26,7 +26,7 @@
           "type": "button",
           "settings": {
             "button_label": "Design Your Own",
-            "button_link": "shopify://products/the-collection-snowboard-hydrogen?view=product-gangsheet",
+            "button_link": "/products/the-collection-snowboard-hydrogen?view=product-gangsheet",
             "button_style": "outline",
             "button_bg": "#6c5ce7",
             "button_text": "#6c5ce7"
@@ -280,7 +280,7 @@
         "heading": "How it works",
         "subtext": "Add a design, choose the size and quantity, then review your order.",
         "button_label": "",
-        "button_link": "shopify://products/the-collection-snowboard-hydrogen?view=product-gangsheet",
+        "button_link": "/products/the-collection-snowboard-hydrogen?view=product-gangsheet",
         "background_color": "#f8f9fa",
         "padding_top": 56,
         "padding_bottom": 56
@@ -292,7 +292,7 @@
         "heading": "Create a custom sticker",
         "subtext": "Upload your design and choose the size and quantity you need.",
         "button_label": "Start designing",
-        "button_link": "shopify://products/the-collection-snowboard-hydrogen?view=product-gangsheet",
+        "button_link": "/products/the-collection-snowboard-hydrogen?view=product-gangsheet",
         "button_style": "solid",
         "gradient_start": "#6c5ce7",
         "gradient_end": "#fd79a8",
