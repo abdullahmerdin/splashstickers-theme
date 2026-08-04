@@ -108,7 +108,7 @@
     justify-content: flex-end;
   }
 
-  .layout-panel-flex--row > .shopify-block:has(> .logo-block--collection-title) {
+  .layout-panel-flex > .shopify-block:has(> .logo-block--collection-title) {
     flex: 1 1 auto;
     min-width: 0;
     align-self: stretch;
@@ -119,12 +119,6 @@
   .logo-block--collection-title jumbo-text {
     --margin-left-nudge: 0;
     --margin-right-nudge: -0.04em;
-  }
-
-  @media screen and (max-width: 749px) {
-    .layout-panel-flex.mobile-column > .shopify-block:has(> .logo-block--collection-title) {
-      width: 100%;
-    }
   }
 
   .logo-block__image-wrapper {
