@@ -72,17 +72,17 @@
 
       {% when 'products', 'site' %}
         {% if layout == 'products' %}
-          assign directory_items = product_guides
-          assign directory_namespace = 'products'
-          assign directory_title_key = 'how_it_works.products.title'
-          assign directory_intro_key = 'how_it_works.products.intro'
-          assign directory_back_key = 'how_it_works.common.back_to_hub'
+          {% assign directory_items = product_guides %}
+          {% assign directory_namespace = 'products' %}
+          {% assign directory_title_key = 'how_it_works.products.title' %}
+          {% assign directory_intro_key = 'how_it_works.products.intro' %}
+          {% assign directory_back_key = 'how_it_works.common.back_to_hub' %}
         {% else %}
-          assign directory_items = site_guides
-          assign directory_namespace = 'site'
-          assign directory_title_key = 'how_it_works.site.title'
-          assign directory_intro_key = 'how_it_works.site.intro'
-          assign directory_back_key = 'how_it_works.common.back_to_hub'
+          {% assign directory_items = site_guides %}
+          {% assign directory_namespace = 'site' %}
+          {% assign directory_title_key = 'how_it_works.site.title' %}
+          {% assign directory_intro_key = 'how_it_works.site.intro' %}
+          {% assign directory_back_key = 'how_it_works.common.back_to_hub' %}
         {% endif %}
 
         <header class="how-it-works__hero how-it-works__hero--directory">

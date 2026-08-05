@@ -59,6 +59,9 @@ for (const slug of [
 }
 
 assert.ok(section.includes('routes.root_url }}pages/how-it-works-{{ item_slug }}'), 'directory cards must build internal guide links');
+assert.ok(section.includes('{% assign directory_items = product_guides %}'), 'products directory variables must be Liquid assignments');
+assert.ok(section.includes('{% assign directory_items = site_guides %}'), 'site directory variables must be Liquid assignments');
+assert.ok(!section.includes('\n          assign directory_'), 'directory assignments must not render as storefront text');
 
 for (const token of [
   'var(--color-background',
