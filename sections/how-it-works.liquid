@@ -1,0 +1,243 @@
+{% liquid
+  assign layout = section.settings.layout | default: 'hub'
+  assign guide_key = section.settings.guide_key | default: 'auto'
+  assign current_page_handle = page.handle | default: ''
+  assign product_guides = 'die_cut,magnet,uv_dtf,uv,emboss,textile' | split: ','
+  assign site_guides = 'configurator,background_removal,browse_and_choose,cart_and_checkout,contact_and_help' | split: ','
+
+  if layout == 'guide' and current_page_handle != blank
+    assign page_guide_key = current_page_handle | remove_first: 'how-it-works-'
+    if page_guide_key != current_page_handle
+      assign guide_key = page_guide_key | replace: '-', '_'
+    endif
+  endif
+
+  if layout == 'guide' and guide_key == 'auto'
+    assign guide_key = 'configurator'
+  endif
+
+  assign is_product_guide = false
+  if product_guides contains guide_key
+    assign is_product_guide = true
+  endif
+
+  assign guide_kind = 'site'
+  if is_product_guide
+    assign guide_kind = 'products'
+  endif
+%}
+
+{{ 'how-it-works.css' | asset_url | stylesheet_tag }}
+
+<section class="how-it-works how-it-works--{{ layout }}" data-how-it-works-layout="{{ layout }}">
+  <div class="how-it-works__inner page-width">
+    {% case layout %}
+      {% when 'hub' %}
+        <header class="how-it-works__hero">
+          <p class="how-it-works__eyebrow">{{ 'how_it_works.common.eyebrow' | t }}</p>
+          <h1>{{ 'how_it_works.hub.title' | t }}</h1>
+          <p class="how-it-works__intro">{{ 'how_it_works.hub.intro' | t }}</p>
+        </header>
+
+        <div class="how-it-works__hub-grid">
+          <a class="how-it-works__hub-card" href="{{ routes.root_url }}pages/how-it-works-products">
+            <span class="how-it-works__card-index" aria-hidden="true">01</span>
+            <span class="how-it-works__hub-card-label">{{ 'how_it_works.common.products' | t }}</span>
+            <h2>{{ 'how_it_works.hub.products_title' | t }}</h2>
+            <p>{{ 'how_it_works.hub.products_text' | t }}</p>
+            <span class="how-it-works__card-link">{{ 'how_it_works.common.learn_more' | t }} <span aria-hidden="true">&rarr;</span></span>
+          </a>
+
+          <a class="how-it-works__hub-card how-it-works__hub-card--site" href="{{ routes.root_url }}pages/how-it-works-site">
+            <span class="how-it-works__card-index" aria-hidden="true">02</span>
+            <span class="how-it-works__hub-card-label">{{ 'how_it_works.common.site' | t }}</span>
+            <h2>{{ 'how_it_works.hub.site_title' | t }}</h2>
+            <p>{{ 'how_it_works.hub.site_text' | t }}</p>
+            <span class="how-it-works__card-link">{{ 'how_it_works.common.learn_more' | t }} <span aria-hidden="true">&rarr;</span></span>
+          </a>
+        </div>
+
+        <div class="how-it-works__quick-path">
+          <div>
+            <p class="how-it-works__eyebrow">{{ 'how_it_works.hub.quick_eyebrow' | t }}</p>
+            <h2>{{ 'how_it_works.hub.quick_title' | t }}</h2>
+            <p>{{ 'how_it_works.hub.quick_text' | t }}</p>
+          </div>
+          <ol class="how-it-works__quick-list">
+            <li><span>01</span>{{ 'how_it_works.hub.quick_step_one' | t }}</li>
+            <li><span>02</span>{{ 'how_it_works.hub.quick_step_two' | t }}</li>
+            <li><span>03</span>{{ 'how_it_works.hub.quick_step_three' | t }}</li>
+          </ol>
+        </div>
+
+      {% when 'products', 'site' %}
+        {% if layout == 'products' %}
+          assign directory_items = product_guides
+          assign directory_namespace = 'products'
+          assign directory_title_key = 'how_it_works.products.title'
+          assign directory_intro_key = 'how_it_works.products.intro'
+          assign directory_back_key = 'how_it_works.common.back_to_hub'
+        {% else %}
+          assign directory_items = site_guides
+          assign directory_namespace = 'site'
+          assign directory_title_key = 'how_it_works.site.title'
+          assign directory_intro_key = 'how_it_works.site.intro'
+          assign directory_back_key = 'how_it_works.common.back_to_hub'
+        {% endif %}
+
+        <header class="how-it-works__hero how-it-works__hero--directory">
+          <a class="how-it-works__back-link" href="{{ routes.root_url }}pages/how-it-works">&larr; {{ directory_back_key | t }}</a>
+          <p class="how-it-works__eyebrow">{% if layout == 'products' %}{{ 'how_it_works.common.products' | t }}{% else %}{{ 'how_it_works.common.site' | t }}{% endif %}</p>
+          <h1>{{ directory_title_key | t }}</h1>
+          <p class="how-it-works__intro">{{ directory_intro_key | t }}</p>
+        </header>
+
+        <div class="how-it-works__directory-grid" role="list">
+          {% for item in directory_items %}
+            {% capture item_title_key %}how_it_works.{{ directory_namespace }}.{{ item }}.title{% endcapture %}
+            {% capture item_summary_key %}how_it_works.{{ directory_namespace }}.{{ item }}.summary{% endcapture %}
+            {% assign item_slug = item | replace: '_', '-' %}
+            <a
+              class="how-it-works__directory-card"
+              href="{{ routes.root_url }}pages/how-it-works-{{ item_slug }}"
+              role="listitem"
+            >
+              <span class="how-it-works__directory-mark" aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
+              <h2>{{ item_title_key | strip | t }}</h2>
+              <p>{{ item_summary_key | strip | t }}</p>
+              <span class="how-it-works__card-link">{{ 'how_it_works.common.learn_more' | t }} <span aria-hidden="true">&rarr;</span></span>
+            </a>
+          {% endfor %}
+        </div>
+
+      {% when 'guide' %}
+        {% capture guide_title_key %}how_it_works.guides.{{ guide_key }}.title{% endcapture %}
+        {% capture guide_intro_key %}how_it_works.guides.{{ guide_key }}.intro{% endcapture %}
+        {% capture guide_what_text_key %}how_it_works.guides.{{ guide_key }}.what_text{% endcapture %}
+        {% capture guide_best_text_key %}how_it_works.guides.{{ guide_key }}.best_text{% endcapture %}
+        {% capture guide_note_text_key %}how_it_works.guides.{{ guide_key }}.note_text{% endcapture %}
+        {% capture guide_kind_key %}how_it_works.common.{{ guide_kind }}{% endcapture %}
+        {% assign guide_cta_key = 'how_it_works.common.see_site_guides' %}
+        {% if is_product_guide %}
+          {% assign guide_cta_key = 'how_it_works.common.browse_products' %}
+        {% endif %}
+        {% if guide_key == 'configurator' %}
+          {% assign guide_cta_key = 'how_it_works.common.start_designing' %}
+        {% endif %}
+
+        <header class="how-it-works__hero how-it-works__hero--guide">
+          <nav class="how-it-works__breadcrumbs" aria-label="{{ 'how_it_works.common.breadcrumb_label' | t }}">
+            <a href="{{ routes.root_url }}pages/how-it-works">{{ 'how_it_works.common.eyebrow' | t }}</a>
+            <span aria-hidden="true">/</span>
+            <a href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_kind_key | strip | t }}</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{{ guide_title_key | strip | t }}</span>
+          </nav>
+          <div class="how-it-works__guide-heading-line">
+            <p class="how-it-works__eyebrow">{{ guide_kind_key | strip | t }}</p>
+            {% if guide_key == 'background_removal' %}
+              <span class="how-it-works__status">{{ 'how_it_works.common.planned' | t }}</span>
+            {% endif %}
+          </div>
+          <h1>{{ guide_title_key | strip | t }}</h1>
+          <p class="how-it-works__intro">{{ guide_intro_key | strip | t }}</p>
+        </header>
+
+        <div class="how-it-works__overview">
+          <article class="how-it-works__overview-card">
+            <span class="how-it-works__overview-label">01</span>
+            <h2>{{ 'how_it_works.common.what_it_is' | t }}</h2>
+            <p>{{ guide_what_text_key | strip | t }}</p>
+          </article>
+          <article class="how-it-works__overview-card">
+            <span class="how-it-works__overview-label">02</span>
+            <h2>{{ 'how_it_works.common.good_fit' | t }}</h2>
+            <p>{{ guide_best_text_key | strip | t }}</p>
+          </article>
+        </div>
+
+        <section class="how-it-works__steps" aria-labelledby="how-it-works-steps-{{ section.id }}">
+          <div class="how-it-works__section-heading">
+            <p class="how-it-works__eyebrow">{{ 'how_it_works.common.steps_eyebrow' | t }}</p>
+            <h2 id="how-it-works-steps-{{ section.id }}">{{ 'how_it_works.common.steps_title' | t }}</h2>
+          </div>
+          <ol class="how-it-works__steps-grid">
+            {% for step_index in (1..4) %}
+              {% capture step_text_key %}how_it_works.guides.{{ guide_key }}.step_{{ step_index }}_text{% endcapture %}
+              {% capture step_title_key %}how_it_works.common.step_{{ step_index }}_title{% endcapture %}
+              <li class="how-it-works__step">
+                <span class="how-it-works__step-number" aria-hidden="true">{{ step_index | prepend: '0' }}</span>
+                <h3>{{ step_title_key | strip | t }}</h3>
+                <p>{{ step_text_key | strip | t }}</p>
+              </li>
+            {% endfor %}
+          </ol>
+        </section>
+
+        <aside class="how-it-works__note">
+          <div>
+            <p class="how-it-works__eyebrow">{{ 'how_it_works.common.before_you_start' | t }}</p>
+            <h2>{{ 'how_it_works.common.note_title' | t }}</h2>
+            <p>{{ guide_note_text_key | strip | t }}</p>
+          </div>
+          <span class="how-it-works__note-mark" aria-hidden="true">&#10022;</span>
+        </aside>
+
+        <div class="how-it-works__guide-actions">
+          <a class="how-it-works__button" href="{% if guide_key == 'configurator' %}/products/the-collection-snowboard-hydrogen?view=product-gangsheet{% else %}{{ routes.all_products_collection_url }}{% endif %}">
+            {{ guide_cta_key | strip | t }}
+          </a>
+          <a class="how-it-works__text-link" href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ 'how_it_works.common.see_all_guides' | t }}</a>
+        </div>
+    {% endcase %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "How It Works",
+  "tag": "section",
+  "class": "how-it-works-section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Page layout",
+      "options": [
+        { "value": "hub", "label": "Hub" },
+        { "value": "products", "label": "Products directory" },
+        { "value": "site", "label": "Site directory" },
+        { "value": "guide", "label": "Guide" }
+      ],
+      "default": "hub"
+    },
+    {
+      "type": "select",
+      "id": "guide_key",
+      "label": "Guide fallback",
+      "info": "Guide pages detect their content from the page handle. This value is used in the theme editor preview when no matching handle is available.",
+      "options": [
+        { "value": "auto", "label": "Auto" },
+        { "value": "die_cut", "label": "Die Cut" },
+        { "value": "magnet", "label": "Magnet" },
+        { "value": "uv_dtf", "label": "UV DTF" },
+        { "value": "uv", "label": "UV" },
+        { "value": "emboss", "label": "Emboss" },
+        { "value": "textile", "label": "Textile" },
+        { "value": "configurator", "label": "Configurator" },
+        { "value": "background_removal", "label": "Background removal" },
+        { "value": "browse_and_choose", "label": "Browse and choose" },
+        { "value": "cart_and_checkout", "label": "Cart and checkout" },
+        { "value": "contact_and_help", "label": "Contact and help" }
+      ],
+      "default": "auto"
+    }
+  ],
+  "presets": [
+    {
+      "name": "How It Works",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}

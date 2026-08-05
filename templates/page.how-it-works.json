@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "how-it-works",
+      "settings": {
+        "layout": "hub",
+        "guide_key": "auto"
+      }
+    }
+  },
+  "order": ["main"]
+}

@@ -418,6 +418,186 @@
   "fields": {
     "separator": "ile"
   },
+  "how_it_works": {
+    "common": {
+      "eyebrow": "Nasıl çalışır",
+      "products": "Ürünler",
+      "site": "Site",
+      "learn_more": "Nasıl çalıştığını öğren",
+      "back_to_hub": "Nasıl Çalışır'a dön",
+      "breadcrumb_label": "Nasıl Çalışır gezinme yolu",
+      "planned": "Gelecek güncellemede planlandı",
+      "what_it_is": "Nedir",
+      "good_fit": "Şu durumda uygun",
+      "steps_eyebrow": "Dört adımda kullan",
+      "steps_title": "Fikirden sonraki adıma",
+      "before_you_start": "Başlamadan önce",
+      "note_title": "Bilmen gereken",
+      "browse_products": "Ürünlere göz at",
+      "start_designing": "Tasarlamaya başla",
+      "see_site_guides": "Tüm site rehberleri",
+      "step_1_title": "Hazırla",
+      "step_2_title": "Seç",
+      "step_3_title": "Kontrol et",
+      "step_4_title": "Tamamla"
+    },
+    "hub": {
+      "title": "Doğru seçimi yap, sonra onu kendin için oluştur.",
+      "intro": "Her ürün formatının ne işe yaradığını ve sitemizdeki araçları nasıl kullanacağını öğren.",
+      "products_title": "Ürününü seç",
+      "products_text": "Sipariş vermeden önce ürün formatlarımızı karşılaştır.",
+      "site_title": "Siteyi güvenle kullan",
+      "site_text": "Göz atmaktan özelleştirmeye ve ödeme adımına kadar akışı öğren.",
+      "quick_eyebrow": "Basit yol",
+      "quick_title": "Burada üç şey olur",
+      "quick_text": "Doğru formatı seç, tasarımını hazırla ve sipariş vermeden önce bilgileri kontrol et.",
+      "quick_step_one": "Bir ürün formatı seç",
+      "quick_step_two": "Tasarımını veya ürün bilgilerini ekle",
+      "quick_step_three": "Siparişi kontrol et ve ödemeye geç"
+    },
+    "products": {
+      "title": "Fikrine uyan formatı seç.",
+      "intro": "Her ürün tipinin farklı bir amacı vardır. İstediğin yüzey, görünüm veya hissiyattan başlayın.",
+      "die_cut": { "title": "Die Cut", "summary": "Tasarımının dış kenarından kesilen tek parça sticker." },
+      "magnet": { "title": "Magnet", "summary": "Manyetik bir yüzeyde sergilemek için çıkarılabilir format." },
+      "uv_dtf": { "title": "UV DTF", "summary": "Tasarımı uyumlu sert bir yüzeye aktarmak için transfer formatı." },
+      "uv": { "title": "UV", "summary": "Temiz detaylara ve bitmiş bir yüzeye odaklanan baskılı format." },
+      "emboss": { "title": "Emboss", "summary": "Tasarımın görülmesinin yanında hissedilmesini sağlayan dokulu seçenek." },
+      "textile": { "title": "Tekstil", "summary": "Kumaş veya giyim ürünleri için tasarlanmış format." }
+    },
+    "site": {
+      "title": "Sitede yolunu kolayca bul.",
+      "intro": "Bu rehberler göz atma adımından güvenli bir siparişe kadar site araçlarını açıklar.",
+      "configurator": { "title": "Configurator", "summary": "Tasarım ekleyip yerleştirerek ve boyutlandırarak özel bir gangsheet oluştur." },
+      "background_removal": { "title": "Arka plan silme", "summary": "Arka planı çıkarılabilir tasarımlar için planlanan hazırlık aracı." },
+      "browse_and_choose": { "title": "Göz at ve seç", "summary": "Bir ürün bul, formatları karşılaştır ve doğru ürün sayfasını aç." },
+      "cart_and_checkout": { "title": "Sepet ve ödeme", "summary": "Ödemeden önce adetleri, notları ve satır detaylarını kontrol et." },
+      "contact_and_help": { "title": "İletişim ve yardım", "summary": "Siparişten önce veya sonra yanıt gerektiğinde iletişim akışını kullan." }
+    },
+    "guides": {
+      "die_cut": {
+        "title": "Die Cut",
+        "intro": "Die Cut sticker'lar tasarımının dış şeklini takip eder; her tasarım tek ve net bir parça gibi görünür.",
+        "what_text": "Kesim çizgisi, tasarımın etrafında büyük bir kare bırakmak yerine dış kenarı takip eder.",
+        "best_text": "Tek tek yerleştirebileceğin, belirgin silüete sahip bir sticker istiyorsan.",
+        "step_1_text": "Kesimin takip etmesini istediğin şekli ve şeffaf alanları içeren bir tasarım hazırla.",
+        "step_2_text": "Ürün seçeneğini seç, ardından boyut ve kopya sayısını belirle.",
+        "step_3_text": "Sepete eklemeden önce tasarım yerleşimini, ölçüleri ve adedi kontrol et.",
+        "step_4_text": "Son kontrolü kolaylaştırmak için tasarım detaylarının bulunduğu sipariş özetini sakla.",
+        "note_text": "Tasarımın kesime dahil olmaması gereken düz bir arka planı varsa yüklemeden önce şeffaf bir dosya hazırla."
+      },
+      "magnet": {
+        "title": "Magnet",
+        "intro": "Magnet ürünleri, tasarımını uyumlu manyetik yüzeylerde sergileyebileceğin bir parçaya dönüştürür.",
+        "what_text": "Bu format, kalıcı yapıştırıcı kullanmadan taşımak veya sergilemek isteyebileceğin tasarımlar içindir.",
+        "best_text": "Manyetik bir yüzey için çıkarılabilir bir sergileme parçası istiyorsan.",
+        "step_1_text": "Son boyutta görmek istediğin metin, şekil ve renkleri içeren bir tasarım hazırla.",
+        "step_2_text": "Magnet seçeneğini seç, ardından boyut ve kopya sayısını belirle.",
+        "step_3_text": "Ürün detaylarında ve sepette tasarımı, ölçüleri ve adedi kontrol et.",
+        "step_4_text": "Siparişi tamamla ve ürünü uyumlu manyetik yüzeyde kullan.",
+        "note_text": "Sipariş vermeden önce kullanacağın yüzeyin uygun olduğundan emin ol."
+      },
+      "uv_dtf": {
+        "title": "UV DTF",
+        "intro": "UV DTF, tasarımı uyumlu sert ve pürüzsüz bir yüzeye aktarmak için kullanılan transfer formatıdır.",
+        "what_text": "Tasarım transfer olarak uygulanır; bu nedenle uygulama yüzeyi en az tasarım kadar önemlidir.",
+        "best_text": "Geleneksel sticker yerine uyumlu sert bir nesneyi süslemek istiyorsan.",
+        "step_1_text": "İhtiyacın olan boyutta net kenarlı ve okunabilir detaylara sahip bir tasarım hazırla.",
+        "step_2_text": "UV DTF'yi seç, ardından ölçüleri ve transfer sayısını belirle.",
+        "step_3_text": "Siparişi sepete eklemeden önce tasarımı ve uygulama yüzeyini kontrol et.",
+        "step_4_text": "Transferi temiz ve uyumlu yüzeye uygula; ürün talimatlarını takip et.",
+        "note_text": "Bu formatı seçmeden önce nesnenin uyumlu, sert ve pürüzsüz bir yüzey olduğundan emin ol."
+      },
+      "uv": {
+        "title": "UV",
+        "intro": "UV, net detayların ve bitmiş bir yüzeyin öncelikli olduğu tasarımlar için baskılı formattır.",
+        "what_text": "Bu ürün gamı transfer yerine doğrudan baskılı bir sonuç isteyen tasarımlar içindir.",
+        "best_text": "Detaylı baskılı bir tasarım istiyor ve kullanılacağı yüzeyi biliyorsan.",
+        "step_1_text": "Korunmasını istediğin oranları ve detay seviyesini gözeterek tasarımı hazırla.",
+        "step_2_text": "UV seçeneğini seç, ardından boyut ve kopya sayısını belirle.",
+        "step_3_text": "Ödeme öncesinde tasarımı, ölçüleri ve ürün detaylarını kontrol et.",
+        "step_4_text": "Bitmiş parçayı ürün için seçtiğin uyumlu yüzeyde kullan.",
+        "note_text": "Yüzey veya bitiş konusunda emin değilsen sipariş vermeden önce bize ulaş."
+      },
+      "emboss": {
+        "title": "Emboss",
+        "intro": "Emboss, tasarımın görülmesinin yanında hissedilmesini istediğin dokulu seçenektir.",
+        "what_text": "Bu formatın ayırt edici özelliği, tasarıma fiziksel bir boyut katan kabartmalı veya baskılı uygulamadır.",
+        "best_text": "Doku, bitmiş parçanın deneyiminin önemli bir parçasıysa.",
+        "step_1_text": "Önemli şekillerin okunaklı kalacağı net bir görsel hiyerarşiye sahip tasarım seç.",
+        "step_2_text": "Emboss'u seç, ardından boyut ve kopya sayısını belirle.",
+        "step_3_text": "Dokulu uygulamayı düşünerek tasarımı ve ölçüleri kontrol et.",
+        "step_4_text": "Siparişi tamamla ve dokunun fark edilebileceği bir yerde kullan.",
+        "note_text": "Çok küçük detaylar büyük şekillerle aynı şekilde sonuçlanmayabilir; tasarım hazırlarken son boyutu düşün."
+      },
+      "textile": {
+        "title": "Tekstil",
+        "intro": "Tekstil ürünleri kumaş veya giyim ürünlerinde kullanılacak tasarımlar içindir.",
+        "what_text": "Bu format malzemeyle başlar: tasarımın kullanılacağı kıyafet veya kumaş üzerinde anlamlı olması gerekir.",
+        "best_text": "Tasarımın kumaş, kıyafet veya başka bir tekstil yüzeyine aitse.",
+        "step_1_text": "Tasarımı giysiyi, yerleşimi ve son boyutu düşünerek hazırla.",
+        "step_2_text": "Tekstil seçeneğini seç, ardından ölçüleri ve kopya sayısını belirle.",
+        "step_3_text": "Ödeme öncesinde tasarımı, yerleşimi ve malzeme detaylarını kontrol et.",
+        "step_4_text": "Seçtiğin tekstil ürünü için verilen uygulama veya bakım bilgilerini takip et.",
+        "note_text": "Özellikle giyim ürünlerinde sipariş vermeden önce kumaş ve malzeme uyumluluğunu kontrol et."
+      },
+      "configurator": {
+        "title": "Configurator",
+        "intro": "Configurator ile bir veya birden fazla tasarımı düzenleyerek özel bir gangsheet oluşturabilirsin.",
+        "what_text": "Studio; tasarım yüklemeni, sayfaya yerleştirmeni, boyutunu ve dönüşünü değiştirmeni, sayfa arka planını ve sayfa adedini belirlemeni sağlar.",
+        "best_text": "Tasarımın hazırsa ve ödeme öncesi yerleşim, ölçü ve kopyalar üzerinde kontrol istiyorsan.",
+        "step_1_text": "Gangsheet ürününü aç ve kullanılabilir bir sayfa seçeneği belirle.",
+        "step_2_text": "Add design ile PNG, JPG veya WebP tasarımını ekle.",
+        "step_3_text": "Tasarımı düzenle, boyutlandır, döndür veya sil; kopyaları ve sayfa arka planını ayarla.",
+        "step_4_text": "Çözünürlük, ölçüler ve adedi kontrol et; ardından yapılandırılmış sayfayı sepete ekle.",
+        "note_text": "Sepet adedi aynı sayfadan kaç tane istediğini gösterir. Tuvaldeki tasarım kopyaları bu adedi artırmaz."
+      },
+      "background_removal": {
+        "title": "Arka plan silme",
+        "intro": "Bu sayfa planlanan arka plan silme aracına ayrılmıştır. Araç mevcut configurator'da henüz canlı değildir.",
+        "what_text": "Roadmap, yerleştirmeden önce istenmeyen arka planı kaldırarak tasarımı hazırlamaya yardımcı olacak bir araç içerir.",
+        "best_text": "Son tasarımda görünmemesi gereken bir arka plana sahip çalışman varsa.",
+        "step_1_text": "Bugün hassas kontrol için şeffaf PNG kullan.",
+        "step_2_text": "Configurator'ı aç ve hazırladığın dosyayı ekle.",
+        "step_3_text": "Tasarımı yerleştirmeden önce seçtiğin boyutta görünen kenarları kontrol et.",
+        "step_4_text": "Otomatik arka plan silmeye ihtiyacın varsa kaynak dosyanı sakla ve aracın yayınlanmasını bekle.",
+        "note_text": "Mevcut configurator görsel arka planlarını otomatik olarak silmez; yüklediğin tasarımı korur."
+      },
+      "browse_and_choose": {
+        "title": "Göz at ve seç",
+        "intro": "Mağaza, genel ürün görünümünden ihtiyacın olan ürün detaylarına geçmeni kolaylaştıracak şekilde düzenlenmiştir.",
+        "what_text": "Koleksiyonlar kataloğu gösterir, ürün sayfaları seçenekleri açıklar ve arama bildiğin bir terime hızlıca götürür.",
+        "best_text": "Ne tür ürün istediğini biliyor ama formatları karşılaştırmak veya doğru sayfayı bulmak istiyorsan.",
+        "step_1_text": "Hedefine en uygun koleksiyon veya ürün bağlantısıyla başla.",
+        "step_2_text": "Medya, seçenek, fiyat, adet ve bulunabilirliği incelemek için ürünü aç.",
+        "step_3_text": "Ürün adını veya bildiğin bir ifadeyi biliyorsan aramayı kullan.",
+        "step_4_text": "Sana uyan seçeneği belirle ve sepete veya configurator'a devam et.",
+        "note_text": "Bir ürün veya koleksiyon görünmüyorsa formatın bulunmadığını varsaymadan önce İletişim ve yardım sayfasını kullan."
+      },
+      "cart_and_checkout": {
+        "title": "Sepet ve ödeme",
+        "intro": "Sepet, Shopify ödeme ekranından önceki son kontrol noktasıdır.",
+        "what_text": "Sepet; ürün adetlerini, seçilen seçenekleri, notları, indirimleri ve yapılandırılmış satır detaylarını bir araya getirir.",
+        "best_text": "Ne sipariş edileceğini doğrulamak ve ödemeden önce son bir değişiklik yapmak istiyorsan.",
+        "step_1_text": "Bir ürün veya yapılandırılmış sayfa ekledikten sonra sepeti aç.",
+        "step_2_text": "Her satırı, seçeneği, adedi ve tasarım detaylarını kontrol et.",
+        "step_3_text": "Gerekirse adedi güncelle, not ekle veya mevcut bir indirim kodu uygula.",
+        "step_4_text": "Özeti siparişinle eşleştirdikten sonra ödeme ekranına geç.",
+        "note_text": "Yapılandırılmış gangsheet satırı, ödeme öncesi sayfayı kontrol edebilmen için tasarım bilgilerini içerir."
+      },
+      "contact_and_help": {
+        "title": "İletişim ve yardım",
+        "intro": "Ürün ve site rehberlerinin yanıtlamadığı bir sorunda doğru yol iletişim formudur.",
+        "what_text": "İletişim formu, paylaşmayı seçtiğin detaylarla sorunu ekibe gönderir.",
+        "best_text": "Ürün uyumu, yüzey, tasarım, sipariş detayı veya sonraki adım konusunda emin değilsen.",
+        "step_1_text": "Ne yapmak istediğini veya hangi konuda yardıma ihtiyacın olduğunu açıkla.",
+        "step_2_text": "Yanıtı etkileyen ürün, sipariş veya yüzey bilgilerini ekle.",
+        "step_3_text": "Ekibin yanıt verebilmesi için kullandığın e-posta adresini yaz.",
+        "step_4_text": "Formu gönder ve takip için sipariş veya tasarım referansını yanında tut.",
+        "note_text": "Mevcut bir sipariş için mümkünse mesajına sipariş referansını ekle."
+      }
+    }
+  },
   "placeholders": {
     "password": "Parola",
     "search": "Ara",

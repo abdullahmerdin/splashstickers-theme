@@ -437,6 +437,219 @@
       "expired": "Expired"
     }
   },
+  "how_it_works": {
+    "common": {
+      "eyebrow": "How it works",
+      "products": "Products",
+      "site": "Site",
+      "learn_more": "Learn how it works",
+      "back_to_hub": "Back to How It Works",
+      "breadcrumb_label": "How It Works breadcrumb",
+      "planned": "Planned for a future update",
+      "what_it_is": "What it is",
+      "good_fit": "A good fit when",
+      "steps_eyebrow": "Use it in four steps",
+      "steps_title": "From idea to next step",
+      "before_you_start": "Before you start",
+      "note_title": "A useful thing to know",
+      "browse_products": "Browse products",
+      "start_designing": "Start designing",
+      "see_site_guides": "See all site guides",
+      "step_1_title": "Prepare",
+      "step_2_title": "Choose",
+      "step_3_title": "Review",
+      "step_4_title": "Finish"
+    },
+    "hub": {
+      "title": "Make the right choice, then make it yours.",
+      "intro": "Learn what each product format is for and how to use the tools on our site.",
+      "products_title": "Choose your product",
+      "products_text": "Compare our product formats before you choose what to order.",
+      "site_title": "Use the site with confidence",
+      "site_text": "Learn how to browse, customize, and move from an idea to checkout.",
+      "quick_eyebrow": "The simple path",
+      "quick_title": "Three things happen here",
+      "quick_text": "Pick the right format, prepare your artwork, and review the details before you order.",
+      "quick_step_one": "Choose a product format",
+      "quick_step_two": "Add artwork or product details",
+      "quick_step_three": "Review your order and check out"
+    },
+    "products": {
+      "title": "Choose the format that fits your idea.",
+      "intro": "Every product type has a different job. Start with the finish, surface, or feel you want.",
+      "die_cut": {
+        "title": "Die Cut",
+        "summary": "A single sticker cut around the outside edge of your artwork."
+      },
+      "magnet": {
+        "title": "Magnet",
+        "summary": "A removable magnetic format for artwork you want to display on a magnetic surface."
+      },
+      "uv_dtf": {
+        "title": "UV DTF",
+        "summary": "A transfer-style format for moving artwork onto a compatible hard surface."
+      },
+      "uv": {
+        "title": "UV",
+        "summary": "A printed format for clean, detailed artwork and a finished surface."
+      },
+      "emboss": {
+        "title": "Emboss",
+        "summary": "A tactile option when you want the design to be felt as well as seen."
+      },
+      "textile": {
+        "title": "Textile",
+        "summary": "A format for designs that belong on fabric or apparel."
+      }
+    },
+    "site": {
+      "title": "Learn your way around the site.",
+      "intro": "These guides explain the tools and steps that take you from browsing to a confident order.",
+      "configurator": {
+        "title": "Configurator",
+        "summary": "Build a custom gangsheet by adding, arranging, and sizing your artwork."
+      },
+      "background_removal": {
+        "title": "Background removal",
+        "summary": "A planned tool for preparing artwork with a removable background."
+      },
+      "browse_and_choose": {
+        "title": "Browse and choose",
+        "summary": "Find a product, compare formats, and open the right product page."
+      },
+      "cart_and_checkout": {
+        "title": "Cart and checkout",
+        "summary": "Review quantities, notes, and line-item details before checkout."
+      },
+      "contact_and_help": {
+        "title": "Contact and help",
+        "summary": "Use the contact flow when you need an answer before or after ordering."
+      }
+    },
+    "guides": {
+      "die_cut": {
+        "title": "Die Cut",
+        "intro": "Die Cut stickers follow the outside shape of your artwork, so each design reads as one clear piece.",
+        "what_text": "The cut line follows the outer edge of the design instead of leaving a large square around it.",
+        "best_text": "You want an individual sticker with a clear silhouette that can be placed one at a time.",
+        "step_1_text": "Start with artwork that has the shape and transparent space you want the cut to follow.",
+        "step_2_text": "Choose the product option, then set the size and number of copies.",
+        "step_3_text": "Review the artwork placement, dimensions, and quantity before adding it to your cart.",
+        "step_4_text": "Keep the order summary with your design details so the final request is easy to check.",
+        "note_text": "If the artwork has a solid background that should not be part of the cut, prepare a transparent file before uploading."
+      },
+      "magnet": {
+        "title": "Magnet",
+        "intro": "Magnet products turn your artwork into a piece made to display on a compatible magnetic surface.",
+        "what_text": "This format is designed for artwork you may want to move, remove, or display without a permanent adhesive.",
+        "best_text": "You want a removable display piece for a magnetic surface.",
+        "step_1_text": "Prepare a design with the text, shape, and colors you want to see at the final size.",
+        "step_2_text": "Choose the magnet option, then set the size and number of copies.",
+        "step_3_text": "Check the artwork, dimensions, and quantity in the product details and cart.",
+        "step_4_text": "Place the order, then use the finished piece on a compatible magnetic surface.",
+        "note_text": "Check the surface you plan to use before ordering so the magnetic format is the right fit."
+      },
+      "uv_dtf": {
+        "title": "UV DTF",
+        "intro": "UV DTF is a transfer-style format for moving artwork onto a compatible hard, smooth surface.",
+        "what_text": "The design is supplied as a transfer, so the application surface matters as much as the artwork itself.",
+        "best_text": "You are decorating a compatible hard object rather than applying a traditional sticker to a flat surface.",
+        "step_1_text": "Prepare artwork with clear edges and readable details at the size you need.",
+        "step_2_text": "Choose UV DTF, then set the dimensions and number of transfers.",
+        "step_3_text": "Review the design and surface plan before adding the order to your cart.",
+        "step_4_text": "Apply the transfer to a clean, compatible surface and follow the product instructions.",
+        "note_text": "Confirm that your object is a compatible hard, smooth surface before choosing this format."
+      },
+      "uv": {
+        "title": "UV",
+        "intro": "UV is a printed format for artwork where crisp detail and a finished surface are the priority.",
+        "what_text": "This product line is suited to designs that need a direct printed result rather than a transfer application.",
+        "best_text": "You want a detailed printed design and already know the surface or object it will belong to.",
+        "step_1_text": "Prepare the artwork at the proportions and level of detail you want to keep.",
+        "step_2_text": "Choose the UV option, then set the size and number of copies.",
+        "step_3_text": "Review the artwork, dimensions, and product details before checkout.",
+        "step_4_text": "Use the finished piece on the compatible surface you selected for the product.",
+        "note_text": "If you are unsure about a surface or finish, contact us before ordering so we can point you to the right format."
+      },
+      "emboss": {
+        "title": "Emboss",
+        "intro": "Emboss is the tactile option for designs that should be felt as well as seen.",
+        "what_text": "The defining part of this format is the raised or pressed treatment that adds a physical dimension to the design.",
+        "best_text": "Texture is part of the experience you want the finished piece to deliver.",
+        "step_1_text": "Choose artwork with a clear hierarchy so the important shapes remain easy to read.",
+        "step_2_text": "Choose Emboss, then set the size and number of copies.",
+        "step_3_text": "Review the artwork and dimensions with the tactile treatment in mind.",
+        "step_4_text": "Complete the order and use the finished piece where its texture can be noticed.",
+        "note_text": "Very small details may not translate the same way as larger shapes; keep the final size in mind while preparing artwork."
+      },
+      "textile": {
+        "title": "Textile",
+        "intro": "Textile products are for artwork intended for fabric or apparel.",
+        "what_text": "This format starts with the material: the design needs to make sense on the garment or fabric where it will be used.",
+        "best_text": "Your design belongs on fabric, clothing, or another textile surface.",
+        "step_1_text": "Prepare the design with the garment, placement, and final size in mind.",
+        "step_2_text": "Choose the textile option, then set the dimensions and number of copies.",
+        "step_3_text": "Review the design, placement, and material details before checkout.",
+        "step_4_text": "Follow the supplied application or care guidance for the chosen textile product.",
+        "note_text": "Check fabric and material compatibility before ordering, especially when the finished piece is for apparel."
+      },
+      "configurator": {
+        "title": "Configurator",
+        "intro": "Use the configurator to turn one artwork or a set of artworks into a configured gangsheet.",
+        "what_text": "The studio lets you upload designs, place them on a sheet, change size and rotation, set the sheet background, and choose sheet quantity.",
+        "best_text": "You already have artwork and want to control placement, dimensions, and copies before checkout.",
+        "step_1_text": "Open the configured gangsheet product and choose an available sheet option.",
+        "step_2_text": "Add PNG, JPG, or WebP artwork through Add design.",
+        "step_3_text": "Arrange, resize, rotate, or delete designs; set copies and the sheet background.",
+        "step_4_text": "Check resolution, dimensions, and quantity, then add the configured sheet to cart.",
+        "note_text": "Cart quantity is the number of identical sheets. Artwork copies on the canvas do not multiply that quantity."
+      },
+      "background_removal": {
+        "title": "Background removal",
+        "intro": "This guide is reserved for the planned background-removal tool. It is not live in the current configurator yet.",
+        "what_text": "The roadmap includes a tool to help prepare artwork by removing an unwanted background before placement.",
+        "best_text": "You have artwork with a background that should not appear in the final design.",
+        "step_1_text": "Use a transparent PNG when you need precise control today.",
+        "step_2_text": "Open the configurator and add the prepared file.",
+        "step_3_text": "Review the visible edges at the chosen size before you place the design.",
+        "step_4_text": "If you need automatic background removal, keep the source file and wait for the tool to be released.",
+        "note_text": "The current configurator does not remove image backgrounds automatically; it preserves the artwork you upload."
+      },
+      "browse_and_choose": {
+        "title": "Browse and choose",
+        "intro": "The storefront is organized to help you move from a broad product view to the exact product details you need.",
+        "what_text": "Collections show the catalog, product pages explain the available options, and search helps you jump to a known term.",
+        "best_text": "You know the kind of product you want, but need to compare formats or find the right product page.",
+        "step_1_text": "Start with the collection or product link that best matches your goal.",
+        "step_2_text": "Open a product to review media, options, price, quantity, and availability.",
+        "step_3_text": "Use search when you already know a product name or phrase.",
+        "step_4_text": "Choose the product option that fits, then continue to cart or the configurator.",
+        "note_text": "If a product or collection is not visible, use Contact and help before assuming that the format is unavailable."
+      },
+      "cart_and_checkout": {
+        "title": "Cart and checkout",
+        "intro": "The cart is the final review point before Shopify checkout.",
+        "what_text": "Your cart collects product quantities, selected options, notes, discounts, and configured line details in one place.",
+        "best_text": "You are ready to verify what will be ordered and make one last change before payment.",
+        "step_1_text": "Open the cart after adding a product or configured sheet.",
+        "step_2_text": "Check each line, selected option, quantity, and any design details.",
+        "step_3_text": "Update quantities, add a note, or apply a discount code when available.",
+        "step_4_text": "Continue to checkout only after the summary matches what you want to order.",
+        "note_text": "For a configured gangsheet, the cart line includes the design information needed to review the sheet before checkout."
+      },
+      "contact_and_help": {
+        "title": "Contact and help",
+        "intro": "Contact is the right path when you need an answer that the product and site guides cannot provide.",
+        "what_text": "The contact form sends your question to the team with the details you choose to share.",
+        "best_text": "You are unsure about a product fit, surface, artwork, order detail, or next step.",
+        "step_1_text": "Describe what you are trying to make or what you need help with.",
+        "step_2_text": "Include the product, order, or surface details that affect the answer.",
+        "step_3_text": "Add a reliable email address so the team can reply.",
+        "step_4_text": "Send the form and keep any order or design reference nearby for the follow-up.",
+        "note_text": "For an existing order, include the order reference in your message whenever possible."
+      }
+    }
+  },
   "placeholders": {
     "password": "Password",
     "search": "Search",

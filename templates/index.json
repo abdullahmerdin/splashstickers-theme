@@ -279,8 +279,8 @@
       "settings": {
         "heading": "How it works",
         "subtext": "Add a design, choose the size and quantity, then review your order.",
-        "button_label": "",
-        "button_link": "/products/the-collection-snowboard-hydrogen?view=product-gangsheet",
+        "button_label": "Explore the full guide",
+        "button_link": "/pages/how-it-works",
         "background_color": "#f8f9fa",
         "padding_top": 56,
         "padding_bottom": 56
