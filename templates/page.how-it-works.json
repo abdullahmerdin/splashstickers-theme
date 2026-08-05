@@ -13,7 +13,7 @@
       "type": "how-it-works",
       "settings": {
         "layout": "hub",
-        "guide_key": "configurator"
+        "guide_key": "auto"
       }
     }
   },
