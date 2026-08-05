@@ -865,6 +865,9 @@
 
       .header-logo {
         grid-area: center;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
       }
 
       &:not(:has(header-actions)) .search-action {
@@ -880,7 +883,15 @@
       }
 
       header-actions {
-        grid-area: rightB;
+        grid-column: 4 / -1;
+        grid-row: 1;
+        justify-content: flex-end;
+      }
+
+      &:has(header-actions shopify-account) {
+        --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) minmax(0, 1fr)
+          var(--header-mobile-bookend) var(--header-mobile-bookend) var(--header-mobile-bookend);
+        grid-template-areas: 'leftA leftB center right0 rightA rightB';
       }
     }
   }
@@ -916,6 +927,26 @@
 
     header-actions {
       grid-area: rightB;
+    }
+
+    @media screen and (max-width: 749px) {
+      .header-logo {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      header-actions {
+        grid-column: 4 / -1;
+        grid-row: 1;
+        justify-content: flex-end;
+      }
+
+      &:has(header-actions shopify-account) {
+        --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) minmax(0, 1fr)
+          var(--header-mobile-bookend) var(--header-mobile-bookend) var(--header-mobile-bookend);
+        grid-template-areas: 'leftA leftB center right0 rightA rightB';
+      }
     }
   }
 

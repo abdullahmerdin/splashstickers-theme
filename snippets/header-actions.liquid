@@ -225,6 +225,13 @@
 
     @media screen and (max-width: 749px) {
       justify-self: flex-end;
+
+      .theme-mode-toggle {
+        width: var(--button-size);
+        height: var(--button-size);
+        background: rgb(var(--splash-color-surface-rgb) / 0.72);
+        border-radius: var(--splash-radius-control);
+      }
     }
   }
 
@@ -247,6 +254,10 @@
 
   .header__column--right header-actions {
     margin-inline-start: calc(var(--gap-md) * -1);
+
+    @media screen and (max-width: 749px) {
+      margin-inline-start: 0;
+    }
   }
 
   .header-actions__cart-icon {

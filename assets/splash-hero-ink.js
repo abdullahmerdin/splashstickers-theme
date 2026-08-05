@@ -43,6 +43,7 @@ class SplashInkHero extends HTMLElement {
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleMotionPreferenceChange = this.handleMotionPreferenceChange.bind(this);
     this.clear = this.clear.bind(this);
+    this.scrollToNextSection = this.scrollToNextSection.bind(this);
     this.toggleExpanded = this.toggleExpanded.bind(this);
     this.updateExpandedHeight = this.updateExpandedHeight.bind(this);
 
@@ -62,6 +63,7 @@ class SplashInkHero extends HTMLElement {
     this.motionQuery.addListener?.(this.handleMotionPreferenceChange);
     this.querySelector('[data-ink-clear]')?.addEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.addEventListener('click', this.toggleExpanded);
+    this.querySelector('[data-ink-scroll]')?.addEventListener('click', this.scrollToNextSection);
     window.addEventListener('resize', this.updateExpandedHeight);
     window.visualViewport?.addEventListener('resize', this.updateExpandedHeight);
 
@@ -84,6 +86,7 @@ class SplashInkHero extends HTMLElement {
     this.motionQuery?.removeListener?.(this.handleMotionPreferenceChange);
     this.querySelector('[data-ink-clear]')?.removeEventListener('click', this.clear);
     this.querySelector('[data-ink-expand]')?.removeEventListener('click', this.toggleExpanded);
+    this.querySelector('[data-ink-scroll]')?.removeEventListener('click', this.scrollToNextSection);
     window.removeEventListener('resize', this.updateExpandedHeight);
     window.visualViewport?.removeEventListener('resize', this.updateExpandedHeight);
     this.heightAnimation?.cancel();
@@ -467,6 +470,20 @@ class SplashInkHero extends HTMLElement {
     this.effectsFrame = null;
     this.clearContext(this.context, this.canvas);
     this.clearContext(this.effectsContext, this.effectsCanvas);
+  }
+
+  scrollToNextSection(event) {
+    event?.stopPropagation();
+    const section = this.closest('.shopify-section') || this;
+    const nextSection = section.nextElementSibling;
+    if (!nextSection) return;
+
+    const headerHeight = document.querySelector('#header-group')?.getBoundingClientRect().height || 0;
+    const targetTop = nextSection.getBoundingClientRect().top + window.scrollY - headerHeight;
+    window.scrollTo({
+      top: Math.max(0, targetTop),
+      behavior: this.reduceMotion ? 'auto' : 'smooth',
+    });
   }
 
   toggleExpanded(event) {

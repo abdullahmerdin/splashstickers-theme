@@ -1,6 +1,10 @@
 {%- liquid
   assign heading = section.settings.heading
   assign draw_hint = section.settings.draw_hint | default: 'Swipe to draw'
+  assign scroll_label = 'Go to the next section'
+  if request.locale.iso_code == 'tr'
+    assign scroll_label = 'Sonraki bölüme geç'
+  endif
   assign bg_color = section.settings.background_color
   assign section_height = section.settings.section_height
   assign padding_top = section.settings.padding_top
@@ -143,6 +147,26 @@
     gap: 10px;
   }
 
+  .splash-hero-{{ section.id }} .splash-hero-scroll {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 30;
+    display: none;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    place-items: center;
+    background: rgb(var(--splash-color-surface-rgb) / 0.9);
+    border: 1px solid var(--splash-color-line);
+    border-radius: 50%;
+    color: var(--splash-color-ink);
+    box-shadow: var(--splash-shadow-control);
+    cursor: pointer;
+    touch-action: manipulation;
+    backdrop-filter: blur(8px);
+  }
+
   .splash-hero-{{ section.id }} .splash-hero-control {
     display: grid;
     width: 42px;
@@ -158,7 +182,7 @@
     backdrop-filter: blur(8px);
   }
 
-  .splash-hero-{{ section.id }} :is(.splash-hero-button, .splash-hero-control):focus-visible {
+  .splash-hero-{{ section.id }} :is(.splash-hero-button, .splash-hero-control, .splash-hero-scroll):focus-visible {
     outline: var(--splash-focus-width) solid var(--splash-color-focus);
     outline-offset: 3px;
   }
@@ -176,6 +200,13 @@
 
     .splash-hero-{{ section.id }} .splash-hero-touch-hint {
       display: flex;
+      max-width: calc(100% - 112px);
+      text-align: center;
+      white-space: normal;
+    }
+
+    .splash-hero-{{ section.id }} .splash-hero-scroll {
+      display: grid;
     }
   }
 
@@ -195,6 +226,18 @@
 >
   <canvas data-ink-canvas aria-hidden="true"></canvas>
   <canvas data-ink-effects aria-hidden="true"></canvas>
+
+  <button
+    type="button"
+    class="splash-hero-scroll"
+    data-ink-scroll
+    aria-label="{{ scroll_label }}"
+    title="{{ scroll_label }}"
+  >
+    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 4v15M6 13l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
 
   {% # theme-check-disable-next-line ValidScopedCSSClass %}
   <div class="page-width">

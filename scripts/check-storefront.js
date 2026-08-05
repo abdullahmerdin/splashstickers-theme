@@ -28,7 +28,7 @@ const collectionTemplate = readThemeJson('templates/collection.json');
 const splashStyles = read('assets/splash-theme.css');
 
 assert.deepEqual(indexTemplate.order, ['splash_drawing', 'featured_stickers', 'sticker_process', 'custom_cta']);
-assert.equal(collectionTemplate.sections.section.type, 'sticker-collection-hero');
+assert.equal(collectionTemplate.sections.main.type, 'main-collection');
 assert.equal(indexTemplate.sections.custom_cta.type, 'splash-cta');
 
 [
@@ -61,22 +61,24 @@ assertContains('assets/sticker-collection-hero.css', '.sticker-collection-hero__
 assertContains('assets/sticker-collection-hero.css', 'animation: sticker-float-one');
 assertContains('assets/sticker-collection-hero.css', '@keyframes sticker-float-one');
 assertContains('assets/sticker-collection-hero.css', 'prefers-reduced-motion: reduce');
-assertContains('templates/collection.json', '"splash_word": "SPLASH"');
-assertContains('templates/collection.json', '"sticker_1_text": "STICKERS"');
-assertContains('templates/collection.json', '"sticker_2_text": "TEXTILE"');
-assertContains('templates/collection.json', '"sticker_3_text": "QUALITY PRINT"');
-assertContains('templates/collection.json', '"art_meta_text": "SPLASH STICKERS EST. 2026"');
 assertContains('sections/splash-hero.liquid', 'role="group"');
 assertContains('sections/splash-hero.liquid', 'aria-describedby="splash-hero-hint-{{ section.id }}"');
 assertContains('sections/splash-hero.liquid', 'aria-expanded="false"');
 assertContains('sections/splash-hero.liquid', 'cursor: crosshair;');
 assertContains('sections/splash-hero.liquid', 'touch-action: pan-y;');
+assertContains('sections/splash-hero.liquid', 'data-ink-scroll');
+assertContains('sections/splash-hero.liquid', "assign scroll_label = 'Sonraki bölüme geç'");
 assertContains('assets/splash-hero-ink.js', 'prefers-reduced-motion: reduce');
 assertContains('assets/splash-hero-ink.js', 'handleMotionPreferenceChange');
 assertContains('assets/splash-hero-ink.js', 'handleKeyDown');
 assertContains('assets/splash-hero-ink.js', "event.key !== 'Escape'");
 assertContains('assets/splash-hero-ink.js', "this.style.touchAction = this.isTouchDevice ? 'pan-y' : 'auto';");
+assertContains('assets/splash-hero-ink.js', 'scrollToNextSection');
 assertContains('assets/splash-hero-ink.js', "button.setAttribute('aria-expanded', String(expanded))");
+assertContains('sections/header.liquid', 'grid-column: 4 / -1;');
+assertContains('sections/header.liquid', "grid-template-areas: 'leftA leftB center right0 rightA rightB';");
+assertContains('blocks/_header-logo.liquid', 'max-width: 100%;');
+assert.match(read('snippets/price-filter.liquid'), /\.price-facet--horizontal\s*\{\s*min-width:\s*0;/);
 assertContains('sections/splash-cta.liquid', 'splash-cta-stickers.js');
 assertContains('sections/splash-cta.liquid', 'data-sticker');
 assertContains('assets/splash-cta-stickers.js', 'class SplashCtaStickers');
