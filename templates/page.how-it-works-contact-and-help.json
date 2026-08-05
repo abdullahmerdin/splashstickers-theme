@@ -40,9 +40,12 @@
       ],
       "settings": {
         "layout": "guide",
-        "guide_key": "auto"
+        "guide_key": "contact_and_help"
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
+

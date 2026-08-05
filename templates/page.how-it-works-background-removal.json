@@ -40,9 +40,12 @@
       ],
       "settings": {
         "layout": "guide",
-        "guide_key": "auto"
+        "guide_key": "background_removal"
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
+

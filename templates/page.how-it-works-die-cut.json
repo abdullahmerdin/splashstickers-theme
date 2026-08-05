@@ -40,9 +40,12 @@
       ],
       "settings": {
         "layout": "guide",
-        "guide_key": "auto"
+        "guide_key": "die_cut"
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
+

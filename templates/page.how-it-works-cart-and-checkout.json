@@ -40,9 +40,12 @@
       ],
       "settings": {
         "layout": "guide",
-        "guide_key": "auto"
+        "guide_key": "cart_and_checkout"
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
+

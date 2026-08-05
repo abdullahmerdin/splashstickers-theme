@@ -2,6 +2,50 @@
   "sections": {
     "main": {
       "type": "how-it-works",
+      "blocks": {
+        "configurator_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "configurator",
+            "visible": true
+          }
+        },
+        "background_removal_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "background_removal",
+            "visible": true
+          }
+        },
+        "browse_and_choose_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "browse_and_choose",
+            "visible": true
+          }
+        },
+        "cart_and_checkout_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "cart_and_checkout",
+            "visible": true
+          }
+        },
+        "contact_and_help_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "contact_and_help",
+            "visible": true
+          }
+        }
+      },
+      "block_order": [
+        "configurator_card",
+        "background_removal_card",
+        "browse_and_choose_card",
+        "cart_and_checkout_card",
+        "contact_and_help_card"
+      ],
       "settings": {
         "layout": "site",
         "guide_key": "auto"

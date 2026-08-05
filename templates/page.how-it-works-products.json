@@ -2,6 +2,58 @@
   "sections": {
     "main": {
       "type": "how-it-works",
+      "blocks": {
+        "die_cut_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "die_cut",
+            "visible": true
+          }
+        },
+        "magnet_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "magnet",
+            "visible": true
+          }
+        },
+        "uv_dtf_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "uv_dtf",
+            "visible": true
+          }
+        },
+        "uv_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "uv",
+            "visible": true
+          }
+        },
+        "emboss_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "emboss",
+            "visible": true
+          }
+        },
+        "textile_card": {
+          "type": "directory_card",
+          "settings": {
+            "guide_key": "textile",
+            "visible": true
+          }
+        }
+      },
+      "block_order": [
+        "die_cut_card",
+        "magnet_card",
+        "uv_dtf_card",
+        "uv_card",
+        "emboss_card",
+        "textile_card"
+      ],
       "settings": {
         "layout": "products",
         "guide_key": "auto"

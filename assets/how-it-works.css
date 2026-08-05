@@ -20,7 +20,11 @@ html[data-theme='dark'] .how-it-works {
 }
 
 .how-it-works__inner {
+  box-sizing: border-box;
+  width: min(100%, 1440px);
+  margin-inline: auto;
   padding-block: clamp(3rem, 7vw, 6.5rem);
+  padding-inline: clamp(1rem, 4vw, 3rem);
 }
 
 .how-it-works__hero {
