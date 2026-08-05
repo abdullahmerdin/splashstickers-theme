@@ -11,7 +11,11 @@ function read(relativePath) {
 }
 
 function readJson(relativePath) {
-  return JSON.parse(read(relativePath));
+  return JSON.parse(
+    read(relativePath)
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, ''),
+  );
 }
 
 function readLocale(relativePath) {
