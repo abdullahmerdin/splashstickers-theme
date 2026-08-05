@@ -853,10 +853,10 @@
     }
 
     @media screen and (max-width: 749px) {
-      --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) 1fr
-        var(--header-mobile-bookend) var(--header-mobile-bookend);
+      --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) minmax(0, 1fr)
+        var(--header-mobile-bookend) var(--header-mobile-bookend) var(--header-mobile-bookend);
 
-      grid-template-areas: 'leftA leftB center rightA rightB';
+      grid-template-areas: 'leftA leftB center right0 rightA rightB';
       grid-column: span 3;
       column-gap: 0;
       align-items: center;
@@ -893,21 +893,16 @@
         z-index: 3;
       }
 
-      &:has(header-actions shopify-account) {
-        --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) minmax(0, 1fr)
-          var(--header-mobile-bookend) var(--header-mobile-bookend) var(--header-mobile-bookend);
-        grid-template-areas: 'leftA leftB center right0 rightA rightB';
-      }
     }
   }
 
   /* not ideal but we need to duplicate these styles for when touch comes into play
     We could avoid the duplication using js to set the data-menu-style attribute on small screens instead of using @media queries */
   #header-component[data-menu-style='drawer'] .header__columns {
-    --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) 1fr
-      var(--header-mobile-bookend) var(--header-mobile-bookend);
+    --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) minmax(0, 1fr)
+      var(--header-mobile-bookend) var(--header-mobile-bookend) var(--header-mobile-bookend);
 
-    grid-template-areas: 'leftA leftB center rightA rightB';
+    grid-template-areas: 'leftA leftB center right0 rightA rightB';
     grid-column: span 3;
     column-gap: 0;
     align-items: center;
@@ -952,11 +947,6 @@
         z-index: 3;
       }
 
-      &:has(header-actions shopify-account) {
-        --header-template-columns: var(--header-mobile-bookend) var(--header-mobile-bookend) minmax(0, 1fr)
-          var(--header-mobile-bookend) var(--header-mobile-bookend) var(--header-mobile-bookend);
-        grid-template-areas: 'leftA leftB center right0 rightA rightB';
-      }
     }
   }
 

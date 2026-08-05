@@ -81,6 +81,8 @@ assertContains('sections/header.liquid', 'z-index: 3;');
 assertContains('blocks/_header-logo.liquid', 'max-width: 100%;');
 assertContains('blocks/logo.liquid', 'font-size: clamp(2rem, 11vw, 3.25rem);');
 assertContains('blocks/logo.liquid', 'overflow-wrap: anywhere;');
+assertContains('snippets/section.liquid', '[data-large-logo-auto-height]:has(.logo-block--collection-title)');
+assertContains('snippets/section.liquid', 'padding-block: var(--padding-block-start) var(--padding-block-end);');
 assert.match(read('snippets/price-filter.liquid'), /\.price-facet--horizontal\s*\{\s*min-width:\s*0;/);
 assertContains('sections/splash-cta.liquid', 'splash-cta-stickers.js');
 assertContains('sections/splash-cta.liquid', 'data-sticker');
