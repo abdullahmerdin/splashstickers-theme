@@ -52,14 +52,23 @@
       class: 'product-media__image',
       ref: ref_image_to_transition,
       data_max_resolution: high_res_url,
-      data_theme_media: dark_mode_media.id,
       fetchpriority: fetch_priority,
       style: focal_point_style,
       ref: image_ref
   }}
 
   {% if dark_mode_media %}
-    <template data-theme-media-dark>
+    <template data-theme-media-sources>
+      {{
+        media.preview_image
+        | image_url: width: 3840
+        | image_tag:
+          widths: widths,
+          alt: '',
+          sizes: sizes,
+          loading: 'lazy',
+          data_max_resolution: high_res_url
+      }}
       {{
         dark_mode_media.preview_image
         | image_url: width: 3840

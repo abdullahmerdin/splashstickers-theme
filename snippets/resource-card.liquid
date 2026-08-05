@@ -137,11 +137,15 @@
             sizes: image_sizes,
             ref: ref_image_to_transition,
             data-media-id: featured_image.id,
-            data_theme_media: rendered_dark_mode_media.id,
             style: primary_focal_point_style
         }}
         {% if rendered_dark_mode_media %}
-          <template data-theme-media-dark>
+          <template data-theme-media-sources>
+            {{
+              featured_image
+              | image_url: width: image_width
+              | image_tag: loading: 'lazy', alt: '', widths: widths, sizes: image_sizes
+            }}
             {{
               rendered_dark_mode_media.preview_image
               | image_url: width: image_width

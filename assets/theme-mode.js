@@ -1,14 +1,13 @@
 (() => {
 const STORAGE_KEY = 'splash-color-mode';
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-const lightMediaSources = new WeakMap();
 
 function readImageSource(image) {
   return {
     src: image.getAttribute('src'),
     srcset: image.getAttribute('srcset'),
     sizes: image.getAttribute('sizes'),
-    maxResolution: image.getAttribute('data-max-resolution'),
+    maxResolution: image.getAttribute('data_max_resolution'),
   };
 }
 
@@ -17,7 +16,7 @@ function writeImageSource(image, source) {
     ['sizes', source.sizes],
     ['srcset', source.srcset],
     ['src', source.src],
-    ['data-max-resolution', source.maxResolution],
+    ['data_max_resolution', source.maxResolution],
   ]) {
     if (value) {
       image.setAttribute(attribute, value);
@@ -28,22 +27,25 @@ function writeImageSource(image, source) {
 }
 
 function updateThemeMedia(mode, root = document) {
-  const images = [];
+  const templates = new Set();
 
-  if (root instanceof HTMLImageElement && root.matches('[data-theme-media]')) images.push(root);
+  if (root instanceof HTMLImageElement && root.nextElementSibling?.matches('template[data-theme-media-sources]')) {
+    templates.add(root.nextElementSibling);
+  }
+  if (root instanceof HTMLTemplateElement && root.matches('[data-theme-media-sources]')) templates.add(root);
   if (root instanceof Document || root instanceof DocumentFragment || root instanceof Element) {
-    images.push(...root.querySelectorAll('img[data-theme-media]'));
+    root.querySelectorAll('template[data-theme-media-sources]').forEach((template) => templates.add(template));
   }
 
-  for (const image of images) {
-    const darkTemplate = image.nextElementSibling;
-    if (!(darkTemplate instanceof HTMLTemplateElement) || !darkTemplate.matches('[data-theme-media-dark]')) continue;
+  for (const template of templates) {
+    const image = template.previousElementSibling;
+    if (!(image instanceof HTMLImageElement)) continue;
 
-    const darkImage = darkTemplate.content.querySelector('img');
-    if (!(darkImage instanceof HTMLImageElement)) continue;
+    const sources = template.content.querySelectorAll('img');
+    const sourceImage = sources[mode === 'dark' ? 1 : 0];
+    if (!(sourceImage instanceof HTMLImageElement)) continue;
 
-    if (!lightMediaSources.has(image)) lightMediaSources.set(image, readImageSource(image));
-    writeImageSource(image, mode === 'dark' ? readImageSource(darkImage) : lightMediaSources.get(image));
+    writeImageSource(image, readImageSource(sourceImage));
   }
 }
 
