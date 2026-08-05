@@ -227,10 +227,14 @@
       justify-self: flex-end;
 
       .theme-mode-toggle {
+        position: relative;
+        z-index: 1;
         width: var(--button-size);
         height: var(--button-size);
-        background: rgb(var(--splash-color-surface-rgb) / 0.72);
+        background: rgb(var(--splash-color-surface-rgb));
+        border: 1px solid var(--splash-color-line);
         border-radius: var(--splash-radius-control);
+        box-shadow: var(--splash-shadow-control);
       }
     }
   }

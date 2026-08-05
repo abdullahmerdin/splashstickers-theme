@@ -866,8 +866,11 @@
       .header-logo {
         grid-area: center;
         min-width: 0;
+        width: 100%;
         max-width: 100%;
         overflow: hidden;
+        position: relative;
+        z-index: 1;
       }
 
       &:not(:has(header-actions)) .search-action {
@@ -886,6 +889,8 @@
         grid-column: 4 / -1;
         grid-row: 1;
         justify-content: flex-end;
+        position: relative;
+        z-index: 3;
       }
 
       &:has(header-actions shopify-account) {
@@ -932,14 +937,19 @@
     @media screen and (max-width: 749px) {
       .header-logo {
         min-width: 0;
+        width: 100%;
         max-width: 100%;
         overflow: hidden;
+        position: relative;
+        z-index: 1;
       }
 
       header-actions {
         grid-column: 4 / -1;
         grid-row: 1;
         justify-content: flex-end;
+        position: relative;
+        z-index: 3;
       }
 
       &:has(header-actions shopify-account) {

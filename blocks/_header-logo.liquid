@@ -108,7 +108,10 @@
     }
 
     @media screen and (max-width: 749px) {
+      min-width: 0;
+      width: 100%;
       padding: 0;
+      overflow: hidden;
     }
 
     @media screen and (min-width: 750px) {
@@ -132,6 +135,20 @@
     @media screen and (min-width: 750px) {
       height: var(--header-logo-image-height);
       width: var(--header-logo-image-width);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .header-logo__image-container {
+      display: flex;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .header-logo__image {
+      width: auto;
+      max-width: 100%;
     }
   }
 

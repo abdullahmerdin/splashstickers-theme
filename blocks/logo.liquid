@@ -131,6 +131,34 @@
     white-space: nowrap;
   }
 
+  @media screen and (max-width: 749px) {
+    .layout-panel-flex > .shopify-block:has(> .logo-block--collection-title) {
+      flex: 0 1 auto;
+      width: 100%;
+      align-self: auto;
+    }
+
+    .logo-block--collection-title {
+      width: 100%;
+      height: auto;
+      min-height: 0;
+      justify-content: flex-start;
+    }
+
+    .logo-block--collection-title jumbo-text {
+      width: 100%;
+      max-width: 100%;
+      font-size: clamp(2rem, 11vw, 3.25rem);
+      line-height: 0.95;
+    }
+
+    .logo-block--collection-title jumbo-text .jumbo-text-line {
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
   .logo-block__image-wrapper {
     display: flex;
     width: 100%;
