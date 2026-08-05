@@ -2009,3 +2009,27 @@ dialog.cfg-modal::backdrop {
     transition-duration: 0.01ms;
   }
 }
+
+/* Keep the editor chrome and its default workspace legible in dark mode. The
+   canvas background remains user-selectable; the configurator runtime swaps
+   only its untouched default when the site theme changes. */
+html[data-theme='dark'] .sticker-configurator {
+  --cfg-ink: #f5f7fa;
+  --cfg-muted: #aeb4c0;
+  --cfg-soft: #20232b;
+  --cfg-surface: #191c23;
+  --cfg-line: #3a3f4b;
+  --cfg-line-strong: #596170;
+  --cfg-grid-surface: #191c23;
+}
+
+html[data-theme='dark'] .sticker-configurator .canvas-wrap {
+  background-color: var(--cfg-grid-surface, #191c23);
+  background-image:
+    linear-gradient(to right, rgb(245 247 250 / 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(245 247 250 / 0.08) 1px, transparent 1px);
+}
+
+html[data-theme='dark'] .sticker-configurator .canvas-area {
+  background: #191c23;
+}

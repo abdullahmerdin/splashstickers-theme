@@ -24,7 +24,7 @@ class CanvasRenderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = '#E8E8E8';
+    ctx.strokeStyle = core.state.gridStrokeColor || '#E8E8E8';
     ctx.lineWidth = 0.5;
 
     var gridSize = core.utils ? core.utils.mmToPx(core.state.gridSize || 20) : (core.state.gridSize || 20);

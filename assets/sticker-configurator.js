@@ -531,7 +531,7 @@ class CanvasRenderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = '#E8E8E8';
+    ctx.strokeStyle = core.state.gridStrokeColor || '#E8E8E8';
     ctx.lineWidth = 0.5;
 
     var gridSize = core.utils ? core.utils.mmToPx(core.state.gridSize || 20) : (core.state.gridSize || 20);
@@ -3851,7 +3851,9 @@ class StickerConfigurator extends HTMLElement {
       gapSize: Math.max(3, Math.min(50, parseInt(this.dataset.gapMm, 10) || 3)),
       modalFile: null,
       modalImageSize: null,
-      modalSizeExplicit: false
+      modalSizeExplicit: false,
+      canvasBackgroundUserSelected: false,
+      gridStrokeColor: '#E8E8E8'
     };
 
     // ── Compose submodules ──
@@ -3882,14 +3884,11 @@ class StickerConfigurator extends HTMLElement {
       this.canvas.style.height = this.CANVAS_H + 'px';
     }
 
-    // Apply bg color from dataset
+    // Apply the configured background, adapting only the default surface to
+    // the site theme. A color explicitly chosen by the user remains intact.
     var bgColor = this.dataset.bgColor || '#F8F9FA';
-    if (this.gridCanvas) {
-      this.gridCanvas.style.background = bgColor;
-    }
-    if (this.canvas) {
-      this.canvas.style.background = bgColor;
-    }
+    this.state.backgroundColor = bgColor;
+    this._applyThemeCanvasBackground(document.documentElement.dataset.theme || 'light');
 
     this.canvasRenderer.drawGrid();
     this.canvasRenderer._syncZoomTransform();
@@ -3976,10 +3975,31 @@ class StickerConfigurator extends HTMLElement {
     this.guideV = this.cache['guide-v'];
   }
 
+  _setCanvasBackground(color) {
+    if (!color) return;
+    this.state.backgroundColor = color;
+    if (this.wrap) this.wrap.style.setProperty('--cfg-grid-surface', color);
+    if (this.gridCanvas) this.gridCanvas.style.background = color;
+    if (this.canvas) this.canvas.style.background = color;
+    if (this.canvasRenderer) this.canvasRenderer.drawGrid();
+  }
+
+  _applyThemeCanvasBackground(mode) {
+    if (this.state.canvasBackgroundUserSelected) return;
+    var configuredBackground = this.dataset.bgColor || '#F8F9FA';
+    var background = mode === 'dark' ? '#191c23' : configuredBackground;
+    this.state.gridStrokeColor = mode === 'dark' ? '#3a3f4b' : '#E8E8E8';
+    this._setCanvasBackground(background);
+  }
+
   /* ── Event Binding Toolbar Delegation ── */
   bindEvents() {
     var signal = this.abortController.signal;
     var core = this;
+
+    document.addEventListener('theme:change', function (event) {
+      core._applyThemeCanvasBackground(event.detail && event.detail.mode ? event.detail.mode : 'light');
+    }, { signal: signal });
 
     // Keep a two-finger gesture inside the editor. Without this capture-level
     // guard some mobile browsers treat the same pinch as page zoom, which
@@ -4162,9 +4182,9 @@ class StickerConfigurator extends HTMLElement {
     var bgColorInput = this.cache['bg-color'];
     if (bgColorInput) {
       bgColorInput.addEventListener('input', function () {
-        core.state.backgroundColor = bgColorInput.value;
-        if (core.gridCanvas) core.gridCanvas.style.background = bgColorInput.value;
-        if (core.canvas) core.canvas.style.background = bgColorInput.value;
+        core.state.canvasBackgroundUserSelected = true;
+        core.state.gridStrokeColor = '#E8E8E8';
+        core._setCanvasBackground(bgColorInput.value);
       }, { signal });
     }
 
