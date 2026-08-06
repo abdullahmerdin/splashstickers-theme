@@ -119,46 +119,88 @@
       {% when 'hub' %}
         {% if section.settings.show_hub_hero != false %}
           <header class="how-it-works__hero">
-            <p class="how-it-works__eyebrow">{{ hub_eyebrow | escape }}</p>
-            <h1>{{ hub_title | escape }}</h1>
-            <p class="how-it-works__intro">{{ hub_intro | escape }}</p>
+            {% if section.settings.show_hub_hero_eyebrow != false %}
+              <p class="how-it-works__eyebrow">{{ hub_eyebrow | escape }}</p>
+            {% endif %}
+            {% if section.settings.show_hub_hero_title != false %}
+              <h1>{{ hub_title | escape }}</h1>
+            {% endif %}
+            {% if section.settings.show_hub_hero_intro != false %}
+              <p class="how-it-works__intro">{{ hub_intro | escape }}</p>
+            {% endif %}
           </header>
         {% endif %}
 
-        <div class="how-it-works__hub-grid">
-          {% if section.settings.show_hub_products_card != false %}
-            <a class="how-it-works__hub-card" href="{{ hub_products_url | escape }}">
-              <span class="how-it-works__card-index" aria-hidden="true">01</span>
-              <span class="how-it-works__hub-card-label">{{ hub_products_label | escape }}</span>
-              <h2>{{ hub_products_title | escape }}</h2>
-              <p>{{ hub_products_text | escape }}</p>
-              <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
-            </a>
-          {% endif %}
+        {% if section.settings.show_hub_products_card != false or section.settings.show_hub_site_card != false %}
+          <div class="how-it-works__hub-grid">
+            {% if section.settings.show_hub_products_card != false %}
+              <a class="how-it-works__hub-card" href="{{ hub_products_url | escape }}">
+                {% if section.settings.show_hub_products_card_index != false %}
+                  <span class="how-it-works__card-index" aria-hidden="true">01</span>
+                {% endif %}
+                {% if section.settings.show_hub_products_card_label != false %}
+                  <span class="how-it-works__hub-card-label">{{ hub_products_label | escape }}</span>
+                {% endif %}
+                {% if section.settings.show_hub_products_card_title != false %}
+                  <h2>{{ hub_products_title | escape }}</h2>
+                {% endif %}
+                {% if section.settings.show_hub_products_card_text != false %}
+                  <p>{{ hub_products_text | escape }}</p>
+                {% endif %}
+                {% if section.settings.show_hub_products_card_link != false %}
+                  <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+                {% endif %}
+              </a>
+            {% endif %}
 
-          {% if section.settings.show_hub_site_card != false %}
-            <a class="how-it-works__hub-card how-it-works__hub-card--site" href="{{ hub_site_url | escape }}">
-              <span class="how-it-works__card-index" aria-hidden="true">02</span>
-              <span class="how-it-works__hub-card-label">{{ hub_site_label | escape }}</span>
-              <h2>{{ hub_site_title | escape }}</h2>
-              <p>{{ hub_site_text | escape }}</p>
-              <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
-            </a>
-          {% endif %}
-        </div>
+            {% if section.settings.show_hub_site_card != false %}
+              <a class="how-it-works__hub-card how-it-works__hub-card--site" href="{{ hub_site_url | escape }}">
+                {% if section.settings.show_hub_site_card_index != false %}
+                  <span class="how-it-works__card-index" aria-hidden="true">02</span>
+                {% endif %}
+                {% if section.settings.show_hub_site_card_label != false %}
+                  <span class="how-it-works__hub-card-label">{{ hub_site_label | escape }}</span>
+                {% endif %}
+                {% if section.settings.show_hub_site_card_title != false %}
+                  <h2>{{ hub_site_title | escape }}</h2>
+                {% endif %}
+                {% if section.settings.show_hub_site_card_text != false %}
+                  <p>{{ hub_site_text | escape }}</p>
+                {% endif %}
+                {% if section.settings.show_hub_site_card_link != false %}
+                  <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+                {% endif %}
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
 
         {% if section.settings.show_hub_quick_path != false %}
           <div class="how-it-works__quick-path">
             <div>
-              <p class="how-it-works__eyebrow">{{ quick_eyebrow | escape }}</p>
-              <h2>{{ quick_title | escape }}</h2>
-              <p>{{ quick_text | escape }}</p>
+              {% if section.settings.show_hub_quick_eyebrow != false %}
+                <p class="how-it-works__eyebrow">{{ quick_eyebrow | escape }}</p>
+              {% endif %}
+              {% if section.settings.show_hub_quick_title != false %}
+                <h2>{{ quick_title | escape }}</h2>
+              {% endif %}
+              {% if section.settings.show_hub_quick_text != false %}
+                <p>{{ quick_text | escape }}</p>
+              {% endif %}
             </div>
-            <ol class="how-it-works__quick-list">
-              <li><span>01</span>{{ quick_step_one | escape }}</li>
-              <li><span>02</span>{{ quick_step_two | escape }}</li>
-              <li><span>03</span>{{ quick_step_three | escape }}</li>
-            </ol>
+            {% if section.settings.show_hub_quick_step_one != false or section.settings.show_hub_quick_step_two != false or section.settings.show_hub_quick_step_three != false %}
+              <ol class="how-it-works__quick-list">
+                {% if section.settings.show_hub_quick_step_one != false %}
+                  <li><span>01</span>{{ quick_step_one | escape }}</li>
+                {% endif %}
+                {% if section.settings.show_hub_quick_step_two != false %}
+                  <li><span>02</span>{{ quick_step_two | escape }}</li>
+                {% endif %}
+                {% if section.settings.show_hub_quick_step_three != false %}
+                  <li><span>03</span>{{ quick_step_three | escape }}</li>
+                {% endif %}
+              </ol>
+            {% endif %}
           </div>
         {% endif %}
 
@@ -200,10 +242,18 @@
 
         {% if section.settings.show_directory_hero != false %}
           <header class="how-it-works__hero how-it-works__hero--directory">
-            <a class="how-it-works__back-link" href="{{ routes.root_url }}pages/how-it-works">&larr; {{ directory_back_label | escape }}</a>
-            <p class="how-it-works__eyebrow">{{ directory_eyebrow | escape }}</p>
-            <h1>{{ directory_title | escape }}</h1>
-            <p class="how-it-works__intro">{{ directory_intro | escape }}</p>
+            {% if section.settings.show_directory_back_link != false %}
+              <a class="how-it-works__back-link" href="{{ routes.root_url }}pages/how-it-works">&larr; {{ directory_back_label | escape }}</a>
+            {% endif %}
+            {% if section.settings.show_directory_eyebrow != false %}
+              <p class="how-it-works__eyebrow">{{ directory_eyebrow | escape }}</p>
+            {% endif %}
+            {% if section.settings.show_directory_title != false %}
+              <h1>{{ directory_title | escape }}</h1>
+            {% endif %}
+            {% if section.settings.show_directory_intro != false %}
+              <p class="how-it-works__intro">{{ directory_intro | escape }}</p>
+            {% endif %}
           </header>
         {% endif %}
 
@@ -245,10 +295,18 @@
                       role="listitem"
                       {{ block.shopify_attributes }}
                     >
-                      <span class="how-it-works__directory-mark" aria-hidden="true">{{ rendered_directory_cards | prepend: '0' }}</span>
-                      <h2>{{ item_title | escape }}</h2>
-                      <p>{{ item_summary | escape }}</p>
-                      <span class="how-it-works__card-link">{{ item_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+                      {% if block.settings.show_mark != false %}
+                        <span class="how-it-works__directory-mark" aria-hidden="true">{{ rendered_directory_cards | prepend: '0' }}</span>
+                      {% endif %}
+                      {% if block.settings.show_title != false %}
+                        <h2>{{ item_title | escape }}</h2>
+                      {% endif %}
+                      {% if block.settings.show_summary != false %}
+                        <p>{{ item_summary | escape }}</p>
+                      {% endif %}
+                      {% if block.settings.show_link != false %}
+                        <span class="how-it-works__card-link">{{ item_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+                      {% endif %}
                     </a>
                   {% endif %}
                 {% endif %}
@@ -364,14 +422,24 @@
                 <span aria-current="page">{{ guide_title | escape }}</span>
               </nav>
             {% endif %}
-            <div class="how-it-works__guide-heading-line">
-              <p class="how-it-works__eyebrow">{{ guide_kind_label | escape }}</p>
-              {% if guide_key == 'background_removal' and section.settings.guide_show_status != false %}
+            {% if section.settings.show_guide_kind_label != false %}
+              <div class="how-it-works__guide-heading-line">
+                <p class="how-it-works__eyebrow">{{ guide_kind_label | escape }}</p>
+                {% if guide_key == 'background_removal' and section.settings.guide_show_status != false %}
+                  <span class="how-it-works__status">{{ 'how_it_works.common.planned' | t }}</span>
+                {% endif %}
+              </div>
+            {% elsif guide_key == 'background_removal' and section.settings.guide_show_status != false %}
+              <div class="how-it-works__guide-heading-line">
                 <span class="how-it-works__status">{{ 'how_it_works.common.planned' | t }}</span>
-              {% endif %}
-            </div>
-            <h1>{{ guide_title | escape }}</h1>
-            <p class="how-it-works__intro">{{ guide_intro | escape }}</p>
+              </div>
+            {% endif %}
+            {% if section.settings.show_guide_title != false %}
+              <h1>{{ guide_title | escape }}</h1>
+            {% endif %}
+            {% if section.settings.show_guide_intro != false %}
+              <p class="how-it-works__intro">{{ guide_intro | escape }}</p>
+            {% endif %}
           </header>
         {% endif %}
 
@@ -379,26 +447,46 @@
           <div class="how-it-works__overview">
             {% if section.settings.show_guide_what_card != false %}
               <article class="how-it-works__overview-card">
-                <span class="how-it-works__overview-label">01</span>
-                <h2>{{ guide_what_title | escape }}</h2>
-                <p>{{ guide_what_text | escape }}</p>
+                {% if section.settings.show_guide_what_label != false %}
+                  <span class="how-it-works__overview-label">01</span>
+                {% endif %}
+                {% if section.settings.show_guide_what_title != false %}
+                  <h2>{{ guide_what_title | escape }}</h2>
+                {% endif %}
+                {% if section.settings.show_guide_what_text != false %}
+                  <p>{{ guide_what_text | escape }}</p>
+                {% endif %}
               </article>
             {% endif %}
             {% if section.settings.show_guide_best_card != false %}
               <article class="how-it-works__overview-card">
-                <span class="how-it-works__overview-label">02</span>
-                <h2>{{ guide_best_title | escape }}</h2>
-                <p>{{ guide_best_text | escape }}</p>
+                {% if section.settings.show_guide_best_label != false %}
+                  <span class="how-it-works__overview-label">02</span>
+                {% endif %}
+                {% if section.settings.show_guide_best_title != false %}
+                  <h2>{{ guide_best_title | escape }}</h2>
+                {% endif %}
+                {% if section.settings.show_guide_best_text != false %}
+                  <p>{{ guide_best_text | escape }}</p>
+                {% endif %}
               </article>
             {% endif %}
           </div>
         {% endif %}
 
         {% if section.settings.show_guide_steps != false %}
-          <section class="how-it-works__steps" aria-labelledby="how-it-works-steps-{{ section.id }}">
+          {% if section.settings.show_guide_steps_title != false %}
+            <section class="how-it-works__steps" aria-labelledby="how-it-works-steps-{{ section.id }}">
+          {% else %}
+            <section class="how-it-works__steps">
+          {% endif %}
             <div class="how-it-works__section-heading">
-              <p class="how-it-works__eyebrow">{{ guide_steps_eyebrow | escape }}</p>
-              <h2 id="how-it-works-steps-{{ section.id }}">{{ guide_steps_title | escape }}</h2>
+              {% if section.settings.show_guide_steps_eyebrow != false %}
+                <p class="how-it-works__eyebrow">{{ guide_steps_eyebrow | escape }}</p>
+              {% endif %}
+              {% if section.settings.show_guide_steps_title != false %}
+                <h2 id="how-it-works-steps-{{ section.id }}">{{ guide_steps_title | escape }}</h2>
+              {% endif %}
             </div>
             <ol class="how-it-works__steps-grid">
               {% if has_guide_step_blocks %}
@@ -421,9 +509,15 @@
                         {% assign step_text = step_text_key | strip | t %}
                       {% endif %}
                       <li class="how-it-works__step" {{ block.shopify_attributes }}>
-                        <span class="how-it-works__step-number" aria-hidden="true">{{ step_index | prepend: '0' }}</span>
-                        <h3>{{ step_title | escape }}</h3>
-                        <p>{{ step_text | escape }}</p>
+                        {% if block.settings.show_number != false %}
+                          <span class="how-it-works__step-number" aria-hidden="true">{{ step_index | prepend: '0' }}</span>
+                        {% endif %}
+                        {% if block.settings.show_title != false %}
+                          <h3>{{ step_title | escape }}</h3>
+                        {% endif %}
+                        {% if block.settings.show_text != false %}
+                          <p>{{ step_text | escape }}</p>
+                        {% endif %}
                       </li>
                     {% endif %}
                   {% endif %}
@@ -446,18 +540,30 @@
         {% if section.settings.show_guide_note != false %}
           <aside class="how-it-works__note">
             <div>
-              <p class="how-it-works__eyebrow">{{ guide_note_eyebrow | escape }}</p>
-              <h2>{{ guide_note_title | escape }}</h2>
-              <p>{{ guide_note_text | escape }}</p>
+              {% if section.settings.show_guide_note_eyebrow != false %}
+                <p class="how-it-works__eyebrow">{{ guide_note_eyebrow | escape }}</p>
+              {% endif %}
+              {% if section.settings.show_guide_note_title != false %}
+                <h2>{{ guide_note_title | escape }}</h2>
+              {% endif %}
+              {% if section.settings.show_guide_note_text != false %}
+                <p>{{ guide_note_text | escape }}</p>
+              {% endif %}
             </div>
-            <span class="how-it-works__note-mark" aria-hidden="true">&#10022;</span>
+            {% if section.settings.show_guide_note_mark != false %}
+              <span class="how-it-works__note-mark" aria-hidden="true">&#10022;</span>
+            {% endif %}
           </aside>
         {% endif %}
 
         {% if section.settings.show_guide_actions != false %}
           <div class="how-it-works__guide-actions">
-            <a class="how-it-works__button" href="{{ guide_cta_url | escape }}">{{ guide_cta_label | escape }}</a>
-            <a class="how-it-works__text-link" href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_all_label | escape }}</a>
+            {% if section.settings.show_guide_primary_cta != false %}
+              <a class="how-it-works__button" href="{{ guide_cta_url | escape }}">{{ guide_cta_label | escape }}</a>
+            {% endif %}
+            {% if section.settings.show_guide_all_link != false %}
+              <a class="how-it-works__text-link" href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_all_label | escape }}</a>
+            {% endif %}
           </div>
         {% endif %}
     {% endcase %}
@@ -595,6 +701,297 @@
       "type": "checkbox",
       "id": "show_guide_actions",
       "label": "Show guide actions",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "header",
+      "content": "Child visibility"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_hero_eyebrow",
+      "label": "Show hub hero eyebrow",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_hero_title",
+      "label": "Show hub hero title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_hero_intro",
+      "label": "Show hub hero intro",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_products_card_index",
+      "label": "Show products card number",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_products_card_label",
+      "label": "Show products card label",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_products_card_title",
+      "label": "Show products card title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_products_card_text",
+      "label": "Show products card text",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_products_card_link",
+      "label": "Show products card link",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_site_card_index",
+      "label": "Show site card number",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_site_card_label",
+      "label": "Show site card label",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_site_card_title",
+      "label": "Show site card title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_site_card_text",
+      "label": "Show site card text",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_site_card_link",
+      "label": "Show site card link",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_quick_eyebrow",
+      "label": "Show quick path eyebrow",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_quick_title",
+      "label": "Show quick path title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_quick_text",
+      "label": "Show quick path text",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_quick_step_one",
+      "label": "Show quick path step 1",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_quick_step_two",
+      "label": "Show quick path step 2",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hub_quick_step_three",
+      "label": "Show quick path step 3",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'hub' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_directory_back_link",
+      "label": "Show directory back link",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'products' or section.settings.layout == 'site' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_directory_eyebrow",
+      "label": "Show directory eyebrow",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'products' or section.settings.layout == 'site' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_directory_title",
+      "label": "Show directory title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'products' or section.settings.layout == 'site' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_directory_intro",
+      "label": "Show directory intro",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'products' or section.settings.layout == 'site' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_kind_label",
+      "label": "Show guide category label",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "guide_show_status",
+      "label": "Show planned status on Background removal",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_title",
+      "label": "Show guide title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_intro",
+      "label": "Show guide intro",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_what_label",
+      "label": "Show what it is number",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_what_title",
+      "label": "Show what it is title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_what_text",
+      "label": "Show what it is text",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_best_label",
+      "label": "Show good fit number",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_best_title",
+      "label": "Show good fit title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_best_text",
+      "label": "Show good fit text",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_steps_eyebrow",
+      "label": "Show steps eyebrow",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_steps_title",
+      "label": "Show steps title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_note_eyebrow",
+      "label": "Show note eyebrow",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_note_title",
+      "label": "Show note title",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_note_text",
+      "label": "Show note text",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_note_mark",
+      "label": "Show note mark",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_primary_cta",
+      "label": "Show primary CTA",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'guide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guide_all_link",
+      "label": "Show all guides link",
       "default": true,
       "visible_if": "{{ section.settings.layout == 'guide' }}"
     },
@@ -800,12 +1197,6 @@
       "type": "text",
       "id": "guide_all_label",
       "label": "All guides link label"
-    },
-    {
-      "type": "checkbox",
-      "id": "guide_show_status",
-      "label": "Show planned status on Background removal",
-      "default": true
     }
   ],
   "blocks": [
@@ -858,6 +1249,30 @@
           "id": "visible",
           "label": "Show card",
           "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_mark",
+          "label": "Show card number",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_title",
+          "label": "Show card title",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_summary",
+          "label": "Show card summary",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_link",
+          "label": "Show card link",
+          "default": true
         }
       ]
     },
@@ -893,6 +1308,24 @@
           "type": "checkbox",
           "id": "visible",
           "label": "Show step",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_number",
+          "label": "Show step number",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_title",
+          "label": "Show step title",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_text",
+          "label": "Show step text",
           "default": true
         }
       ]

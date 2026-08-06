@@ -115,23 +115,71 @@ for (const settingId of [
   'show_directory_cards',
   'show_guide_hero',
   'show_guide_breadcrumbs',
+  'guide_show_status',
   'show_guide_what_card',
   'show_guide_best_card',
   'show_guide_steps',
   'show_guide_note',
   'show_guide_actions',
+  'show_hub_hero_eyebrow',
+  'show_hub_hero_title',
+  'show_hub_hero_intro',
+  'show_hub_products_card_index',
+  'show_hub_products_card_label',
+  'show_hub_products_card_title',
+  'show_hub_products_card_text',
+  'show_hub_products_card_link',
+  'show_hub_site_card_index',
+  'show_hub_site_card_label',
+  'show_hub_site_card_title',
+  'show_hub_site_card_text',
+  'show_hub_site_card_link',
+  'show_hub_quick_eyebrow',
+  'show_hub_quick_title',
+  'show_hub_quick_text',
+  'show_hub_quick_step_one',
+  'show_hub_quick_step_two',
+  'show_hub_quick_step_three',
+  'show_directory_back_link',
+  'show_directory_eyebrow',
+  'show_directory_title',
+  'show_directory_intro',
+  'show_guide_kind_label',
+  'show_guide_title',
+  'show_guide_intro',
+  'show_guide_what_label',
+  'show_guide_what_title',
+  'show_guide_what_text',
+  'show_guide_best_label',
+  'show_guide_best_title',
+  'show_guide_best_text',
+  'show_guide_steps_eyebrow',
+  'show_guide_steps_title',
+  'show_guide_note_eyebrow',
+  'show_guide_note_title',
+  'show_guide_note_text',
+  'show_guide_note_mark',
+  'show_guide_primary_cta',
+  'show_guide_all_link',
 ]) {
   assert.ok(section.includes(`"id": "${settingId}"`), `missing Theme Editor setting ${settingId}`);
 }
 for (const visibilityGuard of [
   'section.settings.show_hub_hero != false',
+  'section.settings.show_hub_products_card_title != false',
   'section.settings.show_directory_cards != false',
+  'block.settings.show_title != false',
   'section.settings.show_guide_steps != false',
+  'block.settings.show_text != false',
+  'section.settings.show_guide_primary_cta != false',
 ]) {
   assert.ok(section.includes(visibilityGuard), `missing visibility guard ${visibilityGuard}`);
 }
 assert.ok(section.includes('"type": "directory_card"'), 'directory cards must be editable blocks');
 assert.ok(section.includes('"type": "guide_step"'), 'guide steps must be editable blocks');
+for (const blockSettingId of ['show_mark', 'show_title', 'show_summary', 'show_link', 'show_number', 'show_text']) {
+  assert.ok(section.includes(`"id": "${blockSettingId}"`), `missing child block setting ${blockSettingId}`);
+}
 
 for (const token of [
   'var(--color-background',
