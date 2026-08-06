@@ -7,7 +7,7 @@
   --how-it-works-accent: var(--splash-color-purple);
   --how-it-works-accent-rgb: var(--splash-color-purple-rgb);
   --how-it-works-accent-ink: var(--splash-color-on-accent);
-  --how-it-works-uv-dtf-art-opacity: 0.18;
+  --how-it-works-directory-art-opacity: 0.18;
   background: var(--how-it-works-background);
   color: var(--how-it-works-foreground);
 }
@@ -18,7 +18,7 @@ html[data-theme='dark'] .how-it-works {
   --how-it-works-muted: var(--color-foreground-muted);
   --how-it-works-card: var(--splash-color-surface);
   --how-it-works-border: var(--splash-color-line);
-  --how-it-works-uv-dtf-art-opacity: 0.16;
+  --how-it-works-directory-art-opacity: 0.16;
 }
 
 .how-it-works__inner {
@@ -281,11 +281,11 @@ html[data-theme='dark'] .how-it-works {
   min-height: 265px;
 }
 
-.how-it-works__directory-card--uv-dtf {
+.how-it-works__directory-card--has-art {
   overflow: hidden;
 }
 
-.how-it-works__directory-card--uv-dtf > :not(.how-it-works__directory-card-art) {
+.how-it-works__directory-card--has-art > :not(.how-it-works__directory-card-art) {
   position: relative;
   z-index: 1;
 }
@@ -298,7 +298,7 @@ html[data-theme='dark'] .how-it-works {
   display: block;
   width: clamp(10rem, 48%, 15rem);
   height: auto;
-  opacity: var(--how-it-works-uv-dtf-art-opacity);
+  opacity: var(--how-it-works-directory-art-opacity);
   pointer-events: none;
   user-select: none;
 }

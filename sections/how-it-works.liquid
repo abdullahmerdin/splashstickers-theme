@@ -264,6 +264,21 @@
               {% for block in section.blocks %}
                 {% if block.type == 'directory_card' %}
                   {% assign item = block.settings.guide_key %}
+                  {% assign item_art = '' %}
+                  {% case item %}
+                    {% when 'die_cut' %}
+                      {% assign item_art = 'splash-product-die-cut-sticker.png' %}
+                    {% when 'magnet' %}
+                      {% assign item_art = 'splash-product-magnet-fridge.png' %}
+                    {% when 'uv_dtf' %}
+                      {% assign item_art = 'splash-product-uv-dtf-mug.png' %}
+                    {% when 'uv' %}
+                      {% assign item_art = 'splash-product-uv-phone-case.png' %}
+                    {% when 'emboss' %}
+                      {% assign item_art = 'splash-product-emboss-notebook.png' %}
+                    {% when 'textile' %}
+                      {% assign item_art = 'splash-product-textile-t-shirt.png' %}
+                  {% endcase %}
                   {% assign item_is_visible = block.settings.visible %}
                   {% if item_is_visible == blank %}
                     {% assign item_is_visible = true %}
@@ -290,15 +305,15 @@
                       {% assign item_link_label = directory_link_label %}
                     {% endif %}
                     <a
-                      class="how-it-works__directory-card{% if item == 'uv_dtf' %} how-it-works__directory-card--uv-dtf{% endif %}"
+                      class="how-it-works__directory-card{% if item_art != blank %} how-it-works__directory-card--has-art{% endif %}"
                       href="{{ item_link | escape }}"
                       role="listitem"
                       {{ block.shopify_attributes }}
                     >
-                      {% if item == 'uv_dtf' %}
+                      {% if item_art != blank %}
                         <img
                           class="how-it-works__directory-card-art"
-                          src="{{ 'splash-product-uv-dtf-mug.png' | asset_url }}"
+                          src="{{ item_art | asset_url }}"
                           alt=""
                           width="1254"
                           height="1254"
@@ -322,18 +337,33 @@
               {% endfor %}
             {% else %}
               {% for item in directory_items %}
+                {% assign item_art = '' %}
+                {% case item %}
+                  {% when 'die_cut' %}
+                    {% assign item_art = 'splash-product-die-cut-sticker.png' %}
+                  {% when 'magnet' %}
+                    {% assign item_art = 'splash-product-magnet-fridge.png' %}
+                  {% when 'uv_dtf' %}
+                    {% assign item_art = 'splash-product-uv-dtf-mug.png' %}
+                  {% when 'uv' %}
+                    {% assign item_art = 'splash-product-uv-phone-case.png' %}
+                  {% when 'emboss' %}
+                    {% assign item_art = 'splash-product-emboss-notebook.png' %}
+                  {% when 'textile' %}
+                    {% assign item_art = 'splash-product-textile-t-shirt.png' %}
+                {% endcase %}
                 {% capture item_title_key %}how_it_works.{{ directory_namespace }}.{{ item }}.title{% endcapture %}
                 {% capture item_summary_key %}how_it_works.{{ directory_namespace }}.{{ item }}.summary{% endcapture %}
                 {% assign item_slug = item | replace: '_', '-' %}
                 <a
-                  class="how-it-works__directory-card{% if item == 'uv_dtf' %} how-it-works__directory-card--uv-dtf{% endif %}"
+                  class="how-it-works__directory-card{% if item_art != blank %} how-it-works__directory-card--has-art{% endif %}"
                   href="{{ routes.root_url }}pages/how-it-works-{{ item_slug }}"
                   role="listitem"
                 >
-                  {% if item == 'uv_dtf' %}
+                  {% if item_art != blank %}
                     <img
                       class="how-it-works__directory-card-art"
-                      src="{{ 'splash-product-uv-dtf-mug.png' | asset_url }}"
+                      src="{{ item_art | asset_url }}"
                       alt=""
                       width="1254"
                       height="1254"
