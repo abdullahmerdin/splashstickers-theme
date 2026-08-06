@@ -3,6 +3,7 @@
 {% liquid
   assign block_settings = block.settings
   assign use_inverse_logo = false
+  assign inverse_logo = settings.logo_inverse
 
   if section.settings.enable_transparent_header_home and template.name == 'index' and section.settings.home_inverse_logo == true
     assign use_inverse_logo = true
@@ -12,12 +13,8 @@
     assign use_inverse_logo = true
   endif
 
-  if use_inverse_logo
-    if settings.logo_inverse != blank
-      assign inverse_logo = settings.logo_inverse
-    else
-      assign inverse_logo = settings.logo
-    endif
+  if use_inverse_logo and inverse_logo == blank
+    assign inverse_logo = settings.logo
   endif
 
   assign alt_text_fallback = 'accessibility.home_logo_alt' | t: store_name: shop.name
@@ -72,6 +69,23 @@
     >
       {% render 'image',
         image: inverse_logo,
+        class: 'header-logo__image',
+        height: settings.logo_height,
+        alt_text_fallback: alt_text_fallback,
+        text_fallback: shop.name,
+        style: inverse_logo_style
+      %}
+    </span>
+  {% endif %}
+
+  {% if settings.logo_inverse != blank %}
+    <span
+      class="header-logo__image-container header-logo__image-container--hover-inverse"
+      data-testid="header-logo-hover-inverse"
+      aria-hidden="true"
+    >
+      {% render 'image',
+        image: settings.logo_inverse,
         class: 'header-logo__image',
         height: settings.logo_height,
         alt_text_fallback: alt_text_fallback,

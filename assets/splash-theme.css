@@ -418,11 +418,26 @@
 
 #header-component.splash-header .header-logo {
   padding-inline: 0.35rem;
-  transition: transform var(--splash-transition);
 }
 
-#header-component.splash-header .header-logo:hover {
-  transform: translateY(-1px);
+#header-component.splash-header .header-logo:has(.header-logo__image-container--hover-inverse) {
+  position: relative;
+}
+
+#header-component.splash-header .header-logo__image-container--hover-inverse {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--splash-transition);
+}
+
+#header-component.splash-header .header-logo:is(:hover, :focus-visible) .header-logo__image-container--hover-inverse {
+  opacity: 1;
 }
 
 #header-component.splash-header .menu-list__link {
@@ -1295,6 +1310,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  #header-component.splash-header .header-logo__image-container--hover-inverse,
   .splash-header-drawer .menu-drawer__menu-item,
   .splash-product-card,
   .splash-product-card .quick-add__button,
