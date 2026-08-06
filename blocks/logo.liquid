@@ -20,6 +20,10 @@
     assign is_collection_title = true
     assign collection_title_alignment = 'right'
   endif
+
+  if is_collection_title
+    assign image = blank
+  endif
 %}
 
 {%- if image -%}
