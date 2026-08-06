@@ -38,7 +38,10 @@ text field blank to keep the active language translation, or enter a custom
 value to override it for that page. The hub has editable hero, card, quick-path,
 and link settings. Products and Site pages expose reorderable, hideable cards.
 Guide pages expose editable overview copy, step blocks, note copy, and CTA
-settings.
+settings. Every layout also has a Visibility group in the Theme Editor: hub
+hero/cards/quick path, directory hero/cards, guide breadcrumbs/overview, steps,
+note, and actions can be shown or hidden independently. Directory cards and guide
+steps remain individually hideable from their block settings.
 
 ## Navigation
 

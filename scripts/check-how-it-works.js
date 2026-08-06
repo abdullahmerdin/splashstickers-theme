@@ -107,8 +107,28 @@ for (const settingId of [
   'guide_intro',
   'guide_note_text',
   'guide_cta_url',
+  'show_hub_hero',
+  'show_hub_products_card',
+  'show_hub_site_card',
+  'show_hub_quick_path',
+  'show_directory_hero',
+  'show_directory_cards',
+  'show_guide_hero',
+  'show_guide_breadcrumbs',
+  'show_guide_what_card',
+  'show_guide_best_card',
+  'show_guide_steps',
+  'show_guide_note',
+  'show_guide_actions',
 ]) {
   assert.ok(section.includes(`"id": "${settingId}"`), `missing Theme Editor setting ${settingId}`);
+}
+for (const visibilityGuard of [
+  'section.settings.show_hub_hero != false',
+  'section.settings.show_directory_cards != false',
+  'section.settings.show_guide_steps != false',
+]) {
+  assert.ok(section.includes(visibilityGuard), `missing visibility guard ${visibilityGuard}`);
 }
 assert.ok(section.includes('"type": "directory_card"'), 'directory cards must be editable blocks');
 assert.ok(section.includes('"type": "guide_step"'), 'guide steps must be editable blocks');
