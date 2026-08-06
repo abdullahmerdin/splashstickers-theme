@@ -188,9 +188,7 @@
   padding: var(--cfg-shell-pad);
   overflow: hidden;
   color: var(--cfg-ink);
-  background:
-    radial-gradient(circle at 100% 0, rgb(var(--cfg-primary-rgb) / 0.055), transparent 30%),
-    var(--cfg-surface);
+  background: var(--cfg-surface);
   border: 1px solid var(--cfg-line);
   border-radius: var(--cfg-radius-lg);
   box-shadow: var(--cfg-shadow);
@@ -1723,9 +1721,7 @@ dialog.cfg-modal::backdrop {
 .sticker-configurator > sticker-configurator.splash-studio {
   position: relative;
   border-color: rgb(var(--splash-color-purple-rgb, 108 92 231) / 0.24);
-  background:
-    radial-gradient(circle at 100% 0, rgb(var(--splash-color-pink-rgb, 253 121 168) / 0.1), transparent 30%),
-    var(--splash-color-surface, #fff);
+  background: var(--splash-color-surface, #fff);
 }
 
 .sticker-configurator .splash-studio__editor {
