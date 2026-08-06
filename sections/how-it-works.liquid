@@ -290,13 +290,22 @@
                       {% assign item_link_label = directory_link_label %}
                     {% endif %}
                     <a
-                      class="how-it-works__directory-card"
+                      class="how-it-works__directory-card{% if item == 'uv_dtf' %} how-it-works__directory-card--uv-dtf{% endif %}"
                       href="{{ item_link | escape }}"
                       role="listitem"
                       {{ block.shopify_attributes }}
                     >
-                      {% if block.settings.show_mark != false %}
-                        <span class="how-it-works__directory-mark" aria-hidden="true">{{ rendered_directory_cards | prepend: '0' }}</span>
+                      {% if item == 'uv_dtf' %}
+                        <img
+                          class="how-it-works__directory-card-art"
+                          src="{{ 'splash-product-uv-dtf-mug.png' | asset_url }}"
+                          alt=""
+                          width="1254"
+                          height="1254"
+                          loading="lazy"
+                          decoding="async"
+                          aria-hidden="true"
+                        >
                       {% endif %}
                       {% if block.settings.show_title != false %}
                         <h2>{{ item_title | escape }}</h2>
@@ -317,11 +326,22 @@
                 {% capture item_summary_key %}how_it_works.{{ directory_namespace }}.{{ item }}.summary{% endcapture %}
                 {% assign item_slug = item | replace: '_', '-' %}
                 <a
-                  class="how-it-works__directory-card"
+                  class="how-it-works__directory-card{% if item == 'uv_dtf' %} how-it-works__directory-card--uv-dtf{% endif %}"
                   href="{{ routes.root_url }}pages/how-it-works-{{ item_slug }}"
                   role="listitem"
                 >
-                  <span class="how-it-works__directory-mark" aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
+                  {% if item == 'uv_dtf' %}
+                    <img
+                      class="how-it-works__directory-card-art"
+                      src="{{ 'splash-product-uv-dtf-mug.png' | asset_url }}"
+                      alt=""
+                      width="1254"
+                      height="1254"
+                      loading="lazy"
+                      decoding="async"
+                      aria-hidden="true"
+                    >
+                  {% endif %}
                   <h2>{{ item_title_key | strip | t }}</h2>
                   <p>{{ item_summary_key | strip | t }}</p>
                   <span class="how-it-works__card-link">{{ directory_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
