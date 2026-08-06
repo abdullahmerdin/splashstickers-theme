@@ -7,7 +7,7 @@
   --how-it-works-accent: var(--splash-color-purple);
   --how-it-works-accent-rgb: var(--splash-color-purple-rgb);
   --how-it-works-accent-ink: var(--splash-color-on-accent);
-  --how-it-works-directory-art-opacity: 0.18;
+  --how-it-works-directory-art-opacity: 0.1;
   background: var(--how-it-works-background);
   color: var(--how-it-works-foreground);
 }
@@ -18,7 +18,7 @@ html[data-theme='dark'] .how-it-works {
   --how-it-works-muted: var(--color-foreground-muted);
   --how-it-works-card: var(--splash-color-surface);
   --how-it-works-border: var(--splash-color-line);
-  --how-it-works-directory-art-opacity: 0.16;
+  --how-it-works-directory-art-opacity: 0.08;
 }
 
 .how-it-works__inner {
@@ -293,8 +293,8 @@ html[data-theme='dark'] .how-it-works {
 .how-it-works__directory-card-art {
   position: absolute;
   z-index: 0;
-  top: -2.5rem;
-  right: -2.5rem;
+  top: 0.75rem;
+  right: 0.75rem;
   display: block;
   width: clamp(10rem, 48%, 15rem);
   height: auto;
@@ -539,8 +539,8 @@ html[data-theme='dark'] .how-it-works {
   }
 
   .how-it-works__directory-card-art {
-    top: -2rem;
-    right: -2rem;
+    top: 0.5rem;
+    right: 0.5rem;
     width: min(13rem, 52vw);
   }
 
