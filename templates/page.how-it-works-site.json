@@ -19,8 +19,7 @@
             "title": "",
             "summary": "",
             "link": "",
-            "link_label": "",
-            "visible": true
+            "link_label": ""
           }
         },
         "background_removal_card": {
@@ -30,8 +29,7 @@
             "title": "",
             "summary": "",
             "link": "",
-            "link_label": "",
-            "visible": true
+            "link_label": ""
           }
         },
         "browse_and_choose_card": {
@@ -41,8 +39,7 @@
             "title": "",
             "summary": "",
             "link": "",
-            "link_label": "",
-            "visible": true
+            "link_label": ""
           }
         },
         "cart_and_checkout_card": {
@@ -52,8 +49,7 @@
             "title": "",
             "summary": "",
             "link": "",
-            "link_label": "",
-            "visible": true
+            "link_label": ""
           }
         },
         "contact_and_help_card": {
@@ -63,8 +59,7 @@
             "title": "",
             "summary": "",
             "link": "",
-            "link_label": "",
-            "visible": true
+            "link_label": ""
           }
         }
       },
@@ -100,7 +95,6 @@
         "directory_eyebrow": "",
         "directory_title": "",
         "directory_intro": "",
-        "directory_link_label": "",
         "guide_title": "",
         "guide_intro": "",
         "guide_kind_label": "",
@@ -115,8 +109,7 @@
         "guide_note_text": "",
         "guide_cta_label": "",
         "guide_cta_url": "",
-        "guide_all_label": "",
-        "guide_show_status": true
+        "guide_all_label": ""
       }
     }
   },

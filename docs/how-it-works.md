@@ -25,26 +25,23 @@ the matching template:
 | Cart and checkout | `how-it-works-cart-and-checkout` | `page.how-it-works-cart-and-checkout` |
 | Contact and help | `how-it-works-contact-and-help` | `page.how-it-works-contact-and-help` |
 
-Each detail template sets the guide fallback key and contains four editable
-step blocks. The section still reads the page handle on the storefront, while
-the separate templates allow each guide page to have its own Theme Editor
-settings. The page body can remain empty; the theme section supplies the
-localized content.
+Each detail template sets the guide key and contains four editable step blocks.
+The section still reads the page handle on the storefront, while the separate
+templates allow each guide page to have its own Theme Editor settings. Content
+is intentionally supplied from those settings; an empty field does not fall
+back to a locale string.
 
 ## Theme Editor controls
 
-Open the relevant page template in Online Store > Themes > Customize. Leave a
-text field blank to keep the active language translation, or enter a custom
-value to override it for that page. The hub has editable hero, card, quick-path,
-and link settings. Products and Site pages expose reorderable, hideable cards.
-Guide pages expose editable overview copy, step blocks, note copy, and CTA
-settings. Every layout also has Visibility and Child visibility groups in the
-Theme Editor. Hub, directory, and guide sections can be shown or hidden, and
-their child labels, titles, descriptions, numbers, links, and quick-path steps
-can be controlled individually. Directory cards and guide steps also expose
-the same child controls inside each block, alongside their whole-card/step
-visibility toggle. The guide's planned status remains independently toggleable
-for the Background removal guide.
+Open the relevant page template in Online Store > Themes > Customize. A child
+is rendered only when its Theme Editor value is non-empty; leaving a child
+field blank hides that child and does not trigger a locale fallback. The hub
+has editable hero, card, quick-path, and link settings. Products and Site pages
+expose reorderable cards. Guide pages expose editable overview copy, step
+blocks, note copy, and CTA settings. This applies to hub content, directory
+hero/card content, guide overview/steps/note/actions, and each directory-card
+or guide-step block. The Background removal planned status uses the same rule
+through its status-label field.
 
 ## Navigation
 

@@ -36,7 +36,6 @@
         "directory_eyebrow": "",
         "directory_title": "",
         "directory_intro": "",
-        "directory_link_label": "",
         "guide_title": "",
         "guide_intro": "",
         "guide_kind_label": "",
@@ -51,8 +50,7 @@
         "guide_note_text": "",
         "guide_cta_label": "",
         "guide_cta_url": "",
-        "guide_all_label": "",
-        "guide_show_status": true
+        "guide_all_label": ""
       }
     }
   },

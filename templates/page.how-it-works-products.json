@@ -15,43 +15,37 @@
         "die_cut_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "die_cut",
-            "visible": true
+            "guide_key": "die_cut"
           }
         },
         "magnet_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "magnet",
-            "visible": true
+            "guide_key": "magnet"
           }
         },
         "uv_dtf_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "uv_dtf",
-            "visible": true
+            "guide_key": "uv_dtf"
           }
         },
         "uv_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "uv",
-            "visible": true
+            "guide_key": "uv"
           }
         },
         "emboss_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "emboss",
-            "visible": true
+            "guide_key": "emboss"
           }
         },
         "textile_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "textile",
-            "visible": true
+            "guide_key": "textile"
           }
         }
       },
