@@ -26,7 +26,7 @@
   endif
 %}
 
-{%- if image -%}
+{%- if image != blank -%}
   {% capture logo_image %}
     {{-
       image
@@ -52,7 +52,7 @@
     {% if block_settings.unit == 'percent' %}
       --logo-width: {{ block_settings.percent_width }}%;
     {% else %}
-      {% if image %}
+      {% if image != blank %}
         --logo-width: {{ image.width | times: 1.00 | divided_by: image.height | times: block_settings.pixel_height }}px;
       {% else %}
         --logo-width: {{ logo_text.size | times: 0.65 }}em;
@@ -65,7 +65,7 @@
         --logo-width-mobile: {{ block_settings.percent_width_mobile }}%;
         --logo-height-mobile: auto;
       {% else %}
-        {% if image %}
+        {% if image != blank %}
           --logo-width-mobile: {{ image.width | times: 1.00 | divided_by: image.height | times: block_settings.pixel_height_mobile }}px;
           {% else %}
             --logo-width-mobile: {{ logo_text.size | times: 0.65 }}em;
@@ -77,7 +77,7 @@
   "
   {{ block.shopify_attributes }}
 >
-  {% if logo_image %}
+  {% if logo_image != blank %}
     <div class="logo-block__image-wrapper">
       {{ logo_image }}
     </div>
