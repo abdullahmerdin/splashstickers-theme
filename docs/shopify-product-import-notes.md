@@ -11,7 +11,7 @@ The file contains the six initial Splash Stickers products:
 - Embossed Stickers
 - Textile Transfers
 
-The products are intentionally set to `draft` with `Published on online store` set to `false`. Prices, product images, inventory, weights, and Shopify product taxonomy are left blank because those values were not provided. Each product has one `Default Title` variant and a draft SKU placeholder.
+The products are intentionally set to `draft` with `Published on online store` set to `false`. Prices, product images, inventory quantities, weights, and Shopify product taxonomy are left blank because those values were not provided. Each product has one `Default Title` variant and a draft SKU placeholder. `Inventory tracker` is blank so Shopify does not track inventory; `Inventory policy` and `Continue selling when out of stock` are set to the valid value `deny`.
 
 Before publishing, fill in:
 
