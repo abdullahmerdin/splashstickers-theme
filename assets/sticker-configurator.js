@@ -3874,8 +3874,8 @@ class StickerConfigurator extends HTMLElement {
     this.keyboardManager = new KeyboardManager(this);
     this.alignmentEngine = new AlignmentEngine(this);
 
-    // Fit the empty sheet to both viewport axes at 100% zoom. All physical
-    // measurements continue to use the fixed millimetre dimensions.
+    // Fill the editor viewport at 100% zoom. The sheet keeps this width and
+    // grows only downward when artwork needs more vertical room.
     this.resizeWorkspaceToViewport(false);
 
     // Set logical canvas dimensions at init. The viewport height is owned by CSS.
@@ -4330,20 +4330,25 @@ class StickerConfigurator extends HTMLElement {
     if (!this.wrap || !this.state) return false;
     var oldWidth = Math.max(1, Number(this.CANVAS_W) || 600);
     var oldHeight = Math.max(1, Number(this.CANVAS_H) || 400);
-    var targetWidth = Math.floor(this.wrap.clientWidth || 0);
+    var targetWidth = Math.max(240, Math.floor(this.wrap.clientWidth || 0));
     var viewportHeight = Math.floor(this.wrap.clientHeight || 0);
     if (!(targetWidth > 0)) return false;
 
-    // The empty sheet should be visible in its entirety on first paint. Once
-    // artwork exists, keep the width-driven resize behavior so a taller sheet
-    // can grow and remain vertically scrollable instead of shrinking artwork.
-    if (!this.state.items.length && viewportHeight > 0) {
-      var heightFitWidth = Math.floor(viewportHeight * oldWidth / oldHeight);
-      if (heightFitWidth > 0) targetWidth = Math.min(targetWidth, heightFitWidth);
-    }
-    targetWidth = Math.max(240, targetWidth);
-    if (Math.abs(targetWidth - oldWidth) < 1) return false;
     var scale = targetWidth / oldWidth;
+    var targetHeight = viewportHeight > 0 ? viewportHeight : oldHeight * scale;
+    if (this.state.items.length) {
+      var maxBottom = 0;
+      var collisionEngine = this.collisionEngine;
+      this.state.items.forEach(function (item) {
+        var rect = collisionEngine ? collisionEngine.getCollisionRect(item) : item;
+        maxBottom = Math.max(maxBottom, (rect.y + rect.h) * scale);
+      });
+      var bottomPadding = (this.utils ? this.utils.mmToPx(20) : 20) * scale;
+      targetHeight = Math.max(targetHeight, maxBottom + bottomPadding);
+    }
+    targetHeight = Math.max(1, Math.ceil(targetHeight));
+    if (Math.abs(targetWidth - oldWidth) < 1 && Math.abs(targetHeight - oldHeight) < 1) return false;
+
     var oldScrollLeft = this.wrap.scrollLeft || 0;
     var oldScrollTop = this.wrap.scrollTop || 0;
     function scaleGeometry(data) {
@@ -4355,7 +4360,7 @@ class StickerConfigurator extends HTMLElement {
     }
 
     this.CANVAS_W = targetWidth;
-    this.CANVAS_H *= scale;
+    this.CANVAS_H = targetHeight;
     this.state.items.forEach(function (item) {
       scaleGeometry(item);
       if (!item.el) return;

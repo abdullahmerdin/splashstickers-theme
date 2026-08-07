@@ -103,7 +103,7 @@ test('workspace resize fills the viewport and preserves item millimetres', () =>
   assert.equal(textContent.style.fontSize, '48px');
 });
 
-test('empty workspace fits both viewport axes without pushing the hint below the canvas', () => {
+test('empty workspace fills the entire canvas viewport', () => {
   const core = {
     CANVAS_W: 600,
     CANVAS_H: 400,
@@ -119,8 +119,46 @@ test('empty workspace fits both viewport axes without pushing the hint below the
   const changed = StickerConfigurator.prototype.resizeWorkspaceToViewport.call(core, false);
 
   assert.equal(changed, true);
-  assert.equal(core.CANVAS_W, 1080);
+  assert.equal(core.CANVAS_W, 1800);
   assert.equal(core.CANVAS_H, 720);
+});
+
+test('adding the first design does not resize a viewport-sized canvas', () => {
+  const core = {
+    CANVAS_W: 1800,
+    CANVAS_H: 720,
+    SHEET_WIDTH_MM: 600,
+    wrap: { clientWidth: 1800, clientHeight: 720, scrollLeft: 0, scrollTop: 0 },
+    state: {
+      items: [{ x: 30, y: 30, w: 150, h: 90 }],
+      history: [],
+      clipboard: null
+    },
+    collisionEngine: { getCollisionRect: (item) => item }
+  };
+  core.utils = new Utils(core);
+
+  const changed = StickerConfigurator.prototype.resizeWorkspaceToViewport.call(core, false);
+
+  assert.equal(changed, false);
+  assert.equal(core.CANVAS_W, 1800);
+  assert.equal(core.CANVAS_H, 720);
+});
+
+test('artwork beyond the viewport grows only the canvas height', () => {
+  const core = {
+    CANVAS_W: 1000,
+    CANVAS_H: 500,
+    state: { items: [{ x: 20, y: 470, w: 100, h: 80 }] },
+    collisionEngine: { getCollisionRect: (item) => item },
+    utils: { mmToPx: (value) => value },
+    canvasRenderer: { drawGrid() {}, _syncZoomTransform() {} }
+  };
+
+  StickerConfigurator.prototype.growCanvas.call(core);
+
+  assert.equal(core.CANVAS_W, 1000);
+  assert.equal(core.CANVAS_H, 570);
 });
 
 test('canvas zoom never falls below its 100 percent scale', () => {
