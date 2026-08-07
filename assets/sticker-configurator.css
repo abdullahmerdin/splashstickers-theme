@@ -536,7 +536,6 @@
     var(--cfg-grid-origin-x) var(--cfg-grid-origin-y),
     var(--cfg-grid-origin-x) var(--cfg-grid-origin-y);
   background-size: var(--cfg-grid-step) var(--cfg-grid-step);
-  border: 1px solid var(--cfg-line-strong);
   border-radius: calc(var(--cfg-radius) + 2px);
   box-shadow: inset 0 1px 2px rgba(20, 22, 29, 0.025);
   /* The canvas is a clipped viewport; zoom changes only the stage inside it. */
@@ -572,7 +571,6 @@
   transform-origin: 0 0;
   background: var(--cfg-bg, #fff);
   border-radius: 0;
-  box-shadow: 0 0 0 1px rgb(var(--cfg-primary-rgb) / 0.16);
   -webkit-user-select: none;
 }
 
@@ -1760,7 +1758,6 @@ dialog.cfg-modal::backdrop {
 }
 
 .sticker-configurator .canvas-wrap {
-  border-color: rgb(var(--splash-color-purple-rgb, 108 92 231) / 0.26);
   background-color: color-mix(in srgb, var(--splash-color-yellow, #fdcb6e) 8%, var(--cfg-surface));
   background-image:
     linear-gradient(to right, rgb(var(--splash-color-ink-rgb, 45 52 54) / 0.08) 1px, transparent 1px),
@@ -1770,19 +1767,8 @@ dialog.cfg-modal::backdrop {
 
 .sticker-configurator .canvas-area {
   box-sizing: border-box;
-  border: 1px solid transparent;
   background: var(--cfg-bg, var(--splash-color-surface, #fff));
   box-shadow: inset 0 0 0 4px rgb(var(--splash-color-surface-rgb, 255 255 255) / 0.62);
-}
-
-.sticker-configurator .canvas-area::after {
-  box-sizing: border-box;
-  position: absolute;
-  z-index: calc(var(--cfg-z-guides) + 1);
-  inset: 0;
-  border: 1px solid rgb(var(--splash-color-teal-rgb, 0 206 201) / 0.42);
-  content: '';
-  pointer-events: none;
 }
 
 .sticker-configurator .canvas-item.selected {
