@@ -28,37 +28,87 @@
 
   assign has_directory_card_blocks = false
   assign has_guide_step_blocks = false
-  assign has_visible_guide_step_blocks = false
   for block in section.blocks
     if block.type == 'directory_card'
       assign has_directory_card_blocks = true
     endif
     if block.type == 'guide_step'
       assign has_guide_step_blocks = true
-      if block.settings.title != blank or block.settings.text != blank
-        assign has_visible_guide_step_blocks = true
-      endif
     endif
   endfor
 
   assign hub_eyebrow = section.settings.hub_eyebrow
+  if hub_eyebrow == blank
+    assign hub_eyebrow = 'how_it_works.common.eyebrow' | t
+  endif
   assign hub_title = section.settings.hub_title
+  if hub_title == blank
+    assign hub_title = 'how_it_works.hub.title' | t
+  endif
   assign hub_intro = section.settings.hub_intro
+  if hub_intro == blank
+    assign hub_intro = 'how_it_works.hub.intro' | t
+  endif
   assign hub_products_label = section.settings.hub_products_label
+  if hub_products_label == blank
+    assign hub_products_label = 'how_it_works.common.products' | t
+  endif
   assign hub_products_title = section.settings.hub_products_title
+  if hub_products_title == blank
+    assign hub_products_title = 'how_it_works.hub.products_title' | t
+  endif
   assign hub_products_text = section.settings.hub_products_text
+  if hub_products_text == blank
+    assign hub_products_text = 'how_it_works.hub.products_text' | t
+  endif
   assign hub_products_url = section.settings.hub_products_url
+  if hub_products_url == blank
+    assign hub_products_url = routes.root_url | append: 'pages/how-it-works-products'
+  endif
   assign hub_site_label = section.settings.hub_site_label
+  if hub_site_label == blank
+    assign hub_site_label = 'how_it_works.common.site' | t
+  endif
   assign hub_site_title = section.settings.hub_site_title
+  if hub_site_title == blank
+    assign hub_site_title = 'how_it_works.hub.site_title' | t
+  endif
   assign hub_site_text = section.settings.hub_site_text
+  if hub_site_text == blank
+    assign hub_site_text = 'how_it_works.hub.site_text' | t
+  endif
   assign hub_site_url = section.settings.hub_site_url
+  if hub_site_url == blank
+    assign hub_site_url = routes.root_url | append: 'pages/how-it-works-site'
+  endif
   assign hub_card_link_label = section.settings.hub_card_link_label
+  if hub_card_link_label == blank
+    assign hub_card_link_label = 'how_it_works.common.learn_more' | t
+  endif
   assign quick_eyebrow = section.settings.quick_eyebrow
+  if quick_eyebrow == blank
+    assign quick_eyebrow = 'how_it_works.hub.quick_eyebrow' | t
+  endif
   assign quick_title = section.settings.quick_title
+  if quick_title == blank
+    assign quick_title = 'how_it_works.hub.quick_title' | t
+  endif
   assign quick_text = section.settings.quick_text
+  if quick_text == blank
+    assign quick_text = 'how_it_works.hub.quick_text' | t
+  endif
   assign quick_step_one = section.settings.quick_step_one
+  if quick_step_one == blank
+    assign quick_step_one = 'how_it_works.hub.quick_step_one' | t
+  endif
   assign quick_step_two = section.settings.quick_step_two
+  if quick_step_two == blank
+    assign quick_step_two = 'how_it_works.hub.quick_step_two' | t
+  endif
   assign quick_step_three = section.settings.quick_step_three
+  if quick_step_three == blank
+    assign quick_step_three = 'how_it_works.hub.quick_step_three' | t
+  endif
 %}
 
 {{ 'how-it-works.css' | asset_url | stylesheet_tag }}
@@ -67,118 +117,83 @@
   <div class="how-it-works__inner page-width">
     {% case layout %}
       {% when 'hub' %}
-        {% if hub_eyebrow != blank or hub_title != blank or hub_intro != blank %}
-          <header class="how-it-works__hero">
-            {% if hub_eyebrow != blank %}
-              <p class="how-it-works__eyebrow">{{ hub_eyebrow | escape }}</p>
-            {% endif %}
-            {% if hub_title != blank %}
-              <h1>{{ hub_title | escape }}</h1>
-            {% endif %}
-            {% if hub_intro != blank %}
-              <p class="how-it-works__intro">{{ hub_intro | escape }}</p>
-            {% endif %}
-          </header>
-        {% endif %}
+        <header class="how-it-works__hero">
+          <p class="how-it-works__eyebrow">{{ hub_eyebrow | escape }}</p>
+          <h1>{{ hub_title | escape }}</h1>
+          <p class="how-it-works__intro">{{ hub_intro | escape }}</p>
+        </header>
 
-        {% if hub_products_label != blank or hub_products_title != blank or hub_products_text != blank or hub_card_link_label != blank or hub_site_label != blank or hub_site_title != blank or hub_site_text != blank %}
-          <div class="how-it-works__hub-grid">
-            {% if hub_products_label != blank or hub_products_title != blank or hub_products_text != blank or hub_card_link_label != blank %}
-              <a class="how-it-works__hub-card"{% if hub_products_url != blank %} href="{{ hub_products_url | escape }}"{% endif %}>
-                <span class="how-it-works__card-index" aria-hidden="true">01</span>
-                {% if hub_products_label != blank %}
-                  <span class="how-it-works__hub-card-label">{{ hub_products_label | escape }}</span>
-                {% endif %}
-                {% if hub_products_title != blank %}
-                  <h2>{{ hub_products_title | escape }}</h2>
-                {% endif %}
-                {% if hub_products_text != blank %}
-                  <p>{{ hub_products_text | escape }}</p>
-                {% endif %}
-                {% if hub_card_link_label != blank %}
-                  <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
-                {% endif %}
-              </a>
-            {% endif %}
+        <div class="how-it-works__hub-grid">
+          <a class="how-it-works__hub-card" href="{{ hub_products_url | escape }}">
+            <span class="how-it-works__hub-card-label">{{ hub_products_label | escape }}</span>
+            <h2>{{ hub_products_title | escape }}</h2>
+            <p>{{ hub_products_text | escape }}</p>
+            <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+          </a>
 
-            {% if hub_site_label != blank or hub_site_title != blank or hub_site_text != blank or hub_card_link_label != blank %}
-              <a class="how-it-works__hub-card how-it-works__hub-card--site"{% if hub_site_url != blank %} href="{{ hub_site_url | escape }}"{% endif %}>
-                <span class="how-it-works__card-index" aria-hidden="true">02</span>
-                {% if hub_site_label != blank %}
-                  <span class="how-it-works__hub-card-label">{{ hub_site_label | escape }}</span>
-                {% endif %}
-                {% if hub_site_title != blank %}
-                  <h2>{{ hub_site_title | escape }}</h2>
-                {% endif %}
-                {% if hub_site_text != blank %}
-                  <p>{{ hub_site_text | escape }}</p>
-                {% endif %}
-                {% if hub_card_link_label != blank %}
-                  <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
-                {% endif %}
-              </a>
-            {% endif %}
+          <a class="how-it-works__hub-card how-it-works__hub-card--site" href="{{ hub_site_url | escape }}">
+            <span class="how-it-works__hub-card-label">{{ hub_site_label | escape }}</span>
+            <h2>{{ hub_site_title | escape }}</h2>
+            <p>{{ hub_site_text | escape }}</p>
+            <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+          </a>
+        </div>
+
+        <div class="how-it-works__quick-path">
+          <div>
+            <p class="how-it-works__eyebrow">{{ quick_eyebrow | escape }}</p>
+            <h2>{{ quick_title | escape }}</h2>
+            <p>{{ quick_text | escape }}</p>
           </div>
-        {% endif %}
-
-        {% if quick_eyebrow != blank or quick_title != blank or quick_text != blank or quick_step_one != blank or quick_step_two != blank or quick_step_three != blank %}
-          <div class="how-it-works__quick-path">
-            {% if quick_eyebrow != blank or quick_title != blank or quick_text != blank %}
-              <div>
-                {% if quick_eyebrow != blank %}
-                  <p class="how-it-works__eyebrow">{{ quick_eyebrow | escape }}</p>
-                {% endif %}
-                {% if quick_title != blank %}
-                  <h2>{{ quick_title | escape }}</h2>
-                {% endif %}
-                {% if quick_text != blank %}
-                  <p>{{ quick_text | escape }}</p>
-                {% endif %}
-              </div>
-            {% endif %}
-            {% if quick_step_one != blank or quick_step_two != blank or quick_step_three != blank %}
-              <ol class="how-it-works__quick-list">
-                {% if quick_step_one != blank %}
-                  <li><span>01</span>{{ quick_step_one | escape }}</li>
-                {% endif %}
-                {% if quick_step_two != blank %}
-                  <li><span>02</span>{{ quick_step_two | escape }}</li>
-                {% endif %}
-                {% if quick_step_three != blank %}
-                  <li><span>03</span>{{ quick_step_three | escape }}</li>
-                {% endif %}
-              </ol>
-            {% endif %}
-          </div>
-        {% endif %}
+          <ol class="how-it-works__quick-list">
+            <li>{{ quick_step_one | escape }}</li>
+            <li>{{ quick_step_two | escape }}</li>
+            <li>{{ quick_step_three | escape }}</li>
+          </ol>
+        </div>
 
       {% when 'products', 'site' %}
         {% if layout == 'products' %}
           {% assign directory_items = product_guides %}
+          {% assign directory_namespace = 'products' %}
+          {% assign directory_title_key = 'how_it_works.products.title' %}
+          {% assign directory_intro_key = 'how_it_works.products.intro' %}
+          {% assign directory_eyebrow_key = 'how_it_works.common.products' %}
         {% else %}
           {% assign directory_items = site_guides %}
+          {% assign directory_namespace = 'site' %}
+          {% assign directory_title_key = 'how_it_works.site.title' %}
+          {% assign directory_intro_key = 'how_it_works.site.intro' %}
+          {% assign directory_eyebrow_key = 'how_it_works.common.site' %}
         {% endif %}
 
         {% assign directory_back_label = section.settings.directory_back_label %}
-        {% assign directory_eyebrow = section.settings.directory_eyebrow %}
-        {% assign directory_title = section.settings.directory_title %}
-        {% assign directory_intro = section.settings.directory_intro %}
-        {% if directory_back_label != blank or directory_eyebrow != blank or directory_title != blank or directory_intro != blank %}
-          <header class="how-it-works__hero how-it-works__hero--directory">
-            {% if directory_back_label != blank %}
-              <a class="how-it-works__back-link" href="{{ routes.root_url }}pages/how-it-works">&larr; {{ directory_back_label | escape }}</a>
-            {% endif %}
-            {% if directory_eyebrow != blank %}
-              <p class="how-it-works__eyebrow">{{ directory_eyebrow | escape }}</p>
-            {% endif %}
-            {% if directory_title != blank %}
-              <h1>{{ directory_title | escape }}</h1>
-            {% endif %}
-            {% if directory_intro != blank %}
-              <p class="how-it-works__intro">{{ directory_intro | escape }}</p>
-            {% endif %}
-          </header>
+        {% if directory_back_label == blank %}
+          {% assign directory_back_label = 'how_it_works.common.back_to_hub' | t %}
         {% endif %}
+        {% assign directory_eyebrow = section.settings.directory_eyebrow %}
+        {% if directory_eyebrow == blank %}
+          {% assign directory_eyebrow = directory_eyebrow_key | t %}
+        {% endif %}
+        {% assign directory_title = section.settings.directory_title %}
+        {% if directory_title == blank %}
+          {% assign directory_title = directory_title_key | t %}
+        {% endif %}
+        {% assign directory_intro = section.settings.directory_intro %}
+        {% if directory_intro == blank %}
+          {% assign directory_intro = directory_intro_key | t %}
+        {% endif %}
+        {% assign directory_link_label = section.settings.directory_link_label %}
+        {% if directory_link_label == blank %}
+          {% assign directory_link_label = 'how_it_works.common.learn_more' | t %}
+        {% endif %}
+
+        <header class="how-it-works__hero how-it-works__hero--directory">
+          <a class="how-it-works__back-link" href="{{ routes.root_url }}pages/how-it-works">&larr; {{ directory_back_label | escape }}</a>
+          <p class="how-it-works__eyebrow">{{ directory_eyebrow | escape }}</p>
+          <h1>{{ directory_title | escape }}</h1>
+          <p class="how-it-works__intro">{{ directory_intro | escape }}</p>
+        </header>
 
         <div class="how-it-works__directory-grid" role="list">
           {% if has_directory_card_blocks %}
@@ -201,196 +216,259 @@
                     {% assign item_art = 'splash-product-textile-t-shirt.png' %}
                 {% endcase %}
                 {% if directory_items contains item %}
+                  {% capture item_title_key %}how_it_works.{{ directory_namespace }}.{{ item }}.title{% endcapture %}
+                  {% capture item_summary_key %}how_it_works.{{ directory_namespace }}.{{ item }}.summary{% endcapture %}
                   {% assign item_title = block.settings.title %}
-                  {% assign item_summary = block.settings.summary %}
-                  {% assign item_link = block.settings.link %}
-                  {% assign item_link_label = block.settings.link_label %}
-                  {% if item_title != blank or item_summary != blank or item_link_label != blank %}
-                    <a
-                      class="how-it-works__directory-card{% if item_art != blank %} how-it-works__directory-card--has-art{% endif %}"
-                      {% if item_link != blank %}href="{{ item_link | escape }}"{% endif %}
-                      role="listitem"
-                      {{ block.shopify_attributes }}
-                    >
-                      {% if item_art != blank %}
-                        <img
-                          class="how-it-works__directory-card-art"
-                          src="{{ item_art | asset_url }}"
-                          alt=""
-                          width="1254"
-                          height="1254"
-                          loading="lazy"
-                          decoding="async"
-                          aria-hidden="true"
-                        >
-                      {% endif %}
-                      {% if item_title != blank %}
-                        <h2>{{ item_title | escape }}</h2>
-                      {% endif %}
-                      {% if item_summary != blank %}
-                        <p>{{ item_summary | escape }}</p>
-                      {% endif %}
-                      {% if item_link_label != blank %}
-                        <span class="how-it-works__card-link">{{ item_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
-                      {% endif %}
-                    </a>
+                  {% if item_title == blank %}
+                    {% assign item_title = item_title_key | strip | t %}
                   {% endif %}
+                  {% assign item_summary = block.settings.summary %}
+                  {% if item_summary == blank %}
+                    {% assign item_summary = item_summary_key | strip | t %}
+                  {% endif %}
+                  {% assign item_link = block.settings.link %}
+                  {% if item_link == blank %}
+                    {% assign item_slug = item | replace: '_', '-' %}
+                    {% assign item_link = routes.root_url | append: 'pages/how-it-works-' | append: item_slug %}
+                  {% endif %}
+                  {% assign item_link_label = block.settings.link_label %}
+                  {% if item_link_label == blank %}
+                    {% assign item_link_label = directory_link_label %}
+                  {% endif %}
+                  <a
+                    class="how-it-works__directory-card{% if item_art != blank %} how-it-works__directory-card--has-art{% endif %}"
+                    href="{{ item_link | escape }}"
+                    role="listitem"
+                    {{ block.shopify_attributes }}
+                  >
+                    {% if item_art != blank %}
+                      <img
+                        class="how-it-works__directory-card-art"
+                        src="{{ item_art | asset_url }}"
+                        alt=""
+                        width="1254"
+                        height="1254"
+                        loading="lazy"
+                        decoding="async"
+                        aria-hidden="true"
+                      >
+                    {% endif %}
+                    <h2>{{ item_title | escape }}</h2>
+                    <p>{{ item_summary | escape }}</p>
+                    <span class="how-it-works__card-link">{{ item_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+                  </a>
                 {% endif %}
               {% endif %}
+            {% endfor %}
+          {% else %}
+            {% for item in directory_items %}
+              {% assign item_art = '' %}
+              {% case item %}
+                {% when 'die_cut' %}
+                  {% assign item_art = 'splash-product-die-cut-sticker.png' %}
+                {% when 'magnet' %}
+                  {% assign item_art = 'splash-product-magnet-fridge.png' %}
+                {% when 'uv_dtf' %}
+                  {% assign item_art = 'splash-product-uv-dtf-mug.png' %}
+                {% when 'uv' %}
+                  {% assign item_art = 'splash-product-uv-phone-case.png' %}
+                {% when 'emboss' %}
+                  {% assign item_art = 'splash-product-emboss-notebook.png' %}
+                {% when 'textile' %}
+                  {% assign item_art = 'splash-product-textile-t-shirt.png' %}
+              {% endcase %}
+              {% capture item_title_key %}how_it_works.{{ directory_namespace }}.{{ item }}.title{% endcapture %}
+              {% capture item_summary_key %}how_it_works.{{ directory_namespace }}.{{ item }}.summary{% endcapture %}
+              {% assign item_slug = item | replace: '_', '-' %}
+              <a
+                class="how-it-works__directory-card{% if item_art != blank %} how-it-works__directory-card--has-art{% endif %}"
+                href="{{ routes.root_url }}pages/how-it-works-{{ item_slug }}"
+                role="listitem"
+              >
+                {% if item_art != blank %}
+                  <img
+                    class="how-it-works__directory-card-art"
+                    src="{{ item_art | asset_url }}"
+                    alt=""
+                    width="1254"
+                    height="1254"
+                    loading="lazy"
+                    decoding="async"
+                    aria-hidden="true"
+                  >
+                {% endif %}
+                <h2>{{ item_title_key | strip | t }}</h2>
+                <p>{{ item_summary_key | strip | t }}</p>
+                <span class="how-it-works__card-link">{{ directory_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
+              </a>
             {% endfor %}
           {% endif %}
         </div>
 
       {% when 'guide' %}
+        {% capture guide_title_key %}how_it_works.guides.{{ guide_key }}.title{% endcapture %}
+        {% capture guide_intro_key %}how_it_works.guides.{{ guide_key }}.intro{% endcapture %}
+        {% capture guide_what_text_key %}how_it_works.guides.{{ guide_key }}.what_text{% endcapture %}
+        {% capture guide_best_text_key %}how_it_works.guides.{{ guide_key }}.best_text{% endcapture %}
+        {% capture guide_note_text_key %}how_it_works.guides.{{ guide_key }}.note_text{% endcapture %}
+        {% capture guide_kind_key %}how_it_works.common.{{ guide_kind }}{% endcapture %}
+        {% assign guide_cta_key = 'how_it_works.common.see_site_guides' %}
+        {% if is_product_guide %}
+          {% assign guide_cta_key = 'how_it_works.common.browse_products' %}
+        {% endif %}
+        {% if guide_key == 'configurator' %}
+          {% assign guide_cta_key = 'how_it_works.common.start_designing' %}
+        {% endif %}
+
         {% assign guide_title = section.settings.guide_title %}
+        {% if guide_title == blank %}
+          {% assign guide_title = guide_title_key | strip | t %}
+        {% endif %}
         {% assign guide_intro = section.settings.guide_intro %}
+        {% if guide_intro == blank %}
+          {% assign guide_intro = guide_intro_key | strip | t %}
+        {% endif %}
         {% assign guide_kind_label = section.settings.guide_kind_label %}
+        {% if guide_kind_label == blank %}
+          {% assign guide_kind_label = guide_kind_key | strip | t %}
+        {% endif %}
         {% assign guide_what_title = section.settings.guide_what_title %}
+        {% if guide_what_title == blank %}
+          {% assign guide_what_title = 'how_it_works.common.what_it_is' | t %}
+        {% endif %}
         {% assign guide_what_text = section.settings.guide_what_text %}
+        {% if guide_what_text == blank %}
+          {% assign guide_what_text = guide_what_text_key | strip | t %}
+        {% endif %}
         {% assign guide_best_title = section.settings.guide_best_title %}
+        {% if guide_best_title == blank %}
+          {% assign guide_best_title = 'how_it_works.common.good_fit' | t %}
+        {% endif %}
         {% assign guide_best_text = section.settings.guide_best_text %}
+        {% if guide_best_text == blank %}
+          {% assign guide_best_text = guide_best_text_key | strip | t %}
+        {% endif %}
         {% assign guide_steps_eyebrow = section.settings.guide_steps_eyebrow %}
+        {% if guide_steps_eyebrow == blank %}
+          {% assign guide_steps_eyebrow = 'how_it_works.common.steps_eyebrow' | t %}
+        {% endif %}
         {% assign guide_steps_title = section.settings.guide_steps_title %}
+        {% if guide_steps_title == blank %}
+          {% assign guide_steps_title = 'how_it_works.common.steps_title' | t %}
+        {% endif %}
         {% assign guide_note_eyebrow = section.settings.guide_note_eyebrow %}
+        {% if guide_note_eyebrow == blank %}
+          {% assign guide_note_eyebrow = 'how_it_works.common.before_you_start' | t %}
+        {% endif %}
         {% assign guide_note_title = section.settings.guide_note_title %}
+        {% if guide_note_title == blank %}
+          {% assign guide_note_title = 'how_it_works.common.note_title' | t %}
+        {% endif %}
         {% assign guide_note_text = section.settings.guide_note_text %}
+        {% if guide_note_text == blank %}
+          {% assign guide_note_text = guide_note_text_key | strip | t %}
+        {% endif %}
         {% assign guide_cta_label = section.settings.guide_cta_label %}
+        {% if guide_cta_label == blank %}
+          {% assign guide_cta_label = guide_cta_key | strip | t %}
+        {% endif %}
         {% assign guide_cta_url = section.settings.guide_cta_url %}
-        {% assign guide_all_label = section.settings.guide_all_label %}
-        {% assign guide_status_label = section.settings.guide_status_label %}
-        {% if section.settings.guide_show_status == false %}
-          {% assign guide_status_label = blank %}
-        {% endif %}
-
-        {% if guide_kind_label != blank or guide_title != blank or guide_intro != blank or guide_status_label != blank %}
-          <header class="how-it-works__hero how-it-works__hero--guide">
-            {% if guide_kind_label != blank or guide_title != blank %}
-              <nav class="how-it-works__breadcrumbs" aria-label="{{ 'how_it_works.common.breadcrumb_label' | t }}">
-                <a href="{{ routes.root_url }}pages/how-it-works">{{ 'how_it_works.common.eyebrow' | t }}</a>
-                <span aria-hidden="true">/</span>
-                {% if guide_kind_label != blank %}
-                  <a href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_kind_label | escape }}</a>
-                {% endif %}
-                <span aria-hidden="true">/</span>
-                {% if guide_title != blank %}
-                  <span aria-current="page">{{ guide_title | escape }}</span>
-                {% endif %}
-              </nav>
-            {% endif %}
-            {% if guide_kind_label != blank or guide_status_label != blank %}
-              <div class="how-it-works__guide-heading-line">
-                {% if guide_kind_label != blank %}
-                  <p class="how-it-works__eyebrow">{{ guide_kind_label | escape }}</p>
-                {% endif %}
-                {% if guide_key == 'background_removal' and guide_status_label != blank %}
-                  <span class="how-it-works__status">{{ guide_status_label | escape }}</span>
-                {% endif %}
-              </div>
-            {% endif %}
-            {% if guide_title != blank %}
-              <h1>{{ guide_title | escape }}</h1>
-            {% endif %}
-            {% if guide_intro != blank %}
-              <p class="how-it-works__intro">{{ guide_intro | escape }}</p>
-            {% endif %}
-          </header>
-        {% endif %}
-
-        {% if guide_what_title != blank or guide_what_text != blank or guide_best_title != blank or guide_best_text != blank %}
-          <div class="how-it-works__overview">
-            {% if guide_what_title != blank or guide_what_text != blank %}
-              <article class="how-it-works__overview-card">
-                <span class="how-it-works__overview-label">01</span>
-                {% if guide_what_title != blank %}
-                  <h2>{{ guide_what_title | escape }}</h2>
-                {% endif %}
-                {% if guide_what_text != blank %}
-                  <p>{{ guide_what_text | escape }}</p>
-                {% endif %}
-              </article>
-            {% endif %}
-            {% if guide_best_title != blank or guide_best_text != blank %}
-              <article class="how-it-works__overview-card">
-                <span class="how-it-works__overview-label">02</span>
-                {% if guide_best_title != blank %}
-                  <h2>{{ guide_best_title | escape }}</h2>
-                {% endif %}
-                {% if guide_best_text != blank %}
-                  <p>{{ guide_best_text | escape }}</p>
-                {% endif %}
-              </article>
-            {% endif %}
-          </div>
-        {% endif %}
-
-        {% if guide_steps_eyebrow != blank or guide_steps_title != blank or has_visible_guide_step_blocks %}
-          {% if guide_steps_title != blank %}
-            <section class="how-it-works__steps" aria-labelledby="how-it-works-steps-{{ section.id }}">
+        {% if guide_cta_url == blank %}
+          {% if guide_key == 'configurator' %}
+            {% assign guide_cta_url = routes.root_url | append: 'products/the-collection-snowboard-hydrogen?view=product-gangsheet' %}
           {% else %}
-            <section class="how-it-works__steps">
+            {% assign guide_cta_url = routes.all_products_collection_url %}
           {% endif %}
-            <div class="how-it-works__section-heading">
-              {% if guide_steps_eyebrow != blank %}
-                <p class="how-it-works__eyebrow">{{ guide_steps_eyebrow | escape }}</p>
-              {% endif %}
-              {% if guide_steps_title != blank %}
-                <h2 id="how-it-works-steps-{{ section.id }}">{{ guide_steps_title | escape }}</h2>
-              {% endif %}
-            </div>
-            <ol class="how-it-works__steps-grid">
-              {% if has_guide_step_blocks %}
-                {% for block in section.blocks %}
-                  {% if block.type == 'guide_step' %}
-                    {% assign step_index = block.settings.step_index | default: forloop.index %}
-                    {% assign step_title = block.settings.title %}
-                    {% assign step_text = block.settings.text %}
-                    {% if step_title != blank or step_text != blank %}
-                      <li class="how-it-works__step" {{ block.shopify_attributes }}>
-                        <span class="how-it-works__step-number" aria-hidden="true">{{ step_index | prepend: '0' }}</span>
-                        {% if step_title != blank %}
-                          <h3>{{ step_title | escape }}</h3>
-                        {% endif %}
-                        {% if step_text != blank %}
-                          <p>{{ step_text | escape }}</p>
-                        {% endif %}
-                      </li>
-                    {% endif %}
-                  {% endif %}
-                {% endfor %}
-              {% endif %}
-            </ol>
-          </section>
+        {% endif %}
+        {% assign guide_all_label = section.settings.guide_all_label %}
+        {% if guide_all_label == blank %}
+          {% assign guide_all_label = 'how_it_works.common.see_all_guides' | t %}
+        {% endif %}
+        {% assign guide_status_label = section.settings.guide_status_label %}
+        {% if guide_status_label == blank and guide_key == 'background_removal' %}
+          {% assign guide_status_label = 'how_it_works.common.planned' | t %}
         {% endif %}
 
-        {% if guide_note_eyebrow != blank or guide_note_title != blank or guide_note_text != blank %}
-          <aside class="how-it-works__note">
-            <div>
-              {% if guide_note_eyebrow != blank %}
-                <p class="how-it-works__eyebrow">{{ guide_note_eyebrow | escape }}</p>
-              {% endif %}
-              {% if guide_note_title != blank %}
-                <h2>{{ guide_note_title | escape }}</h2>
-              {% endif %}
-              {% if guide_note_text != blank %}
-                <p>{{ guide_note_text | escape }}</p>
-              {% endif %}
-            </div>
-            <span class="how-it-works__note-mark" aria-hidden="true">&#10022;</span>
-          </aside>
-        {% endif %}
-
-        {% if guide_cta_label != blank and guide_cta_url != blank %}
-          <div class="how-it-works__guide-actions">
-            <a class="how-it-works__button" href="{{ guide_cta_url | escape }}">{{ guide_cta_label | escape }}</a>
-            {% if guide_all_label != blank %}
-              <a class="how-it-works__text-link" href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_all_label | escape }}</a>
+        <header class="how-it-works__hero how-it-works__hero--guide">
+          <nav class="how-it-works__breadcrumbs" aria-label="{{ 'how_it_works.common.breadcrumb_label' | t }}">
+            <a href="{{ routes.root_url }}pages/how-it-works">{{ 'how_it_works.common.eyebrow' | t }}</a>
+            <span aria-hidden="true">/</span>
+            <a href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_kind_label | escape }}</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{{ guide_title | escape }}</span>
+          </nav>
+          <div class="how-it-works__guide-heading-line">
+            <p class="how-it-works__eyebrow">{{ guide_kind_label | escape }}</p>
+            {% if guide_key == 'background_removal' %}
+              <span class="how-it-works__status">{{ guide_status_label | escape }}</span>
             {% endif %}
           </div>
-        {% elsif guide_all_label != blank %}
-          <div class="how-it-works__guide-actions">
-            <a class="how-it-works__text-link" href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_all_label | escape }}</a>
+          <h1>{{ guide_title | escape }}</h1>
+          <p class="how-it-works__intro">{{ guide_intro | escape }}</p>
+        </header>
+
+        <div class="how-it-works__overview">
+          <article class="how-it-works__overview-card">
+            <h2>{{ guide_what_title | escape }}</h2>
+            <p>{{ guide_what_text | escape }}</p>
+          </article>
+          <article class="how-it-works__overview-card">
+            <h2>{{ guide_best_title | escape }}</h2>
+            <p>{{ guide_best_text | escape }}</p>
+          </article>
+        </div>
+
+        <section class="how-it-works__steps" aria-labelledby="how-it-works-steps-{{ section.id }}">
+          <div class="how-it-works__section-heading">
+            <p class="how-it-works__eyebrow">{{ guide_steps_eyebrow | escape }}</p>
+            <h2 id="how-it-works-steps-{{ section.id }}">{{ guide_steps_title | escape }}</h2>
           </div>
-        {% endif %}
+          <ol class="how-it-works__steps-grid">
+            {% if has_guide_step_blocks %}
+              {% for block in section.blocks %}
+                {% if block.type == 'guide_step' %}
+                  {% assign step_index = block.settings.step_index | default: forloop.index %}
+                  {% capture step_text_key %}how_it_works.guides.{{ guide_key }}.step_{{ step_index }}_text{% endcapture %}
+                  {% capture step_title_key %}how_it_works.common.step_{{ step_index }}_title{% endcapture %}
+                  {% assign step_title = block.settings.title %}
+                  {% if step_title == blank %}
+                    {% assign step_title = step_title_key | strip | t %}
+                  {% endif %}
+                  {% assign step_text = block.settings.text %}
+                  {% if step_text == blank %}
+                    {% assign step_text = step_text_key | strip | t %}
+                  {% endif %}
+                  <li class="how-it-works__step" {{ block.shopify_attributes }}>
+                    <h3>{{ step_title | escape }}</h3>
+                    <p>{{ step_text | escape }}</p>
+                  </li>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              {% for step_index in (1..4) %}
+                {% capture step_text_key %}how_it_works.guides.{{ guide_key }}.step_{{ step_index }}_text{% endcapture %}
+                {% capture step_title_key %}how_it_works.common.step_{{ step_index }}_title{% endcapture %}
+                <li class="how-it-works__step">
+                  <h3>{{ step_title_key | strip | t }}</h3>
+                  <p>{{ step_text_key | strip | t }}</p>
+                </li>
+              {% endfor %}
+            {% endif %}
+          </ol>
+        </section>
+
+        <aside class="how-it-works__note">
+          <div>
+            <p class="how-it-works__eyebrow">{{ guide_note_eyebrow | escape }}</p>
+            <h2>{{ guide_note_title | escape }}</h2>
+            <p>{{ guide_note_text | escape }}</p>
+          </div>
+        </aside>
+
+        <div class="how-it-works__guide-actions">
+          <a class="how-it-works__button" href="{{ guide_cta_url | escape }}">{{ guide_cta_label | escape }}</a>
+          <a class="how-it-works__text-link" href="{{ routes.root_url }}pages/how-it-works-{{ guide_kind }}">{{ guide_all_label | escape }}</a>
+        </div>
     {% endcase %}
   </div>
 </section>
@@ -442,7 +520,7 @@
       "type": "text",
       "id": "hub_eyebrow",
       "label": "Hub eyebrow",
-      "info": "Leave blank to hide this child."
+      "info": "Leave blank to use the active language translation."
     },
     {
       "type": "text",
@@ -554,6 +632,12 @@
       "label": "Directory intro"
     },
     {
+      "type": "text",
+      "id": "directory_link_label",
+      "label": "Directory card link label",
+      "info": "Leave blank to use the active language translation."
+    },
+    {
       "type": "header",
       "content": "Guide content"
     },
@@ -636,7 +720,7 @@
       "type": "text",
       "id": "guide_status_label",
       "label": "Planned status label",
-      "info": "Leave blank to hide the planned status on Background removal."
+      "info": "Leave blank to use the active language translation on Background removal."
     }
   ],
   "blocks": [
@@ -667,22 +751,25 @@
           "type": "text",
           "id": "title",
           "label": "Card title",
-          "info": "Leave blank to hide this child."
+          "info": "Leave blank to use the active language translation."
         },
         {
           "type": "textarea",
           "id": "summary",
-          "label": "Card summary"
+          "label": "Card summary",
+          "info": "Leave blank to use the active language translation."
         },
         {
           "type": "url",
           "id": "link",
-          "label": "Card link"
+          "label": "Card link",
+          "info": "Leave blank to use the default guide link."
         },
         {
           "type": "text",
           "id": "link_label",
-          "label": "Card link label"
+          "label": "Card link label",
+          "info": "Leave blank to use the active language translation."
         }
       ]
     },
@@ -706,13 +793,13 @@
           "type": "text",
           "id": "title",
           "label": "Step title",
-          "info": "Leave blank to hide this child."
+          "info": "Leave blank to use the default step title."
         },
         {
           "type": "textarea",
           "id": "text",
           "label": "Step text",
-          "info": "Leave blank to hide this child."
+          "info": "Leave blank to use the guide translation."
         }
       ]
     }

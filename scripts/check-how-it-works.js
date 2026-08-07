@@ -95,7 +95,8 @@ for (const slug of [
   assert.ok(documentation.includes(`how-it-works-${slug}`), `missing documented How It Works route for ${slug}`);
 }
 
-assert.ok(section.includes('href="{{ item_link | escape }}"'), 'directory cards must use their explicit link field');
+assert.ok(section.includes('href="{{ item_link | escape }}"'), 'directory cards must use their resolved link field');
+assert.ok(section.includes("assign item_link = routes.root_url | append: 'pages/how-it-works-'"), 'directory cards must have a default guide link');
 assert.ok(section.includes('{% assign directory_items = product_guides %}'), 'products directory variables must be Liquid assignments');
 assert.ok(section.includes('{% assign directory_items = site_guides %}'), 'site directory variables must be Liquid assignments');
 assert.ok(!section.includes('\n          assign directory_'), 'directory assignments must not render as storefront text');
@@ -108,25 +109,33 @@ for (const settingId of [
   'guide_note_text',
   'guide_cta_url',
   'guide_status_label',
+  'directory_link_label',
 ]) {
   assert.ok(section.includes(`"id": "${settingId}"`), `missing Theme Editor setting ${settingId}`);
 }
-for (const contentGuard of [
-  'hub_title != blank',
-  'item_title != blank',
-  'guide_what_text != blank',
-  'step_text != blank',
-  'guide_note_text != blank',
+for (const fallback of [
+  "assign hub_title = 'how_it_works.hub.title' | t",
+  "assign item_title = item_title_key | strip | t",
+  "assign guide_what_text = guide_what_text_key | strip | t",
+  "assign step_text = step_text_key | strip | t",
+  "assign guide_note_text = guide_note_text_key | strip | t",
 ]) {
-  assert.ok(section.includes(contentGuard), `missing blank-content guard ${contentGuard}`);
+  assert.ok(section.includes(fallback), `missing locale fallback ${fallback}`);
 }
 assert.ok(section.includes('"type": "directory_card"'), 'directory cards must be editable blocks');
 assert.ok(section.includes('"type": "guide_step"'), 'guide steps must be editable blocks');
-assert.ok(!section.includes('"content": "Visibility"'), 'How It Works should not expose visibility checkboxes');
-assert.ok(!section.includes('"content": "Child visibility"'), 'How It Works should not expose child visibility checkboxes');
-assert.ok(!section.includes('"id": "visible"'), 'How It Works blocks should use blank content for visibility');
-assert.ok(!section.includes('== nil'), 'blank How It Works content must not fall back on missing values');
-assert.ok(!section.includes('| strip | t'), 'editable How It Works content must not fall back to locale strings');
+assert.ok(!section.includes('"id": "visible"'), 'How It Works blocks should not expose visibility checkboxes');
+assert.ok(!section.includes('"id": "show_'), 'How It Works should not expose child visibility checkboxes');
+for (const marker of [
+  'how-it-works__card-index',
+  'how-it-works__directory-mark',
+  'how-it-works__overview-label',
+  'how-it-works__step-number',
+  'how-it-works__note-mark',
+]) {
+  assert.ok(!section.includes(marker), `How It Works should not render decorative marker ${marker}`);
+  assert.ok(!styles.includes(marker), `How It Works styles should not keep decorative marker ${marker}`);
+}
 
 for (const token of [
   'var(--color-background',

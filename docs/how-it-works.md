@@ -28,20 +28,18 @@ the matching template:
 Each detail template sets the guide key and contains four editable step blocks.
 The section still reads the page handle on the storefront, while the separate
 templates allow each guide page to have its own Theme Editor settings. Content
-is intentionally supplied from those settings; an empty field does not fall
-back to a locale string.
+is read from those settings when provided and falls back to the active locale
+when a field is empty, so the default cards and guide copy remain visible.
 
 ## Theme Editor controls
 
-Open the relevant page template in Online Store > Themes > Customize. A child
-is rendered only when its Theme Editor value is non-empty; leaving a child
-field blank hides that child and does not trigger a locale fallback. The hub
+Open the relevant page template in Online Store > Themes > Customize. The hub
 has editable hero, card, quick-path, and link settings. Products and Site pages
-expose reorderable cards. Guide pages expose editable overview copy, step
-blocks, note copy, and CTA settings. This applies to hub content, directory
-hero/card content, guide overview/steps/note/actions, and each directory-card
-or guide-step block. The Background removal planned status uses the same rule
-through its status-label field.
+expose reorderable cards whose titles, summaries, links, and link labels can be
+overridden individually. Guide pages expose editable overview copy, step
+blocks, note copy, and CTA settings. Leaving any text field blank restores its
+active-language fallback; no visibility checkboxes are needed. The Background
+removal planned status can also be overridden through its status-label field.
 
 ## Navigation
 
