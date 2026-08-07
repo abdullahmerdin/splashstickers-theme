@@ -53,6 +53,12 @@
           const trigger = card.querySelector('[data-sample-open]');
           if (!trigger) return null;
 
+          const images = Array.from(card.querySelectorAll('[data-sample-image]')).map((image) => ({
+            fullSrc: image.dataset.sampleFullSrc || '',
+            thumbSrc: image.dataset.sampleThumbSrc || image.dataset.sampleFullSrc || '',
+            alt: image.dataset.sampleAlt || trigger.dataset.sampleTitle || '',
+          }));
+
           return {
             card,
             trigger,
@@ -60,12 +66,11 @@
             categoryLabel: trigger.dataset.sampleCategoryLabel || '',
             title: trigger.dataset.sampleTitle || '',
             description: trigger.dataset.sampleDescription || '',
-            alt: trigger.dataset.sampleAlt || trigger.dataset.sampleTitle || '',
-            fullSrc: trigger.dataset.sampleFullSrc || '',
-            thumbSrc: trigger.dataset.sampleThumbSrc || trigger.dataset.sampleFullSrc || '',
+            images,
+            activeImageIndex: 0,
           };
         })
-        .filter(Boolean);
+        .filter((item) => item && item.images.length > 0);
 
       this.items.forEach((item, index) => {
         item.index = index;
@@ -79,6 +84,22 @@
     bindEvents() {
       this.items.forEach((item) => {
         item.trigger.addEventListener('click', () => this.openItem(item));
+
+        item.previousButton = item.card.querySelector('[data-sample-card-previous]');
+        item.nextButton = item.card.querySelector('[data-sample-card-next]');
+        item.dots = item.card.querySelector('[data-sample-card-dots]');
+
+        item.previousButton?.addEventListener('click', (event) => {
+          event.stopPropagation();
+          this.setCardImage(item, item.activeImageIndex - 1);
+        });
+        item.nextButton?.addEventListener('click', (event) => {
+          event.stopPropagation();
+          this.setCardImage(item, item.activeImageIndex + 1);
+        });
+
+        this.buildCardDots(item);
+        this.setCardImage(item, 0);
       });
 
       this.filterBar?.addEventListener('click', (event) => {
@@ -122,6 +143,46 @@
       this.viewport?.addEventListener('pointermove', (event) => this.handlePointerMove(event));
       this.viewport?.addEventListener('pointerup', (event) => this.handlePointerUp(event));
       this.viewport?.addEventListener('pointercancel', (event) => this.handlePointerUp(event));
+    }
+
+    buildCardDots(item) {
+      if (!item.dots || item.images.length < 2) return;
+
+      item.images.forEach((image, index) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'product-samples__card-dot';
+        dot.dataset.sampleCardDot = String(index);
+        dot.setAttribute('aria-label', `${item.title}, photo ${index + 1}`);
+        dot.setAttribute('aria-pressed', String(index === 0));
+        dot.addEventListener('click', (event) => {
+          event.stopPropagation();
+          this.setCardImage(item, index);
+        });
+        item.dots.append(dot);
+      });
+    }
+
+    setCardImage(item, imageIndex) {
+      if (!item || item.images.length === 0) return;
+
+      const nextIndex = (imageIndex + item.images.length) % item.images.length;
+      item.activeImageIndex = nextIndex;
+
+      item.card.querySelectorAll('[data-sample-card-slide]').forEach((slide, index) => {
+        const isActive = index === nextIndex;
+        slide.hidden = !isActive;
+        slide.setAttribute('aria-hidden', String(!isActive));
+      });
+
+      item.dots?.querySelectorAll('[data-sample-card-dot]').forEach((dot, index) => {
+        dot.setAttribute('aria-pressed', String(index === nextIndex));
+      });
+
+      const hasMultiple = item.images.length > 1;
+      if (item.previousButton) item.previousButton.hidden = !hasMultiple;
+      if (item.nextButton) item.nextButton.hidden = !hasMultiple;
+      if (item.dots) item.dots.hidden = !hasMultiple;
     }
 
     buildFilters() {
@@ -172,15 +233,22 @@
       return this.items.filter((item) => !item.card.hidden);
     }
 
-    openItem(item, { focusClose = true } = {}) {
-      if (!item || !this.dialog) return;
+    getVisibleViews() {
+      return this.getVisibleItems().flatMap((item) =>
+        item.images.map((image, imageIndex) => ({ item, image, imageIndex })),
+      );
+    }
+
+    openItem(item, { focusClose = true, imageIndex = item?.activeImageIndex || 0 } = {}) {
+      if (!item || !this.dialog || item.images.length === 0) return;
 
       const wasOpen = this.dialog.open;
       this.activeItem = item;
+      this.setCardImage(item, imageIndex);
       if (!wasOpen) {
         this.lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       }
-      this.updateDialogContent(item);
+      this.updateDialogContent(item, item.images[item.activeImageIndex]);
 
       if (!wasOpen) {
         if (typeof this.dialog.showModal === 'function') {
@@ -198,10 +266,10 @@
       }
     }
 
-    updateDialogContent(item) {
+    updateDialogContent(item, image) {
       if (this.dialogImage) {
-        this.dialogImage.src = item.fullSrc;
-        this.dialogImage.alt = item.alt;
+        this.dialogImage.src = image.fullSrc;
+        this.dialogImage.alt = image.alt;
       }
 
       if (this.dialogTitle) this.dialogTitle.textContent = item.title;
@@ -211,13 +279,15 @@
         this.dialogDescription.hidden = !item.description;
       }
 
-      const visibleItems = this.getVisibleItems();
-      const visiblePosition = visibleItems.indexOf(item);
+      const visibleViews = this.getVisibleViews();
+      const visiblePosition = visibleViews.findIndex(
+        (view) => view.item === item && view.imageIndex === item.activeImageIndex,
+      );
       if (this.counter) {
-        this.counter.textContent = `${Math.max(visiblePosition + 1, 1)} / ${visibleItems.length}`;
+        this.counter.textContent = `${Math.max(visiblePosition + 1, 1)} / ${visibleViews.length}`;
       }
 
-      const hasMultiple = visibleItems.length > 1;
+      const hasMultiple = visibleViews.length > 1;
       if (this.previousButton) this.previousButton.disabled = !hasMultiple;
       if (this.nextButton) this.nextButton.disabled = !hasMultiple;
     }
@@ -226,35 +296,44 @@
       if (!this.thumbnails) return;
 
       this.thumbnails.replaceChildren();
-      const visibleItems = this.getVisibleItems();
+      const visibleViews = this.getVisibleViews();
 
-      visibleItems.forEach((item) => {
+      visibleViews.forEach((view) => {
+        const { item, image, imageIndex } = view;
         const thumbnail = document.createElement('button');
         thumbnail.type = 'button';
         thumbnail.className = 'product-samples__thumbnail';
         thumbnail.setAttribute('role', 'listitem');
-        thumbnail.setAttribute('aria-label', `${item.title}`);
-        thumbnail.setAttribute('aria-selected', String(item === this.activeItem));
+        thumbnail.setAttribute('aria-label', `${item.title}, photo ${imageIndex + 1}`);
+        thumbnail.setAttribute(
+          'aria-selected',
+          String(item === this.activeItem && imageIndex === item.activeImageIndex),
+        );
 
-        const image = document.createElement('img');
-        image.src = item.thumbSrc;
-        image.alt = '';
-        image.loading = 'lazy';
-        image.decoding = 'async';
-        thumbnail.append(image);
-        thumbnail.addEventListener('click', () => this.openItem(item, { focusClose: false }));
+        const imageElement = document.createElement('img');
+        imageElement.src = image.thumbSrc;
+        imageElement.alt = '';
+        imageElement.loading = 'lazy';
+        imageElement.decoding = 'async';
+        thumbnail.append(imageElement);
+        thumbnail.addEventListener('click', () =>
+          this.openItem(item, { focusClose: false, imageIndex }),
+        );
         this.thumbnails.append(thumbnail);
       });
     }
 
     goToRelativeItem(direction) {
-      const visibleItems = this.getVisibleItems();
-      if (visibleItems.length < 2) return;
+      const visibleViews = this.getVisibleViews();
+      if (visibleViews.length < 2) return;
 
-      let position = visibleItems.indexOf(this.activeItem);
+      let position = visibleViews.findIndex(
+        (view) => view.item === this.activeItem && view.imageIndex === this.activeItem.activeImageIndex,
+      );
       if (position < 0) position = 0;
-      const nextPosition = (position + direction + visibleItems.length) % visibleItems.length;
-      this.openItem(visibleItems[nextPosition], { focusClose: false });
+      const nextPosition = (position + direction + visibleViews.length) % visibleViews.length;
+      const nextView = visibleViews[nextPosition];
+      this.openItem(nextView.item, { focusClose: false, imageIndex: nextView.imageIndex });
     }
 
     handleKeyDown(event) {

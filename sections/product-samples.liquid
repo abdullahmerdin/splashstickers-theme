@@ -26,7 +26,24 @@
       when 'emboss'
         assign block_fallback_asset = 'splash-product-emboss-sticker-v2.png'
     endcase
-    if block.settings.image != blank or block_fallback_asset != blank
+    assign block_has_uploaded_image = false
+    for block_image_index in (1..4)
+      assign block_image = blank
+      case block_image_index
+        when 1
+          assign block_image = block.settings.image
+        when 2
+          assign block_image = block.settings.image_2
+        when 3
+          assign block_image = block.settings.image_3
+        when 4
+          assign block_image = block.settings.image_4
+      endcase
+      if block_image != blank
+        assign block_has_uploaded_image = true
+      endif
+    endfor
+    if block_has_uploaded_image or block_fallback_asset != blank
       assign gallery_count = gallery_count | plus: 1
     endif
   endfor
@@ -43,7 +60,7 @@
   data-filter-label="{{ section.settings.filter_label | default: 'Filter samples' | escape }}"
   data-all-filter-label="{{ section.settings.filter_all_label | default: 'All samples' | escape }}"
   data-empty-filter-label="{{ section.settings.empty_filter_label | default: 'No samples in this category yet.' | escape }}"
-  style="--samples-columns: {{ section.settings.columns | default: 3 }}; --samples-image-fit: {{ section.settings.image_fit | default: 'contain' }};"
+  style="--samples-columns: {{ section.settings.columns | default: 3 }}; --samples-image-fit: cover;"
 >
   <div class="product-samples__inner">
     <header class="product-samples__hero">
@@ -104,21 +121,30 @@
             assign sample_title = block.settings.title | default: sample_category_label
             assign sample_description = block.settings.description
             assign sample_alt = block.settings.alt
-            if sample_alt == blank and block.settings.image != blank
-              assign sample_alt = block.settings.image.alt
-            endif
             if sample_alt == blank
               assign sample_alt = sample_title
             endif
-            assign sample_full_src = sample_fallback_asset | asset_url
-            assign sample_thumb_src = sample_fallback_asset | asset_url
-            if block.settings.image != blank
-              assign sample_full_src = block.settings.image | image_url: width: 2400
-              assign sample_thumb_src = block.settings.image | image_url: width: 360
-            endif
+            assign sample_has_uploaded_images = false
+            for sample_image_index in (1..4)
+              assign sample_image = blank
+              case sample_image_index
+                when 1
+                  assign sample_image = block.settings.image
+                when 2
+                  assign sample_image = block.settings.image_2
+                when 3
+                  assign sample_image = block.settings.image_3
+                when 4
+                  assign sample_image = block.settings.image_4
+              endcase
+              if sample_image != blank
+                assign sample_has_uploaded_images = true
+              endif
+            endfor
+            assign sample_rendered_index = 0
           %}
 
-          {% if block.settings.image != blank or sample_fallback_asset != blank %}
+          {% if sample_has_uploaded_images or sample_fallback_asset != blank %}
             <article
               class="product-samples__card"
               data-sample-card
@@ -127,43 +153,95 @@
               role="listitem"
               {{ block.shopify_attributes }}
             >
-              <button
-                type="button"
-                class="product-samples__card-button"
-                data-sample-open
-                data-sample-title="{{ sample_title | escape }}"
-                data-sample-category="{{ sample_category | escape }}"
-                data-sample-category-label="{{ sample_category_label | escape }}"
-                data-sample-description="{{ sample_description | strip_html | escape }}"
-                data-sample-alt="{{ sample_alt | escape }}"
-                data-sample-full-src="{{ sample_full_src | escape }}"
-                data-sample-thumb-src="{{ sample_thumb_src | escape }}"
-                aria-label="{{ section.settings.open_label | default: 'Open sample photo' | append: ': ' | append: sample_title | escape }}"
-              >
-                <span class="product-samples__media-frame">
-                  {% if block.settings.image != blank %}
-                    {{
-                      block.settings.image
-                      | image_url: width: 1600
-                      | image_tag:
-                        class: 'product-samples__card-image',
-                        widths: '480, 720, 960, 1200, 1600',
-                        sizes: '(min-width: 990px) calc((100vw - 8rem) / 3), (min-width: 640px) 50vw, 100vw',
-                        loading: 'lazy',
-                        decoding: 'async',
-                        alt: sample_alt
-                    }}
-                  {% else %}
-                    <img
-                      class="product-samples__card-image"
-                      src="{{ sample_fallback_asset | asset_url }}"
-                      alt="{{ sample_alt | escape }}"
-                      width="1600"
-                      height="1600"
-                      loading="lazy"
-                      decoding="async"
-                    >
-                  {% endif %}
+              <div class="product-samples__media-frame" data-sample-card-media>
+                <button
+                  type="button"
+                  class="product-samples__card-button"
+                  data-sample-open
+                  data-sample-title="{{ sample_title | escape }}"
+                  data-sample-category="{{ sample_category | escape }}"
+                  data-sample-category-label="{{ sample_category_label | escape }}"
+                  data-sample-description="{{ sample_description | strip_html | escape }}"
+                  data-sample-alt="{{ sample_alt | escape }}"
+                  aria-label="{{ section.settings.open_label | default: 'Open sample photo' | append: ': ' | append: sample_title | escape }}"
+                >
+                  <span class="product-samples__card-slides">
+                    {% for sample_image_index in (1..4) %}
+                      {% liquid
+                        assign sample_image = blank
+                        case sample_image_index
+                          when 1
+                            assign sample_image = block.settings.image
+                          when 2
+                            assign sample_image = block.settings.image_2
+                          when 3
+                            assign sample_image = block.settings.image_3
+                          when 4
+                            assign sample_image = block.settings.image_4
+                        endcase
+                        assign sample_asset = blank
+                        if sample_image == blank and sample_has_uploaded_images == false and sample_image_index == 1
+                          assign sample_asset = sample_fallback_asset
+                        endif
+                        if sample_image != blank or sample_asset != blank
+                          assign sample_rendered_index = sample_rendered_index | plus: 1
+                          assign sample_image_alt = sample_alt
+                          if sample_image_alt == blank and sample_image != blank
+                            assign sample_image_alt = sample_image.alt
+                          endif
+                          if sample_image_alt == blank
+                            assign sample_image_alt = sample_title | append: ' photo ' | append: sample_rendered_index
+                          endif
+                          assign sample_full_src = sample_asset | asset_url
+                          assign sample_thumb_src = sample_asset | asset_url
+                          if sample_image != blank
+                            assign sample_full_src = sample_image | image_url: width: 2400
+                            assign sample_thumb_src = sample_image | image_url: width: 360
+                          endif
+                        endif
+                      %}
+                      {% if sample_image != blank or sample_asset != blank %}
+                        <span
+                          class="product-samples__card-slide"
+                          data-sample-card-slide
+                          data-sample-image
+                          data-sample-full-src="{{ sample_full_src | escape }}"
+                          data-sample-thumb-src="{{ sample_thumb_src | escape }}"
+                          data-sample-alt="{{ sample_image_alt | escape }}"
+                          {% if sample_rendered_index > 1 %}
+                            hidden
+                            aria-hidden="true"
+                          {% else %}
+                            aria-hidden="false"
+                          {% endif %}
+                        >
+                          {% if sample_image != blank %}
+                            {{
+                              sample_image
+                              | image_url: width: 1600
+                              | image_tag:
+                                class: 'product-samples__card-image',
+                                widths: '480, 720, 960, 1200, 1600',
+                                sizes: '(min-width: 990px) calc((100vw - 8rem) / 3), (min-width: 640px) 50vw, 100vw',
+                                loading: 'lazy',
+                                decoding: 'async',
+                                alt: sample_image_alt
+                            }}
+                          {% else %}
+                            <img
+                              class="product-samples__card-image"
+                              src="{{ sample_asset | asset_url }}"
+                              alt="{{ sample_image_alt | escape }}"
+                              width="1600"
+                              height="1600"
+                              loading="lazy"
+                              decoding="async"
+                            >
+                          {% endif %}
+                        </span>
+                      {% endif %}
+                    {% endfor %}
+                  </span>
                   <span class="product-samples__zoom-badge" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                       <circle cx="10.75" cy="10.75" r="5.5" stroke="currentColor" stroke-width="1.8"/>
@@ -171,8 +249,36 @@
                     </svg>
                     <span>{{ section.settings.zoom_label | default: 'Zoom' | escape }}</span>
                   </span>
-                </span>
-              </button>
+                </button>
+                <button
+                  type="button"
+                  class="product-samples__card-media-nav product-samples__card-media-nav--previous"
+                  data-sample-card-previous
+                  aria-label="{{ section.settings.previous_label | default: 'Previous sample' | append: ': ' | append: sample_title | escape }}"
+                  hidden
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m14.5 5-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="product-samples__card-media-nav product-samples__card-media-nav--next"
+                  data-sample-card-next
+                  aria-label="{{ section.settings.next_label | default: 'Next sample' | append: ': ' | append: sample_title | escape }}"
+                  hidden
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m9.5 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <div
+                  class="product-samples__card-dots"
+                  data-sample-card-dots
+                  role="group"
+                  aria-label="{{ sample_title | append: ': sample photos' | escape }}"
+                ></div>
+              </div>
 
               <div class="product-samples__card-content">
                 <p class="product-samples__card-category">{{ sample_category_label | escape }}</p>
@@ -336,16 +442,6 @@
       "default": 3
     },
     {
-      "type": "select",
-      "id": "image_fit",
-      "label": "Image fit",
-      "options": [
-        { "value": "contain", "label": "Show full image" },
-        { "value": "cover", "label": "Fill frame" }
-      ],
-      "default": "contain"
-    },
-    {
       "type": "header",
       "content": "Gallery labels"
     },
@@ -475,7 +571,25 @@
           "type": "image_picker",
           "id": "image",
           "label": "Sample photo",
-          "info": "Upload the real product photo customers should see."
+          "info": "Upload the first real product photo. Add up to three more photos below for the same card."
+        },
+        {
+          "type": "image_picker",
+          "id": "image_2",
+          "label": "Sample photo 2",
+          "info": "Optional second photo for this sample card."
+        },
+        {
+          "type": "image_picker",
+          "id": "image_3",
+          "label": "Sample photo 3",
+          "info": "Optional third photo for this sample card."
+        },
+        {
+          "type": "image_picker",
+          "id": "image_4",
+          "label": "Sample photo 4",
+          "info": "Optional fourth photo for this sample card."
         },
         {
           "type": "select",
