@@ -15,37 +15,61 @@
         "die_cut_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "die_cut"
+            "guide_key": "die_cut",
+            "title": "",
+            "summary": "",
+            "link": "",
+            "link_label": ""
           }
         },
         "magnet_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "magnet"
+            "guide_key": "magnet",
+            "title": "",
+            "summary": "",
+            "link": "",
+            "link_label": ""
           }
         },
         "uv_dtf_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "uv_dtf"
+            "guide_key": "uv_dtf",
+            "title": "",
+            "summary": "",
+            "link": "",
+            "link_label": ""
           }
         },
         "uv_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "uv"
+            "guide_key": "uv",
+            "title": "",
+            "summary": "",
+            "link": "",
+            "link_label": ""
           }
         },
         "emboss_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "emboss"
+            "guide_key": "emboss",
+            "title": "",
+            "summary": "",
+            "link": "",
+            "link_label": ""
           }
         },
         "textile_card": {
           "type": "directory_card",
           "settings": {
-            "guide_key": "textile"
+            "guide_key": "textile",
+            "title": "",
+            "summary": "",
+            "link": "",
+            "link_label": ""
           }
         }
       },
@@ -59,9 +83,49 @@
       ],
       "settings": {
         "layout": "products",
-        "guide_key": "auto"
+        "guide_key": "auto",
+        "hub_eyebrow": "",
+        "hub_title": "",
+        "hub_intro": "",
+        "hub_products_label": "",
+        "hub_products_title": "",
+        "hub_products_text": "",
+        "hub_products_url": "",
+        "hub_site_label": "",
+        "hub_site_title": "",
+        "hub_site_text": "",
+        "hub_site_url": "",
+        "hub_card_link_label": "",
+        "quick_eyebrow": "",
+        "quick_title": "",
+        "quick_text": "",
+        "quick_step_one": "",
+        "quick_step_two": "",
+        "quick_step_three": "",
+        "directory_back_label": "*",
+        "directory_eyebrow": "*",
+        "directory_title": "*",
+        "directory_intro": "*",
+        "guide_title": "*",
+        "guide_intro": "*",
+        "guide_kind_label": "*",
+        "guide_what_title": "*",
+        "guide_what_text": "*",
+        "guide_best_title": "*",
+        "guide_best_text": "*",
+        "guide_steps_eyebrow": "*",
+        "guide_steps_title": "*",
+        "guide_note_eyebrow": "*",
+        "guide_note_title": "*",
+        "guide_note_text": "*",
+        "guide_cta_label": "*",
+        "guide_cta_url": "",
+        "guide_all_label": "",
+        "guide_status_label": ""
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
