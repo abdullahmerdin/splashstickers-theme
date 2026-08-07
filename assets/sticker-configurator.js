@@ -2738,24 +2738,19 @@ class InteractionManager {
   }
 
   moveDraggedItems(ds, dx, dy) {
-    var core = this.core;
     var draggedItems = this._dragItems(ds.ids);
     if (!draggedItems.length) return draggedItems;
 
-    var allowed = core.collisionEngine.constrainGroupDelta(
-      dx,
-      dy,
-      draggedItems,
-      core.state.items,
-      ds.ids
-    );
+    // Dragging is deliberately free so artwork can pass over occupied areas.
+    // Collision and bounds remain non-blocking feedback during the gesture;
+    // onMouseUp/onTouchEnd reject an illegal drop and restore startPos.
     draggedItems.forEach(function (item) {
-      item.x += allowed.dx;
-      item.y += allowed.dy;
+      item.x += dx;
+      item.y += dy;
       item.el.style.left = item.x + 'px';
       item.el.style.top = item.y + 'px';
     });
-    this._setMoveVisual(ds, false);
+    this._setMoveVisual(ds, this._isMoveIllegal(ds));
     return draggedItems;
   }
 
@@ -3171,9 +3166,9 @@ class InteractionManager {
       var item = core.state.items.find(function (candidate) { return candidate.id === id; });
       if (!item || !item.el) return;
       item.el.classList.toggle('is-illegal', Boolean(illegal));
-      item.el.style.opacity = illegal ? '0.42' : '';
-      item.el.style.filter = illegal ? 'grayscale(1)' : '';
-      item.el.style.outline = illegal ? '2px solid #d04b56' : '';
+      item.el.style.opacity = '';
+      item.el.style.filter = '';
+      item.el.style.outline = '';
     });
     ds.illegal = Boolean(illegal);
   }

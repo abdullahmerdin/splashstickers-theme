@@ -361,7 +361,7 @@
 .sticker-configurator .canvas-item.is-illegal {
   filter: grayscale(1);
   opacity: 0.42;
-  outline: 2px solid #d04b56;
+  outline: 2px solid var(--cfg-danger);
   outline-offset: 2px;
 }
 
@@ -2016,6 +2016,7 @@ html[data-theme='dark'] .sticker-configurator {
   --cfg-surface: #191c23;
   --cfg-line: #3a3f4b;
   --cfg-line-strong: #596170;
+  --cfg-danger: #ff7b86;
   --cfg-grid-surface: #191c23;
 }
 

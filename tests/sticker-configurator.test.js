@@ -37,7 +37,7 @@ const context = {
 };
 
 vm.runInNewContext(
-  source + '\n;globalThis.__configuratorClasses = { Utils, CollisionEngine, CanvasRenderer, CartManager, StickerConfigurator, AlignmentEngine, KeyboardManager };',
+  source + '\n;globalThis.__configuratorClasses = { Utils, CollisionEngine, CanvasRenderer, CartManager, StickerConfigurator, AlignmentEngine, InteractionManager, KeyboardManager };',
   context
 );
 
@@ -48,6 +48,7 @@ const {
   CartManager,
   StickerConfigurator,
   AlignmentEngine,
+  InteractionManager,
   KeyboardManager
 } = context.__configuratorClasses;
 
@@ -211,6 +212,65 @@ test('collision engine enforces configured gaps and workspace bounds', () => {
     engine.canPlace({ id: 3, x: 590, y: 10, w: 20, h: 20, rotation: 0 }, [first], []),
     false
   );
+});
+
+test('dragging can cross occupied artwork and an illegal drop snaps back', () => {
+  const classes = new Set();
+  const moving = {
+    id: 1, x: 0, y: 0, w: 50, h: 50, rotation: 0,
+    el: {
+      style: {},
+      classList: {
+        toggle(name, enabled) { enabled ? classes.add(name) : classes.delete(name); },
+        remove(name) { classes.delete(name); }
+      }
+    }
+  };
+  const stationary = { id: 2, x: 100, y: 0, w: 50, h: 50, rotation: 0 };
+  const dragState = {
+    type: 'move',
+    ids: [moving.id],
+    startPos: { [moving.id]: { x: moving.x, y: moving.y } },
+    illegal: false
+  };
+  const core = {
+    CANVAS_W: 300,
+    CANVAS_H: 200,
+    state: {
+      items: [moving, stationary],
+      gapSize: 2,
+      snapEnabled: false,
+      dragState
+    },
+    utils: { mmToPx: (value) => value },
+    historyManager: { saveState() {} },
+    growCanvas() {},
+    dispatchUpdateEvent() {}
+  };
+  core.collisionEngine = new CollisionEngine(core);
+  const interaction = new InteractionManager(core);
+
+  interaction.moveDraggedItems(dragState, 110, 0);
+
+  assert.equal(moving.x, 110);
+  assert.equal(dragState.illegal, true);
+  assert.equal(classes.has('is-illegal'), true);
+
+  interaction.moveDraggedItems(dragState, 60, 0);
+  assert.equal(moving.x, 170);
+  assert.equal(dragState.illegal, false);
+  assert.equal(classes.has('is-illegal'), false);
+
+  interaction.moveDraggedItems(dragState, -60, 0);
+  assert.equal(dragState.illegal, true);
+
+  interaction.onMouseUp({});
+
+  assert.equal(moving.x, 0);
+  assert.equal(moving.y, 0);
+  assert.equal(moving.el.style.left, '0px');
+  assert.equal(moving.el.style.top, '0px');
+  assert.equal(classes.has('is-illegal'), false);
 });
 
 test('auto arrange fills the gap beneath shorter artwork instead of starting a new shelf', () => {
