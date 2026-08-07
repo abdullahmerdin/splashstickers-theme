@@ -555,7 +555,7 @@
 .sticker-configurator .canvas-stage {
   position: relative;
   flex: none;
-  margin: 0;
+  margin: 0 auto;
 }
 
 .sticker-configurator .canvas-area {

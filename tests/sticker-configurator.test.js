@@ -103,6 +103,26 @@ test('workspace resize fills the viewport and preserves item millimetres', () =>
   assert.equal(textContent.style.fontSize, '48px');
 });
 
+test('empty workspace fits both viewport axes without pushing the hint below the canvas', () => {
+  const core = {
+    CANVAS_W: 600,
+    CANVAS_H: 400,
+    SHEET_WIDTH_MM: 600,
+    wrap: { clientWidth: 1800, clientHeight: 720, scrollLeft: 0, scrollTop: 0 },
+    state: {
+      items: [],
+      history: [],
+      clipboard: null
+    }
+  };
+
+  const changed = StickerConfigurator.prototype.resizeWorkspaceToViewport.call(core, false);
+
+  assert.equal(changed, true);
+  assert.equal(core.CANVAS_W, 1080);
+  assert.equal(core.CANVAS_H, 720);
+});
+
 test('canvas zoom never falls below its 100 percent scale', () => {
   const renderer = new CanvasRenderer({});
   assert.equal(renderer.clampZoom(0.25), 1);
