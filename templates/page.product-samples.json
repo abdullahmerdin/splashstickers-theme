@@ -15,7 +15,7 @@
         "die_cut_sample": {
           "type": "sample",
           "settings": {
-            "image": "",
+            "image": "shopify://shop_images/gorsel_2026-08-07_171040705.png",
             "category": "die_cut",
             "title": "Die-cut finish",
             "description": "A close look at the printed surface and cut edge.",
@@ -25,7 +25,7 @@
         "magnet_sample": {
           "type": "sample",
           "settings": {
-            "image": "",
+            "image": "shopify://shop_images/gorsel_2026-08-07_170904599.png",
             "category": "magnet",
             "title": "Magnet finish",
             "description": "See the colour and edge detail on a finished magnet.",
@@ -35,7 +35,7 @@
         "uv_dtf_sample": {
           "type": "sample",
           "settings": {
-            "image": "",
+            "image": "shopify://shop_images/gorsel_2026-08-07_170621705.png",
             "category": "uv_dtf",
             "title": "UV DTF finish",
             "description": "Inspect the raised detail and colour on a finished transfer.",
@@ -45,7 +45,7 @@
         "uv_print_sample": {
           "type": "sample",
           "settings": {
-            "image": "",
+            "image": "shopify://shop_images/gorsel_2026-08-07_170723720.png",
             "category": "uv_print",
             "title": "UV print finish",
             "description": "A closer look at the glossy printed surface.",
@@ -55,7 +55,7 @@
         "textile_sample": {
           "type": "sample",
           "settings": {
-            "image": "",
+            "image": "shopify://shop_images/gorsel_2026-08-07_170819440.png",
             "category": "textile",
             "title": "Textile transfer",
             "description": "See how the finished transfer sits on fabric.",
@@ -65,7 +65,7 @@
         "emboss_sample": {
           "type": "sample",
           "settings": {
-            "image": "",
+            "image": "shopify://shop_images/gorsel_2026-08-07_171005327.png",
             "category": "emboss",
             "title": "Emboss finish",
             "description": "Inspect the tactile raised detail up close.",
