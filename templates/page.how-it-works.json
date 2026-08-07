@@ -20,11 +20,11 @@
         "hub_products_label": "",
         "hub_products_title": "Products",
         "hub_products_text": "Learn about our products before you choose what to order.",
-        "hub_products_url": "",
+        "hub_products_url": "shopify://pages/how-it-works-products",
         "hub_site_label": "",
         "hub_site_title": "Tools",
         "hub_site_text": "Learn how to use our site and it's tools.",
-        "hub_site_url": "",
+        "hub_site_url": "shopify://pages/how-it-works-site",
         "hub_card_link_label": "",
         "quick_eyebrow": "",
         "quick_title": "",
@@ -50,7 +50,8 @@
         "guide_note_text": "",
         "guide_cta_label": "",
         "guide_cta_url": "",
-        "guide_all_label": ""
+        "guide_all_label": "",
+        "guide_status_label": ""
       }
     }
   },
