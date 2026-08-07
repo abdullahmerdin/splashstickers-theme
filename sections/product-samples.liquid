@@ -1,0 +1,531 @@
+{% liquid
+  assign section_id = 'product-samples-' | append: section.id
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = page.title | default: 'See the finish up close'
+  endif
+  assign intro = section.settings.intro
+  if intro == blank
+    assign intro = 'Browse real product samples and open any image to inspect the finish, colour and detail.'
+  endif
+  assign gallery_count = 0
+  for block in section.blocks
+    assign block_category = block.settings.category | default: 'other'
+    assign block_fallback_asset = blank
+    case block_category
+      when 'die_cut'
+        assign block_fallback_asset = 'splash-product-die-cut-sticker-v2.png'
+      when 'uv_dtf'
+        assign block_fallback_asset = 'splash-product-uv-dtf-sticker-v2.png'
+      when 'uv_print'
+        assign block_fallback_asset = 'splash-product-uv-print-sticker-v2.png'
+      when 'magnet'
+        assign block_fallback_asset = 'splash-product-magnet-v2.png'
+      when 'textile'
+        assign block_fallback_asset = 'splash-product-textile-transfer-v2.png'
+      when 'emboss'
+        assign block_fallback_asset = 'splash-product-emboss-sticker-v2.png'
+    endcase
+    if block.settings.image != blank or block_fallback_asset != blank
+      assign gallery_count = gallery_count | plus: 1
+    endif
+  endfor
+%}
+
+{{ 'product-samples.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-samples.js' | asset_url }}" defer></script>
+
+<section
+  id="{{ section_id }}"
+  class="product-samples"
+  data-sample-gallery
+  data-sample-count-label="{{ section.settings.count_label | default: 'samples' | escape }}"
+  data-filter-label="{{ section.settings.filter_label | default: 'Filter samples' | escape }}"
+  data-all-filter-label="{{ section.settings.filter_all_label | default: 'All samples' | escape }}"
+  data-empty-filter-label="{{ section.settings.empty_filter_label | default: 'No samples in this category yet.' | escape }}"
+  style="--samples-columns: {{ section.settings.columns | default: 3 }}; --samples-image-fit: {{ section.settings.image_fit | default: 'contain' }};"
+>
+  <div class="product-samples__inner">
+    <header class="product-samples__hero">
+      <p class="product-samples__eyebrow">{{ section.settings.eyebrow | default: 'Real samples' | escape }}</p>
+      <h1>{{ heading | escape }}</h1>
+      <p class="product-samples__intro">{{ intro | escape }}</p>
+    </header>
+
+    <div class="product-samples__toolbar">
+      <div
+        class="product-samples__filters"
+        data-sample-filter-bar
+        role="toolbar"
+        aria-label="{{ section.settings.filter_label | default: 'Filter samples' | escape }}"
+      >
+        <button
+          type="button"
+          class="product-samples__filter-button"
+          data-sample-filter="all"
+          data-sample-filter-static
+          aria-pressed="true"
+        >
+          {{ section.settings.filter_all_label | default: 'All samples' | escape }}
+        </button>
+      </div>
+      <p class="product-samples__count" data-sample-count aria-live="polite">
+        {{ gallery_count }} {{ section.settings.count_label | default: 'samples' | escape }}
+      </p>
+    </div>
+
+    {% if gallery_count > 0 %}
+      <div class="product-samples__grid" data-sample-grid role="list">
+        {% for block in section.blocks %}
+          {% liquid
+            assign sample_category = block.settings.category | default: 'other'
+            assign sample_category_label = 'Other samples'
+            assign sample_fallback_asset = blank
+            case sample_category
+              when 'die_cut'
+                assign sample_category_label = 'Die-cut'
+                assign sample_fallback_asset = 'splash-product-die-cut-sticker-v2.png'
+              when 'uv_dtf'
+                assign sample_category_label = 'UV DTF'
+                assign sample_fallback_asset = 'splash-product-uv-dtf-sticker-v2.png'
+              when 'uv_print'
+                assign sample_category_label = 'UV print'
+                assign sample_fallback_asset = 'splash-product-uv-print-sticker-v2.png'
+              when 'magnet'
+                assign sample_category_label = 'Magnet'
+                assign sample_fallback_asset = 'splash-product-magnet-v2.png'
+              when 'textile'
+                assign sample_category_label = 'Textile'
+                assign sample_fallback_asset = 'splash-product-textile-transfer-v2.png'
+              when 'emboss'
+                assign sample_category_label = 'Emboss'
+                assign sample_fallback_asset = 'splash-product-emboss-sticker-v2.png'
+            endcase
+            assign sample_title = block.settings.title | default: sample_category_label
+            assign sample_description = block.settings.description
+            assign sample_alt = block.settings.alt
+            if sample_alt == blank and block.settings.image != blank
+              assign sample_alt = block.settings.image.alt
+            endif
+            if sample_alt == blank
+              assign sample_alt = sample_title
+            endif
+            assign sample_full_src = sample_fallback_asset | asset_url
+            assign sample_thumb_src = sample_fallback_asset | asset_url
+            if block.settings.image != blank
+              assign sample_full_src = block.settings.image | image_url: width: 2400
+              assign sample_thumb_src = block.settings.image | image_url: width: 360
+            endif
+          %}
+
+          {% if block.settings.image != blank or sample_fallback_asset != blank %}
+            <article
+              class="product-samples__card"
+              data-sample-card
+              data-sample-category="{{ sample_category | escape }}"
+              data-sample-category-label="{{ sample_category_label | escape }}"
+              role="listitem"
+              {{ block.shopify_attributes }}
+            >
+              <button
+                type="button"
+                class="product-samples__card-button"
+                data-sample-open
+                data-sample-title="{{ sample_title | escape }}"
+                data-sample-category="{{ sample_category | escape }}"
+                data-sample-category-label="{{ sample_category_label | escape }}"
+                data-sample-description="{{ sample_description | strip_html | escape }}"
+                data-sample-alt="{{ sample_alt | escape }}"
+                data-sample-full-src="{{ sample_full_src | escape }}"
+                data-sample-thumb-src="{{ sample_thumb_src | escape }}"
+                aria-label="{{ section.settings.open_label | default: 'Open sample photo' | append: ': ' | append: sample_title | escape }}"
+              >
+                <span class="product-samples__media-frame">
+                  {% if block.settings.image != blank %}
+                    {{
+                      block.settings.image
+                      | image_url: width: 1600
+                      | image_tag:
+                        class: 'product-samples__card-image',
+                        widths: '480, 720, 960, 1200, 1600',
+                        sizes: '(min-width: 990px) calc((100vw - 8rem) / 3), (min-width: 640px) 50vw, 100vw',
+                        loading: 'lazy',
+                        decoding: 'async',
+                        alt: sample_alt
+                    }}
+                  {% else %}
+                    <img
+                      class="product-samples__card-image"
+                      src="{{ sample_fallback_asset | asset_url }}"
+                      alt="{{ sample_alt | escape }}"
+                      width="1600"
+                      height="1600"
+                      loading="lazy"
+                      decoding="async"
+                    >
+                  {% endif %}
+                  <span class="product-samples__zoom-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="10.75" cy="10.75" r="5.5" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="m15 15 4.25 4.25M10.75 8v5.5M8 10.75h5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span>{{ section.settings.zoom_label | default: 'Zoom' | escape }}</span>
+                  </span>
+                </span>
+              </button>
+
+              <div class="product-samples__card-content">
+                <p class="product-samples__card-category">{{ sample_category_label | escape }}</p>
+                <h2>{{ sample_title | escape }}</h2>
+                {% if sample_description != blank %}
+                  <p>{{ sample_description | escape }}</p>
+                {% endif %}
+              </div>
+            </article>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <p class="product-samples__empty-filter" data-sample-empty-filter hidden>
+        {{ section.settings.empty_filter_label | default: 'No samples in this category yet.' | escape }}
+      </p>
+    {% else %}
+      <div class="product-samples__empty-state">
+        <p class="product-samples__eyebrow">{{ section.settings.empty_eyebrow | default: 'Gallery ready' | escape }}</p>
+        <h2>{{ section.settings.empty_title | default: 'Add your first sample photo' | escape }}</h2>
+        <p>{{ section.settings.empty_text | default: 'Add a sample block in the Theme Editor, then upload the product photo you want customers to see.' | escape }}</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <dialog
+    id="{{ section_id }}-dialog"
+    class="product-samples__dialog"
+    data-sample-dialog
+    aria-labelledby="{{ section_id }}-dialog-title"
+  >
+    <div class="product-samples__dialog-shell" data-sample-dialog-shell>
+      <button
+        type="button"
+        class="product-samples__dialog-close"
+        data-sample-close
+        aria-label="{{ section.settings.close_label | default: 'Close sample viewer' | escape }}"
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="m5 5 14 14M19 5 5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <div class="product-samples__dialog-body">
+        <div class="product-samples__dialog-media">
+          <button
+            type="button"
+            class="product-samples__dialog-nav product-samples__dialog-nav--previous"
+            data-sample-previous
+            aria-label="{{ section.settings.previous_label | default: 'Previous sample' | escape }}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m14.5 5-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <div
+            class="product-samples__dialog-viewport"
+            data-sample-viewport
+            tabindex="0"
+            role="img"
+            aria-label="{{ section.settings.viewport_label | default: 'Zoomable sample image' | escape }}"
+          >
+            <img
+              class="product-samples__dialog-image"
+              data-sample-dialog-image
+              alt=""
+              width="1600"
+              height="1600"
+              draggable="false"
+            >
+          </div>
+
+          <button
+            type="button"
+            class="product-samples__dialog-nav product-samples__dialog-nav--next"
+            data-sample-next
+            aria-label="{{ section.settings.next_label | default: 'Next sample' | escape }}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m9.5 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <aside class="product-samples__dialog-details">
+          <div class="product-samples__dialog-counter" data-sample-counter aria-live="polite"></div>
+          <p class="product-samples__dialog-category" data-sample-dialog-category></p>
+          <h2 id="{{ section_id }}-dialog-title" data-sample-dialog-title></h2>
+          <p class="product-samples__dialog-description" data-sample-dialog-description></p>
+
+          <div
+            class="product-samples__zoom-controls"
+            role="group"
+            aria-label="{{ section.settings.zoom_controls_label | default: 'Zoom controls' | escape }}"
+          >
+            <button
+              type="button"
+              class="product-samples__zoom-button"
+              data-sample-zoom="out"
+              aria-label="{{ section.settings.zoom_out_label | default: 'Zoom out' | escape }}"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              class="product-samples__zoom-level"
+              data-sample-zoom="reset"
+              aria-label="{{ section.settings.zoom_reset_label | default: 'Reset zoom' | escape }}"
+            >
+              <span data-sample-zoom-level>100%</span>
+            </button>
+            <button
+              type="button"
+              class="product-samples__zoom-button"
+              data-sample-zoom="in"
+              aria-label="{{ section.settings.zoom_in_label | default: 'Zoom in' | escape }}"
+            >
+              +
+            </button>
+          </div>
+          <p class="product-samples__zoom-hint">{{ section.settings.zoom_hint | default: 'Use + / −, scroll or double-click. Drag when zoomed in.' | escape }}</p>
+        </aside>
+      </div>
+
+      <div class="product-samples__thumbnails" data-sample-thumbnails role="list"></div>
+    </div>
+  </dialog>
+</section>
+
+{% schema %}
+{
+  "name": "Product sample gallery",
+  "class": "section-wrapper product-samples-section",
+  "max_blocks": 24,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Real samples"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "See the finish up close"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro",
+      "default": "Browse real product samples and open any image to inspect the finish, colour and detail."
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Desktop columns",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "options": [
+        { "value": "contain", "label": "Show full image" },
+        { "value": "cover", "label": "Fill frame" }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "header",
+      "content": "Gallery labels"
+    },
+    {
+      "type": "text",
+      "id": "filter_label",
+      "label": "Filter label",
+      "default": "Filter samples"
+    },
+    {
+      "type": "text",
+      "id": "filter_all_label",
+      "label": "All filter label",
+      "default": "All samples"
+    },
+    {
+      "type": "text",
+      "id": "count_label",
+      "label": "Count label",
+      "default": "samples"
+    },
+    {
+      "type": "text",
+      "id": "zoom_label",
+      "label": "Card zoom label",
+      "default": "Zoom"
+    },
+    {
+      "type": "text",
+      "id": "open_label",
+      "label": "Open label",
+      "default": "Open sample photo"
+    },
+    {
+      "type": "text",
+      "id": "empty_filter_label",
+      "label": "Empty filter message",
+      "default": "No samples in this category yet."
+    },
+    {
+      "type": "header",
+      "content": "Viewer labels"
+    },
+    {
+      "type": "text",
+      "id": "close_label",
+      "label": "Close label",
+      "default": "Close sample viewer"
+    },
+    {
+      "type": "text",
+      "id": "previous_label",
+      "label": "Previous label",
+      "default": "Previous sample"
+    },
+    {
+      "type": "text",
+      "id": "next_label",
+      "label": "Next label",
+      "default": "Next sample"
+    },
+    {
+      "type": "text",
+      "id": "viewport_label",
+      "label": "Image viewport label",
+      "default": "Zoomable sample image"
+    },
+    {
+      "type": "text",
+      "id": "zoom_controls_label",
+      "label": "Zoom controls label",
+      "default": "Zoom controls"
+    },
+    {
+      "type": "text",
+      "id": "zoom_out_label",
+      "label": "Zoom out label",
+      "default": "Zoom out"
+    },
+    {
+      "type": "text",
+      "id": "zoom_reset_label",
+      "label": "Zoom reset label",
+      "default": "Reset zoom"
+    },
+    {
+      "type": "text",
+      "id": "zoom_in_label",
+      "label": "Zoom in label",
+      "default": "Zoom in"
+    },
+    {
+      "type": "text",
+      "id": "zoom_hint",
+      "label": "Zoom hint",
+      "default": "Use + / −, scroll or double-click. Drag when zoomed in."
+    },
+    {
+      "type": "header",
+      "content": "Empty state"
+    },
+    {
+      "type": "text",
+      "id": "empty_eyebrow",
+      "label": "Empty eyebrow",
+      "default": "Gallery ready"
+    },
+    {
+      "type": "text",
+      "id": "empty_title",
+      "label": "Empty title",
+      "default": "Add your first sample photo"
+    },
+    {
+      "type": "textarea",
+      "id": "empty_text",
+      "label": "Empty text",
+      "default": "Add a sample block in the Theme Editor, then upload the product photo you want customers to see."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "sample",
+      "name": "Sample photo",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Sample photo",
+          "info": "Upload the real product photo customers should see."
+        },
+        {
+          "type": "select",
+          "id": "category",
+          "label": "Category",
+          "options": [
+            { "value": "die_cut", "label": "Die-cut" },
+            { "value": "uv_dtf", "label": "UV DTF" },
+            { "value": "uv_print", "label": "UV print" },
+            { "value": "magnet", "label": "Magnet" },
+            { "value": "textile", "label": "Textile" },
+            { "value": "emboss", "label": "Emboss" },
+            { "value": "other", "label": "Other" }
+          ],
+          "default": "die_cut"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Die-cut finish"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "default": "A close look at the printed surface and cut edge."
+        },
+        {
+          "type": "text",
+          "id": "alt",
+          "label": "Alt text",
+          "info": "Describe the image for visitors using a screen reader."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product sample gallery",
+      "category": "Custom",
+      "blocks": [
+        { "type": "sample" },
+        { "type": "sample", "settings": { "category": "magnet", "title": "Magnet finish", "description": "See the colour and edge detail on a finished magnet." } },
+        { "type": "sample", "settings": { "category": "uv_dtf", "title": "UV DTF finish", "description": "Inspect the raised detail and colour on a finished transfer." } },
+        { "type": "sample", "settings": { "category": "uv_print", "title": "UV print finish", "description": "A closer look at the glossy printed surface." } },
+        { "type": "sample", "settings": { "category": "textile", "title": "Textile transfer", "description": "See how the finished transfer sits on fabric." } },
+        { "type": "sample", "settings": { "category": "emboss", "title": "Emboss finish", "description": "Inspect the tactile raised detail up close." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,114 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "product-samples",
+      "blocks": {
+        "die_cut_sample": {
+          "type": "sample",
+          "settings": {
+            "image": "",
+            "category": "die_cut",
+            "title": "Die-cut finish",
+            "description": "A close look at the printed surface and cut edge.",
+            "alt": ""
+          }
+        },
+        "magnet_sample": {
+          "type": "sample",
+          "settings": {
+            "image": "",
+            "category": "magnet",
+            "title": "Magnet finish",
+            "description": "See the colour and edge detail on a finished magnet.",
+            "alt": ""
+          }
+        },
+        "uv_dtf_sample": {
+          "type": "sample",
+          "settings": {
+            "image": "",
+            "category": "uv_dtf",
+            "title": "UV DTF finish",
+            "description": "Inspect the raised detail and colour on a finished transfer.",
+            "alt": ""
+          }
+        },
+        "uv_print_sample": {
+          "type": "sample",
+          "settings": {
+            "image": "",
+            "category": "uv_print",
+            "title": "UV print finish",
+            "description": "A closer look at the glossy printed surface.",
+            "alt": ""
+          }
+        },
+        "textile_sample": {
+          "type": "sample",
+          "settings": {
+            "image": "",
+            "category": "textile",
+            "title": "Textile transfer",
+            "description": "See how the finished transfer sits on fabric.",
+            "alt": ""
+          }
+        },
+        "emboss_sample": {
+          "type": "sample",
+          "settings": {
+            "image": "",
+            "category": "emboss",
+            "title": "Emboss finish",
+            "description": "Inspect the tactile raised detail up close.",
+            "alt": ""
+          }
+        }
+      },
+      "block_order": [
+        "die_cut_sample",
+        "magnet_sample",
+        "uv_dtf_sample",
+        "uv_print_sample",
+        "textile_sample",
+        "emboss_sample"
+      ],
+      "settings": {
+        "eyebrow": "Real samples",
+        "heading": "See the finish up close",
+        "intro": "Browse real product samples and open any image to inspect the finish, colour and detail.",
+        "columns": 3,
+        "image_fit": "contain",
+        "filter_label": "Filter samples",
+        "filter_all_label": "All samples",
+        "count_label": "samples",
+        "zoom_label": "Zoom",
+        "open_label": "Open sample photo",
+        "empty_filter_label": "No samples in this category yet.",
+        "close_label": "Close sample viewer",
+        "previous_label": "Previous sample",
+        "next_label": "Next sample",
+        "viewport_label": "Zoomable sample image",
+        "zoom_controls_label": "Zoom controls",
+        "zoom_out_label": "Zoom out",
+        "zoom_reset_label": "Reset zoom",
+        "zoom_in_label": "Zoom in",
+        "zoom_hint": "Use + / −, scroll or double-click. Drag when zoomed in.",
+        "empty_eyebrow": "Gallery ready",
+        "empty_title": "Add your first sample photo",
+        "empty_text": "Add a sample block in the Theme Editor, then upload the product photo you want customers to see."
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}
