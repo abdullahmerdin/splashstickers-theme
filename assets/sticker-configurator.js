@@ -3903,7 +3903,9 @@ class StickerConfigurator extends HTMLElement {
           core.resizeWorkspaceToViewport(true);
         });
       });
-      this.resizeObserver.observe(this.wrap);
+      // Observe the stable border box so scrollbars appearing inside the
+      // viewport cannot feed their content-box width back into canvas sizing.
+      this.resizeObserver.observe(this.wrap, { box: 'border-box' });
     }
     this.historyManager.saveState();
     this.mobileHandler.autoDetectMobile();

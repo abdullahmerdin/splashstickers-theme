@@ -525,7 +525,8 @@
   /* The editor owns panning/zooming. Do not let a pinch fall through to
      browser/page zoom, which would scale the controls below the canvas too. */
   touch-action: none;
-  scrollbar-gutter: auto;
+  scrollbar-gutter: stable;
+  overflow-anchor: none;
   background-color: #fff;
   background-image:
     linear-gradient(to right, rgba(44, 48, 61, 0.075) 1px, transparent 1px),
@@ -1768,9 +1769,16 @@ dialog.cfg-modal::backdrop {
 .sticker-configurator .canvas-area {
   border: 1px solid transparent;
   background: var(--cfg-bg, var(--splash-color-surface, #fff));
-  box-shadow:
-    inset 0 0 0 1px rgb(var(--splash-color-teal-rgb, 0 206 201) / 0.34),
-    inset 0 0 0 4px rgb(var(--splash-color-surface-rgb, 255 255 255) / 0.62);
+  box-shadow: inset 0 0 0 4px rgb(var(--splash-color-surface-rgb, 255 255 255) / 0.62);
+}
+
+.sticker-configurator .canvas-area::after {
+  position: absolute;
+  z-index: calc(var(--cfg-z-guides) + 1);
+  inset: 0;
+  border: 1px solid rgb(var(--splash-color-teal-rgb, 0 206 201) / 0.42);
+  content: '';
+  pointer-events: none;
 }
 
 .sticker-configurator .canvas-item.selected {
