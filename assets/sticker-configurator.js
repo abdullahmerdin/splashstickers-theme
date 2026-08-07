@@ -669,7 +669,10 @@ class CanvasRenderer {
     this._syncZoomTransform();
 
     requestAnimationFrame(function () {
-      core.wrap.scrollLeft = Math.max(0, (core.wrap.scrollWidth - core.wrap.clientWidth) / 2);
+      // At the minimum 100% zoom the sheet is sized to the viewport. Pin it to
+      // the inline-start edge instead of centring incidental border overflow;
+      // even a one-pixel scroll hides the canvas's left guide line.
+      core.wrap.scrollLeft = 0;
       core.wrap.scrollTop = core.wrap.scrollHeight > core.wrap.clientHeight
         ? 0
         : Math.max(0, (core.wrap.scrollHeight - core.wrap.clientHeight) / 2);

@@ -168,6 +168,31 @@ test('canvas zoom never falls below its 100 percent scale', () => {
   assert.equal(renderer.clampZoom(1), 1);
 });
 
+test('100 percent fit keeps the canvas pinned to its visible left edge', () => {
+  const wrap = {
+    clientWidth: 1000,
+    clientHeight: 500,
+    scrollWidth: 1002,
+    scrollHeight: 500,
+    scrollLeft: 1,
+    scrollTop: 0
+  };
+  const core = {
+    CANVAS_W: 1000,
+    CANVAS_H: 500,
+    canvas: {},
+    wrap,
+    state: { zoom: 1, panX: 1, panY: 0 }
+  };
+  const renderer = new CanvasRenderer(core);
+  renderer._syncZoomTransform = () => {};
+  context.requestAnimationFrame = (callback) => { callback(); return 1; };
+
+  assert.equal(renderer.zoomToFit(), true);
+  assert.equal(wrap.scrollLeft, 0);
+  assert.equal(core.state.panX, 0);
+});
+
 test('collision engine enforces configured gaps and workspace bounds', () => {
   const core = {
     CANVAS_W: 600,

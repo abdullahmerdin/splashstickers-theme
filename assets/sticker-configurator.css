@@ -514,6 +514,7 @@
   --cfg-grid-origin-x: 0px;
   --cfg-grid-origin-y: 0px;
   position: relative;
+  box-sizing: border-box;
   grid-row: 4;
   align-self: stretch;
   width: calc(100% + var(--cfg-shell-pad) + var(--cfg-shell-pad));
@@ -554,6 +555,7 @@
 }
 
 .sticker-configurator .canvas-stage {
+  box-sizing: border-box;
   position: relative;
   flex: none;
   margin: 0;
@@ -1767,12 +1769,14 @@ dialog.cfg-modal::backdrop {
 }
 
 .sticker-configurator .canvas-area {
+  box-sizing: border-box;
   border: 1px solid transparent;
   background: var(--cfg-bg, var(--splash-color-surface, #fff));
   box-shadow: inset 0 0 0 4px rgb(var(--splash-color-surface-rgb, 255 255 255) / 0.62);
 }
 
 .sticker-configurator .canvas-area::after {
+  box-sizing: border-box;
   position: absolute;
   z-index: calc(var(--cfg-z-guides) + 1);
   inset: 0;
