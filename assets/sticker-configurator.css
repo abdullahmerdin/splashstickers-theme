@@ -1828,14 +1828,14 @@ dialog.cfg-modal::backdrop {
 .sticker-configurator .cfg-btn-submit {
   border-color: var(--splash-color-purple, var(--cfg-primary));
   border-radius: var(--splash-radius-control, var(--cfg-radius));
-  background: var(--splash-gradient-primary, linear-gradient(135deg, #6c5ce7, #fd79a8));
+  background: var(--splash-color-purple, var(--cfg-primary));
   box-shadow: var(--splash-shadow-cta, 0 8px 24px rgb(108 92 231 / 0.35));
   font-family: var(--splash-font-body, inherit);
   font-weight: 800;
 }
 
 .sticker-configurator .cfg-btn-submit:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--splash-color-pink, #fd79a8), var(--splash-color-purple, #6c5ce7));
+  background: var(--splash-color-pink, var(--cfg-primary));
   box-shadow: var(--splash-shadow-lift, 0 10px 26px rgb(45 52 54 / 0.18));
 }
 
@@ -1923,7 +1923,7 @@ dialog.cfg-modal::backdrop {
 
 .cfg-modal .cfg-btn-pry {
   border-color: var(--splash-color-purple, var(--cfg-primary));
-  background: var(--splash-gradient-primary, linear-gradient(135deg, #6c5ce7, #fd79a8));
+  background: var(--splash-color-purple, var(--cfg-primary));
 }
 
 .cfg-modal .cfg-btn-danger {
