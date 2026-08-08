@@ -22,6 +22,8 @@
       this.dialogTitle = root.querySelector('[data-sample-dialog-title]');
       this.dialogCategory = root.querySelector('[data-sample-dialog-category]');
       this.dialogDescription = root.querySelector('[data-sample-dialog-description]');
+      this.productLink = root.querySelector('[data-sample-product-link]');
+      this.productLinkLabel = root.querySelector('[data-sample-product-link-label]');
       this.counter = root.querySelector('[data-sample-counter]');
       this.thumbnails = root.querySelector('[data-sample-thumbnails]');
 
@@ -32,6 +34,7 @@
       this.panX = 0;
       this.panY = 0;
       this.dragState = null;
+      this.shopLabel = root.dataset.sampleShopLabel || 'Shop';
 
       if (!this.dialog || !this.grid) return;
 
@@ -258,6 +261,23 @@
       if (this.dialogDescription) {
         this.dialogDescription.textContent = item.description;
         this.dialogDescription.hidden = !item.description;
+      }
+
+      const productUrl = item.trigger.dataset.sampleProductUrl || '';
+      const productTitle = item.trigger.dataset.sampleProductTitle || '';
+      const hasProduct = Boolean(productUrl && productTitle);
+      if (this.productLink) {
+        this.productLink.hidden = !hasProduct;
+        if (hasProduct) {
+          this.productLink.href = productUrl;
+          this.productLink.setAttribute('aria-label', `${this.shopLabel} ${productTitle}`);
+        } else {
+          this.productLink.removeAttribute('href');
+          this.productLink.removeAttribute('aria-label');
+        }
+      }
+      if (this.productLinkLabel) {
+        this.productLinkLabel.textContent = hasProduct ? `${this.shopLabel} ${productTitle}` : '';
       }
 
       const visibleViews = this.getVisibleViews();

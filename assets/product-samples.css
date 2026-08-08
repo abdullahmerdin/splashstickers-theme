@@ -164,6 +164,7 @@ html[data-theme='dark'] .product-samples {
 .product-samples__dialog-close:focus-visible,
 .product-samples__dialog-nav:focus-visible,
 .product-samples__thumbnail:focus-visible,
+.product-samples__shop-button:focus-visible,
 .product-samples__dialog-viewport:focus-visible {
   outline: 3px solid var(--samples-focus);
   outline-offset: 4px;
@@ -481,6 +482,43 @@ html[data-theme='dark'] .product-samples {
   margin-top: 1rem;
   color: var(--samples-muted);
   line-height: 1.65;
+}
+
+.product-samples__shop-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  width: fit-content;
+  min-width: min(100%, 15rem);
+  min-height: 46px;
+  margin-top: auto;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--samples-accent);
+  border-radius: 999px;
+  background: var(--samples-accent);
+  color: var(--samples-accent-ink);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background-color var(--samples-transition), border-color var(--samples-transition), color var(--samples-transition), transform var(--samples-transition);
+}
+
+.product-samples__shop-button:hover {
+  border-color: var(--samples-foreground);
+  background: var(--samples-foreground);
+  color: var(--samples-background);
+  transform: translateY(-2px);
+}
+
+.product-samples__shop-button[hidden] {
+  display: none;
+}
+
+.product-samples__shop-button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
 }
 
 .product-samples__dialog-nav:disabled {

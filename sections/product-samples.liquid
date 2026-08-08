@@ -56,6 +56,7 @@
   id="{{ section_id }}"
   class="product-samples"
   data-sample-gallery
+  data-sample-shop-label="{{ section.settings.shop_label | default: 'Shop' | escape }}"
   data-filter-label="{{ section.settings.filter_label | default: 'Filter samples' | escape }}"
   data-all-filter-label="{{ section.settings.filter_all_label | default: 'All samples' | escape }}"
   data-empty-filter-label="{{ section.settings.empty_filter_label | default: 'No samples in this category yet.' | escape }}"
@@ -119,6 +120,13 @@
             if sample_alt == blank
               assign sample_alt = sample_title
             endif
+            assign sample_product = block.settings.product
+            assign sample_product_url = blank
+            assign sample_product_title = blank
+            if sample_product != blank
+              assign sample_product_url = sample_product.url
+              assign sample_product_title = sample_product.title
+            endif
             assign sample_has_uploaded_images = false
             for sample_image_index in (1..4)
               assign sample_image = blank
@@ -158,6 +166,8 @@
                   data-sample-category-label="{{ sample_category_label | escape }}"
                   data-sample-description="{{ sample_description | strip_html | escape }}"
                   data-sample-alt="{{ sample_alt | escape }}"
+                  data-sample-product-url="{{ sample_product_url | escape }}"
+                  data-sample-product-title="{{ sample_product_title | escape }}"
                   aria-label="{{ section.settings.open_label | default: 'Open sample photo' | append: ': ' | append: sample_title | escape }}"
                 >
                   <span class="product-samples__card-slides">
@@ -356,6 +366,17 @@
           <p class="product-samples__dialog-category" data-sample-dialog-category></p>
           <h2 id="{{ section_id }}-dialog-title" data-sample-dialog-title></h2>
           <p class="product-samples__dialog-description" data-sample-dialog-description></p>
+          <a
+            class="product-samples__shop-button"
+            data-sample-product-link
+            href="{{ routes.root_url }}"
+            hidden
+          >
+            <span data-sample-product-link-label></span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
 
         </aside>
       </div>
@@ -449,6 +470,12 @@
       "default": "Zoomable sample image"
     },
     {
+      "type": "text",
+      "id": "shop_label",
+      "label": "Shop button label",
+      "default": "Shop"
+    },
+    {
       "type": "header",
       "content": "Empty state"
     },
@@ -499,6 +526,12 @@
           "id": "image_4",
           "label": "Sample photo 4",
           "info": "Optional fourth photo for this sample card."
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Shop product",
+          "info": "Optional product linked by the Shop button in the sample viewer."
         },
         {
           "type": "select",
