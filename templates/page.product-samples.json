@@ -94,10 +94,6 @@
         "previous_label": "Previous sample",
         "next_label": "Next sample",
         "viewport_label": "Zoomable sample image",
-        "zoom_controls_label": "Zoom controls",
-        "zoom_out_label": "Zoom out",
-        "zoom_reset_label": "Reset zoom",
-        "zoom_in_label": "Zoom in",
         "empty_eyebrow": "Gallery ready",
         "empty_title": "Add your first sample photo",
         "empty_text": "Add a sample block in the Theme Editor, then upload the product photo you want customers to see."

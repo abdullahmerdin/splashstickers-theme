@@ -237,12 +237,6 @@
                       {% endif %}
                     {% endfor %}
                   </span>
-                  <span class="product-samples__zoom-badge" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="10.75" cy="10.75" r="5.5" stroke="currentColor" stroke-width="1.8"/>
-                      <path d="m15 15 4.25 4.25M10.75 8v5.5M8 10.75h5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    </svg>
-                  </span>
                 </button>
                 <button
                   type="button"
@@ -363,37 +357,6 @@
           <h2 id="{{ section_id }}-dialog-title" data-sample-dialog-title></h2>
           <p class="product-samples__dialog-description" data-sample-dialog-description></p>
 
-          <div
-            class="product-samples__zoom-controls"
-            role="group"
-            aria-label="{{ section.settings.zoom_controls_label | default: 'Zoom controls' | escape }}"
-          >
-            <button
-              type="button"
-              class="product-samples__zoom-button"
-              data-sample-zoom="out"
-              aria-label="{{ section.settings.zoom_out_label | default: 'Zoom out' | escape }}"
-            >
-              −
-            </button>
-            <button
-              type="button"
-              class="product-samples__zoom-level"
-              data-sample-zoom="reset"
-              aria-label="{{ section.settings.zoom_reset_label | default: 'Reset zoom' | escape }}"
-            >
-              {{ 'icon-reset.svg' | inline_asset_content }}
-              <span class="visually-hidden">{{ section.settings.zoom_reset_label | default: 'Reset zoom' | escape }}</span>
-            </button>
-            <button
-              type="button"
-              class="product-samples__zoom-button"
-              data-sample-zoom="in"
-              aria-label="{{ section.settings.zoom_in_label | default: 'Zoom in' | escape }}"
-            >
-              +
-            </button>
-          </div>
         </aside>
       </div>
 
@@ -484,30 +447,6 @@
       "id": "viewport_label",
       "label": "Image viewport label",
       "default": "Zoomable sample image"
-    },
-    {
-      "type": "text",
-      "id": "zoom_controls_label",
-      "label": "Zoom controls label",
-      "default": "Zoom controls"
-    },
-    {
-      "type": "text",
-      "id": "zoom_out_label",
-      "label": "Zoom out label",
-      "default": "Zoom out"
-    },
-    {
-      "type": "text",
-      "id": "zoom_reset_label",
-      "label": "Zoom reset label",
-      "default": "Reset zoom"
-    },
-    {
-      "type": "text",
-      "id": "zoom_in_label",
-      "label": "Zoom in label",
-      "default": "Zoom in"
     },
     {
       "type": "header",

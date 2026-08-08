@@ -24,9 +24,6 @@
       this.dialogDescription = root.querySelector('[data-sample-dialog-description]');
       this.counter = root.querySelector('[data-sample-counter]');
       this.thumbnails = root.querySelector('[data-sample-thumbnails]');
-      this.zoomOutButton = root.querySelector('[data-sample-zoom="out"]');
-      this.zoomInButton = root.querySelector('[data-sample-zoom="in"]');
-      this.zoomResetButton = root.querySelector('[data-sample-zoom="reset"]');
 
       this.items = [];
       this.activeItem = null;
@@ -109,15 +106,6 @@
       this.closeButton?.addEventListener('click', () => this.close());
       this.previousButton?.addEventListener('click', () => this.goToRelativeItem(-1));
       this.nextButton?.addEventListener('click', () => this.goToRelativeItem(1));
-
-      this.root.querySelectorAll('[data-sample-zoom]').forEach((button) => {
-        button.addEventListener('click', () => {
-          const action = button.dataset.sampleZoom;
-          if (action === 'in') this.changeZoom(ZOOM_STEP);
-          if (action === 'out') this.changeZoom(-ZOOM_STEP);
-          if (action === 'reset') this.resetZoom();
-        });
-      });
 
       this.dialog.addEventListener('click', (event) => {
         if (event.target === this.dialog) this.close();
@@ -419,9 +407,6 @@
       this.viewport?.style.setProperty('--sample-pan-y', `${this.panY}px`);
       this.viewport?.setAttribute('data-zoomed', String(this.zoom > MIN_ZOOM));
 
-      if (this.zoomOutButton) this.zoomOutButton.disabled = this.zoom <= MIN_ZOOM;
-      if (this.zoomInButton) this.zoomInButton.disabled = this.zoom >= MAX_ZOOM;
-      if (this.zoomResetButton) this.zoomResetButton.disabled = this.zoom <= MIN_ZOOM;
     }
 
     close() {
