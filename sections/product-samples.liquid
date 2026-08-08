@@ -56,7 +56,6 @@
   id="{{ section_id }}"
   class="product-samples"
   data-sample-gallery
-  data-sample-count-label="{{ section.settings.count_label | default: 'samples' | escape }}"
   data-filter-label="{{ section.settings.filter_label | default: 'Filter samples' | escape }}"
   data-all-filter-label="{{ section.settings.filter_all_label | default: 'All samples' | escape }}"
   data-empty-filter-label="{{ section.settings.empty_filter_label | default: 'No samples in this category yet.' | escape }}"
@@ -64,7 +63,6 @@
 >
   <div class="product-samples__inner">
     <header class="product-samples__hero">
-      <p class="product-samples__eyebrow">{{ section.settings.eyebrow | default: 'Real samples' | escape }}</p>
       <h1>{{ heading | escape }}</h1>
       <p class="product-samples__intro">{{ intro | escape }}</p>
     </header>
@@ -86,9 +84,6 @@
           {{ section.settings.filter_all_label | default: 'All samples' | escape }}
         </button>
       </div>
-      <p class="product-samples__count" data-sample-count aria-live="polite">
-        {{ gallery_count }} {{ section.settings.count_label | default: 'samples' | escape }}
-      </p>
     </div>
 
     {% if gallery_count > 0 %}
@@ -247,7 +242,6 @@
                       <circle cx="10.75" cy="10.75" r="5.5" stroke="currentColor" stroke-width="1.8"/>
                       <path d="m15 15 4.25 4.25M10.75 8v5.5M8 10.75h5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
-                    <span>{{ section.settings.zoom_label | default: 'Zoom' | escape }}</span>
                   </span>
                 </button>
                 <button
@@ -388,7 +382,8 @@
               data-sample-zoom="reset"
               aria-label="{{ section.settings.zoom_reset_label | default: 'Reset zoom' | escape }}"
             >
-              <span data-sample-zoom-level>100%</span>
+              {{ 'icon-reset.svg' | inline_asset_content }}
+              <span class="visually-hidden">{{ section.settings.zoom_reset_label | default: 'Reset zoom' | escape }}</span>
             </button>
             <button
               type="button"
@@ -399,7 +394,6 @@
               +
             </button>
           </div>
-          <p class="product-samples__zoom-hint">{{ section.settings.zoom_hint | default: 'Use + / −, scroll or double-click. Drag when zoomed in.' | escape }}</p>
         </aside>
       </div>
 
@@ -414,12 +408,6 @@
   "class": "section-wrapper product-samples-section",
   "max_blocks": 24,
   "settings": [
-    {
-      "type": "text",
-      "id": "eyebrow",
-      "label": "Eyebrow",
-      "default": "Real samples"
-    },
     {
       "type": "text",
       "id": "heading",
@@ -456,18 +444,6 @@
       "id": "filter_all_label",
       "label": "All filter label",
       "default": "All samples"
-    },
-    {
-      "type": "text",
-      "id": "count_label",
-      "label": "Count label",
-      "default": "samples"
-    },
-    {
-      "type": "text",
-      "id": "zoom_label",
-      "label": "Card zoom label",
-      "default": "Zoom"
     },
     {
       "type": "text",
@@ -532,12 +508,6 @@
       "id": "zoom_in_label",
       "label": "Zoom in label",
       "default": "Zoom in"
-    },
-    {
-      "type": "text",
-      "id": "zoom_hint",
-      "label": "Zoom hint",
-      "default": "Use + / −, scroll or double-click. Drag when zoomed in."
     },
     {
       "type": "header",

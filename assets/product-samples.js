@@ -13,7 +13,6 @@
       this.dialog = root.querySelector('[data-sample-dialog]');
       this.filterBar = root.querySelector('[data-sample-filter-bar]');
       this.grid = root.querySelector('[data-sample-grid]');
-      this.count = root.querySelector('[data-sample-count]');
       this.emptyFilter = root.querySelector('[data-sample-empty-filter]');
       this.closeButton = root.querySelector('[data-sample-close]');
       this.previousButton = root.querySelector('[data-sample-previous]');
@@ -25,7 +24,6 @@
       this.dialogDescription = root.querySelector('[data-sample-dialog-description]');
       this.counter = root.querySelector('[data-sample-counter]');
       this.thumbnails = root.querySelector('[data-sample-thumbnails]');
-      this.zoomLevel = root.querySelector('[data-sample-zoom-level]');
       this.zoomOutButton = root.querySelector('[data-sample-zoom="out"]');
       this.zoomInButton = root.querySelector('[data-sample-zoom="in"]');
       this.zoomResetButton = root.querySelector('[data-sample-zoom="reset"]');
@@ -220,11 +218,6 @@
       this.filterBar?.querySelectorAll('[data-sample-filter]').forEach((button) => {
         button.setAttribute('aria-pressed', String(button.dataset.sampleFilter === category));
       });
-
-      if (this.count) {
-        const countLabel = this.root.dataset.sampleCountLabel || 'samples';
-        this.count.textContent = `${visibleItems.length} ${countLabel}`;
-      }
 
       if (this.emptyFilter) this.emptyFilter.hidden = visibleItems.length > 0;
     }
@@ -426,7 +419,6 @@
       this.viewport?.style.setProperty('--sample-pan-y', `${this.panY}px`);
       this.viewport?.setAttribute('data-zoomed', String(this.zoom > MIN_ZOOM));
 
-      if (this.zoomLevel) this.zoomLevel.textContent = `${Math.round(this.zoom * 100)}%`;
       if (this.zoomOutButton) this.zoomOutButton.disabled = this.zoom <= MIN_ZOOM;
       if (this.zoomInButton) this.zoomInButton.disabled = this.zoom >= MAX_ZOOM;
       if (this.zoomResetButton) this.zoomResetButton.disabled = this.zoom <= MIN_ZOOM;
