@@ -121,8 +121,8 @@
               assign sample_alt = sample_title
             endif
             assign sample_product = block.settings.product
-            assign sample_product_url = blank
-            assign sample_product_title = blank
+            assign sample_product_url = routes.all_products_collection_url
+            assign sample_product_title = sample_title
             if sample_product != blank
               assign sample_product_url = sample_product.url
               assign sample_product_title = sample_product.title
