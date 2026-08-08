@@ -16,9 +16,7 @@
           "type": "sample",
           "settings": {
             "image": "shopify://shop_images/gorsel_2026-08-07_171040705.png",
-            "image_2": "",
-            "image_3": "",
-            "image_4": "",
+            "image_2": "shopify://shop_images/gorsel_2026-08-08_144059707.png",
             "category": "die_cut",
             "title": "Die-cut finish",
             "description": "A close look at the printed surface and cut edge.",
@@ -29,9 +27,6 @@
           "type": "sample",
           "settings": {
             "image": "shopify://shop_images/gorsel_2026-08-07_170904599.png",
-            "image_2": "",
-            "image_3": "",
-            "image_4": "",
             "category": "magnet",
             "title": "Magnet finish",
             "description": "See the colour and edge detail on a finished magnet.",
@@ -42,9 +37,6 @@
           "type": "sample",
           "settings": {
             "image": "shopify://shop_images/gorsel_2026-08-07_170621705.png",
-            "image_2": "",
-            "image_3": "",
-            "image_4": "",
             "category": "uv_dtf",
             "title": "UV DTF finish",
             "description": "Inspect the raised detail and colour on a finished transfer.",
@@ -55,9 +47,6 @@
           "type": "sample",
           "settings": {
             "image": "shopify://shop_images/gorsel_2026-08-07_170723720.png",
-            "image_2": "",
-            "image_3": "",
-            "image_4": "",
             "category": "uv_print",
             "title": "UV print finish",
             "description": "A closer look at the glossy printed surface.",
@@ -68,9 +57,6 @@
           "type": "sample",
           "settings": {
             "image": "shopify://shop_images/gorsel_2026-08-07_170819440.png",
-            "image_2": "",
-            "image_3": "",
-            "image_4": "",
             "category": "textile",
             "title": "Textile transfer",
             "description": "See how the finished transfer sits on fabric.",
@@ -81,9 +67,6 @@
           "type": "sample",
           "settings": {
             "image": "shopify://shop_images/gorsel_2026-08-07_171005327.png",
-            "image_2": "",
-            "image_3": "",
-            "image_4": "",
             "category": "emboss",
             "title": "Emboss finish",
             "description": "Inspect the tactile raised detail up close.",
