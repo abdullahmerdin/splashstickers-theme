@@ -83,9 +83,9 @@
         "emboss_sample"
       ],
       "settings": {
-        "eyebrow": "Real samples",
-        "heading": "See the finish up close",
-        "intro": "Browse real product samples and open any image to inspect the finish, colour and detail.",
+        "eyebrow": "Browse",
+        "heading": "Samples",
+        "intro": "Browse our samples, inspect colour and detail.",
         "columns": 3,
         "filter_label": "Filter samples",
         "filter_all_label": "All samples",
