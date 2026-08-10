@@ -15,14 +15,16 @@
         "splash_mockup_studio": {
           "type": "shopify://apps/splash-stickers/blocks/mockup-studio/019febda-63b2-7e16-abe4-1caf4f3d8a9f",
           "settings": {
-            "eyebrow": "Splash Mockup Studio",
+            "eyebrow": "",
             "heading": "Put your design into the real world.",
             "body": "Upload once, choose several products, then art-direct every mockup exactly the way you want it.",
             "button_text": "Generate selected mockups"
           }
         }
       },
-      "block_order": ["splash_mockup_studio"],
+      "block_order": [
+        "splash_mockup_studio"
+      ],
       "settings": {
         "content_direction": "column",
         "vertical_on_mobile": true,
@@ -53,5 +55,7 @@
       }
     }
   },
-  "order": ["mockup_studio"]
+  "order": [
+    "mockup_studio"
+  ]
 }
