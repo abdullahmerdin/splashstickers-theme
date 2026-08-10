@@ -110,7 +110,7 @@ export async function findDesign(shop: string, publicId: string) {
       mockups: {
         orderBy: { createdAt: "desc" },
         take: 1,
-        select: { publicId: true, status: true, outputUrl: true, errorCode: true },
+        select: { publicId: true, scene: true, options: true, status: true, outputUrl: true, errorCode: true },
       },
     },
   });

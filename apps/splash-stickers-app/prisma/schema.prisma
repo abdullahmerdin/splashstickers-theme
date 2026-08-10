@@ -102,6 +102,8 @@ model Mockup {
   publicId   String
   shop       String
   designId   String
+  scene      String       @default("phone")
+  options    Json?
   status     MockupStatus @default(QUEUED)
   outputUrl  String?
   errorCode  String?
@@ -112,6 +114,7 @@ model Mockup {
   @@unique([shop, publicId])
   @@index([shop, status, createdAt])
   @@index([designId])
+  @@index([designId, scene, createdAt])
 }
 
 model Review {

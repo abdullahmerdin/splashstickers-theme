@@ -1,22 +1,57 @@
 import { normalizeDesignManifest, type DesignManifest } from "@splash-stickers/design-contract";
 
+import laptopPlate from "../assets/mockups/laptop.webp?inline";
+import mailerPlate from "../assets/mockups/mailer.webp?inline";
 import phoneCasePlate from "../assets/mockups/phone-case.webp?inline";
+import {
+  normalizeMockupOptions,
+  normalizeMockupScene,
+  type MockupOptions,
+  type MockupScene,
+} from "./mockup-options.server";
 
 type AdminGraphql = {
   graphql: (query: string, options?: { variables?: Record<string, unknown> }) => Promise<Response>;
 };
 
+type Rect = { x: number; y: number; width: number; height: number; radius: number };
+
+type SceneDefinition = {
+  label: string;
+  plate: string;
+  surface: Rect;
+  printArea: Rect;
+  padding: number;
+};
+
 const MAX_INLINE_ARTWORK_BYTES = 12 * 1024 * 1024;
 const MAX_INLINE_MOCKUP_BYTES = 32 * 1024 * 1024;
 const INLINE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-const PHONE_SCENE_SIZE = 1000;
-const PHONE_PRINT_AREA = {
-  x: 348,
-  y: 337,
-  width: 304,
-  height: 453,
+const MOCKUP_SCENE_SIZE = 1000;
+
+const MOCKUP_SCENE_DEFINITIONS: Record<MockupScene, SceneDefinition> = {
+  phone: {
+    label: "Phone case",
+    plate: phoneCasePlate,
+    surface: { x: 300, y: 104, width: 398, height: 790, radius: 76 },
+    printArea: { x: 348, y: 337, width: 304, height: 453, radius: 22 },
+    padding: 32,
+  },
+  laptop: {
+    label: "Laptop lid",
+    plate: laptopPlate,
+    surface: { x: 70, y: 167, width: 866, height: 643, radius: 27 },
+    printArea: { x: 128, y: 224, width: 750, height: 525, radius: 18 },
+    padding: 34,
+  },
+  mailer: {
+    label: "Shipping box",
+    plate: mailerPlate,
+    surface: { x: 104, y: 140, width: 790, height: 701, radius: 8 },
+    printArea: { x: 158, y: 195, width: 682, height: 590, radius: 6 },
+    padding: 38,
+  },
 };
-const PHONE_PRINT_PADDING = 32;
 
 function artworkBounds(manifest: DesignManifest) {
   if (!manifest.items.length) {
@@ -114,17 +149,8 @@ function color(value: unknown, fallback: string) {
     : fallback;
 }
 
-export function renderMockupSvg(input: unknown, artworkUrls: Map<string, string>) {
-  const manifest: DesignManifest = normalizeDesignManifest(input);
-  const bounds = artworkBounds(manifest);
-  const availableWidth = PHONE_PRINT_AREA.width - PHONE_PRINT_PADDING * 2;
-  const availableHeight = PHONE_PRINT_AREA.height - PHONE_PRINT_PADDING * 2;
-  const scale = Math.min(availableWidth / bounds.width, availableHeight / bounds.height);
-  const renderedWidth = bounds.width * scale;
-  const renderedHeight = bounds.height * scale;
-  const offsetX = PHONE_PRINT_AREA.x + PHONE_PRINT_PADDING + (availableWidth - renderedWidth) / 2 - bounds.x * scale;
-  const offsetY = PHONE_PRINT_AREA.y + PHONE_PRINT_PADDING + (availableHeight - renderedHeight) / 2 - bounds.y * scale;
-  const elements = manifest.items
+function artworkElements(manifest: DesignManifest, artworkUrls: Map<string, string>) {
+  return manifest.items
     .slice()
     .sort((left, right) => left.placement.zIndex - right.placement.zIndex)
     .map((item) => {
@@ -150,15 +176,43 @@ export function renderMockupSvg(input: unknown, artworkUrls: Map<string, string>
       return `<rect x="${placement.xMm}" y="${placement.yMm}" width="${placement.widthMm}" height="${placement.heightMm}" rx="2" fill="none" stroke="#8a8f98" stroke-dasharray="3 2" transform="${transform}"/>`;
     })
     .join("");
+}
+
+export function renderMockupSvg(
+  input: unknown,
+  artworkUrls: Map<string, string>,
+  sceneValue: unknown = "phone",
+  optionsValue: Partial<MockupOptions> = {},
+) {
+  const manifest: DesignManifest = normalizeDesignManifest(input);
+  const scene = normalizeMockupScene(sceneValue);
+  const options = normalizeMockupOptions(optionsValue, scene);
+  const definition = MOCKUP_SCENE_DEFINITIONS[scene];
+  const bounds = artworkBounds(manifest);
+  const availableWidth = definition.printArea.width - definition.padding * 2;
+  const availableHeight = definition.printArea.height - definition.padding * 2;
+  const baseScale = Math.min(availableWidth / bounds.width, availableHeight / bounds.height);
+  const scale = baseScale * options.scalePct / 100;
+  const centerX = definition.printArea.x + definition.printArea.width * options.xPct / 100;
+  const centerY = definition.printArea.y + definition.printArea.height * options.yPct / 100;
+  const offsetX = centerX - (bounds.x + bounds.width / 2) * scale;
+  const offsetY = centerY - (bounds.y + bounds.height / 2) * scale;
+  const surface = definition.surface;
+  const printArea = definition.printArea;
+  const elements = artworkElements(manifest, artworkUrls);
+  const title = `${definition.label} sticker mockup`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>` +
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${PHONE_SCENE_SIZE}" height="${PHONE_SCENE_SIZE}" viewBox="0 0 ${PHONE_SCENE_SIZE} ${PHONE_SCENE_SIZE}" role="img" aria-label="Phone case sticker mockup">` +
-    `<title>Phone case sticker mockup</title>` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${MOCKUP_SCENE_SIZE}" height="${MOCKUP_SCENE_SIZE}" viewBox="0 0 ${MOCKUP_SCENE_SIZE} ${MOCKUP_SCENE_SIZE}" role="img" aria-label="${xml(title)}">` +
+    `<title>${xml(title)}</title>` +
     `<defs>` +
-    `<clipPath id="phone-print-area"><rect x="${PHONE_PRINT_AREA.x}" y="${PHONE_PRINT_AREA.y}" width="${PHONE_PRINT_AREA.width}" height="${PHONE_PRINT_AREA.height}" rx="22"/></clipPath>` +
-    `<filter id="sticker-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#251f1a" flood-opacity="0.24"/></filter>` +
+    `<clipPath id="product-surface"><rect x="${surface.x}" y="${surface.y}" width="${surface.width}" height="${surface.height}" rx="${surface.radius}"/></clipPath>` +
+    `<clipPath id="print-area"><rect x="${printArea.x}" y="${printArea.y}" width="${printArea.width}" height="${printArea.height}" rx="${printArea.radius}"/></clipPath>` +
+    `<filter id="sticker-shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#251f1a" flood-opacity="0.24"/></filter>` +
     `</defs>` +
-    `<image href="${xml(phoneCasePlate)}" width="${PHONE_SCENE_SIZE}" height="${PHONE_SCENE_SIZE}" preserveAspectRatio="xMidYMid slice"/>` +
-    `<g clip-path="url(#phone-print-area)"><g transform="translate(${offsetX} ${offsetY}) scale(${scale})" filter="url(#sticker-shadow)">${elements}</g></g>` +
-    `</svg>`;
+    `<g style="isolation:isolate">` +
+    `<image href="${xml(definition.plate)}" width="${MOCKUP_SCENE_SIZE}" height="${MOCKUP_SCENE_SIZE}" preserveAspectRatio="xMidYMid slice"/>` +
+    `<rect x="${surface.x}" y="${surface.y}" width="${surface.width}" height="${surface.height}" rx="${surface.radius}" fill="${xml(options.productColor)}" opacity="0.82" clip-path="url(#product-surface)" style="mix-blend-mode:multiply"/>` +
+    `<g clip-path="url(#print-area)"><g transform="rotate(${options.rotationDeg} ${centerX} ${centerY}) translate(${offsetX} ${offsetY}) scale(${scale})" filter="url(#sticker-shadow)">${elements}</g></g>` +
+    `</g></svg>`;
 }

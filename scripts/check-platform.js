@@ -25,13 +25,18 @@ const required = [
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.stage.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.complete.ts',
   'apps/splash-stickers-app/app/assets/mockups/phone-case.webp',
+  'apps/splash-stickers-app/app/assets/mockups/laptop.webp',
+  'apps/splash-stickers-app/app/assets/mockups/mailer.webp',
+  'apps/splash-stickers-app/app/services/mockup-options.server.ts',
   'apps/splash-stickers-app/app/services/upload-ticket.server.ts',
   'apps/splash-stickers-app/app/routes/webhooks.orders.paid.tsx',
   'apps/splash-stickers-app/app/routes/webhooks.compliance.tsx',
   'apps/splash-stickers-app/extensions/splash-storefront/shopify.extension.toml',
   'apps/splash-stickers-app/storefront-extension-src/splash-storefront.js',
+  'apps/splash-stickers-app/storefront-extension-src/mockup-studio.js',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid',
+  'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-studio.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid',
   'packages/design-contract/schema/design-manifest.schema.json',
   'packages/design-contract/src/index.js',
@@ -77,9 +82,12 @@ assert(/requireAppProxy/.test(proxyRoutes), 'all storefront domains use the sign
 
 const bridge = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid');
 const mockup = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid');
+const mockupStudio = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-studio.liquid');
 const reviews = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid');
 assert(/"target"\s*:\s*"body"/.test(bridge), 'storefront bridge is an app embed');
 assert(/"target"\s*:\s*"section"/.test(mockup), 'mockup is a movable app block');
+assert(/"templates"\s*:\s*\["page"\]/.test(mockupStudio), 'mockup studio is a dedicated page app block');
+assert(/mockup-phone\.jpg/.test(mockupStudio) && /mockup-laptop\.jpg/.test(mockupStudio) && /mockup-mailer\.jpg/.test(mockupStudio), 'mockup studio exposes all product scene plates');
 assert(/"target"\s*:\s*"section"/.test(reviews), 'reviews are a movable app block');
 
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');
@@ -87,11 +95,14 @@ assert(/--color-background/.test(extensionCss) && /--color-foreground/.test(exte
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'extension UI includes a dark-mode fallback');
 
 const mockupRenderer = read('apps/splash-stickers-app/app/services/mockup-renderer.server.ts');
-const phoneMockupPath = path.join(root, 'apps/splash-stickers-app/app/assets/mockups/phone-case.webp');
-assert(fs.statSync(phoneMockupPath).size <= 250_000, 'phone mockup plate stays lightweight enough to inline');
-assert(/phone-case\.webp\?inline/.test(mockupRenderer), 'mockup renderer embeds the phone scene without a cross-origin dependency');
-assert(/PHONE_PRINT_AREA/.test(mockupRenderer) && /phone-print-area/.test(mockupRenderer), 'phone mockup constrains artwork to the printable case surface');
-assert(/artworkBounds/.test(mockupRenderer) && /PHONE_PRINT_PADDING/.test(mockupRenderer), 'phone mockup fits visible artwork instead of empty sheet space');
+['phone-case.webp', 'laptop.webp', 'mailer.webp'].forEach((filename) => {
+  const mockupPath = path.join(root, 'apps/splash-stickers-app/app/assets/mockups', filename);
+  assert(fs.statSync(mockupPath).size <= 250_000, `${filename} mockup plate stays lightweight enough to inline`);
+});
+assert(/phone-case\.webp\?inline/.test(mockupRenderer) && /laptop\.webp\?inline/.test(mockupRenderer) && /mailer\.webp\?inline/.test(mockupRenderer), 'mockup renderer embeds every product scene without cross-origin dependencies');
+assert(/MOCKUP_SCENE_DEFINITIONS/.test(mockupRenderer) && /print-area/.test(mockupRenderer), 'every mockup scene constrains artwork to its printable surface');
+assert(/artworkBounds/.test(mockupRenderer) && /options\.scalePct/.test(mockupRenderer), 'mockup renderer applies customer placement and scale to visible artwork');
+assert(/options\.productColor/.test(mockupRenderer) && /mix-blend-mode:multiply/.test(mockupRenderer), 'mockup renderer preserves product lighting while applying customer color');
 
 const contractSchema = JSON.parse(read('packages/design-contract/schema/design-manifest.schema.json'));
 assert(contractSchema.properties.schemaVersion.const === '1.0', 'DesignManifest schema version is pinned');
@@ -104,6 +115,11 @@ const configuratorEntry = read('assets/sticker-configurator/entry.js');
 const extensionJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
 const extensionJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
 assert(fs.statSync(extensionJsPath).size <= 10_000, 'storefront extension JavaScript stays within Shopify\'s app-block limit');
+const mockupStudioJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio.js');
+const mockupStudioJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio.js');
+assert(fs.statSync(mockupStudioJsPath).size <= 10_000, 'mockup studio JavaScript stays within Shopify\'s app-block limit');
+assert(/uploads\/stage/.test(mockupStudioJs) && /data-studio-file/.test(mockupStudio), 'mockup studio uploads finished artwork without the configurator');
+assert(/scalePct/.test(mockupStudioJs) && /productColor/.test(mockupStudioJs) && /pointermove/.test(mockupStudioJs), 'mockup studio supports scale, color and drag placement controls');
 assert(/sticker-configurator:artwork-added/.test(configuratorEntry), 'configurator exposes the selected File only to the upload bridge event');
 assert(/uploads\/stage/.test(extensionJs) && /uploads\/complete/.test(extensionJs), 'storefront bridge completes the staged artwork upload flow');
 assert(/uploadToken/.test(extensionJs), 'staged artwork completion carries a short-lived server-signed token');

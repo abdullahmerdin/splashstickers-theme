@@ -1,0 +1,126 @@
+<section
+  class="splash-app-surface splash-studio"
+  data-splash-studio
+  data-proxy-base="{{ routes.root_url }}apps/splash-stickers/"
+  data-scene-phone="{{ 'mockup-phone.jpg' | asset_url }}"
+  data-scene-laptop="{{ 'mockup-laptop.jpg' | asset_url }}"
+  data-scene-mailer="{{ 'mockup-mailer.jpg' | asset_url }}"
+  {{ block.shopify_attributes }}
+>
+  <header class="splash-studio-hero">
+    <div>
+      <span class="splash-studio-eyebrow">{{ block.settings.eyebrow | escape }}</span>
+      <h1>{{ block.settings.heading | escape }}</h1>
+      <p>{{ block.settings.body | escape }}</p>
+    </div>
+    <ol class="splash-studio-steps" aria-label="How it works">
+      <li><span>01</span>Upload</li>
+      <li><span>02</span>Art direct</li>
+      <li><span>03</span>Generate</li>
+    </ol>
+  </header>
+
+  <div class="splash-studio-upload" data-studio-dropzone>
+    <input id="splash-studio-file-{{ block.id }}" data-studio-file type="file" accept="image/png,image/jpeg,image/webp">
+    <label for="splash-studio-file-{{ block.id }}">
+      <span class="splash-studio-upload__icon" aria-hidden="true">↗</span>
+      <strong>Drop your design here</strong>
+      <span>or browse a PNG, JPG or WebP up to 25 MB</span>
+    </label>
+    <p data-studio-filename>No configurator needed — upload the finished artwork directly.</p>
+  </div>
+
+  <div class="splash-studio-section-heading">
+    <div>
+      <span class="splash-studio-kicker">Choose products</span>
+      <h2>Select one or several mockups</h2>
+    </div>
+    <p>Each product keeps its own placement, scale and color.</p>
+  </div>
+
+  <div class="splash-studio-scenes">
+    <label class="splash-studio-scene" data-scene-card>
+      <input data-scene-choice type="checkbox" value="phone" checked>
+      <img src="{{ 'mockup-phone.jpg' | asset_url }}" alt="Blank phone case mockup" width="1000" height="1000">
+      <span><strong>Phone case</strong><small>Portrait canvas</small></span>
+      <i aria-hidden="true">✓</i>
+    </label>
+    <label class="splash-studio-scene" data-scene-card>
+      <input data-scene-choice type="checkbox" value="laptop">
+      <img src="{{ 'mockup-laptop.jpg' | asset_url }}" alt="Blank laptop mockup" width="1000" height="1000">
+      <span><strong>Laptop</strong><small>Wide canvas</small></span>
+      <i aria-hidden="true">✓</i>
+    </label>
+    <label class="splash-studio-scene" data-scene-card>
+      <input data-scene-choice type="checkbox" value="mailer">
+      <img src="{{ 'mockup-mailer.jpg' | asset_url }}" alt="Blank shipping box mockup" width="1000" height="1000">
+      <span><strong>Shipping box</strong><small>Packaging canvas</small></span>
+      <i aria-hidden="true">✓</i>
+    </label>
+  </div>
+
+  <template data-editor-template>
+    <article class="splash-studio-editor" hidden>
+      <div class="splash-studio-editor__heading">
+        <div><span class="splash-studio-kicker">Edit placement</span><h3 data-editor-title></h3></div>
+        <span class="splash-studio-drag-hint">Drag the design on the product</span>
+      </div>
+      <div class="splash-studio-workspace">
+        <div class="splash-studio-canvas">
+          <img class="splash-studio-plate" alt="" width="1000" height="1000">
+          <span class="splash-studio-surface" aria-hidden="true"></span>
+          <div class="splash-studio-print-area">
+            <img class="splash-studio-artwork" alt="Your uploaded design" draggable="false" width="1000" height="1000" hidden>
+          </div>
+        </div>
+        <div class="splash-studio-controls">
+          <div class="splash-studio-control">
+            <div class="splash-studio-control__label"><label>Size</label><output data-scale-output>100%</output></div>
+            <input data-scale type="range" min="30" max="220" step="1" value="100" aria-label="Design size">
+          </div>
+          <div class="splash-studio-control">
+            <div class="splash-studio-control__label"><label>Rotation</label><output data-rotation-output>0°</output></div>
+            <input data-rotation type="range" min="-180" max="180" step="1" value="0" aria-label="Design rotation">
+          </div>
+          <fieldset class="splash-studio-colors">
+            <legend>Product color</legend>
+            <div data-color-presets></div>
+            <label class="splash-studio-custom-color"><input data-custom-color type="color"><span>Custom</span></label>
+          </fieldset>
+          <button class="splash-studio-reset" type="button" data-reset>Reset placement</button>
+        </div>
+      </div>
+    </article>
+  </template>
+  <div class="splash-studio-editors" data-studio-editors></div>
+
+  <footer class="splash-studio-actions">
+    <p data-studio-status role="status" aria-live="polite">Upload a design to start editing.</p>
+    <button class="splash-app-button splash-studio-generate" type="button" data-studio-generate disabled>
+      {{ block.settings.button_text | escape }}
+    </button>
+  </footer>
+
+  <section class="splash-studio-results" data-studio-results hidden>
+    <div class="splash-studio-section-heading">
+      <div><span class="splash-studio-kicker">Ready to share</span><h2>Your mockups</h2></div>
+    </div>
+    <div class="splash-studio-result-grid" data-result-grid></div>
+  </section>
+</section>
+
+{% schema %}
+{
+  "name": "Mockup studio",
+  "target": "section",
+  "enabled_on": { "templates": ["page"] },
+  "stylesheet": "splash-storefront.css",
+  "javascript": "mockup-studio.js",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Splash Mockup Studio" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Put your design into the real world." },
+    { "type": "textarea", "id": "body", "label": "Body", "default": "Upload once, choose several products, then art-direct every mockup exactly the way you want it." },
+    { "type": "text", "id": "button_text", "label": "Button", "default": "Generate selected mockups" }
+  ]
+}
+{% endschema %}

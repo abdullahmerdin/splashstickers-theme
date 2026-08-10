@@ -15,6 +15,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       status: true,
       outputUrl: true,
       errorCode: true,
+      scene: true,
+      options: true,
       createdAt: true,
       design: { select: { publicId: true } },
     },
@@ -32,7 +34,7 @@ export default function Mockups() {
             {mockups.map((mockup) => (
               <s-box key={mockup.publicId} padding="base" borderWidth="base" borderRadius="base">
                 <s-heading>{mockup.publicId}</s-heading>
-                <s-paragraph>Design: {mockup.design.publicId} · Status: {mockup.status}</s-paragraph>
+                <s-paragraph>Design: {mockup.design.publicId} · Product: {mockup.scene} · Status: {mockup.status}</s-paragraph>
                 {mockup.outputUrl && <s-link href={mockup.outputUrl} target="_blank">Open generated mockup</s-link>}
                 {mockup.errorCode && <s-paragraph>Error: {mockup.errorCode}</s-paragraph>}
               </s-box>

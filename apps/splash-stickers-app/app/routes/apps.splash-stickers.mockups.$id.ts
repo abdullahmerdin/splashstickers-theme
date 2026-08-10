@@ -4,6 +4,7 @@ import db from "../db.server";
 import { requireAppProxy } from "../services/app-proxy.server";
 import { apiError, json } from "../services/http.server";
 import { artworkIsReady } from "../services/mockup-renderer.server";
+import { normalizeMockupOptions } from "../services/mockup-options.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { context, shop } = await requireAppProxy(request);
@@ -17,6 +18,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       status: true,
       outputUrl: true,
       errorCode: true,
+      scene: true,
+      options: true,
       updatedAt: true,
       design: { select: { publicId: true, status: true, manifest: true } },
     },
@@ -40,6 +43,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     mockup: {
       id: mockup.publicId,
       designId: mockup.design.publicId,
+      scene: mockup.scene,
+      options: normalizeMockupOptions(mockup.options, mockup.scene),
       status: mockup.status,
       outputUrl: mockup.outputUrl,
       errorCode: mockup.errorCode,
