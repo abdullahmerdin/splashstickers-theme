@@ -1,0 +1,26 @@
+<div
+  class="splash-app-bridge"
+  data-splash-bridge
+  data-proxy-base="{{ routes.root_url }}apps/splash-stickers/"
+  data-autosave="{{ block.settings.autosave }}"
+  hidden
+>
+  <span data-splash-bridge-status role="status" aria-live="polite"></span>
+</div>
+
+{% schema %}
+{
+  "name": "Storefront bridge",
+  "target": "body",
+  "stylesheet": "splash-storefront.css",
+  "javascript": "splash-storefront.js",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "autosave",
+      "label": "Save configurator changes",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

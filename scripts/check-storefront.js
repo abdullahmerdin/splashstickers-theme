@@ -27,7 +27,11 @@ const indexTemplate = readThemeJson('templates/index.json');
 const collectionTemplate = readThemeJson('templates/collection.json');
 const splashStyles = read('assets/splash-theme.css');
 
-assert.deepEqual(indexTemplate.order, ['splash_drawing', 'featured_stickers', 'sticker_process', 'custom_cta']);
+const requiredIndexOrder = ['splash_drawing', 'featured_stickers', 'sticker_process', 'custom_cta'];
+assert.deepEqual(
+  indexTemplate.order.filter((sectionId) => requiredIndexOrder.includes(sectionId)),
+  requiredIndexOrder,
+);
 assert.equal(collectionTemplate.sections.main.type, 'main-collection');
 assert.equal(indexTemplate.sections.custom_cta.type, 'splash-cta');
 

@@ -1,0 +1,54 @@
+# This file stores configurations for your Shopify app. Shopify CLI fills the
+# client ID and development URLs when this source tree is linked to an app.
+name = "Splash Stickers"
+client_id = ""
+application_url = "https://splash-stickers.invalid"
+embedded = true
+handle = "splash-stickers"
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_files,read_orders,write_app_proxy,write_files"
+
+[webhooks]
+api_version = "2026-07"
+
+  # Handled by: /app/routes/webhooks.app.uninstalled.tsx
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  # Handled by: /app/routes/webhooks.app.scopes_update.tsx
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/paid" ]
+  uri = "/webhooks/orders/paid"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+  uri = "/webhooks/compliance"
+
+  # Webhooks can have filters
+  # Only receive webhooks for product updates with a product price >= 10.00
+  # See: https://shopify.dev/docs/apps/build/webhooks/customize/filters
+  # [[webhooks.subscriptions]]
+  # topics = ["products/update"]
+  # uri = "/webhooks/products/update"
+  # filter = "variants.price:>=10.00"
+
+[app_proxy]
+url = "https://splash-stickers.invalid/apps/splash-stickers/"
+subpath = "splash-stickers"
+prefix = "apps"
+
+[auth]
+redirect_urls = [
+  "https://splash-stickers.invalid/auth/callback"
+]

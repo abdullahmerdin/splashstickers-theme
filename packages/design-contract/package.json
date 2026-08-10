@@ -1,0 +1,29 @@
+{
+  "name": "@splash-stickers/design-contract",
+  "version": "1.0.0",
+  "description": "Versioned Splash Stickers DesignManifest contract for storefront and backend integrations.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./schema": "./schema/design-manifest.schema.json",
+    "./schema.json": "./schema/design-manifest.schema.json",
+    "./package.json": "./package.json"
+  },
+  "types": "./src/index.d.ts",
+  "files": [
+    "src",
+    "schema",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "UNLICENSED"
+}

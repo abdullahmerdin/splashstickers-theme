@@ -1,0 +1,14 @@
+{
+  "mockup": {
+    "waiting": "Bir tasarım bekleniyor"
+  },
+  "reviews": {
+    "loading": "Yorumlar yükleniyor…",
+    "rating": "Puan",
+    "choose_rating": "Puan seçin",
+    "name": "Ad (isteğe bağlı)",
+    "title": "Başlık (isteğe bağlı)",
+    "body": "Yorum",
+    "submit": "Yorumu gönder"
+  }
+}

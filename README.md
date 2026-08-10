@@ -1,4 +1,25 @@
-# Splash Stickers Shopify theme
+# Splash Stickers platform
+
+This repository is the deployable Splash Stickers storefront theme and the
+workspace root for the accompanying Shopify app. The theme deliberately remains
+at the repository root so existing Shopify theme tooling and GitHub integration
+continue to work without a path migration.
+
+Platform packages:
+
+- `apps/splash-stickers-app`: embedded React Router app, persistence and
+  storefront app-proxy API.
+- `apps/splash-stickers-app/extensions/splash-storefront`: theme app blocks and
+  the storefront bridge embed.
+- `packages/design-contract`: versioned contract shared by the configurator and
+  app.
+- Shopify theme directories (`assets`, `blocks`, `sections`, `templates`, and
+  friends) remain at the repository root.
+
+See [`docs/platform-architecture.md`](docs/platform-architecture.md) for system
+boundaries, data flow and rollout requirements.
+
+## Theme
 
 The theme preserves Horizon's Shopify behavior layer while exposing a namespaced
 Splash design system for the storefront shell, catalog, product studio, cart and
@@ -23,11 +44,21 @@ Export PDF action.
 
 ## Local checks
 
-Install dependencies, vendor the pinned PDF runtime, and run the configurator
-checks:
+Install all workspace dependencies from the repository root:
 
 ```powershell
 npm.cmd install
+```
+
+Run the complete platform validation:
+
+```powershell
+npm.cmd run check:all
+```
+
+The existing theme checks remain independently available:
+
+```powershell
 npm.cmd run vendor:jspdf
 npm.cmd run build:configurator
 npm.cmd run check:phase4
@@ -36,6 +67,17 @@ npm.cmd run check:phase6
 npm.cmd run check:configurator
 npm.cmd run check:storefront
 ```
+
+The app must be linked to a Shopify app record before its first dev session:
+
+```powershell
+Set-Location apps/splash-stickers-app
+npm.cmd run config:link
+npm.cmd run dev
+```
+
+Shopify CLI replaces the placeholder client ID and development URLs while
+linking/developing. Never commit API secrets or access tokens.
 
 `assets/sticker-configurator/*.js` contains the editable source modules and is
 excluded from theme uploads. The build script emits the committed
@@ -77,5 +119,6 @@ tablet and mobile widths. Confirm keyboard focus, reduced motion, empty/error
 states, variant pricing and cart payload behavior. Shopify Theme Check should be
 run from an environment with the Shopify CLI installed.
 
-The print-ready PDF remains available from the studio export action. Delivering
-that sheet into the order/production handoff is a separate integration follow-up.
+The print-ready PDF remains available from the studio export action. Paid order
+lines are now linked to their durable app design records; automating a
+high-resolution production artifact remains a deployment follow-up.

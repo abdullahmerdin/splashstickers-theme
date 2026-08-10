@@ -6,3 +6,17 @@ assets/sticker-configurator/**/*
 .github/**/*
 .gitignore
 .theme-check.yml
+apps/*
+apps/**/*
+packages/*
+packages/**/*
+docs/*
+docs/**/*
+tests/*
+tests/**/*
+scripts/*
+scripts/**/*
+package.json
+package-lock.json
+README.md
+AGENTS.md

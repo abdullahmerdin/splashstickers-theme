@@ -1,0 +1,14 @@
+.git
+.github
+.shopify
+node_modules
+**/node_modules
+**/build
+**/.cache
+**/.react-router
+**/.env
+**/.env.*
+**/prisma/dev.sqlite
+**/prisma/dev.sqlite-journal
+*.zip
+*.tar.gz

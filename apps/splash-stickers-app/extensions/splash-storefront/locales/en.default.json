@@ -1,0 +1,14 @@
+{
+  "mockup": {
+    "waiting": "Waiting for a design"
+  },
+  "reviews": {
+    "loading": "Loading reviews…",
+    "rating": "Rating",
+    "choose_rating": "Choose a rating",
+    "name": "Name (optional)",
+    "title": "Title (optional)",
+    "body": "Review",
+    "submit": "Submit review"
+  }
+}

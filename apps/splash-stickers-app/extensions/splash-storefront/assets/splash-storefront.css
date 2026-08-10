@@ -1,0 +1,135 @@
+.splash-app-surface {
+  --splash-app-bg: var(--color-background, #ffffff);
+  --splash-app-text: var(--color-foreground, #161616);
+  --splash-app-muted: var(--color-foreground, #5f6368);
+  --splash-app-border: color-mix(in srgb, var(--splash-app-text) 18%, transparent);
+  --splash-app-accent: var(--splash-color-primary, var(--color-button, #005bd3));
+  --splash-app-accent-text: var(--color-button-text, #ffffff);
+  color: var(--splash-app-text);
+  background: var(--splash-app-bg);
+  border: 1px solid var(--splash-app-border);
+  border-radius: 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+:is(html[data-color-scheme="dark"], html.dark) .splash-app-surface {
+  --splash-app-bg: var(--color-background, #17191d);
+  --splash-app-text: var(--color-foreground, #f4f5f7);
+  --splash-app-muted: var(--color-foreground, #c4c8cf);
+  --splash-app-accent: var(--splash-color-primary, var(--color-button, #8ab4ff));
+  --splash-app-accent-text: var(--color-button-text, #101114);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-color-scheme="light"]) .splash-app-surface {
+    --splash-app-bg: var(--color-background, #17191d);
+    --splash-app-text: var(--color-foreground, #f4f5f7);
+    --splash-app-muted: var(--color-foreground, #c4c8cf);
+    --splash-app-accent: var(--splash-color-primary, var(--color-button, #8ab4ff));
+    --splash-app-accent-text: var(--color-button-text, #101114);
+  }
+}
+
+.splash-app-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-end: 1rem;
+}
+
+.splash-app-heading,
+.splash-review-form h3 {
+  color: inherit;
+  margin: 0;
+}
+
+.splash-app-status,
+.splash-review-summary,
+.splash-review__meta {
+  color: var(--splash-app-muted);
+}
+
+.splash-mockup__canvas {
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed var(--splash-app-border);
+  border-radius: 0.75rem;
+}
+
+.splash-mockup__canvas img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  /* Generated artwork is content and must retain its source colors. */
+  color-scheme: only light;
+}
+
+.splash-review {
+  padding-block: 1rem;
+  border-block-start: 1px solid var(--splash-app-border);
+}
+
+.splash-review__title,
+.splash-review__body,
+.splash-review__meta {
+  margin-block: 0.25rem;
+}
+
+.splash-review-form {
+  display: grid;
+  gap: 1rem;
+  margin-block-start: 1.5rem;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--splash-app-border);
+}
+
+.splash-review-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.splash-review-form :is(input, select, textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  color: var(--splash-app-text);
+  background: var(--splash-app-bg);
+  border: 1px solid var(--splash-app-border);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+}
+
+.splash-review-form textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.splash-app-button {
+  justify-self: start;
+  color: var(--splash-app-accent-text);
+  background: var(--splash-app-accent);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1.25rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.splash-app-button:focus-visible,
+.splash-review-form :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--splash-app-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 47.99rem) {
+  .splash-app-heading-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

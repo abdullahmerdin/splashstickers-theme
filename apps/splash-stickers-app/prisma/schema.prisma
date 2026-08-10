@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+enum DesignStatus {
+  DRAFT
+  READY
+  ARCHIVED
+}
+
+enum MockupStatus {
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProductionStatus {
+  PENDING
+  IN_PRODUCTION
+  FULFILLED
+  CANCELLED
+}
+
+model Design {
+  id            String       @id @default(cuid())
+  publicId      String
+  shop          String
+  schemaVersion String       @default("1.0")
+  status        DesignStatus @default(DRAFT)
+  productId     String?
+  variantId     String?
+  manifest      Json
+  digest        String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  assets        DesignAsset[]
+  mockups       Mockup[]
+  orders        OrderDesign[]
+
+  @@unique([shop, publicId])
+  @@index([shop, status, updatedAt])
+}
+
+model DesignAsset {
+  id           String   @id @default(cuid())
+  shop         String
+  designId     String
+  storageKey   String
+  contentType  String
+  originalName String?
+  byteSize     Int?
+  widthPx      Int?
+  heightPx     Int?
+  createdAt    DateTime @default(now())
+  design       Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  @@unique([designId, storageKey])
+  @@index([designId])
+  @@index([shop, createdAt])
+}
+
+model Mockup {
+  id         String       @id @default(cuid())
+  publicId   String
+  shop       String
+  designId   String
+  status     MockupStatus @default(QUEUED)
+  outputUrl  String?
+  errorCode  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  design     Design       @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  @@unique([shop, publicId])
+  @@index([shop, status, createdAt])
+  @@index([designId])
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  publicId   String
+  shop       String
+  productId  String
+  rating     Int
+  title      String?
+  body       String
+  authorName String?
+  verified   Boolean      @default(false)
+  status     ReviewStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([shop, publicId])
+  @@index([shop, productId, status, createdAt])
+}
+
+model OrderDesign {
+  id         String           @id @default(cuid())
+  shop       String
+  designId   String
+  orderId    String
+  lineItemId String
+  status     ProductionStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  design     Design           @relation(fields: [designId], references: [id], onDelete: Restrict)
+
+  @@unique([shop, orderId, lineItemId])
+  @@index([designId])
+  @@index([shop, status, createdAt])
+}

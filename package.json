@@ -1,8 +1,15 @@
 {
-  "name": "all-the-stickers-theme",
+  "name": "splash-stickers-platform",
   "private": true,
+  "workspaces": [
+    "apps/splash-stickers-app",
+    "apps/splash-stickers-app/extensions/*",
+    "packages/*"
+  ],
   "scripts": {
     "build:configurator": "node scripts/build-configurator.js",
+    "build:app": "npm run build --workspace=@splash-stickers/app",
+    "build:platform": "npm run build:configurator && npm run build:app",
     "check:configurator": "node scripts/build-configurator.js --check && node --check assets/sticker-configurator.js && node --check assets/sticker-configurator-experience.js && node scripts/check-configurator-sync.js && node --test tests/sticker-configurator.test.js",
     "check:how-it-works": "node scripts/check-how-it-works.js",
     "check:storefront": "node scripts/check-storefront.js",
@@ -10,6 +17,11 @@
     "check:phase5": "node scripts/check-phase5.js && node scripts/check-css-cleanup.js",
     "check:css-cleanup": "node scripts/check-css-cleanup.js",
     "check:phase6": "node scripts/check-phase6.js",
+    "check:contract": "npm test --workspace=@splash-stickers/design-contract",
+    "check:app": "npm run typecheck --workspace=@splash-stickers/app && npm run lint --workspace=@splash-stickers/app && npm run build --workspace=@splash-stickers/app",
+    "check:platform": "node scripts/check-platform.js && npm run check:contract && npm run check:app",
+    "check:theme": "npm run check:phase4 && npm run check:phase5 && npm run check:phase6 && npm run check:configurator && npm run check:how-it-works && npm run check:storefront",
+    "check:all": "npm run check:theme && npm run check:platform",
     "vendor:jspdf": "node scripts/vendor-jspdf.js"
   },
   "devDependencies": {
