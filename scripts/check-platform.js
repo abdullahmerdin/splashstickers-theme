@@ -17,6 +17,7 @@ const required = [
   'apps/splash-stickers-app/package.json',
   'apps/splash-stickers-app/Dockerfile',
   'apps/splash-stickers-app/shopify.app.toml',
+  'apps/splash-stickers-app/shopify.web.toml',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.designs.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.mockups.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.mockups.$id.render.ts',
@@ -27,7 +28,7 @@ const required = [
   'apps/splash-stickers-app/app/routes/webhooks.orders.paid.tsx',
   'apps/splash-stickers-app/app/routes/webhooks.compliance.tsx',
   'apps/splash-stickers-app/extensions/splash-storefront/shopify.extension.toml',
-  'apps/splash-stickers-app/extensions/splash-storefront/src/splash-storefront.js',
+  'apps/splash-stickers-app/storefront-extension-src/splash-storefront.js',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid',
@@ -53,6 +54,9 @@ assert(/COPY package\.json package-lock\.json/.test(dockerfile), 'container inst
 assert(/npm run build:app/.test(dockerfile), 'container builds the app through the workspace root');
 
 const appConfig = read('apps/splash-stickers-app/shopify.app.toml');
+const webConfig = read('apps/splash-stickers-app/shopify.web.toml');
+assert(/roles\s*=\s*\["frontend",\s*"backend"\]/.test(webConfig), 'Shopify CLI runs the React Router frontend and backend');
+assert(/prisma migrate deploy/.test(webConfig) && /react-router dev/.test(webConfig), 'dev preview migrates storage before starting React Router');
 assert(/api_version\s*=\s*"2026-07"/.test(appConfig), 'app targets Shopify API 2026-07');
 assert(/write_app_proxy/.test(appConfig), 'app requests the app-proxy scope');
 assert(/write_files/.test(appConfig), 'app requests Shopify Files access for staged artwork uploads');
