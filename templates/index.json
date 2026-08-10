@@ -280,7 +280,7 @@
             "arrows_color": "#000000",
             "transition_speed": 5,
             "header_text": "Customers are saying",
-            "show_average_rating": true,
+            "show_average_rating": false,
             "rating_display": "default"
           }
         }
