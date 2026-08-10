@@ -121,7 +121,7 @@
               assign sample_alt = sample_title
             endif
             assign sample_product = block.settings.product
-            assign sample_product_url = routes.all_products_collection_url
+            assign sample_product_url = block.settings.product_url | default: routes.all_products_collection_url
             assign sample_product_title = sample_title
             if sample_product != blank
               assign sample_product_url = sample_product.url
@@ -532,6 +532,12 @@
           "id": "product",
           "label": "Shop product",
           "info": "Optional product linked by the Shop button in the sample viewer."
+        },
+        {
+          "type": "url",
+          "id": "product_url",
+          "label": "Direct shop URL",
+          "info": "Optional storefront URL used when the product picker is unavailable, such as for an unpublished product."
         },
         {
           "type": "select",

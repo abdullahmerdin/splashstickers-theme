@@ -19,6 +19,7 @@
             "image_2": "shopify://shop_images/gorsel_2026-08-08_144059707.png",
             "category": "die_cut",
             "product": "shopify://products/die-cut-stickers",
+            "product_url": "/products/die-cut-stickers",
             "title": "Die-cut finish",
             "description": "A close look at the printed surface and cut edge.",
             "alt": ""
@@ -30,6 +31,7 @@
             "image": "shopify://shop_images/gorsel_2026-08-07_170904599.png",
             "category": "magnet",
             "product": "shopify://products/magnets",
+            "product_url": "/products/magnets",
             "title": "Magnet finish",
             "description": "See the colour and edge detail on a finished magnet.",
             "alt": ""
@@ -41,6 +43,7 @@
             "image": "shopify://shop_images/gorsel_2026-08-07_170621705.png",
             "category": "uv_dtf",
             "product": "shopify://products/uv-dtf-transfers",
+            "product_url": "/products/uv-dtf-transfers",
             "title": "UV DTF finish",
             "description": "Inspect the raised detail and colour on a finished transfer.",
             "alt": ""
@@ -52,6 +55,7 @@
             "image": "shopify://shop_images/gorsel_2026-08-07_170723720.png",
             "category": "uv_print",
             "product": "shopify://products/uv-printed-stickers",
+            "product_url": "/products/uv-printed-stickers",
             "title": "UV print finish",
             "description": "A closer look at the glossy printed surface.",
             "alt": ""
@@ -63,6 +67,7 @@
             "image": "shopify://shop_images/gorsel_2026-08-07_170819440.png",
             "category": "textile",
             "product": "shopify://products/textile-transfers",
+            "product_url": "/products/textile-transfers",
             "title": "Textile transfer",
             "description": "See how the finished transfer sits on fabric.",
             "alt": ""
@@ -74,6 +79,7 @@
             "image": "shopify://shop_images/gorsel_2026-08-07_171005327.png",
             "category": "emboss",
             "product": "shopify://products/embossed-stickers",
+            "product_url": "/products/embossed-stickers",
             "title": "Emboss finish",
             "description": "Inspect the tactile raised detail up close.",
             "alt": ""
