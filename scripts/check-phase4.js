@@ -14,6 +14,33 @@ function assertContains(relativePath, pattern) {
   }
 }
 
+function listTextFiles(relativeDirectory) {
+  const directory = path.join(root, relativeDirectory);
+  if (!fs.existsSync(directory)) return [];
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = path.join(relativeDirectory, entry.name);
+    if (entry.isDirectory()) return listTextFiles(relativePath);
+    if (!/\.(css|js|json|liquid)$/.test(entry.name)) return [];
+    return [relativePath];
+  });
+}
+
+function assertRetiredSectionIsAbsent() {
+  const retiredSectionType = ['collision', 'test'].join('-');
+  const retiredSectionPath = path.join(root, 'sections', `${retiredSectionType}.liquid`);
+  if (fs.existsSync(retiredSectionPath)) {
+    throw new Error(`Retired ${retiredSectionType} section must not be present.`);
+  }
+
+  const sourceRoots = ['assets', 'blocks', 'config', 'layout', 'scripts', 'sections', 'snippets', 'templates'];
+  const references = sourceRoots
+    .flatMap((relativeDirectory) => listTextFiles(relativeDirectory))
+    .filter((relativePath) => read(relativePath).includes(retiredSectionType));
+  if (references.length) {
+    throw new Error(`Retired ${retiredSectionType} references remain in: ${references.join(', ')}`);
+  }
+}
+
 function readThemeJson(relativePath) {
   const source = read(relativePath).replace(/^[\s\S]*?\*\/\s*/, '');
   return JSON.parse(source);
@@ -44,6 +71,7 @@ const checks = [
 ];
 
 checks.forEach(([relativePath, pattern]) => assertContains(relativePath, pattern));
+assertRetiredSectionIsAbsent();
 
 const configuratorSource = read('sections/sticker-configurator.liquid');
 const configuratorSchema = JSON.parse(
@@ -90,4 +118,4 @@ if (defaultMainSection.disabled === true && defaultConfiguratorSections.length =
 // A product template may intentionally combine product-information with one configurator section;
 // the invalid case is duplicate configurator rendering or a template with no active product surface.
 
-console.log(`Phase 4 wiring checks passed (${checks.length + 2} groups).`);
+console.log(`Phase 4 wiring checks passed (${checks.length + 3} groups).`);
