@@ -288,6 +288,7 @@
     },
     "custom_cta": {
       "type": "splash-cta",
+      "disabled": true,
       "settings": {
         "heading": "Create a custom sticker",
         "subtext": "Upload your design and choose the size and quantity you need.",
