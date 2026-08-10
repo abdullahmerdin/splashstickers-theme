@@ -27,6 +27,7 @@ const required = [
   'apps/splash-stickers-app/app/routes/webhooks.orders.paid.tsx',
   'apps/splash-stickers-app/app/routes/webhooks.compliance.tsx',
   'apps/splash-stickers-app/extensions/splash-storefront/shopify.extension.toml',
+  'apps/splash-stickers-app/extensions/splash-storefront/src/splash-storefront.js',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid',
@@ -42,6 +43,7 @@ const rootPackage = JSON.parse(read('package.json'));
 assert(rootPackage.private === true, 'workspace root is private');
 assert(rootPackage.workspaces.includes('apps/splash-stickers-app'), 'root owns the Shopify app workspace');
 assert(rootPackage.workspaces.includes('packages/*'), 'root owns shared packages');
+assert(rootPackage.scripts['build:storefront-extension'].includes('esbuild'), 'storefront extension has a deterministic minified build');
 
 const appPackage = JSON.parse(read('apps/splash-stickers-app/package.json'));
 assert(appPackage.name === '@splash-stickers/app', 'Shopify app has a stable workspace name');
@@ -59,7 +61,7 @@ assert(!/read_products/.test(appConfig), 'mockup artwork access does not require
 assert(/topics\s*=\s*\[\s*"orders\/paid"\s*\]/.test(appConfig), 'paid-order handoff webhook is configured');
 assert(/customers\/data_request/.test(appConfig) && /shop\/redact/.test(appConfig), 'privacy compliance webhooks are configured');
 assert(/subpath\s*=\s*"splash-stickers"/.test(appConfig), 'storefront app-proxy path is stable');
-assert(!/client_id\s*=\s*"[^"\s]+"/.test(appConfig), 'no Shopify client ID is committed before app linking');
+assert(/client_id\s*=\s*"[a-f0-9]{32}"/.test(appConfig), 'Shopify app configuration is linked to a real client ID');
 
 const proxyRoutes = [
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.designs.ts',
@@ -88,6 +90,8 @@ assert(/splashPersistDesign/.test(cartManager), 'cart handoff waits for app pers
 assert(/_design_manifest_version/.test(cartManager), 'cart handoff includes a private contract version');
 const configuratorEntry = read('assets/sticker-configurator/entry.js');
 const extensionJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
+const extensionJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
+assert(fs.statSync(extensionJsPath).size <= 10_000, 'storefront extension JavaScript stays within Shopify\'s app-block limit');
 assert(/sticker-configurator:artwork-added/.test(configuratorEntry), 'configurator exposes the selected File only to the upload bridge event');
 assert(/uploads\/stage/.test(extensionJs) && /uploads\/complete/.test(extensionJs), 'storefront bridge completes the staged artwork upload flow');
 assert(/uploadToken/.test(extensionJs), 'staged artwork completion carries a short-lived server-signed token');

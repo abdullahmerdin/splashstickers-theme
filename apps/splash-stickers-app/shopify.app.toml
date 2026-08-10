@@ -1,7 +1,7 @@
 # This file stores configurations for your Shopify app. Shopify CLI fills the
-# client ID and development URLs when this source tree is linked to an app.
+# development URLs when this source tree runs through `shopify app dev`.
 name = "Splash Stickers"
-client_id = ""
+client_id = "72e5218f676eb676f1492300ebe47d76"
 application_url = "https://splash-stickers.invalid"
 embedded = true
 handle = "splash-stickers"
@@ -34,14 +34,6 @@ api_version = "2026-07"
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
   uri = "/webhooks/compliance"
-
-  # Webhooks can have filters
-  # Only receive webhooks for product updates with a product price >= 10.00
-  # See: https://shopify.dev/docs/apps/build/webhooks/customize/filters
-  # [[webhooks.subscriptions]]
-  # topics = ["products/update"]
-  # uri = "/webhooks/products/update"
-  # filter = "variants.price:>=10.00"
 
 [app_proxy]
 url = "https://splash-stickers.invalid/apps/splash-stickers/"
