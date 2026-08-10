@@ -40,6 +40,96 @@
         "enable_analytics": false
       }
     },
+    "1786369562238bfe12": {
+      "type": "_blocks",
+      "blocks": {
+        "splash_stickers_mockup_preview_Urgp8T": {
+          "type": "shopify://apps/splash-stickers/blocks/mockup-preview/019febda-63b2-7e16-abe4-1caf4f3d8a9f",
+          "settings": {
+            "product": "",
+            "heading": "Your mockup",
+            "empty_text": "Add artwork to generate a mockup.",
+            "image_alt": "Generated sticker sheet mockup"
+          }
+        }
+      },
+      "block_order": [
+        "splash_stickers_mockup_preview_Urgp8T"
+      ],
+      "settings": {
+        "content_direction": "column",
+        "vertical_on_mobile": true,
+        "horizontal_alignment": "flex-start",
+        "vertical_alignment": "center",
+        "align_baseline": false,
+        "horizontal_alignment_flex_direction_column": "flex-start",
+        "vertical_alignment_flex_direction_column": "center",
+        "gap": 12,
+        "section_width": "page-width",
+        "section_height": "",
+        "section_height_custom": 50,
+        "background_media": "none",
+        "background_color": "",
+        "video_position": "cover",
+        "background_image_position": "cover",
+        "toggle_overlay": false,
+        "overlay_color": "#00000026",
+        "overlay_style": "solid",
+        "gradient_direction": "to top",
+        "border": "none",
+        "border_width": 1,
+        "border_opacity": 100,
+        "border_color": "",
+        "border_radius": 0,
+        "padding-block-start": 0,
+        "padding-block-end": 0
+      }
+    },
+    "1786369568b00c48e6": {
+      "type": "_blocks",
+      "blocks": {
+        "splash_stickers_product_reviews_4F8XNf": {
+          "type": "shopify://apps/splash-stickers/blocks/product-reviews/019febda-63b2-7e16-abe4-1caf4f3d8a9f",
+          "settings": {
+            "product": "",
+            "heading": "Customer reviews",
+            "show_form": true,
+            "form_heading": "Share your experience"
+          }
+        }
+      },
+      "block_order": [
+        "splash_stickers_product_reviews_4F8XNf"
+      ],
+      "settings": {
+        "content_direction": "column",
+        "vertical_on_mobile": true,
+        "horizontal_alignment": "flex-start",
+        "vertical_alignment": "center",
+        "align_baseline": false,
+        "horizontal_alignment_flex_direction_column": "flex-start",
+        "vertical_alignment_flex_direction_column": "center",
+        "gap": 12,
+        "section_width": "page-width",
+        "section_height": "",
+        "section_height_custom": 50,
+        "background_media": "none",
+        "background_color": "",
+        "video_position": "cover",
+        "background_image_position": "cover",
+        "toggle_overlay": false,
+        "overlay_color": "#00000026",
+        "overlay_style": "solid",
+        "gradient_direction": "to top",
+        "border": "none",
+        "border_width": 1,
+        "border_opacity": 100,
+        "border_color": "",
+        "border_radius": 0,
+        "padding-block-start": 0,
+        "padding-block-end": 0
+      }
+    },
     "featured_product_information_WJ4dU6": {
       "type": "featured-product-information",
       "blocks": {
@@ -816,6 +906,8 @@
   },
   "order": [
     "sticker_configurator_ia3Qd6",
+    "1786369562238bfe12",
+    "1786369568b00c48e6",
     "featured_product_information_WJ4dU6",
     "main",
     "product_recommendations_qggXJq",
