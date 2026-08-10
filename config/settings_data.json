@@ -130,6 +130,13 @@
         "settings": {
           "widget_type": "review-widget"
         }
+      },
+      "1047524329414508780": {
+        "type": "shopify://apps/splash-stickers/blocks/storefront-bridge/019febda-63b2-7e16-abe4-1caf4f3d8a9f",
+        "disabled": false,
+        "settings": {
+          "autosave": true
+        }
       }
     },
     "color_palette": {
