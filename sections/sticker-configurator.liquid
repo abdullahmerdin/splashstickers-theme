@@ -5,6 +5,10 @@
 <script src="{{ 'sticker-configurator-experience.js' | asset_url }}" defer></script>
 
 <style>
+  #shopify-section-{{ section.id }} {
+    --cfg-padding-top: {{ section.settings.padding_top }}px;
+    --cfg-padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
   .shopify-section.sticker-configurator > sticker-configurator { position: relative; }
   .shopify-section.sticker-configurator > sticker-configurator.is-loading {
     min-height: min(720px, calc(100svh - var(--header-group-height, 64px)));
@@ -75,11 +79,9 @@
   role="region"
   aria-label="{{ 'sections.sticker-configurator.editor_aria_label' | t | escape }}"
   {% unless heading == blank %}aria-labelledby="cfg-heading-{{ section.id }}"{% endunless %}
-  class="splash-studio is-loading"
+  class="splash-configurator is-loading"
   style="
     --cfg-bg: {{ bg_color }};
-    padding-block-start: {{ section.settings.padding_top }}px;
-    padding-block-end: {{ section.settings.padding_bottom }}px;
   "
 >
   <script type="application/json" data-configurator-copy>
@@ -167,7 +169,7 @@
     </aside>
   {% endif %}
 
-  <div class="editor-wrap splash-studio__editor">
+  <div class="editor-wrap splash-configurator__editor">
     <div class="toolbar" role="toolbar" aria-label="{{ 'sections.sticker-configurator.toolbar_aria_label' | t | escape }}">
       <!-- Toolbar buttons generated via JS delegation (data-action) -->
       {% if section.settings.enable_undo_redo %}
@@ -259,7 +261,7 @@
     </div>
   </div>
 
-    <div class="cfg-controls splash-studio__controls">
+    <div class="cfg-controls splash-configurator__controls">
       <input type="file" accept="image/png,image/jpeg,image/webp" id="file-input-{{ section.id }}" aria-label="{{ 'sections.sticker-configurator.choose_design' | t | escape }}" hidden>
       {% if configurator_product != blank and configurator_product.has_only_default_variant == false %}
         <label class="cfg-variant-field" for="variant-select-{{ section.id }}">

@@ -37,6 +37,12 @@ npm.cmd run check:configurator
 npm.cmd run check:storefront
 ```
 
+`assets/sticker-configurator/*.js` contains the editable source modules and is
+excluded from theme uploads. The build script emits the committed
+`assets/sticker-configurator.js` bundle in a fixed order with a SHA-256 source
+manifest; run the build whenever a source module changes and keep the bundle's
+generated header intact.
+
 The vendored `assets/jspdf.umd.min.js` file is committed so the storefront does
 not depend on a third-party CDN at runtime.
 

@@ -7,7 +7,8 @@
     "check:how-it-works": "node scripts/check-how-it-works.js",
     "check:storefront": "node scripts/check-storefront.js",
     "check:phase4": "node scripts/check-phase4.js",
-    "check:phase5": "node scripts/check-phase5.js",
+    "check:phase5": "node scripts/check-phase5.js && node scripts/check-css-cleanup.js",
+    "check:css-cleanup": "node scripts/check-css-cleanup.js",
     "check:phase6": "node scripts/check-phase6.js",
     "vendor:jspdf": "node scripts/vendor-jspdf.js"
   },

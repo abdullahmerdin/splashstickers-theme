@@ -186,6 +186,8 @@
   min-width: 0;
   min-height: 0;
   padding: var(--cfg-shell-pad);
+  padding-block-start: var(--cfg-padding-top, var(--cfg-shell-pad));
+  padding-block-end: var(--cfg-padding-bottom, var(--cfg-shell-pad));
   overflow: hidden;
   color: var(--cfg-ink);
   background: var(--cfg-surface);
@@ -1447,9 +1449,9 @@ dialog.cfg-modal::backdrop {
 
   .sticker-configurator > sticker-configurator {
     --cfg-shell-pad: 10px;
-    padding: var(--cfg-shell-pad) var(--cfg-shell-pad) max(var(--cfg-shell-pad), env(safe-area-inset-bottom));
-    padding-block-start: var(--cfg-shell-pad) !important;
-    padding-block-end: max(var(--cfg-shell-pad), env(safe-area-inset-bottom)) !important;
+    --cfg-padding-top: var(--cfg-shell-pad);
+    --cfg-padding-bottom: max(var(--cfg-shell-pad), env(safe-area-inset-bottom));
+    padding: var(--cfg-shell-pad) var(--cfg-shell-pad) var(--cfg-padding-bottom);
     border-radius: 0;
   }
 
@@ -1719,13 +1721,13 @@ dialog.cfg-modal::backdrop {
 
 /* Configurator finish: the editor, product surfaces and feedback states use
    the same tokens while the canvas interaction model stays unchanged. */
-.sticker-configurator > sticker-configurator.splash-studio {
+.sticker-configurator > sticker-configurator.splash-configurator {
   position: relative;
   border-color: rgb(var(--splash-color-purple-rgb, 108 92 231) / 0.24);
   background: var(--splash-color-surface, #fff);
 }
 
-.sticker-configurator .splash-studio__editor {
+.sticker-configurator .splash-configurator__editor {
   position: relative;
 }
 
@@ -1792,14 +1794,14 @@ dialog.cfg-modal::backdrop {
   background: var(--splash-color-pink, #fd79a8);
 }
 
-.sticker-configurator .splash-studio__controls {
+.sticker-configurator .splash-configurator__controls {
   position: relative;
   border-color: rgb(var(--splash-color-purple-rgb, 108 92 231) / 0.2);
   background: linear-gradient(135deg, color-mix(in srgb, var(--splash-color-purple, #6c5ce7) 5%, var(--cfg-surface)), var(--cfg-surface));
   box-shadow: 0 -6px 20px rgb(var(--splash-color-ink-rgb, 45 52 54) / 0.05);
 }
 
-.sticker-configurator .splash-studio__controls::before {
+.sticker-configurator .splash-configurator__controls::before {
   position: absolute;
   inset: 0 18% auto;
   height: 2px;
@@ -1990,7 +1992,7 @@ dialog.cfg-modal::backdrop {
 }
 
 @media screen and (max-width: 767px) {
-  .sticker-configurator > sticker-configurator.splash-studio {
+  .sticker-configurator > sticker-configurator.splash-configurator {
     border-inline: 0;
   }
 
