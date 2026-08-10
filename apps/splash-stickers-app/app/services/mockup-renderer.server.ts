@@ -1,5 +1,7 @@
 import { normalizeDesignManifest, type DesignManifest } from "@splash-stickers/design-contract";
 
+import phoneCasePlate from "../assets/mockups/phone-case.webp?inline";
+
 type AdminGraphql = {
   graphql: (query: string, options?: { variables?: Record<string, unknown> }) => Promise<Response>;
 };
@@ -7,6 +9,30 @@ type AdminGraphql = {
 const MAX_INLINE_ARTWORK_BYTES = 12 * 1024 * 1024;
 const MAX_INLINE_MOCKUP_BYTES = 32 * 1024 * 1024;
 const INLINE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const PHONE_SCENE_SIZE = 1000;
+const PHONE_PRINT_AREA = {
+  x: 348,
+  y: 337,
+  width: 304,
+  height: 453,
+};
+const PHONE_PRINT_PADDING = 32;
+
+function artworkBounds(manifest: DesignManifest) {
+  if (!manifest.items.length) {
+    return { x: 0, y: 0, width: manifest.sheet.widthMm, height: manifest.sheet.heightMm };
+  }
+  const left = Math.min(...manifest.items.map((item) => item.placement.xMm));
+  const top = Math.min(...manifest.items.map((item) => item.placement.yMm));
+  const right = Math.max(...manifest.items.map((item) => item.placement.xMm + item.placement.widthMm));
+  const bottom = Math.max(...manifest.items.map((item) => item.placement.yMm + item.placement.heightMm));
+  return {
+    x: left,
+    y: top,
+    width: Math.max(1, right - left),
+    height: Math.max(1, bottom - top),
+  };
+}
 
 export async function resolveArtworkUrls(admin: AdminGraphql, assetRefs: string[]) {
   const ids = Array.from(new Set(assetRefs.filter((value) => value.startsWith("gid://shopify/"))));
@@ -90,8 +116,14 @@ function color(value: unknown, fallback: string) {
 
 export function renderMockupSvg(input: unknown, artworkUrls: Map<string, string>) {
   const manifest: DesignManifest = normalizeDesignManifest(input);
-  const width = manifest.sheet.widthMm;
-  const height = manifest.sheet.heightMm;
+  const bounds = artworkBounds(manifest);
+  const availableWidth = PHONE_PRINT_AREA.width - PHONE_PRINT_PADDING * 2;
+  const availableHeight = PHONE_PRINT_AREA.height - PHONE_PRINT_PADDING * 2;
+  const scale = Math.min(availableWidth / bounds.width, availableHeight / bounds.height);
+  const renderedWidth = bounds.width * scale;
+  const renderedHeight = bounds.height * scale;
+  const offsetX = PHONE_PRINT_AREA.x + PHONE_PRINT_PADDING + (availableWidth - renderedWidth) / 2 - bounds.x * scale;
+  const offsetY = PHONE_PRINT_AREA.y + PHONE_PRINT_PADDING + (availableHeight - renderedHeight) / 2 - bounds.y * scale;
   const elements = manifest.items
     .slice()
     .sort((left, right) => left.placement.zIndex - right.placement.zIndex)
@@ -119,8 +151,14 @@ export function renderMockupSvg(input: unknown, artworkUrls: Map<string, string>
     })
     .join("");
 
-  const background = color(manifest.sheet.background, "#ffffff");
   return `<?xml version="1.0" encoding="UTF-8"?>` +
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}mm" height="${height}mm" viewBox="0 0 ${width} ${height}" role="img" aria-label="Sticker sheet mockup">` +
-    `<rect width="${width}" height="${height}" fill="${xml(background)}"/>${elements}</svg>`;
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${PHONE_SCENE_SIZE}" height="${PHONE_SCENE_SIZE}" viewBox="0 0 ${PHONE_SCENE_SIZE} ${PHONE_SCENE_SIZE}" role="img" aria-label="Phone case sticker mockup">` +
+    `<title>Phone case sticker mockup</title>` +
+    `<defs>` +
+    `<clipPath id="phone-print-area"><rect x="${PHONE_PRINT_AREA.x}" y="${PHONE_PRINT_AREA.y}" width="${PHONE_PRINT_AREA.width}" height="${PHONE_PRINT_AREA.height}" rx="22"/></clipPath>` +
+    `<filter id="sticker-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#251f1a" flood-opacity="0.24"/></filter>` +
+    `</defs>` +
+    `<image href="${xml(phoneCasePlate)}" width="${PHONE_SCENE_SIZE}" height="${PHONE_SCENE_SIZE}" preserveAspectRatio="xMidYMid slice"/>` +
+    `<g clip-path="url(#phone-print-area)"><g transform="translate(${offsetX} ${offsetY}) scale(${scale})" filter="url(#sticker-shadow)">${elements}</g></g>` +
+    `</svg>`;
 }

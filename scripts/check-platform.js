@@ -24,6 +24,7 @@ const required = [
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.reviews.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.stage.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.complete.ts',
+  'apps/splash-stickers-app/app/assets/mockups/phone-case.webp',
   'apps/splash-stickers-app/app/services/upload-ticket.server.ts',
   'apps/splash-stickers-app/app/routes/webhooks.orders.paid.tsx',
   'apps/splash-stickers-app/app/routes/webhooks.compliance.tsx',
@@ -84,6 +85,13 @@ assert(/"target"\s*:\s*"section"/.test(reviews), 'reviews are a movable app bloc
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');
 assert(/--color-background/.test(extensionCss) && /--color-foreground/.test(extensionCss), 'extension UI derives from semantic theme tokens');
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'extension UI includes a dark-mode fallback');
+
+const mockupRenderer = read('apps/splash-stickers-app/app/services/mockup-renderer.server.ts');
+const phoneMockupPath = path.join(root, 'apps/splash-stickers-app/app/assets/mockups/phone-case.webp');
+assert(fs.statSync(phoneMockupPath).size <= 250_000, 'phone mockup plate stays lightweight enough to inline');
+assert(/phone-case\.webp\?inline/.test(mockupRenderer), 'mockup renderer embeds the phone scene without a cross-origin dependency');
+assert(/PHONE_PRINT_AREA/.test(mockupRenderer) && /phone-print-area/.test(mockupRenderer), 'phone mockup constrains artwork to the printable case surface');
+assert(/artworkBounds/.test(mockupRenderer) && /PHONE_PRINT_PADDING/.test(mockupRenderer), 'phone mockup fits visible artwork instead of empty sheet space');
 
 const contractSchema = JSON.parse(read('packages/design-contract/schema/design-manifest.schema.json'));
 assert(contractSchema.properties.schemaVersion.const === '1.0', 'DesignManifest schema version is pinned');
