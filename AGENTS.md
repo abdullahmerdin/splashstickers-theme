@@ -11,3 +11,10 @@
 - Treat media, artwork, and output-preview canvases as content: preserve their source or user-selected colors instead of recoloring them as interface chrome.
 - An optional dark-mode product hero is uploaded as product image media whose filename contains `--dark` (for example, `happy-cat--dark.webp`). Keep its light image as the first/featured product media, never assign the helper to a variant, exclude the helper from every storefront gallery/count/thumbnail/zoom list, and fall back to the light image when no helper exists.
 - Keep the color-mode control accessible, honor the system preference before a visitor chooses, and persist an explicit visitor choice.
+
+## Storefront content and visual restraint
+
+- Prefer compact, proportionate storefront controls and previews. Do not let upload areas, helper panels, or inactive previews dominate the viewport.
+- Add instructional or status copy only when it prevents confusion, communicates progress, or explains an error. Omit self-evident helper text and repeated confirmations.
+- Do not use decorative gradients, glow effects, illuminated transitions, or oversized shadows. Use flat semantic surfaces, borders, spacing, and hierarchy that match the theme.
+- Treat these removed phrases as negative AI-artifact examples and do not reintroduce similar filler: "No configurator needed", "Each product keeps its own placement, scale and color", "Drag the design on the product", and "Design ready. Fine-tune each selected product."

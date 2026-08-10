@@ -253,6 +253,11 @@
     var status = root.querySelector('[data-studio-status]');
     var generate = root.querySelector('[data-studio-generate]');
 
+    function setStatus(message) {
+      status.hidden = !message;
+      status.textContent = message || '';
+    }
+
     function sync() {
       var scenes = selected(root);
       if (!scenes.includes(state.activeScene)) state.activeScene = scenes[0] || null;
@@ -282,7 +287,7 @@
     async function chooseFile(file) {
       if (!file) return;
       if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 25 * 1024 * 1024) {
-        status.textContent = 'PNG, JPG or WebP; max 25 MB.';
+        setStatus('PNG, JPG or WebP; max 25 MB.');
         return;
       }
       try {
@@ -290,14 +295,11 @@
         if (state._image) URL.revokeObjectURL(state._image.url);
         state._file = file;
         state._image = info;
-        var filename = root.querySelector('[data-studio-filename]');
-        filename.textContent = file.name + ' · ' + Math.round(file.size / 1024) + ' KB';
-        filename.hidden = false;
         root.classList.add('has-artwork');
         Object.keys(state._update).forEach(function (scene) { state._update[scene](); });
-        status.textContent = 'Design ready.';
+        setStatus();
         sync();
-      } catch (error) { status.textContent = error.message; }
+      } catch (error) { setStatus(error.message); }
     }
 
     input.onchange = function () { chooseFile(input.files && input.files[0]); };
@@ -325,7 +327,7 @@
       if (!state._file || !scenes.length) return;
       generate.disabled = true;
       generate.setAttribute('aria-busy', 'true');
-      status.textContent = 'Uploading…';
+      setStatus('Uploading…');
       var results = root.querySelector('[data-studio-results]');
       var grid = results.querySelector('[data-result-grid]');
       results.hidden = false;
@@ -333,7 +335,7 @@
       scenes.forEach(function (scene) { resultPlaceholder(grid, scene); });
       try {
         var assetRef = await uploadArtwork(root, state._file);
-        status.textContent = 'Preparing…';
+        setStatus('Preparing…');
         var saved = await request(root, 'designs', { method: 'POST', body: JSON.stringify({ manifest: designManifest(state, assetRef) }) });
         await Promise.all(scenes.map(async function (scene) {
           var created = await request(root, 'mockups', {
@@ -341,9 +343,9 @@
           });
           renderResult(root, scene, await poll(root, created.mockup.id, 0));
         }));
-        status.textContent = scenes.length + ' mockup' + (scenes.length === 1 ? '' : 's') + ' ready.';
+        setStatus(scenes.length + ' mockup' + (scenes.length === 1 ? '' : 's') + ' ready.');
       } catch (error) {
-        status.textContent = error.message;
+        setStatus(error.message);
       } finally {
         generate.removeAttribute('aria-busy');
         sync();

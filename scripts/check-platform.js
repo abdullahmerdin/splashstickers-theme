@@ -122,7 +122,7 @@ assert(/uploads\/stage/.test(mockupStudioJs) && /data-studio-file/.test(mockupSt
 assert(/scalePct/.test(mockupStudioJs) && /productColor/.test(mockupStudioJs) && /pointermove/.test(mockupStudioJs), 'mockup studio supports scale, color and drag placement controls');
 assert(/data-resize-handle/.test(mockupStudio) && /data-rotate-handle/.test(mockupStudio) && !/type="range"/.test(mockupStudio), 'mockup studio keeps resize and rotation controls on the artwork');
 assert(/activeScene/.test(mockupStudioJs) && /data-editor-activate/.test(mockupStudio), 'selected mockup editors keep an explicit customer-controlled active scene');
-assert(!/splash-studio-steps/.test(mockupStudio) && !/No configurator needed|Each product keeps|Drag the design/.test(mockupStudio), 'mockup studio omits redundant instructional copy');
+assert(!/splash-studio-steps/.test(mockupStudio) && !/No configurator needed|Each product keeps|Drag the design|Design ready/.test(mockupStudio + mockupStudioJs), 'mockup studio omits redundant instructional copy');
 assert(/sticker-configurator:artwork-added/.test(configuratorEntry), 'configurator exposes the selected File only to the upload bridge event');
 assert(/uploads\/stage/.test(extensionJs) && /uploads\/complete/.test(extensionJs), 'storefront bridge completes the staged artwork upload flow');
 assert(/uploadToken/.test(extensionJs), 'staged artwork completion carries a short-lived server-signed token');

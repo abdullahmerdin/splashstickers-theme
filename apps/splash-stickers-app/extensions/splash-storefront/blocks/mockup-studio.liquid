@@ -20,7 +20,6 @@
       <strong>Drop your design here</strong>
       <span>or browse a PNG, JPG or WebP up to 25 MB</span>
     </label>
-    <p data-studio-filename hidden></p>
   </div>
 
   <div class="splash-studio-section-heading">
@@ -103,7 +102,7 @@
   <div class="splash-studio-editors" data-studio-editors></div>
 
   <footer class="splash-studio-actions">
-    <p data-studio-status role="status" aria-live="polite">Upload a design to start editing.</p>
+    <p data-studio-status role="status" aria-live="polite" hidden></p>
     <button class="splash-app-button splash-studio-generate" type="button" data-studio-generate disabled>
       {{ block.settings.button_text | escape }}
     </button>
