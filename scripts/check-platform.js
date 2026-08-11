@@ -93,6 +93,7 @@ assert(/"target"\s*:\s*"section"/.test(reviews), 'reviews are a movable app bloc
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');
 assert(/--color-background/.test(extensionCss) && /--color-foreground/.test(extensionCss), 'extension UI derives from semantic theme tokens');
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'extension UI includes a dark-mode fallback');
+assert(/scroll-snap-type:\s*inline mandatory/.test(extensionCss) && /order:\s*-1/.test(extensionCss), 'mockup studio mobile layout keeps product selection compact and the active editor first');
 
 const mockupRenderer = read('apps/splash-stickers-app/app/services/mockup-renderer.server.ts');
 ['phone-case.webp', 'laptop.webp', 'mailer.webp'].forEach((filename) => {
