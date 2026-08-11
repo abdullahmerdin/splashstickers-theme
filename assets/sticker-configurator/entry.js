@@ -823,18 +823,12 @@ class StickerConfigurator extends HTMLElement {
     var reader = new FileReader();
     var core = this;
     reader.onload = function (e) {
-      var addedItemIds = [];
       for (var i = 0; i < qty; i++) {
-        var addedItem = core.itemManager.addImageItem(e.target.result, false, {
+        core.itemManager.addImageItem(e.target.result, false, {
           w: core.utils ? core.utils.mmToPx(wMm) : wMm,
           h: core.utils ? core.utils.mmToPx(hMm) : hMm
         });
-        if (addedItem) addedItemIds.push(addedItem.id);
       }
-      core.dispatchEvent(new CustomEvent('sticker-configurator:artwork-added', {
-        bubbles: true,
-        detail: { file: file, itemIds: addedItemIds }
-      }));
       core.growCanvas();
       core.historyManager.saveState();
       core.alignmentEngine.onAutoArrange();

@@ -32,10 +32,8 @@ const required = [
   'apps/splash-stickers-app/app/routes/webhooks.orders.paid.tsx',
   'apps/splash-stickers-app/app/routes/webhooks.compliance.tsx',
   'apps/splash-stickers-app/extensions/splash-storefront/shopify.extension.toml',
-  'apps/splash-stickers-app/storefront-extension-src/splash-storefront.js',
+  'apps/splash-stickers-app/storefront-extension-src/product-reviews.js',
   'apps/splash-stickers-app/storefront-extension-src/mockup-studio-v2.js',
-  'apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid',
-  'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-studio.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid',
   'packages/design-contract/schema/design-manifest.schema.json',
@@ -80,12 +78,14 @@ const proxyRoutes = [
 ].map(read).join('\n');
 assert(/requireAppProxy/.test(proxyRoutes), 'all storefront domains use the signed app-proxy boundary');
 
-const bridge = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid');
-const mockup = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid');
 const mockupStudio = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-studio.liquid');
 const reviews = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid');
-assert(/"target"\s*:\s*"body"/.test(bridge), 'storefront bridge is an app embed');
-assert(/"target"\s*:\s*"section"/.test(mockup), 'mockup is a movable app block');
+const themeSettings = read('config/settings_data.json');
+const productTemplate = read('templates/product.json');
+const retiredBridgePath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid');
+const retiredPreviewPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid');
+assert(!fs.existsSync(retiredBridgePath) && !/storefront-bridge/.test(themeSettings), 'customizer no longer loads the retired storefront bridge');
+assert(!fs.existsSync(retiredPreviewPath) && !/mockup-preview/.test(productTemplate), 'product template no longer waits for the retired inline mockup preview');
 assert(/"templates"\s*:\s*\["page"\]/.test(mockupStudio), 'mockup studio is a dedicated page app block');
 assert(/mockup-phone\.jpg/.test(mockupStudio) && /mockup-laptop\.jpg/.test(mockupStudio) && /mockup-mailer\.jpg/.test(mockupStudio), 'mockup studio exposes all product scene plates');
 assert(/"target"\s*:\s*"section"/.test(reviews), 'reviews are a movable app block');
@@ -110,12 +110,14 @@ assert(contractSchema.properties.schemaVersion.const === '1.0', 'DesignManifest 
 assert(contractSchema.additionalProperties === false, 'DesignManifest rejects unknown top-level fields');
 
 const cartManager = read('assets/sticker-configurator/cart-manager.js');
-assert(/splashPersistDesign/.test(cartManager), 'cart handoff waits for app persistence when the bridge is enabled');
+assert(!/splashPersistDesign|_design_digest/.test(cartManager), 'cart handoff does not wait for removed app persistence');
 assert(/_design_manifest_version/.test(cartManager), 'cart handoff includes a private contract version');
 const configuratorEntry = read('assets/sticker-configurator/entry.js');
-const extensionJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
-const extensionJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
-assert(fs.statSync(extensionJsPath).size <= 10_000, 'storefront extension JavaScript stays within Shopify\'s app-block limit');
+const reviewsJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/product-reviews.js');
+const reviewsJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/product-reviews.js');
+const retiredStorefrontJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
+assert(fs.statSync(reviewsJsPath).size <= 10_000, 'reviews JavaScript stays within Shopify\'s app-block limit');
+assert(/"javascript"\s*:\s*"product-reviews\.js"/.test(reviews) && !fs.existsSync(retiredStorefrontJsPath), 'reviews use a dedicated bundle and omit the retired storefront bridge asset');
 const mockupStudioJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js');
 const mockupStudioSource = read('apps/splash-stickers-app/storefront-extension-src/mockup-studio-v2.js');
 const mockupStudioJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js');
@@ -129,9 +131,8 @@ assert(/\.splash-studio-artwork-handle\s*\{[^}]*opacity:\s*0\.68/s.test(extensio
 assert(/activeScene/.test(mockupStudioJs) && /data-scene-activate/.test(mockupStudio), 'mockup cards keep an explicit customer-controlled active scene');
 assert(/editor\.hidden\s*=\s*!isActive/.test(mockupStudioSource), 'mockup studio renders only the active editor while selections stay compact');
 assert(!/splash-studio-steps/.test(mockupStudio) && !/No configurator needed|Each product keeps|Drag the design|Design ready/.test(mockupStudio + mockupStudioJs), 'mockup studio omits redundant instructional copy');
-assert(/sticker-configurator:artwork-added/.test(configuratorEntry), 'configurator exposes the selected File only to the upload bridge event');
-assert(/uploads\/stage/.test(extensionJs) && /uploads\/complete/.test(extensionJs), 'storefront bridge completes the staged artwork upload flow');
-assert(/uploadToken/.test(extensionJs), 'staged artwork completion carries a short-lived server-signed token');
+assert(!/sticker-configurator:artwork-added/.test(configuratorEntry), 'configurator keeps uploaded artwork local instead of dispatching it to the retired bridge');
+assert(!/data-splash-bridge|data-splash-mockup|uploads\/stage|splash:design-saved/.test(reviewsJs), 'reviews bundle omits retired customizer persistence and inline mockup listeners');
 
 const shopifyIgnore = read('.shopifyignore');
 assert(/apps\/\*/.test(shopifyIgnore) && /packages\/\*/.test(shopifyIgnore), 'theme uploads exclude app and shared workspaces');

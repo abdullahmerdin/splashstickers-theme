@@ -45,28 +45,9 @@
   margin: 0;
 }
 
-.splash-app-status,
 .splash-review-summary,
 .splash-review__meta {
   color: var(--splash-app-muted);
-}
-
-.splash-mockup__canvas {
-  display: grid;
-  min-height: 14rem;
-  place-items: center;
-  overflow: hidden;
-  border: 1px dashed var(--splash-app-border);
-  border-radius: 0.75rem;
-}
-
-.splash-mockup__canvas img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  /* Generated artwork is content and must retain its source colors. */
-  color-scheme: only light;
 }
 
 .splash-review {

@@ -426,49 +426,6 @@ test('cart request uses Shopify JSON payload and never builds the production PDF
   assert.equal(cartPayload.items[0].properties._design_manifest_version, '1');
 });
 
-test('app persistence can replace the public design ID before cart handoff', async () => {
-  let requestOptions;
-  context.fetch = async (_url, options) => {
-    requestOptions = options;
-    return { ok: true, text: async () => '{}' };
-  };
-  const core = {
-    CANVAS_W: 600,
-    CANVAS_H: 400,
-    cache: {
-      submit: {
-        classList: { add() {}, remove() {} },
-        disabled: false,
-        innerHTML: 'Add to cart',
-        textContent: ''
-      },
-      'cart-status': { dataset: {}, textContent: '' }
-    },
-    dataset: { cartAddUrl: '/cart/add.js', redirectToCart: 'false' },
-    dispatchAddToCartEvent() {},
-    modalManager: { showErrorModal() {} },
-    qtyEl: { textContent: '2' },
-    state: {
-      backgroundColor: '#ffffff',
-      gapSize: 3,
-      items: [{ x: 1, y: 2, w: 3, h: 4, rotation: 0, scaleX: 1, scaleY: 1 }],
-      projectId: 'local-id',
-      variantAvailable: true,
-      variantId: 123
-    },
-    async splashPersistDesign(manifest) {
-      assert.equal(manifest.projectId, 'local-id');
-      return { publicId: 'saved-id', schemaVersion: 1, digest: 'abcdef0123456789abcdef0123456789' };
-    }
-  };
-
-  await new CartManager(core).addToCart();
-  const cartPayload = JSON.parse(requestOptions.body);
-  assert.equal(core.state.projectId, 'saved-id');
-  assert.equal(cartPayload.items[0].properties['Design ID'], 'saved-id');
-  assert.equal(cartPayload.items[0].properties._design_digest, 'abcdef0123456789abcdef01');
-});
-
 test('the rendered add-to-cart button is wired to CartManager', () => {
   let calls = 0;
   const submit = new EventTarget();

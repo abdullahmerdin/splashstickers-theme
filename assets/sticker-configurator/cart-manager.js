@@ -133,15 +133,6 @@ class CartManager {
 
     try {
       var manifest = this.buildManifest();
-      var persistedDesign = null;
-      if (typeof core.splashPersistDesign === 'function') {
-        persistedDesign = await core.splashPersistDesign(manifest);
-        if (!persistedDesign || !persistedDesign.publicId || persistedDesign.status === 'DRAFT') {
-          throw new Error(configuratorText(core, 'design_save_failed', 'The design could not be saved for production.'));
-        }
-        core.state.projectId = persistedDesign.publicId;
-      }
-
       var sheetWidthMm = this.roundMm(core.CANVAS_W);
       var sheetHeightMm = this.roundMm(core.CANVAS_H);
       var cartPayload = {
@@ -154,17 +145,10 @@ class CartManager {
             'Sheet copies': String(this.getSheetQuantity()),
             'Sheet size': sheetWidthMm + ' × ' + sheetHeightMm + ' mm',
             '_configurator_version': '3',
-            '_design_manifest_version': String(persistedDesign && persistedDesign.schemaVersion || manifest.version),
-            '_design_digest': persistedDesign && persistedDesign.digest
-              ? String(persistedDesign.digest).slice(0, 24)
-              : ''
+            '_design_manifest_version': String(manifest.version)
           }
         }]
       };
-
-      if (!cartPayload.items[0].properties._design_digest) {
-        delete cartPayload.items[0].properties._design_digest;
-      }
 
       var response = await fetch(
         core.dataset.cartAddUrl || ((window.Shopify && window.Shopify.routes.root) || '/') + 'cart/add.js',

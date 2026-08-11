@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build:configurator": "node scripts/build-configurator.js",
-    "build:storefront-extension": "esbuild apps/splash-stickers-app/storefront-extension-src/splash-storefront.js apps/splash-stickers-app/storefront-extension-src/mockup-studio-v2.js --minify --charset=utf8 --outdir=apps/splash-stickers-app/extensions/splash-storefront/assets && terser apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js --ecma 2020 --compress passes=3,booleans_as_integers=true --mangle --mangle-props regex=/^_/ --output apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js",
+    "build:storefront-extension": "esbuild apps/splash-stickers-app/storefront-extension-src/product-reviews.js apps/splash-stickers-app/storefront-extension-src/mockup-studio-v2.js --minify --charset=utf8 --outdir=apps/splash-stickers-app/extensions/splash-storefront/assets && terser apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js --ecma 2020 --compress passes=3,booleans_as_integers=true --mangle --mangle-props regex=/^_/ --output apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js",
     "build:app": "npm run build --workspace=@splash-stickers/app",
     "build:platform": "npm run build:configurator && npm run build:storefront-extension && npm run build:app",
     "check:configurator": "node scripts/build-configurator.js --check && node --check assets/sticker-configurator.js && node --check assets/sticker-configurator-experience.js && node scripts/check-configurator-sync.js && node --test tests/sticker-configurator.test.js",

@@ -25,7 +25,7 @@ export default function Dashboard() {
     <s-page heading="Splash Stickers">
       <s-section heading="Platform status">
         <s-paragraph>
-          Theme storefront, design persistence, mockup queue and review moderation are connected for {data.shop}.
+          Theme storefront, standalone mockups and review moderation are connected for {data.shop}.
         </s-paragraph>
         <s-stack direction="inline" gap="base">
           <Metric label="Designs" value={data.designs} href="/app/designs" />
@@ -39,8 +39,8 @@ export default function Dashboard() {
       <s-section heading="Activation checklist">
         <s-unordered-list>
           <s-list-item>Set the hosted app URL and app proxy URL before production deploy.</s-list-item>
-          <s-list-item>Enable the Storefront bridge app embed in the theme editor.</s-list-item>
-          <s-list-item>Add the Mockup and Reviews app blocks to the product template.</s-list-item>
+          <s-list-item>Add the Reviews app block to the product template.</s-list-item>
+          <s-list-item>Add the Mockup Studio app block to its dedicated page template.</s-list-item>
           <s-list-item>Connect the hosted database and high-resolution production renderer.</s-list-item>
         </s-unordered-list>
       </s-section>
