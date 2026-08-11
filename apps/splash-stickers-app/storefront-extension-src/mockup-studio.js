@@ -61,10 +61,9 @@
     handle.onpointercancel = stop;
   }
 
-  function makeEditor(root, scene, state, sync) {
+  function makeEditor(root, scene, state) {
     var definition = SCENES[scene];
     var article = root.querySelector('[data-editor-template]').content.firstElementChild.cloneNode(true);
-    var activate = article.querySelector('[data-editor-activate]');
     var plate = article.querySelector('.splash-studio-plate');
     var surface = article.querySelector('.splash-studio-surface');
     var printArea = article.querySelector('.splash-studio-print-area');
@@ -76,8 +75,6 @@
     var presets = article.querySelector('[data-color-presets]');
     article.dataset.sceneEditor = scene;
     article.querySelector('[data-editor-title]').textContent = definition._label;
-    activate.setAttribute('aria-label', 'Edit ' + definition._label.toLowerCase());
-    activate.onclick = function () { state.activeScene = scene; sync(); };
     plate.src = root.dataset['scene' + scene[0].toUpperCase() + scene.slice(1)];
     plate.alt = definition._label + ' mockup';
     setRect(surface, definition._surface);
@@ -261,13 +258,10 @@
     function sync() {
       var scenes = selected(root);
       if (!scenes.includes(state.activeScene)) state.activeScene = scenes[0] || null;
-      editors.dataset.count = String(scenes.length);
       root.querySelectorAll('[data-scene-editor]').forEach(function (editor) {
-        var isSelected = scenes.includes(editor.dataset.sceneEditor);
-        var isActive = isSelected && editor.dataset.sceneEditor === state.activeScene;
-        editor.hidden = !isSelected;
+        var isActive = scenes.includes(editor.dataset.sceneEditor) && editor.dataset.sceneEditor === state.activeScene;
+        editor.hidden = !isActive;
         editor.dataset.active = String(isActive);
-        editor.querySelector('[data-editor-activate]').tabIndex = isActive ? -1 : 0;
       });
       root.querySelectorAll('[data-scene-card]').forEach(function (card) {
         var isSelected = card.querySelector('[data-scene-choice]').checked;
@@ -281,7 +275,7 @@
 
     Object.keys(SCENES).forEach(function (scene) {
       state._configs[scene] = defaults(scene);
-      editors.append(makeEditor(root, scene, state, sync));
+      editors.append(makeEditor(root, scene, state));
     });
 
     async function chooseFile(file) {

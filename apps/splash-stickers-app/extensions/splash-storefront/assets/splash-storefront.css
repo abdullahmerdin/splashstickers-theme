@@ -320,10 +320,6 @@
   padding: 0.75rem 2.7rem 0.75rem 0.85rem;
 }
 
-.splash-studio-scene small {
-  color: var(--splash-app-muted);
-}
-
 .splash-studio-scene__include {
   position: absolute;
   right: 0.65rem;
@@ -370,12 +366,8 @@
 }
 
 .splash-studio-editors {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 7.25rem;
-  align-items: start;
-  gap: 0.75rem;
   inline-size: min(100%, 46rem);
-  margin-block: 1.25rem 0;
+  margin-block: 1rem 0;
   margin-inline: auto;
 }
 
@@ -394,35 +386,8 @@
 }
 
 .splash-studio-editor[data-active="true"] {
-  grid-column: 1;
-  grid-row: 1 / span 3;
   padding: clamp(0.7rem, 1.5vw, 1rem);
   border-color: var(--splash-app-accent);
-}
-
-.splash-studio-editors[data-count="1"] .splash-studio-editor[data-active="true"] {
-  grid-column: 1 / -1;
-}
-
-.splash-studio-editor[data-active="false"] {
-  grid-column: 2;
-}
-
-.splash-studio-editor__activate {
-  position: absolute;
-  z-index: 10;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: inherit;
-  cursor: pointer;
-}
-
-.splash-studio-editor[data-active="true"] > .splash-studio-editor__activate {
-  display: none;
 }
 
 .splash-studio-editor__heading {
@@ -431,15 +396,6 @@
 
 .splash-studio-editor h3 {
   font-size: clamp(1.2rem, 1.75vw, 1.6rem);
-}
-
-.splash-studio-editor[data-active="false"] .splash-studio-kicker {
-  display: none;
-}
-
-.splash-studio-editor[data-active="false"] h3 {
-  font-size: 0.85rem;
-  letter-spacing: 0;
 }
 
 .splash-studio-workspace {
@@ -456,11 +412,6 @@
   border-radius: 0.65rem;
   background: var(--splash-studio-soft);
   color-scheme: only light;
-}
-
-.splash-studio-editor[data-active="false"] .splash-studio-canvas {
-  width: 100%;
-  border-radius: 0.45rem;
 }
 
 .splash-studio-plate,
@@ -536,7 +487,15 @@
   font: inherit;
   line-height: 1;
   cursor: grab;
+  opacity: 0.68;
   touch-action: none;
+  transition: opacity 150ms ease;
+}
+
+.splash-studio-artwork-frame:hover .splash-studio-artwork-handle,
+.splash-studio-artwork-handle:focus-visible,
+.splash-studio-artwork-frame:is(.is-resizing, .is-rotating) .splash-studio-artwork-handle {
+  opacity: 1;
 }
 
 .splash-studio-artwork-handle--rotate {
@@ -547,16 +506,6 @@
 .splash-studio-artwork-handle--resize {
   right: 0.3rem;
   bottom: 0.3rem;
-}
-
-.splash-studio-editor[data-active="false"] .splash-studio-artwork-frame {
-  outline: 0;
-  pointer-events: none;
-}
-
-.splash-studio-editor[data-active="false"] .splash-studio-artwork-handle,
-.splash-studio-editor[data-active="false"] .splash-studio-controls {
-  display: none;
 }
 
 .splash-studio-controls {
@@ -814,10 +763,6 @@
     font-size: 0.8rem;
   }
 
-  .splash-studio-scene small {
-    display: none;
-  }
-
   .splash-studio-scene__include {
     right: 0.15rem;
     width: 2.75rem;
@@ -836,21 +781,12 @@
   }
 
   .splash-studio-editors {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.65rem;
     width: 100%;
     margin-block-start: 1rem;
   }
 
   .splash-studio-editor[data-active="true"] {
-    grid-column: 1 / -1;
-    grid-row: auto;
-    order: -1;
     padding: 0.65rem;
-  }
-
-  .splash-studio-editor[data-active="false"] {
-    grid-column: auto;
   }
 
   .splash-studio-editor[data-active="true"] .splash-studio-canvas {

@@ -93,7 +93,7 @@ assert(/"target"\s*:\s*"section"/.test(reviews), 'reviews are a movable app bloc
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');
 assert(/--color-background/.test(extensionCss) && /--color-foreground/.test(extensionCss), 'extension UI derives from semantic theme tokens');
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'extension UI includes a dark-mode fallback');
-assert(/scroll-snap-type:\s*inline mandatory/.test(extensionCss) && /order:\s*-1/.test(extensionCss), 'mockup studio mobile layout keeps product selection compact and the active editor first');
+assert(/scroll-snap-type:\s*inline mandatory/.test(extensionCss) && /width:\s*2\.75rem/.test(extensionCss), 'mockup studio mobile layout keeps product selection compact and touch controls usable');
 
 const mockupRenderer = read('apps/splash-stickers-app/app/services/mockup-renderer.server.ts');
 ['phone-case.webp', 'laptop.webp', 'mailer.webp'].forEach((filename) => {
@@ -117,12 +117,15 @@ const extensionJs = read('apps/splash-stickers-app/extensions/splash-storefront/
 const extensionJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
 assert(fs.statSync(extensionJsPath).size <= 10_000, 'storefront extension JavaScript stays within Shopify\'s app-block limit');
 const mockupStudioJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio.js');
+const mockupStudioSource = read('apps/splash-stickers-app/storefront-extension-src/mockup-studio.js');
 const mockupStudioJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio.js');
 assert(fs.statSync(mockupStudioJsPath).size <= 10_000, 'mockup studio JavaScript stays within Shopify\'s app-block limit');
 assert(/uploads\/stage/.test(mockupStudioJs) && /data-studio-file/.test(mockupStudio), 'mockup studio uploads finished artwork without the configurator');
 assert(/scalePct/.test(mockupStudioJs) && /productColor/.test(mockupStudioJs) && /pointermove/.test(mockupStudioJs), 'mockup studio supports scale, color and drag placement controls');
 assert(/data-resize-handle/.test(mockupStudio) && /data-rotate-handle/.test(mockupStudio) && !/type="range"/.test(mockupStudio), 'mockup studio keeps resize and rotation controls on the artwork');
-assert(/activeScene/.test(mockupStudioJs) && /data-editor-activate/.test(mockupStudio), 'selected mockup editors keep an explicit customer-controlled active scene');
+assert(/\.splash-studio-artwork-handle\s*\{[^}]*opacity:\s*0\.68/s.test(extensionCss), 'mockup studio keeps artwork handles visually subdued until interaction');
+assert(/activeScene/.test(mockupStudioJs) && /data-scene-activate/.test(mockupStudio), 'mockup cards keep an explicit customer-controlled active scene');
+assert(/editor\.hidden\s*=\s*!isActive/.test(mockupStudioSource), 'mockup studio renders only the active editor while selections stay compact');
 assert(!/splash-studio-steps/.test(mockupStudio) && !/No configurator needed|Each product keeps|Drag the design|Design ready/.test(mockupStudio + mockupStudioJs), 'mockup studio omits redundant instructional copy');
 assert(/sticker-configurator:artwork-added/.test(configuratorEntry), 'configurator exposes the selected File only to the upload bridge event');
 assert(/uploads\/stage/.test(extensionJs) && /uploads\/complete/.test(extensionJs), 'storefront bridge completes the staged artwork upload flow');

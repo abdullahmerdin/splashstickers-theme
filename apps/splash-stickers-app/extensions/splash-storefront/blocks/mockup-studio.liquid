@@ -23,17 +23,14 @@
   </div>
 
   <div class="splash-studio-section-heading">
-    <div>
-      <span class="splash-studio-kicker">Choose products</span>
-      <h2>Select one or several mockups</h2>
-    </div>
+    <h2>Select mockups</h2>
   </div>
 
   <div class="splash-studio-scenes">
     <article class="splash-studio-scene" data-scene-card data-scene="phone">
       <button class="splash-studio-scene__activate" type="button" data-scene-activate aria-pressed="true">
         <img src="{{ 'mockup-phone.jpg' | asset_url }}" alt="Blank phone case mockup" width="1000" height="1000">
-        <span><strong>Phone case</strong><small>Portrait canvas</small></span>
+        <span><strong>Phone case</strong></span>
       </button>
       <label class="splash-studio-scene__include" for="splash-studio-phone-{{ block.id }}">
         <input id="splash-studio-phone-{{ block.id }}" data-scene-choice type="checkbox" value="phone" checked>
@@ -44,7 +41,7 @@
     <article class="splash-studio-scene" data-scene-card data-scene="laptop">
       <button class="splash-studio-scene__activate" type="button" data-scene-activate aria-pressed="false">
         <img src="{{ 'mockup-laptop.jpg' | asset_url }}" alt="Blank laptop mockup" width="1000" height="1000">
-        <span><strong>Laptop</strong><small>Wide canvas</small></span>
+        <span><strong>Laptop</strong></span>
       </button>
       <label class="splash-studio-scene__include" for="splash-studio-laptop-{{ block.id }}">
         <input id="splash-studio-laptop-{{ block.id }}" data-scene-choice type="checkbox" value="laptop">
@@ -55,7 +52,7 @@
     <article class="splash-studio-scene" data-scene-card data-scene="mailer">
       <button class="splash-studio-scene__activate" type="button" data-scene-activate aria-pressed="false">
         <img src="{{ 'mockup-mailer.jpg' | asset_url }}" alt="Blank shipping box mockup" width="1000" height="1000">
-        <span><strong>Shipping box</strong><small>Packaging canvas</small></span>
+        <span><strong>Shipping box</strong></span>
       </button>
       <label class="splash-studio-scene__include" for="splash-studio-mailer-{{ block.id }}">
         <input id="splash-studio-mailer-{{ block.id }}" data-scene-choice type="checkbox" value="mailer">
@@ -67,9 +64,7 @@
 
   <template data-editor-template>
     <article class="splash-studio-editor" hidden>
-      <button class="splash-studio-editor__activate" type="button" data-editor-activate></button>
       <div class="splash-studio-editor__heading">
-        <span class="splash-studio-kicker">Edit placement</span>
         <h3 data-editor-title></h3>
       </div>
       <div class="splash-studio-workspace">
