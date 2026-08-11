@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  // Versioned entrypoint prevents storefronts from reusing the retired status-message bundle.
+
   var SCENES = {
     phone: { _label: 'Phone case', _surface: [30, 10.4, 39.8, 79], _print: [34.8, 33.7, 30.4, 45.3], _color: '#f5f2ec' },
     laptop: { _label: 'Laptop', _surface: [7, 16.7, 86.6, 64.3], _print: [12.8, 22.4, 75, 52.5], _color: '#d9dde2' },

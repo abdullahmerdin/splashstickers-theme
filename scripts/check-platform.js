@@ -33,7 +33,7 @@ const required = [
   'apps/splash-stickers-app/app/routes/webhooks.compliance.tsx',
   'apps/splash-stickers-app/extensions/splash-storefront/shopify.extension.toml',
   'apps/splash-stickers-app/storefront-extension-src/splash-storefront.js',
-  'apps/splash-stickers-app/storefront-extension-src/mockup-studio.js',
+  'apps/splash-stickers-app/storefront-extension-src/mockup-studio-v2.js',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/storefront-bridge.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-preview.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-studio.liquid',
@@ -116,10 +116,12 @@ const configuratorEntry = read('assets/sticker-configurator/entry.js');
 const extensionJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
 const extensionJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.js');
 assert(fs.statSync(extensionJsPath).size <= 10_000, 'storefront extension JavaScript stays within Shopify\'s app-block limit');
-const mockupStudioJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio.js');
-const mockupStudioSource = read('apps/splash-stickers-app/storefront-extension-src/mockup-studio.js');
-const mockupStudioJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio.js');
+const mockupStudioJs = read('apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js');
+const mockupStudioSource = read('apps/splash-stickers-app/storefront-extension-src/mockup-studio-v2.js');
+const mockupStudioJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js');
+const retiredMockupStudioJsPath = path.join(root, 'apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio.js');
 assert(fs.statSync(mockupStudioJsPath).size <= 10_000, 'mockup studio JavaScript stays within Shopify\'s app-block limit');
+assert(/"javascript"\s*:\s*"mockup-studio-v2\.js"/.test(mockupStudio) && !fs.existsSync(retiredMockupStudioJsPath), 'mockup studio uses the cache-busted bundle and omits the retired asset');
 assert(/uploads\/stage/.test(mockupStudioJs) && /data-studio-file/.test(mockupStudio), 'mockup studio uploads finished artwork without the configurator');
 assert(/scalePct/.test(mockupStudioJs) && /productColor/.test(mockupStudioJs) && /pointermove/.test(mockupStudioJs), 'mockup studio supports scale, color and drag placement controls');
 assert(/data-resize-handle/.test(mockupStudio) && /data-rotate-handle/.test(mockupStudio) && !/type="range"/.test(mockupStudio), 'mockup studio keeps resize and rotation controls on the artwork');
