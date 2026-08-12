@@ -15,6 +15,7 @@ const required = [
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.stage.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.complete.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.status.ts',
+  'apps/splash-stickers-app/app/routes/healthz.ts',
   'apps/splash-stickers-app/app/services/products.server.ts',
   'apps/splash-stickers-app/app/services/purchase-intents.server.ts',
   'apps/splash-stickers-app/app/services/order-handoff.server.ts',
