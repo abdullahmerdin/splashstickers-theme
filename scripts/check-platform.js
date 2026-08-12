@@ -10,6 +10,8 @@ function assert(condition, message) { if (!condition) throw new Error(message); 
 
 const required = [
   'apps/splash-stickers-app/app/components/workbench/WorkbenchShell.tsx',
+  'apps/splash-stickers-app/app/lib/gangsheet-editor.ts',
+  'apps/splash-stickers-app/app/lib/gangsheet-editor.test.mjs',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.builder.tsx',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.purchase-intents.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.stage.ts',
@@ -68,6 +70,9 @@ assert(/data-drawer-open/.test(shell) && /max-width:\s*59\.99rem/.test(builderCs
 assert(/max-height:\s*calc\(5 \* 1\.4em/.test(builderCss) && /autoGrow/.test(builder), 'prompt grows from one through five lines');
 assert(/role="tabpanel"/.test(builder) && /ChangeReview/.test(builder), 'preview and diff are explicit controlled panels');
 assert(/data-theme="dark"/.test(builderCss), 'standalone builder has semantic dark-mode values');
+assert(/setCanvasZoom/.test(builder) && /onCanvasWheel/.test(builder) && /gb-canvas-wrap/.test(builderCss), 'canvas zoom and pan stay isolated from fixed builder controls');
+assert(/isLayoutValid/.test(builder) && /findOpenPlacement/.test(builder) && /data-invalid/.test(builder), 'direct manipulation prevents overlapping artwork');
+assert(/function undo/.test(builder) && /function redo/.test(builder) && /duplicateSelected/.test(builder) && /flipSelected/.test(builder), 'builder keeps configurator quality-of-life editing actions');
 assert(!/linear-gradient|radial-gradient|filter:\s*drop-shadow|box-shadow:/.test(builderCss), 'builder avoids decorative gradients, glows and shadows');
 assert(!/No configurator needed|Each product keeps|Drag the design|Design ready/.test(builder + builderCss), 'builder avoids retired AI-artifact copy');
 
@@ -80,13 +85,13 @@ assert(/line\.quantity/.test(handoffService), 'production quantity comes from th
 
 const launcher = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/gangsheet-builder.liquid');
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');
-assert(/method="get"/.test(launcher) && /name="variant"/.test(launcher), 'launcher uses a native declarative product form');
+assert(/<iframe/.test(launcher) && /embedded=1/.test(launcher) && /name="variant"/.test(launcher) === false, 'product app block embeds the builder instead of navigating away');
 assert(/html\[data-theme="dark"\]/.test(extensionCss), 'app extension follows the theme persisted color mode');
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'app extension honors system dark preference before a choice');
 
 const productTemplate = read('templates/product.json');
 const gangsheetTemplate = read('templates/product.product-gangsheet.json');
-assert(!/blocks\/gangsheet-builder/.test(productTemplate) && /blocks\/gangsheet-builder/.test(gangsheetTemplate), 'only the gangsheet product template mounts the builder app block');
+assert(!/blocks\/gangsheet-builder/.test(productTemplate) && /blocks\/gangsheet-builder/.test(gangsheetTemplate), 'only the gangsheet product template embeds the builder app block');
 assert(!/sticker-configurator/.test(productTemplate + gangsheetTemplate), 'theme templates do not embed the retired configurator');
 assert(/_splash_gangsheet/.test(read('snippets/cart-products.liquid')), 'cart recognizes app-owned gangsheet lines by contract marker');
 assert(/item\.quantity/.test(read('snippets/cart-gangsheet-summary.liquid')), 'cart summary renders Shopify quantity authority');

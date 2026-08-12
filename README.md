@@ -42,8 +42,9 @@ uploads artwork to Shopify Files, waits for processing, saves the canonical
 design and creates a signed purchase handoff before changing Shopify cart.
 Shopify line quantity is the production quantity authority.
 
-The theme contains only the app launcher and compact cart summary. Builder
-runtime, state and purchase orchestration are not theme assets.
+The theme contains only the embedded app frame and compact cart summary. Builder
+runtime, editor state and purchase orchestration remain app-owned rather than
+theme assets.
 
 ## Local checks
 

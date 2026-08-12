@@ -17,7 +17,8 @@
     "check:css-cleanup": "node scripts/check-css-cleanup.js",
     "check:phase6": "node scripts/check-phase6.js",
     "check:contract": "npm test --workspace=@splash-stickers/design-contract",
-    "check:app": "npm run typecheck --workspace=@splash-stickers/app && npm run lint --workspace=@splash-stickers/app && npm run build --workspace=@splash-stickers/app",
+    "check:builder": "node --test apps/splash-stickers-app/app/lib/gangsheet-editor.test.mjs",
+    "check:app": "npm run check:builder && npm run typecheck --workspace=@splash-stickers/app && npm run lint --workspace=@splash-stickers/app && npm run build --workspace=@splash-stickers/app",
     "check:platform": "node scripts/check-platform.js && npm run check:contract && npm run check:app",
     "check:theme": "npm run check:phase4 && npm run check:phase5 && npm run check:phase6 && npm run check:how-it-works && npm run check:storefront",
     "check:all": "npm run check:theme && npm run check:platform"

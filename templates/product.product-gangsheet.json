@@ -48,9 +48,7 @@
           "settings": {
             "product": "",
             "heading": "Build your gangsheet",
-            "body": "Arrange your artwork, review the sheet and add the saved design to Shopify cart.",
-            "option_label": "Sheet option",
-            "button_text": "Open Splash Gangsheet Builder",
+            "fallback_link_text": "Open gangsheet builder",
             "missing_product_text": "Select a gangsheet product in this app block."
           }
         }

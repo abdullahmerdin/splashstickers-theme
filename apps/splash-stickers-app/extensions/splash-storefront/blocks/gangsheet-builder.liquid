@@ -3,31 +3,20 @@
   assign selected_variant = builder_product.selected_or_first_available_variant
 -%}
 
-<section class="splash-app-surface splash-builder-launcher" {{ block.shopify_attributes }}>
-  <div>
-    <h2>{{ block.settings.heading | escape }}</h2>
-    {% if block.settings.body != blank %}<p>{{ block.settings.body | escape }}</p>{% endif %}
-  </div>
+<section class="splash-app-surface splash-builder-embed" {{ block.shopify_attributes }}>
   {% if builder_product != blank and selected_variant != blank %}
-    <form action="{{ routes.root_url }}apps/splash-stickers/builder" method="get">
-      {% if builder_product.has_only_default_variant == false %}
-        <label>
-          <span>{{ block.settings.option_label | escape }}</span>
-          <select name="variant">
-            {% for variant in builder_product.variants %}
-              <option value="{{ variant.id }}" {% if variant.id == selected_variant.id %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
-                {{ variant.title | escape }} · {{ variant.price | money_with_currency }}
-              </option>
-            {% endfor %}
-          </select>
-        </label>
-      {% else %}
-        <input type="hidden" name="variant" value="{{ selected_variant.id }}">
-      {% endif %}
-      <button class="splash-app-button" type="submit" {% unless selected_variant.available %}disabled{% endunless %}>
-        {{ block.settings.button_text | escape }}
-      </button>
-    </form>
+    <iframe
+      class="splash-builder-frame"
+      src="{{ routes.root_url }}apps/splash-stickers/builder?variant={{ selected_variant.id }}&amp;embedded=1"
+      title="{{ block.settings.heading | escape }}"
+      loading="eager"
+      allow="clipboard-write"
+    ></iframe>
+    <noscript>
+      <a class="splash-app-button" href="{{ routes.root_url }}apps/splash-stickers/builder?variant={{ selected_variant.id }}">
+        {{ block.settings.fallback_link_text | escape }}
+      </a>
+    </noscript>
   {% else %}
     <p role="status">{{ block.settings.missing_product_text | escape }}</p>
   {% endif %}
@@ -42,9 +31,7 @@
   "settings": [
     { "type": "product", "id": "product", "label": "Gangsheet product" },
     { "type": "text", "id": "heading", "label": "Heading", "default": "Build your gangsheet" },
-    { "type": "textarea", "id": "body", "label": "Body", "default": "Arrange your artwork, review the sheet and add the saved design to Shopify cart." },
-    { "type": "text", "id": "option_label", "label": "Option label", "default": "Sheet option" },
-    { "type": "text", "id": "button_text", "label": "Button", "default": "Open Splash Gangsheet Builder" },
+    { "type": "text", "id": "fallback_link_text", "label": "No-JavaScript link", "default": "Open gangsheet builder" },
     { "type": "text", "id": "missing_product_text", "label": "Missing product message", "default": "Select a gangsheet product in this app block." }
   ]
 }

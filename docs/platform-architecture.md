@@ -20,7 +20,7 @@ integration is delivered through the `splash-storefront` theme app extension.
 
 | Capability | Theme | App |
 | --- | --- | --- |
-| Gangsheet canvas and direct manipulation | Launches app block | Owns |
+| Gangsheet canvas and direct manipulation | Embeds app block | Owns |
 | Immediate review step and live preview | Does not own | Renders and persists |
 | Generated production mockup | Displays | Queues, stores and publishes status |
 | Customer review display/form | Hosts app block | Stores and moderates submissions |
