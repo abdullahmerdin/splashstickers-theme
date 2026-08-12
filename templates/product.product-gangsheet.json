@@ -11,9 +11,40 @@
   "sections": {
     "gangsheet_builder_app": {
       "type": "_blocks",
+      "settings": {
+        "content_direction": "column",
+        "vertical_on_mobile": true,
+        "horizontal_alignment": "flex-start",
+        "vertical_alignment": "center",
+        "align_baseline": false,
+        "horizontal_alignment_flex_direction_column": "flex-start",
+        "vertical_alignment_flex_direction_column": "center",
+        "gap": 12,
+        "section_width": "page-width",
+        "section_height": "",
+        "section_height_custom": 50,
+        "background_media": "none",
+        "background_color": "",
+        "video_position": "cover",
+        "background_image_position": "cover",
+        "toggle_overlay": false,
+        "overlay_color": "#00000026",
+        "overlay_style": "solid",
+        "gradient_direction": "to top",
+        "border": "none",
+        "border_width": 1,
+        "border_opacity": 100,
+        "border_color": "",
+        "border_radius": 0,
+        "padding-block-start": 24,
+        "padding-block-end": 24
+      }
+    },
+    "1786533916a601acac": {
+      "type": "_blocks",
       "blocks": {
-        "splash_gangsheet_builder": {
-          "type": "shopify://apps/splash-stickers/blocks/gangsheet-builder/019febda-63b2-7e16-abe4-1caf4f3d8a9f",
+        "splash_gangsheet_builder_gangsheet_builder_rCRWzN": {
+          "type": "shopify://apps/splash-gangsheet-builder/blocks/gangsheet-builder/019ff181-0308-7938-ba89-fa01058fce5a",
           "settings": {
             "product": "",
             "heading": "Build your gangsheet",
@@ -24,25 +55,41 @@
           }
         }
       },
-      "block_order": ["splash_gangsheet_builder"],
+      "block_order": [
+        "splash_gangsheet_builder_gangsheet_builder_rCRWzN"
+      ],
       "settings": {
         "content_direction": "column",
         "vertical_on_mobile": true,
         "horizontal_alignment": "flex-start",
         "vertical_alignment": "center",
+        "align_baseline": false,
+        "horizontal_alignment_flex_direction_column": "flex-start",
+        "vertical_alignment_flex_direction_column": "center",
         "gap": 12,
         "section_width": "page-width",
+        "section_height": "",
+        "section_height_custom": 50,
         "background_media": "none",
         "background_color": "",
+        "video_position": "cover",
+        "background_image_position": "cover",
+        "toggle_overlay": false,
+        "overlay_color": "#00000026",
+        "overlay_style": "solid",
+        "gradient_direction": "to top",
         "border": "none",
         "border_width": 1,
         "border_opacity": 100,
         "border_color": "",
         "border_radius": 0,
-        "padding-block-start": 24,
-        "padding-block-end": 24
+        "padding-block-start": 0,
+        "padding-block-end": 0
       }
     }
   },
-  "order": ["gangsheet_builder_app"]
+  "order": [
+    "gangsheet_builder_app",
+    "1786533916a601acac"
+  ]
 }

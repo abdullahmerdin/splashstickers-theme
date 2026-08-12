@@ -11,20 +11,6 @@
   "sections": {
     "1786369568b00c48e6": {
       "type": "_blocks",
-      "blocks": {
-        "splash_stickers_product_reviews_4F8XNf": {
-          "type": "shopify://apps/splash-stickers/blocks/product-reviews/019febda-63b2-7e16-abe4-1caf4f3d8a9f",
-          "settings": {
-            "product": "",
-            "heading": "Customer reviews",
-            "show_form": true,
-            "form_heading": "Share your experience"
-          }
-        }
-      },
-      "block_order": [
-        "splash_stickers_product_reviews_4F8XNf"
-      ],
       "settings": {
         "content_direction": "column",
         "vertical_on_mobile": true,
