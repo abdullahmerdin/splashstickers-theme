@@ -1,11 +1,13 @@
 FROM node:22-alpine
 RUN apk add --no-cache openssl
 
-EXPOSE 3000
+EXPOSE 10000
 
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=10000
 
 COPY package.json package-lock.json ./
 COPY apps/splash-stickers-app/package.json apps/splash-stickers-app/package.json
