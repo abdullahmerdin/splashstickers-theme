@@ -187,13 +187,18 @@ export function GangsheetBuilder({
   }, [embedded, mode]);
   useEffect(() => {
     let hostRoot = document.documentElement;
+    let hostSurface = hostRoot;
     if (embedded && window.parent !== window) {
-      try { hostRoot = window.parent.document.documentElement; } catch { /* Fall back to this document. */ }
+      try {
+        hostRoot = window.parent.document.documentElement;
+        const frameElement = window.frameElement as HTMLElement | null;
+        hostSurface = frameElement?.closest<HTMLElement>(".splash-builder-embed, .shopify-block, .section") || frameElement?.parentElement || hostRoot;
+      } catch { /* Fall back to this document. */ }
     }
     const syncTheme = () => {
       const nextMode = readThemeModeFromRoot(hostRoot);
       setMode(nextMode);
-      syncEmbeddedThemeTokens(hostRoot, document.documentElement, nextMode);
+      syncEmbeddedThemeTokens(hostSurface, document.documentElement, nextMode);
     };
     const observer = new MutationObserver(syncTheme);
     observer.observe(hostRoot, { attributes: true, attributeFilter: ["class", "data-theme", "data-color-scheme"] });
@@ -1254,26 +1259,27 @@ function readThemeModeFromRoot(root: HTMLElement): "light" | "dark" {
   return typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function syncEmbeddedThemeTokens(hostRoot: HTMLElement, builderRoot: HTMLElement, mode: "light" | "dark") {
-  if (hostRoot === builderRoot) return;
-  const hostStyles = getComputedStyle(hostRoot);
+function syncEmbeddedThemeTokens(hostSurface: HTMLElement, builderRoot: HTMLElement, mode: "light" | "dark") {
+  if (hostSurface === builderRoot) return;
+  const hostStyles = getComputedStyle(hostSurface);
   const token = (...names: string[]) => names.map((name) => hostStyles.getPropertyValue(name).trim()).find(Boolean) || "";
-  const surface = token("--splash-color-surface", "--color-background") || (mode === "dark" ? "#191c23" : "#ffffff");
   const background = token("--color-background", "--splash-color-surface") || (mode === "dark" ? "#0f1115" : "#ffffff");
-  const text = token("--splash-color-ink", "--color-foreground") || (mode === "dark" ? "#f5f7fa" : "#2d3436");
+  const controlSurface = token("--color-input-background", "--splash-color-surface") || (mode === "dark" ? "#191c23" : "#ffffff");
+  const text = token("--color-foreground", "--splash-color-ink") || (mode === "dark" ? "#f5f7fa" : "#2d3436");
   const accent = token("--splash-color-purple", "--color-primary-button-background") || "#6c5ce7";
   const assignments = {
     "--wb-bg": background,
-    "--wb-surface": surface,
-    "--wb-surface-subtle": token("--splash-surface-soft") || `color-mix(in srgb, ${surface} 94%, ${text})`,
+    "--wb-surface": background,
+    "--wb-control-surface": controlSurface,
+    "--wb-surface-subtle": `color-mix(in srgb, ${background} 96%, ${text})`,
     "--wb-canvas-surround": background,
-    "--wb-edit-sheet": mode === "dark" ? token("--splash-surface-soft") || `color-mix(in srgb, ${surface} 88%, ${text})` : surface,
+    "--wb-edit-sheet": mode === "dark" ? controlSurface : background,
     "--wb-text": text,
-    "--wb-muted": token("--splash-color-muted", "--color-foreground-muted") || text,
-    "--wb-border": token("--splash-color-line", "--color-border") || `color-mix(in srgb, ${text} 18%, transparent)`,
+    "--wb-muted": token("--color-foreground-muted", "--splash-color-muted") || text,
+    "--wb-border": token("--color-border", "--splash-color-line") || `color-mix(in srgb, ${text} 18%, transparent)`,
     "--wb-border-strong": `color-mix(in srgb, ${text} 28%, transparent)`,
     "--wb-accent": accent,
-    "--wb-accent-soft": `color-mix(in srgb, ${surface} 86%, ${accent})`,
+    "--wb-accent-soft": `color-mix(in srgb, ${controlSurface} 86%, ${accent})`,
     "--wb-accent-text": token("--splash-color-on-accent", "--color-primary-button-text") || "#ffffff",
     "--wb-danger": token("--color-error") || (mode === "dark" ? "#ff8a80" : "#b42318"),
     "--wb-success": token("--color-success") || (mode === "dark" ? "#6ee7a8" : "#176b45"),

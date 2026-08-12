@@ -77,8 +77,9 @@ assert(/mobileTarget:\s*"editing-tools-mobile"/.test(builder) && /mobileTarget:\
 assert(/gb-tour-mask/.test(builder + builderCss) && /mask="url\(#gb-tour-cutout\)"/.test(builder), 'guided tour spotlights each active control through the page overlay');
 assert(/data-theme="dark"/.test(builderCss), 'standalone builder has semantic dark-mode values');
 assert(/MutationObserver/.test(builder) && /theme:change/.test(builder) && !/toggleMode/.test(builder), 'embedded builder follows the storefront theme dynamically without a separate toggle');
-assert(/syncEmbeddedThemeTokens/.test(builder) && /--splash-color-surface/.test(builder) && /--splash-color-ink/.test(builder) && /--splash-color-line/.test(builder), 'embedded builder inherits the storefront semantic color tokens');
-assert(/--wb-bg:\s*#0f1115/.test(builderCss) && /--wb-surface:\s*#191c23/.test(builderCss) && /--wb-accent:\s*#6c5ce7/.test(builderCss), 'standalone dark palette matches the storefront dark palette');
+assert(/syncEmbeddedThemeTokens/.test(builder) && /hostSurface/.test(builder) && /frameElement\?\.closest/.test(builder) && /--color-background/.test(builder), 'embedded builder inherits the actual product-section surface tokens');
+assert(/--wb-bg:\s*#0f1115/.test(builderCss) && /--wb-control-surface:\s*#191c23/.test(builderCss) && /--wb-accent:\s*#6c5ce7/.test(builderCss), 'standalone dark palette matches the storefront dark palette');
+assert(/\.wb-panel[\s\S]*background:\s*transparent/.test(builderCss) && /\.gb-stage-toolbar[\s\S]*background:\s*transparent/.test(builderCss) && /--wb-canvas-surround:\s*#ffffff/.test(builderCss), 'builder chrome blends into the product page in both color modes');
 assert(/--wb-edit-sheet/.test(builderCss) && /data-dark-surface/.test(builder), 'dark mode uses a dark editing sheet without recoloring output previews');
 assert(/setCanvasZoom/.test(builder) && /passive:\s*false/.test(builder) && /preventDefault\(\)/.test(builder) && /gb-canvas-wrap/.test(builderCss), 'canvas zoom captures modified wheel gestures without zooming the storefront');
 assert(/isLayoutValid/.test(builder) && /autoArrange/.test(builder) && /data-invalid/.test(builder), 'direct manipulation and arrangement prevent overlapping artwork');
