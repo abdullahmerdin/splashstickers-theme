@@ -36,6 +36,7 @@ assert(rootPackage.workspaces.includes('apps/splash-stickers-app'), 'root owns t
 assert(!rootPackage.scripts['build:configurator'] && !rootPackage.scripts['check:configurator'], 'retired theme configurator scripts stay absent');
 
 const appConfig = read('apps/splash-stickers-app/shopify.app.toml');
+const extensionConfig = read('apps/splash-stickers-app/extensions/splash-storefront/shopify.extension.toml');
 const viteConfig = read('apps/splash-stickers-app/vite.config.ts');
 const prismaSchema = read('apps/splash-stickers-app/prisma/schema.prisma');
 const envExample = read('apps/splash-stickers-app/.env.example');
@@ -86,6 +87,10 @@ assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'app extension honors 
 
 const productTemplate = read('templates/product.json');
 const gangsheetTemplate = read('templates/product.product-gangsheet.json');
+const mockupTemplate = read('templates/page.mockup-studio.json');
+const extensionUid = extensionConfig.match(/uid\s*=\s*"([^"]+)"/)?.[1];
+assert(Boolean(extensionUid), 'theme app extension has a stable UID');
+assert([productTemplate, gangsheetTemplate, mockupTemplate].every((template) => template.includes(`/${extensionUid}`)), 'theme app blocks reference the current extension UID');
 assert(!/blocks\/gangsheet-builder/.test(productTemplate) && /blocks\/gangsheet-builder/.test(gangsheetTemplate), 'only the gangsheet product template mounts the builder app block');
 assert(!/sticker-configurator/.test(productTemplate + gangsheetTemplate), 'theme templates do not embed the retired configurator');
 assert(/_splash_gangsheet/.test(read('snippets/cart-products.liquid')), 'cart recognizes app-owned gangsheet lines by contract marker');
