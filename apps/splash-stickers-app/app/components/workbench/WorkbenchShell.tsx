@@ -48,7 +48,7 @@ export function WorkbenchShell({ title, subtitle, context, children, preview, ac
         <div className="wb-appbar__actions">
           {actions}
           <button ref={previewButton} className="wb-icon-button wb-mobile-only" type="button"
-            aria-label="Open preview and changes" aria-expanded={drawer === "preview"}
+            aria-label="Open preview and order" aria-expanded={drawer === "preview"}
             onClick={() => setDrawer("preview")}><span aria-hidden="true">▣</span></button>
         </div>
       </header>
@@ -58,7 +58,7 @@ export function WorkbenchShell({ title, subtitle, context, children, preview, ac
           <DrawerHeader title="Project" onClose={closeDrawer} />{context}
         </aside>
         <section className="wb-stage" aria-label="Builder workspace">{children}</section>
-        <aside className="wb-panel wb-panel--preview" data-drawer-open={drawer === "preview" || undefined} aria-label="Preview and changes">
+        <aside className="wb-panel wb-panel--preview" data-drawer-open={drawer === "preview" || undefined} aria-label="Preview and order">
           <DrawerHeader title="Preview" onClose={closeDrawer} />{preview}
         </aside>
       </div>

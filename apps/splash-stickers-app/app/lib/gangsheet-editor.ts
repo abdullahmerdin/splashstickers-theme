@@ -149,21 +149,77 @@ export function findOpenPlacement<T extends LayoutItem>(item: T, placed: T[], sh
   return null;
 }
 
-export function autoArrange<T extends LayoutItem>(items: T[], sheet: SheetGeometry) {
-  const arranged: T[] = [];
-  const ordered = [...items].sort((first, second) => {
-    const area = second.widthMm * second.heightMm - first.widthMm * first.heightMm;
-    return area || items.indexOf(first) - items.indexOf(second);
-  });
+export function autoArrange<T extends LayoutItem>(items: T[], sheet: SheetGeometry, growVertically = false) {
+  const gap = Math.max(0, sheet.gapMm);
+  const entries = items.map((item, index) => {
+    const bounds = rotatedBounds(item);
+    return {
+      item,
+      index,
+      bounds,
+      offsetX: bounds.x - item.xMm,
+      offsetY: bounds.y - item.yMm,
+    };
+  }).sort((first, second) => (
+    second.bounds.width * second.bounds.height - first.bounds.width * first.bounds.height
+    || second.bounds.height - first.bounds.height
+    || first.index - second.index
+  ));
+  const placedBounds: Bounds[] = [];
+  const arranged = new Map<string, T>();
   const unplacedIds: string[] = [];
-  for (const item of ordered) {
-    const next = findOpenPlacement(constrainItemToSheet(item, sheet), arranged, sheet);
-    if (!next) unplacedIds.push(item.id);
-    else arranged.push(next);
+  let requiredHeightMm = 0;
+
+  for (const entry of entries) {
+    if (entry.bounds.width > sheet.widthMm + 0.01) {
+      unplacedIds.push(entry.item.id);
+      continue;
+    }
+    const xCandidates = [0];
+    const yCandidates = [0];
+    for (const bounds of placedBounds) {
+      xCandidates.push(bounds.x + bounds.width + gap);
+      yCandidates.push(bounds.y + bounds.height + gap);
+    }
+    xCandidates.sort((a, b) => a - b);
+    yCandidates.sort((a, b) => a - b);
+    let slot: Bounds | null = null;
+    for (const y of yCandidates) {
+      for (const x of xCandidates) {
+        const candidate = { x, y, width: entry.bounds.width, height: entry.bounds.height };
+        if (candidate.x + candidate.width > sheet.widthMm + 0.01) continue;
+        if (!growVertically && candidate.y + candidate.height > sheet.heightMm + 0.01) continue;
+        if (!placedBounds.some((bounds) => boundsOverlap(candidate, bounds, gap))) {
+          slot = candidate;
+          break;
+        }
+      }
+      if (slot) break;
+    }
+    if (!slot && growVertically) {
+      const bottom = placedBounds.reduce((value, bounds) => Math.max(value, bounds.y + bounds.height), 0);
+      slot = { x: 0, y: bottom > 0 ? bottom + gap : 0, width: entry.bounds.width, height: entry.bounds.height };
+    }
+    if (!slot) {
+      unplacedIds.push(entry.item.id);
+      continue;
+    }
+    const next = {
+      ...entry.item,
+      xMm: round(slot.x - entry.offsetX),
+      yMm: round(slot.y - entry.offsetY),
+    };
+    arranged.set(entry.item.id, next);
+    placedBounds.push(slot);
+    requiredHeightMm = Math.max(requiredHeightMm, slot.y + slot.height);
   }
-  if (unplacedIds.length) return { items, unplacedIds };
-  const byId = new Map(arranged.map((item) => [item.id, item]));
-  return { items: items.map((item) => byId.get(item.id) || item), unplacedIds };
+
+  if (unplacedIds.length) return { items, unplacedIds, requiredHeightMm: sheet.heightMm };
+  return {
+    items: items.map((item) => arranged.get(item.id) || item),
+    unplacedIds,
+    requiredHeightMm: growVertically ? Math.max(sheet.heightMm, Math.ceil(requiredHeightMm)) : sheet.heightMm,
+  };
 }
 
 export function itemsInSelection(items: LayoutItem[], selection: Bounds) {

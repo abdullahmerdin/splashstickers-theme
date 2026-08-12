@@ -51,6 +51,22 @@ test("auto arrange never accepts a partially overlapping result", () => {
   assert.equal(isLayoutValid(result.items, sheet), true);
 });
 
+test("legacy auto arrange fills exposed edges and grows the sheet vertically", () => {
+  const compactSheet = { widthMm: 110, heightMm: 60, gapMm: 3 };
+  const source = [
+    item("a", 0, 0, 60, 50),
+    item("b", 0, 0, 40, 20),
+    item("c", 0, 0, 40, 27),
+    item("d", 0, 0, 60, 30),
+  ];
+  const result = autoArrange(source, compactSheet, true);
+  assert.deepEqual(result.unplacedIds, []);
+  assert.ok(result.requiredHeightMm > compactSheet.heightMm);
+  assert.equal(isLayoutValid(result.items, { ...compactSheet, heightMm: result.requiredHeightMm }), true);
+  assert.equal(result.items.find((entry) => entry.id === "b").xMm, 63);
+  assert.equal(result.items.find((entry) => entry.id === "c").xMm, 63);
+});
+
 test("constraining a rotated item keeps its visual bounds on the sheet", () => {
   const constrained = constrainItemToSheet(item("a", -30, -20, 80, 45, 35), sheet);
   assert.equal(isPlacementValid(constrained, [], sheet), true);

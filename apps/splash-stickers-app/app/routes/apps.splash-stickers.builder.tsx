@@ -7,7 +7,6 @@ import {
   autoArrange,
   clamp,
   constrainItemToSheet,
-  findOpenPlacement,
   isLayoutValid,
   isPlacementValid,
   itemsInSelection,
@@ -65,14 +64,14 @@ type SheetState = {
   background: string;
 };
 type EditorSnapshot = { items: BuilderItem[]; sheet: SheetState };
-type ProposalOperation = {
-  id: string;
-  kind: "arrange" | "gap" | "background" | "remove";
-  label: string;
-  before: string;
-  after: string;
-  value?: string | number;
-  accepted: boolean;
+type DesignDraft = {
+  file: File;
+  previewUrl: string;
+  naturalWidth: number;
+  naturalHeight: number;
+  widthMm: number;
+  heightMm: number;
+  copies: number;
 };
 type TransformKind = "move" | "resize" | "rotate";
 
@@ -114,9 +113,6 @@ export function GangsheetBuilder({
   const [statusKind, setStatusKind] = useState<"" | "error" | "success">("");
   const [busy, setBusy] = useState(false);
   const [activity, setActivity] = useState<string[]>([]);
-  const [prompt, setPrompt] = useState("");
-  const [proposal, setProposal] = useState<ProposalOperation[]>([]);
-  const [rightTab, setRightTab] = useState<"preview" | "diff">("preview");
   const [mode, setMode] = useState<"light" | "dark">(() => typeof document !== "undefined" && document.documentElement.dataset.theme === "dark" ? "dark" : "light");
   const [zoom, setZoom] = useState(1);
   const [canvasBase, setCanvasBase] = useState({ width: 900, height: 600 });
@@ -124,9 +120,12 @@ export function GangsheetBuilder({
   const [selectionBox, setSelectionBox] = useState<Bounds | null>(null);
   const [spacePressed, setSpacePressed] = useState(false);
   const [textDialogOpen, setTextDialogOpen] = useState(false);
+  const [designDialogOpen, setDesignDialogOpen] = useState(false);
+  const [designDraft, setDesignDraft] = useState<DesignDraft | null>(null);
+  const [moreToolsOpen, setMoreToolsOpen] = useState(false);
+  const [sheetSettingsOpen, setSheetSettingsOpen] = useState(false);
   const [historyState, setHistoryState] = useState({ undo: 0, redo: 0 });
   const [exporting, setExporting] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const canvasViewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<BuilderItem[]>(initialItems);
@@ -136,6 +135,12 @@ export function GangsheetBuilder({
   const redoStackRef = useRef<EditorSnapshot[]>([]);
   const objectUrlsRef = useRef(new Set<string>());
   const uploadCacheRef = useRef(new Map<string, Pick<BuilderItem, "assetRef" | "uploadState" | "uploadError">>());
+  const zoomRef = useRef(1);
+  const touchPointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{ distance: number } | null>(null);
+  const touchPanRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number; moved: boolean } | null>(null);
+  const cancelTransformRef = useRef<(() => void) | null>(null);
+  const designDraftRef = useRef<DesignDraft | null>(null);
 
   const selectedItems = items.filter((item) => selectedIds.includes(item.id));
   const selected = selectedItems.length === 1 ? selectedItems[0] : null;
@@ -145,10 +150,17 @@ export function GangsheetBuilder({
   const allUploadsReady = items.length > 0 && items.every((item) => item.kind === "text" || (item.uploadState === "ready" && item.assetRef));
   const canUndo = historyState.undo > 0;
   const canRedo = historyState.redo > 0;
+  const useDarkCanvasSurface = mode === "dark" && sheet.background.toLowerCase() === "#ffffff";
 
   useEffect(() => { itemsRef.current = items; }, [items]);
   useEffect(() => { sheetRef.current = sheet; }, [sheet]);
-  useEffect(() => () => { objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url)); }, []);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { designDraftRef.current = designDraft; }, [designDraft]);
+  useEffect(() => () => {
+    objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    const draftUrl = designDraftRef.current?.previewUrl;
+    if (draftUrl && !objectUrlsRef.current.has(draftUrl)) URL.revokeObjectURL(draftUrl);
+  }, []);
   useEffect(() => {
     document.documentElement.dataset.theme = mode;
     document.documentElement.dataset.embedded = embedded ? "true" : "false";
@@ -244,58 +256,86 @@ export function GangsheetBuilder({
     try { localStorage.setItem("splash-color-mode", next); } catch { /* The current document still updates. */ }
   }
 
-  async function addFiles(fileList: FileList | File[] | null) {
-    const files = Array.from(fileList || []);
-    const prepared: Array<{ file: File; item: BuilderItem }> = [];
-    let working = [...itemsRef.current];
-    for (const file of files) {
-      if (!ACCEPTED_TYPES.has(file.type) || file.size < 1 || file.size > MAX_FILE_BYTES) {
-        announce(`${file.name}: use a PNG, JPG or WebP file up to 25 MB.`, "error");
-        continue;
-      }
-      try {
-        const dimensions = await readImageDimensions(file);
-        const widthMm = Math.min(150, Math.max(20, dimensions.width / 300 * 25.4));
-        const heightMm = Math.min(150, Math.max(20, widthMm * dimensions.height / dimensions.width));
-        const id = crypto.randomUUID();
-        const previewUrl = URL.createObjectURL(file);
-        objectUrlsRef.current.add(previewUrl);
-        const candidate: BuilderItem = {
-          id,
-          kind: "image",
-          name: file.name,
-          previewUrl,
-          uploadState: "uploading",
-          xMm: sheetRef.current.gapMm,
-          yMm: sheetRef.current.gapMm,
-          widthMm: round(widthMm),
-          heightMm: round(heightMm),
-          rotation: 0,
-          flipX: false,
-          flipY: false,
-        };
-        const placed = findOpenPlacement(constrainItemToSheet(candidate, sheetRef.current), working, sheetRef.current);
-        if (!placed) {
-          URL.revokeObjectURL(previewUrl);
-          objectUrlsRef.current.delete(previewUrl);
-          announce(`${file.name} does not fit without overlapping another design.`, "error");
-          continue;
-        }
-        working = [...working, placed];
-        prepared.push({ file, item: placed });
-      } catch {
-        announce(`${file.name} could not be read.`, "error");
-      }
-    }
-    if (!prepared.length) return;
-    const before = snapshot();
-    replaceItems(working);
-    setSelectedIds(prepared.map(({ item }) => item.id));
-    recordUndo(before, `Added ${prepared.length} design${prepared.length === 1 ? "" : "s"}`);
-    prepared.forEach(({ file, item }) => { void uploadArtwork(item.id, file); });
+  function openDesignDialog() {
+    setDesignDialogOpen(true);
   }
 
-  async function uploadArtwork(itemId: string, file: File) {
+  async function chooseDesign(fileList: FileList | File[] | null) {
+    const file = Array.from(fileList || [])[0];
+    if (!file) return;
+    if (!ACCEPTED_TYPES.has(file.type) || file.size < 1 || file.size > MAX_FILE_BYTES) {
+      announce(`${file.name}: use a PNG, JPG or WebP file up to 25 MB.`, "error");
+      return;
+    }
+    try {
+      const dimensions = await readImageDimensions(file);
+      const naturalWidthMm = dimensions.width / 300 * 25.4;
+      const naturalHeightMm = dimensions.height / 300 * 25.4;
+      const scale = Math.min(1, sheetRef.current.widthMm / naturalWidthMm, sheetRef.current.heightMm / naturalHeightMm);
+      const previewUrl = URL.createObjectURL(file);
+      const previousUrl = designDraftRef.current?.previewUrl;
+      if (previousUrl && !objectUrlsRef.current.has(previousUrl)) URL.revokeObjectURL(previousUrl);
+      setDesignDraft({
+        file,
+        previewUrl,
+        naturalWidth: dimensions.width,
+        naturalHeight: dimensions.height,
+        widthMm: round(Math.max(10, naturalWidthMm * scale)),
+        heightMm: round(Math.max(10, naturalHeightMm * scale)),
+        copies: 3,
+      });
+      setDesignDialogOpen(true);
+      announce("");
+    } catch {
+      announce(`${file.name} could not be read.`, "error");
+    }
+  }
+
+  function closeDesignDialog() {
+    const previewUrl = designDraftRef.current?.previewUrl;
+    if (previewUrl && !objectUrlsRef.current.has(previewUrl)) URL.revokeObjectURL(previewUrl);
+    setDesignDraft(null);
+    setDesignDialogOpen(false);
+  }
+
+  function addDraftDesign() {
+    const draft = designDraftRef.current;
+    if (!draft) return;
+    const copies = clamp(Math.round(draft.copies), 1, 50);
+    const widthMm = clamp(draft.widthMm, 10, sheetRef.current.widthMm);
+    const heightMm = clamp(draft.heightMm, 10, 2000);
+    const additions: BuilderItem[] = Array.from({ length: copies }, (_, index) => ({
+      id: crypto.randomUUID(),
+      kind: "image",
+      name: copies === 1 ? draft.file.name : `${draft.file.name} ${index + 1}`,
+      previewUrl: draft.previewUrl,
+      uploadState: "uploading",
+      xMm: 0,
+      yMm: 0,
+      widthMm: round(widthMm),
+      heightMm: round(heightMm),
+      rotation: 0,
+      flipX: false,
+      flipY: false,
+    }));
+    const before = snapshot();
+    const result = autoArrange([...itemsRef.current, ...additions], sheetRef.current, true);
+    if (result.unplacedIds.length) {
+      announce("The design is wider than the current sheet.", "error");
+      return;
+    }
+    const nextSheet = { ...sheetRef.current, heightMm: result.requiredHeightMm };
+    objectUrlsRef.current.add(draft.previewUrl);
+    replaceSheet(nextSheet);
+    replaceItems(result.items);
+    setSelectedIds(additions.map((item) => item.id));
+    recordUndo(before, `Added ${copies} design cop${copies === 1 ? "y" : "ies"}`);
+    setDesignDraft(null);
+    setDesignDialogOpen(false);
+    void uploadArtwork(additions.map((item) => item.id), draft.file);
+  }
+
+  async function uploadArtwork(itemIds: string[], file: File) {
     try {
       announce(`Uploading ${file.name}…`);
       const stage = await postJson("uploads/stage", { filename: file.name, mimeType: file.type, fileSize: file.size });
@@ -312,14 +352,14 @@ export function GangsheetBuilder({
       });
       await waitForFileReady(completed.file.id);
       const result = { assetRef: completed.file.id as string, uploadState: "ready" as const, uploadError: undefined };
-      uploadCacheRef.current.set(itemId, result);
-      replaceItems((current) => current.map((item) => item.id === itemId ? { ...item, ...result } : item));
+      itemIds.forEach((itemId) => uploadCacheRef.current.set(itemId, result));
+      replaceItems((current) => current.map((item) => itemIds.includes(item.id) ? { ...item, ...result } : item));
       announce(`${file.name} is ready.`, "success");
     } catch (uploadError) {
       const message = uploadError instanceof Error ? uploadError.message : "Artwork upload failed.";
       const result = { uploadState: "error" as const, uploadError: message };
-      uploadCacheRef.current.set(itemId, result);
-      replaceItems((current) => current.map((item) => item.id === itemId ? { ...item, ...result } : item));
+      itemIds.forEach((itemId) => uploadCacheRef.current.set(itemId, result));
+      replaceItems((current) => current.map((item) => itemIds.includes(item.id) ? { ...item, ...result } : item));
       announce(message, "error");
     }
   }
@@ -355,23 +395,20 @@ export function GangsheetBuilder({
   function duplicateSelected() {
     if (!selectedIds.length) return;
     const before = snapshot();
-    const copies: BuilderItem[] = [];
-    const working = [...itemsRef.current];
-    for (const source of itemsRef.current.filter((item) => selectedIds.includes(item.id))) {
-      const copy = { ...source, id: crypto.randomUUID(), name: `${source.name} copy`, locked: false };
-      const placed = findOpenPlacement(copy, working, sheetRef.current);
-      if (!placed) continue;
-      copies.push(placed);
-      working.push(placed);
-    }
-    if (!copies.length) {
-      announce("There is no free space for another copy.", "error");
-      return;
-    }
-    replaceItems(working);
+    const copies = itemsRef.current.filter((item) => selectedIds.includes(item.id)).map((source) => ({
+      ...source,
+      id: crypto.randomUUID(),
+      name: `${source.name} copy`,
+      locked: false,
+      xMm: 0,
+      yMm: 0,
+    }));
+    const result = autoArrange([...itemsRef.current, ...copies], sheetRef.current, true);
+    if (result.unplacedIds.length) return announce("A selected design is wider than the sheet.", "error");
+    replaceSheet({ ...sheetRef.current, heightMm: result.requiredHeightMm });
+    replaceItems(result.items);
     setSelectedIds(copies.map((item) => item.id));
     recordUndo(before, `Duplicated ${copies.length} design${copies.length === 1 ? "" : "s"}`);
-    if (copies.length < selectedIds.length) announce("Some copies could not fit without overlapping.", "error");
   }
 
   function flipSelected(axis: "x" | "y") {
@@ -406,11 +443,12 @@ export function GangsheetBuilder({
   function arrange() {
     if (!itemsRef.current.length) return;
     const before = snapshot();
-    const result = autoArrange(itemsRef.current, sheetRef.current);
+    const result = autoArrange(itemsRef.current, sheetRef.current, true);
     if (result.unplacedIds.length) {
       announce("The current artwork cannot fit on this sheet without overlapping.", "error");
       return;
     }
+    replaceSheet({ ...sheetRef.current, heightMm: result.requiredHeightMm });
     replaceItems(result.items);
     recordUndo(before, "Auto-arranged artwork");
     announce("Artwork arranged with the current gap.", "success");
@@ -422,12 +460,13 @@ export function GangsheetBuilder({
     const constrained = itemsRef.current.map((item) => constrainItemToSheet(item, nextSheet));
     let nextItems = constrained;
     if (!isLayoutValid(constrained, nextSheet)) {
-      const result = autoArrange(constrained, nextSheet);
+      const result = autoArrange(constrained, nextSheet, patch.gapMm !== undefined);
       if (result.unplacedIds.length) {
         announce("The sheet is too small for the current artwork and gap.", "error");
         return;
       }
       nextItems = result.items;
+      nextSheet.heightMm = result.requiredHeightMm;
     }
     replaceSheet(nextSheet);
     replaceItems(nextItems);
@@ -452,14 +491,12 @@ export function GangsheetBuilder({
       flipX: false,
       flipY: false,
     };
-    const placed = findOpenPlacement(candidate, itemsRef.current, sheetRef.current);
-    if (!placed) {
-      announce("There is no free space for this text.", "error");
-      return;
-    }
     const before = snapshot();
-    replaceItems([...itemsRef.current, placed]);
-    setSelectedIds([placed.id]);
+    const result = autoArrange([...itemsRef.current, candidate], sheetRef.current, true);
+    if (result.unplacedIds.length) return announce("The text is wider than the sheet.", "error");
+    replaceSheet({ ...sheetRef.current, heightMm: result.requiredHeightMm });
+    replaceItems(result.items);
+    setSelectedIds([candidate.id]);
     recordUndo(before, "Added text");
     setTextDialogOpen(false);
   }
@@ -482,6 +519,7 @@ export function GangsheetBuilder({
     const startItems = before.items;
     const startX = event.clientX;
     const startY = event.clientY;
+    const pointerId = event.pointerId;
     const startItem = startItems.find((entry) => entry.id === item.id);
     if (!startItem) return;
     const centerX = rect.left + (startItem.xMm + startItem.widthMm / 2) / sheetRef.current.widthMm * rect.width;
@@ -490,6 +528,7 @@ export function GangsheetBuilder({
     let moved = false;
 
     const onMove = (move: PointerEvent) => {
+      if (move.pointerId !== pointerId) return;
       const deltaX = (move.clientX - startX) / rect.width * sheetRef.current.widthMm;
       const deltaY = (move.clientY - startY) / rect.height * sheetRef.current.heightMm;
       moved ||= Math.abs(move.clientX - startX) > 2 || Math.abs(move.clientY - startY) > 2;
@@ -509,9 +548,16 @@ export function GangsheetBuilder({
       replaceItems(next);
     };
 
-    const onUp = () => {
+    const finish = (cancelled = false) => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      cancelTransformRef.current = null;
+      if (cancelled) {
+        replaceItems(startItems);
+        setInvalid([]);
+        return;
+      }
       if (!moved) {
         setInvalid([]);
         return;
@@ -525,12 +571,16 @@ export function GangsheetBuilder({
       recordUndo(before, kind === "move" ? `Moved ${activeIds.length} design${activeIds.length === 1 ? "" : "s"}` : kind === "resize" ? `Resized ${item.name}` : `Rotated ${item.name}`);
       setInvalid([]);
     };
+    const onUp = (up: PointerEvent) => { if (up.pointerId === pointerId) finish(); };
+    const onCancel = (cancel: PointerEvent) => { if (cancel.pointerId === pointerId) finish(true); };
+    cancelTransformRef.current = () => finish(true);
     window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp, { once: true });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
   }
 
   function onCanvasBackgroundPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.button !== 0 || event.target !== event.currentTarget) return;
+    if (event.pointerType === "touch" || event.button !== 0 || event.target !== event.currentTarget) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const startX = clamp((event.clientX - rect.left) / rect.width * sheetRef.current.widthMm, 0, sheetRef.current.widthMm);
     const startY = clamp((event.clientY - rect.top) / rect.height * sheetRef.current.heightMm, 0, sheetRef.current.heightMm);
@@ -558,11 +608,33 @@ export function GangsheetBuilder({
   }
 
   function onViewportPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    const viewport = canvasViewportRef.current;
+    if (!viewport) return;
+    if (event.pointerType === "touch") {
+      touchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      try { viewport.setPointerCapture(event.pointerId); } catch { /* Pointer capture is best-effort. */ }
+      if (touchPointersRef.current.size >= 2) {
+        event.preventDefault();
+        event.stopPropagation();
+        cancelTransformRef.current?.();
+        touchPanRef.current = null;
+        const [first, second] = Array.from(touchPointersRef.current.values());
+        pinchRef.current = { distance: Math.hypot(second.x - first.x, second.y - first.y) || 1 };
+      } else if (event.target === canvasRef.current) {
+        touchPanRef.current = {
+          pointerId: event.pointerId,
+          x: event.clientX,
+          y: event.clientY,
+          scrollLeft: viewport.scrollLeft,
+          scrollTop: viewport.scrollTop,
+          moved: false,
+        };
+      }
+      return;
+    }
     if (!(event.button === 1 || (event.button === 0 && spacePressed))) return;
     event.preventDefault();
     event.stopPropagation();
-    const viewport = canvasViewportRef.current;
-    if (!viewport) return;
     const startX = event.clientX;
     const startY = event.clientY;
     const scrollLeft = viewport.scrollLeft;
@@ -581,16 +653,58 @@ export function GangsheetBuilder({
     window.addEventListener("pointerup", onUp, { once: true });
   }
 
+  function onViewportPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "touch" || !touchPointersRef.current.has(event.pointerId)) return;
+    touchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const pointers = Array.from(touchPointersRef.current.values());
+    if (pointers.length >= 2) {
+      event.preventDefault();
+      event.stopPropagation();
+      const distance = Math.hypot(pointers[1].x - pointers[0].x, pointers[1].y - pointers[0].y) || 1;
+      const center = { x: (pointers[0].x + pointers[1].x) / 2, y: (pointers[0].y + pointers[1].y) / 2 };
+      const previousDistance = pinchRef.current?.distance || distance;
+      setCanvasZoom(zoomRef.current * distance / previousDistance, center);
+      pinchRef.current = { distance };
+      return;
+    }
+    const pan = touchPanRef.current;
+    const viewport = canvasViewportRef.current;
+    if (!pan || pan.pointerId !== event.pointerId || !viewport) return;
+    const deltaX = event.clientX - pan.x;
+    const deltaY = event.clientY - pan.y;
+    if (!pan.moved && Math.hypot(deltaX, deltaY) < 7) return;
+    pan.moved = true;
+    event.preventDefault();
+    viewport.dataset.panning = "true";
+    viewport.scrollLeft = pan.scrollLeft - deltaX;
+    viewport.scrollTop = pan.scrollTop - deltaY;
+  }
+
+  function onViewportPointerEnd(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "touch") return;
+    touchPointersRef.current.delete(event.pointerId);
+    if (touchPointersRef.current.size < 2) pinchRef.current = null;
+    const pan = touchPanRef.current;
+    if (pan?.pointerId === event.pointerId) {
+      if (!pan.moved) setSelectedIds([]);
+      touchPanRef.current = null;
+      const viewport = canvasViewportRef.current;
+      if (viewport) delete viewport.dataset.panning;
+    }
+  }
+
   function setCanvasZoom(nextValue: number, clientPoint?: { x: number; y: number }) {
     const viewport = canvasViewportRef.current;
-    const next = clamp(Math.round(nextValue * 10) / 10, 0.5, 4);
-    if (!viewport || next === zoom) return;
+    const current = zoomRef.current;
+    const next = clamp(Math.round(nextValue * 100) / 100, 0.5, 4);
+    if (!viewport || next === current) return;
     const rect = viewport.getBoundingClientRect();
     const pointX = clientPoint ? clientPoint.x - rect.left : rect.width / 2;
     const pointY = clientPoint ? clientPoint.y - rect.top : rect.height / 2;
     const contentX = viewport.scrollLeft + pointX;
     const contentY = viewport.scrollTop + pointY;
-    const ratio = next / zoom;
+    const ratio = next / current;
+    zoomRef.current = next;
     setZoom(next);
     requestAnimationFrame(() => {
       viewport.scrollLeft = contentX * ratio - pointX;
@@ -599,11 +713,13 @@ export function GangsheetBuilder({
   }
 
   function onCanvasWheel(event: ReactWheelEvent<HTMLDivElement>) {
+    if (!event.ctrlKey && !event.metaKey) return;
     event.preventDefault();
-    setCanvasZoom(zoom + (event.deltaY < 0 ? 0.1 : -0.1), { x: event.clientX, y: event.clientY });
+    setCanvasZoom(zoomRef.current * Math.exp(-event.deltaY * 0.002), { x: event.clientX, y: event.clientY });
   }
 
   function fitCanvas() {
+    zoomRef.current = 1;
     setZoom(1);
     requestAnimationFrame(() => {
       if (!canvasViewportRef.current) return;
@@ -658,58 +774,6 @@ export function GangsheetBuilder({
     // Event bindings intentionally refresh with the current selection, zoom and history state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyState, selectedIds, zoom]);
-
-  function createProposal() {
-    const value = prompt.trim();
-    if (!value) return;
-    const operations: ProposalOperation[] = [];
-    if (/arrange|yerleştir|düzenle/i.test(value)) operations.push(operation("arrange", "Auto-arrange artwork", "Current positions", "Packed with current gap"));
-    const gapAfterLabel = value.match(/(?:gap|boşluk)[^0-9]*(\d+(?:\.\d+)?)/i);
-    const gapBeforeLabel = value.match(/(\d+(?:\.\d+)?)\s*(?:mm\s*)?(?:gap|boşluk)/i);
-    const gapValue = Number(gapAfterLabel?.[1] || gapBeforeLabel?.[1]);
-    if (Number.isFinite(gapValue) && gapValue >= 0) operations.push(operation("gap", "Change artwork gap", `${sheet.gapMm} mm`, `${Math.min(50, gapValue)} mm`, Math.min(50, gapValue)));
-    const color = value.match(/#(?:[0-9a-f]{3}|[0-9a-f]{6})\b/i);
-    if (color && /background|zemin|arka plan/i.test(value)) operations.push(operation("background", "Change sheet background", sheet.background, color[0], color[0]));
-    if (/remove selected|delete selected|seçileni sil/i.test(value) && selectedIds.length) operations.push(operation("remove", "Remove selected artwork", `${selectedIds.length} on sheet`, "Removed", selectedIds.join(",")));
-    if (!operations.length) {
-      announce("Try “arrange”, “set gap to 5”, “background #ffffff”, or “remove selected”.", "error");
-      return;
-    }
-    setProposal(operations);
-    setRightTab("diff");
-    addActivity(value);
-    announce("Change proposal is ready for review.");
-  }
-
-  function applyProposal() {
-    const accepted = proposal.filter((entry) => entry.accepted);
-    if (!accepted.length) return;
-    const before = snapshot();
-    const nextSheet = { ...sheetRef.current };
-    for (const entry of accepted) {
-      if (entry.kind === "gap") nextSheet.gapMm = Number(entry.value);
-      if (entry.kind === "background") nextSheet.background = String(entry.value);
-    }
-    const removedIds = new Set(accepted.filter((entry) => entry.kind === "remove").flatMap((entry) => String(entry.value).split(",")));
-    let nextItems = itemsRef.current.filter((item) => !removedIds.has(item.id));
-    if (accepted.some((entry) => entry.kind === "arrange") || nextSheet.gapMm !== sheetRef.current.gapMm) {
-      const result = autoArrange(nextItems, nextSheet);
-      if (result.unplacedIds.length) {
-        announce("Those changes would make designs overlap. Nothing was applied.", "error");
-        return;
-      }
-      nextItems = result.items;
-    }
-    replaceSheet(nextSheet);
-    replaceItems(nextItems);
-    setPinnedIds((current) => current.filter((id) => !removedIds.has(id)));
-    setSelectedIds((current) => current.filter((id) => !removedIds.has(id)));
-    recordUndo(before, `Applied ${accepted.length} proposed change${accepted.length === 1 ? "" : "s"}`);
-    setProposal([]);
-    setPrompt("");
-    setRightTab("preview");
-    announce("Selected changes applied.", "success");
-  }
 
   async function downloadPreview() {
     if (!itemsRef.current.length || exporting) return;
@@ -821,7 +885,7 @@ export function GangsheetBuilder({
   }
 
   const contextPanel = <>
-    <section className="wb-section"><div className="wb-section__heading"><h2>Artwork</h2><label className="gb-upload">Add files<input type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={(event) => { void addFiles(event.target.files); event.target.value = ""; }} /></label></div>
+    <section className="wb-section"><div className="wb-section__heading"><h2>Artwork</h2><button className="gb-upload" type="button" onClick={openDesignDialog}>Add design</button></div>
       {items.length ? <ul className="gb-file-tree">{items.map((item) => <li key={item.id} data-selected={selectedIds.includes(item.id) || undefined}>
         <button className="gb-file" type="button" onClick={(event) => selectItem(item.id, event.shiftKey || event.ctrlKey || event.metaKey)}><span aria-hidden="true">{item.kind === "text" ? "T" : "▧"}</span><span><strong>{item.name}</strong><small data-state={item.uploadState}>{uploadLabel(item)}</small></span></button>
         <button className="wb-icon-button" type="button" aria-label={`${pinnedIds.includes(item.id) ? "Unpin" : "Pin"} ${item.name}`} aria-pressed={pinnedIds.includes(item.id)} onClick={() => setPinnedIds((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}>⌖</button>
@@ -834,12 +898,7 @@ export function GangsheetBuilder({
   </>;
 
   const previewPanel = <>
-    <div className="wb-tabs" role="tablist" aria-label="Preview panels">
-      <button type="button" role="tab" aria-selected={rightTab === "preview"} onClick={() => setRightTab("preview")}>Live preview</button>
-      <button type="button" role="tab" aria-selected={rightTab === "diff"} onClick={() => setRightTab("diff")}>Diff{proposal.length ? ` (${proposal.length})` : ""}</button>
-    </div>
-    {rightTab === "preview" ? <div role="tabpanel" className="wb-section"><Preview sheet={sheet} items={items} /><Inspector selected={selected} selectedCount={selectedItems.length} sheet={sheet} onChange={updateSelected} onRemove={removeSelected} /></div> :
-      <div role="tabpanel" className="wb-section"><ChangeReview proposal={proposal} setProposal={setProposal} onApply={applyProposal} onReject={() => { setProposal([]); announce("Proposal discarded."); }} /></div>}
+    <section className="wb-section"><h2>Live preview</h2><Preview sheet={sheet} items={items} /><Inspector selected={selected} selectedCount={selectedItems.length} sheet={sheet} onChange={updateSelected} onRemove={removeSelected} /></section>
     <PurchasePanel product={product} variantId={variantId} setVariantId={setVariantId} quantity={quantity} setQuantity={setQuantity}
       total={formatMoney(totalCents, product.currency)} disabled={previewMode || !allUploadsReady || busy || !variant?.available || !isLayoutValid(items, sheet)} busy={busy} onBuy={addToCart} />
   </>;
@@ -847,48 +906,51 @@ export function GangsheetBuilder({
   return <WorkbenchShell title={product.title} subtitle="Gang sheet builder" context={contextPanel} preview={previewPanel}
     actions={<button suppressHydrationWarning className="wb-mode" type="button" onClick={toggleMode} aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`} aria-pressed={mode === "dark"}>{mode === "dark" ? "Light" : "Dark"}</button>}>
     <div className="gb-stage-toolbar" role="toolbar" aria-label="Design tools">
+      <button className="gb-add-design" type="button" onClick={openDesignDialog}><span aria-hidden="true">+</span> Add design</button>
+      <ToolbarButton label="Auto-arrange" symbol="▦" onClick={arrange} disabled={!items.length} />
       <ToolbarButton label="Undo" symbol="↶" onClick={undo} disabled={!canUndo} />
       <ToolbarButton label="Redo" symbol="↷" onClick={redo} disabled={!canRedo} />
-      <span className="gb-toolbar-divider" />
-      <ToolbarButton label="Auto-arrange" symbol="▦" onClick={arrange} disabled={!items.length} />
-      <ToolbarButton label="Delete selected" symbol="⌫" onClick={removeSelected} disabled={!selectedIds.length} />
-      <ToolbarButton label="Duplicate selected" symbol="⧉" onClick={duplicateSelected} disabled={!selectedIds.length} />
-      <ToolbarButton label="Flip horizontally" symbol="↔" onClick={() => flipSelected("x")} disabled={!selectedIds.length} />
-      <ToolbarButton label="Flip vertically" symbol="↕" onClick={() => flipSelected("y")} disabled={!selectedIds.length} />
-      <ToolbarButton label={selectedItems.some((item) => !item.locked) ? "Lock selected" : "Unlock selected"} symbol="▣" onClick={toggleLock} disabled={!selectedIds.length} pressed={selectedItems.length > 0 && selectedItems.every((item) => item.locked)} />
-      <ToolbarButton label="Add text" symbol="T" onClick={() => setTextDialogOpen(true)} />
-      <ToolbarButton label="Download preview" symbol="↓" onClick={() => { void downloadPreview(); }} disabled={!items.length || exporting} />
-      <span className="gb-toolbar-divider" />
-      <ToolbarButton label="Zoom out" symbol="−" onClick={() => setCanvasZoom(zoom - 0.1)} disabled={zoom <= 0.5} />
-      <button className="gb-zoom-value" type="button" onClick={fitCanvas} title="Zoom to fit">{Math.round(zoom * 100)}%</button>
-      <ToolbarButton label="Zoom in" symbol="+" onClick={() => setCanvasZoom(zoom + 0.1)} disabled={zoom >= 4} />
+      <button className="gb-more-toggle" type="button" aria-expanded={moreToolsOpen} aria-controls="gb-more-tools" onClick={() => setMoreToolsOpen((open) => !open)}>More</button>
+      <div id="gb-more-tools" className="gb-more-tools" data-open={moreToolsOpen || undefined}>
+        <span className="gb-toolbar-divider" />
+        <ToolbarButton label="Delete selected" symbol="⌫" onClick={removeSelected} disabled={!selectedIds.length} />
+        <ToolbarButton label="Duplicate selected" symbol="⧉" onClick={duplicateSelected} disabled={!selectedIds.length} />
+        <ToolbarButton label="Flip horizontally" symbol="↔" onClick={() => flipSelected("x")} disabled={!selectedIds.length} />
+        <ToolbarButton label="Flip vertically" symbol="↕" onClick={() => flipSelected("y")} disabled={!selectedIds.length} />
+        <ToolbarButton label={selectedItems.some((item) => !item.locked) ? "Lock selected" : "Unlock selected"} symbol="▣" onClick={toggleLock} disabled={!selectedIds.length} pressed={selectedItems.length > 0 && selectedItems.every((item) => item.locked)} />
+        <ToolbarButton label="Add text" symbol="T" onClick={() => setTextDialogOpen(true)} />
+        <ToolbarButton label="Download preview" symbol="↓" onClick={() => { void downloadPreview(); }} disabled={!items.length || exporting} />
+        <span className="gb-toolbar-divider" />
+        <ToolbarButton label="Zoom out" symbol="−" onClick={() => setCanvasZoom(zoomRef.current - 0.1)} disabled={zoom <= 0.5} />
+        <button className="gb-zoom-value" type="button" onClick={fitCanvas} title="Zoom to fit">{Math.round(zoom * 100)}%</button>
+        <ToolbarButton label="Zoom in" symbol="+" onClick={() => setCanvasZoom(zoomRef.current + 0.1)} disabled={zoom >= 4} />
+      </div>
     </div>
-    <div className="gb-info-bar"><span>{items.length} item{items.length === 1 ? "" : "s"}{selectedIds.length ? ` · ${selectedIds.length} selected` : ""}</span><span>Scroll to zoom · Space or middle-drag to pan</span></div>
-    <div className="gb-sheet-controls">
-      <label>W <input type="number" min="100" max="2000" value={sheet.widthMm} onChange={(event) => updateSheetGeometry({ widthMm: clamp(Number(event.target.value), 100, 2000) }, "Changed sheet width")} /> mm</label>
-      <label>H <input type="number" min="100" max="2000" value={sheet.heightMm} onChange={(event) => updateSheetGeometry({ heightMm: clamp(Number(event.target.value), 100, 2000) }, "Changed sheet height")} /> mm</label>
-      <label>Gap <input type="number" min="0" max="50" value={sheet.gapMm} onChange={(event) => updateSheetGeometry({ gapMm: clamp(Number(event.target.value), 0, 50) }, "Changed artwork gap")} /> mm</label>
-      <label>Sheet <input type="color" value={sheet.background} aria-label="Sheet background" onChange={(event) => updateSheetGeometry({ background: event.target.value }, "Changed sheet background")} /></label>
+    <div className="gb-info-bar"><span>{items.length} item{items.length === 1 ? "" : "s"}{selectedIds.length ? ` · ${selectedIds.length} selected` : ""}</span><span>Ctrl-scroll to zoom · Space or middle-drag to pan</span></div>
+    <div className="gb-sheet-settings">
+      <button className="gb-sheet-toggle" type="button" aria-expanded={sheetSettingsOpen} aria-controls="gb-sheet-controls" onClick={() => setSheetSettingsOpen((open) => !open)}>Sheet · {sheet.widthMm} × {sheet.heightMm} mm</button>
+      <div id="gb-sheet-controls" className="gb-sheet-controls" data-open={sheetSettingsOpen || undefined}>
+        <label>W <input type="number" min="100" max="2000" value={sheet.widthMm} onChange={(event) => updateSheetGeometry({ widthMm: clamp(Number(event.target.value), 100, 2000) }, "Changed sheet width")} /> mm</label>
+        <label>H <input type="number" min="100" max="2000" value={sheet.heightMm} onChange={(event) => updateSheetGeometry({ heightMm: clamp(Number(event.target.value), 100, 2000) }, "Changed sheet height")} /> mm</label>
+        <label>Gap <input type="number" min="0" max="50" value={sheet.gapMm} onChange={(event) => updateSheetGeometry({ gapMm: clamp(Number(event.target.value), 0, 50) }, "Changed artwork gap")} /> mm</label>
+        <label>Sheet <input type="color" value={sheet.background} aria-label="Sheet background" onChange={(event) => updateSheetGeometry({ background: event.target.value }, "Changed sheet background")} /></label>
+      </div>
     </div>
-    <div ref={canvasViewportRef} className="gb-canvas-wrap" data-space-pressed={spacePressed || undefined} onPointerDownCapture={onViewportPointerDown} onWheel={onCanvasWheel}
-      onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); void addFiles(event.dataTransfer.files); }}>
+    <div ref={canvasViewportRef} className="gb-canvas-wrap" data-space-pressed={spacePressed || undefined} onPointerDownCapture={onViewportPointerDown} onPointerMoveCapture={onViewportPointerMove} onPointerUpCapture={onViewportPointerEnd} onPointerCancelCapture={onViewportPointerEnd} onWheel={onCanvasWheel}
+      onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); void chooseDesign(event.dataTransfer.files); }}>
       <div className="gb-canvas-stage" style={{ width: canvasBase.width * zoom, height: canvasBase.height * zoom }}>
-        <div ref={canvasRef} className="gb-canvas" style={{ width: canvasBase.width, height: canvasBase.height, backgroundColor: sheet.background, transform: `scale(${zoom})` }}
+        <div ref={canvasRef} className="gb-canvas" data-dark-surface={useDarkCanvasSurface || undefined} style={{ width: canvasBase.width, height: canvasBase.height, backgroundColor: useDarkCanvasSurface ? "var(--wb-edit-sheet)" : sheet.background, transform: `scale(${zoom})` }}
           role="region" aria-label={`${sheet.widthMm} by ${sheet.heightMm} millimetre gangsheet`} onPointerDown={onCanvasBackgroundPointerDown}>
           {items.map((item) => <CanvasItem key={item.id} item={item} sheet={sheet} selected={selectedIds.includes(item.id)} invalid={invalidIds.includes(item.id)} onSelect={() => setSelectedIds([item.id])} onPointerDown={onItemPointerDown} />)}
           {selectionBox ? <div className="gb-selection-box" style={{ left: `${selectionBox.x / sheet.widthMm * 100}%`, top: `${selectionBox.y / sheet.heightMm * 100}%`, width: `${selectionBox.width / sheet.widthMm * 100}%`, height: `${selectionBox.height / sheet.heightMm * 100}%` }} /> : null}
-          {!items.length ? <label className="gb-canvas-empty">Add artwork<input type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={(event) => { void addFiles(event.target.files); event.target.value = ""; }} /><span>PNG, JPG or WebP · 25 MB max</span></label> : null}
+          {!items.length ? <button className="gb-canvas-empty" type="button" onClick={openDesignDialog}>Add design<span>PNG, JPG or WebP · 25 MB max</span></button> : null}
         </div>
       </div>
-    </div>
-    <div className="gb-composer">
-      <textarea ref={textareaRef} rows={1} value={prompt} aria-label="Describe a builder change" placeholder="Describe a change, for example: arrange with a 5 mm gap"
-        onChange={(event) => setPrompt(event.target.value)} onInput={(event) => autoGrow(event.currentTarget)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") createProposal(); }} />
-      <button type="button" onClick={createProposal} disabled={!prompt.trim()}>Review change</button>
     </div>
     <p className="gb-status" data-kind={statusKind || undefined} role="status" aria-live="polite">{status}</p>
     <div className="gb-mobile-buy wb-mobile-only"><span>{formatMoney(totalCents, product.currency)}</span><button type="button" disabled={previewMode || !allUploadsReady || busy || !variant?.available} onClick={addToCart}>{busy ? "Adding…" : "Add to cart"}</button></div>
     {textDialogOpen ? <TextDialog onAdd={addText} onClose={() => setTextDialogOpen(false)} /> : null}
+    {designDialogOpen ? <DesignDialog draft={designDraft} onChoose={chooseDesign} onDraftChange={(patch) => setDesignDraft((current) => current ? { ...current, ...patch } : current)} onAdd={addDraftDesign} onClose={closeDesignDialog} /> : null}
   </WorkbenchShell>;
 }
 
@@ -994,12 +1056,34 @@ function TextDialog({ onAdd, onClose }: { onAdd: (text: string, style: TextStyle
   </dialog>;
 }
 
-function ChangeReview({ proposal, setProposal, onApply, onReject }: { proposal: ProposalOperation[]; setProposal: (value: ProposalOperation[]) => void; onApply: () => void; onReject: () => void }) {
-  if (!proposal.length) return <p className="wb-empty">Proposed changes appear here before they affect the sheet.</p>;
-  return <div className="gb-diff"><h2>Proposed changes</h2><ul>{proposal.map((entry) => <li key={entry.id} data-accepted={entry.accepted || undefined}>
-    <label><input type="checkbox" checked={entry.accepted} onChange={(event) => setProposal(proposal.map((candidate) => candidate.id === entry.id ? { ...candidate, accepted: event.target.checked } : candidate))} /><strong>{entry.label}</strong></label>
-    <p className="gb-diff__before"><span aria-hidden="true">−</span>{entry.before}</p><p className="gb-diff__after"><span aria-hidden="true">+</span>{entry.after}</p>
-  </li>)}</ul><div className="gb-diff__actions"><button type="button" onClick={onReject}>Reject all</button><button type="button" onClick={onApply} disabled={!proposal.some((entry) => entry.accepted)}>Apply selected</button></div></div>;
+function DesignDialog({ draft, onChoose, onDraftChange, onAdd, onClose }: {
+  draft: DesignDraft | null;
+  onChoose: (files: FileList | File[] | null) => Promise<void>;
+  onDraftChange: (patch: Partial<DesignDraft>) => void;
+  onAdd: () => void;
+  onClose: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, []);
+  return <dialog ref={dialogRef} className="gb-dialog gb-design-dialog" aria-labelledby="gb-design-title" onCancel={(event) => { event.preventDefault(); onClose(); }}>
+    <form method="dialog" onSubmit={(event) => { event.preventDefault(); onAdd(); }}>
+      <div className="wb-section__heading"><h2 id="gb-design-title">Add design</h2><button className="wb-icon-button" type="button" aria-label="Close design dialog" onClick={onClose}>×</button></div>
+      <label className="gb-design-picker" onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); void onChoose(event.dataTransfer.files); }}>
+        {draft ? <><img src={draft.previewUrl} alt="Selected design preview" /><span><strong>{draft.file.name}</strong><small>{draft.naturalWidth} × {draft.naturalHeight} px</small></span></> : <><strong>Choose artwork</strong><span>or drop a PNG, JPG or WebP here</span></>}
+        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void onChoose(event.target.files); event.target.value = ""; }} />
+      </label>
+      {draft ? <div className="gb-dialog__fields gb-design-fields">
+        <label><span>Width</span><span><input type="number" min="10" max="2000" step="1" value={round(draft.widthMm)} onChange={(event) => onDraftChange({ widthMm: clamp(Number(event.target.value), 10, 2000) })} /> mm</span></label>
+        <label><span>Height</span><span><input type="number" min="10" max="2000" step="1" value={round(draft.heightMm)} onChange={(event) => onDraftChange({ heightMm: clamp(Number(event.target.value), 10, 2000) })} /> mm</span></label>
+        <label><span>Copies</span><input type="number" min="1" max="50" step="1" value={draft.copies} onChange={(event) => onDraftChange({ copies: clamp(Math.round(Number(event.target.value)), 1, 50) })} /></label>
+      </div> : null}
+      <div className="gb-dialog__actions"><button type="button" onClick={onClose}>Cancel</button><button type="submit" disabled={!draft}>Add to sheet</button></div>
+    </form>
+  </dialog>;
 }
 
 async function postJson(path: string, body: Record<string, unknown>) {
@@ -1009,10 +1093,6 @@ async function postJson(path: string, body: Record<string, unknown>) {
   return payload;
 }
 
-function operation(kind: ProposalOperation["kind"], label: string, before: string, after: string, value?: string | number): ProposalOperation {
-  return { id: crypto.randomUUID(), kind, label, before, after, value, accepted: true };
-}
-
 function uploadLabel(item: BuilderItem) {
   if (item.kind === "text") return "Text";
   return item.uploadState === "uploading" ? "Uploading…" : item.uploadState === "ready" ? "Ready" : item.uploadError || "Upload failed";
@@ -1020,12 +1100,6 @@ function uploadLabel(item: BuilderItem) {
 
 function formatMoney(cents: number, currency: string) {
   return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(cents / 100);
-}
-
-function autoGrow(textarea: HTMLTextAreaElement) {
-  const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 22;
-  textarea.style.height = "auto";
-  textarea.style.height = `${Math.min(textarea.scrollHeight, lineHeight * 5 + 20)}px`;
 }
 
 function readImageDimensions(file: File) {

@@ -67,11 +67,15 @@ const builderCss = read('apps/splash-stickers-app/app/styles/gangsheet-builder.c
 assert(/wb-panel--context/.test(shell) && /wb-stage/.test(shell) && /wb-panel--preview/.test(shell), 'workbench has context, primary stage and preview regions');
 assert(/grid-template-columns:[^;]+[^;]+[^;]+;/.test(builderCss), 'desktop workbench uses three columns');
 assert(/data-drawer-open/.test(shell) && /max-width:\s*59\.99rem/.test(builderCss), 'side panels become mobile drawers');
-assert(/max-height:\s*calc\(5 \* 1\.4em/.test(builderCss) && /autoGrow/.test(builder), 'prompt grows from one through five lines');
-assert(/role="tabpanel"/.test(builder) && /ChangeReview/.test(builder), 'preview and diff are explicit controlled panels');
+assert(!/Describe a builder change|gb-composer|ChangeReview/.test(builder + builderCss), 'builder omits the removed change composer and proposal panel');
+assert(/<Preview/.test(builder) && /<PurchasePanel/.test(builder), 'live preview and controlled purchase actions remain available');
 assert(/data-theme="dark"/.test(builderCss), 'standalone builder has semantic dark-mode values');
+assert(/--wb-edit-sheet/.test(builderCss) && /data-dark-surface/.test(builder), 'dark mode uses a dark editing sheet without recoloring output previews');
 assert(/setCanvasZoom/.test(builder) && /onCanvasWheel/.test(builder) && /gb-canvas-wrap/.test(builderCss), 'canvas zoom and pan stay isolated from fixed builder controls');
-assert(/isLayoutValid/.test(builder) && /findOpenPlacement/.test(builder) && /data-invalid/.test(builder), 'direct manipulation prevents overlapping artwork');
+assert(/isLayoutValid/.test(builder) && /autoArrange/.test(builder) && /data-invalid/.test(builder), 'direct manipulation and arrangement prevent overlapping artwork');
+assert(/DesignDialog/.test(builder) && /copies:\s*3/.test(builder) && /Add to sheet/.test(builder), 'add design dialog captures physical size and copy count before placement');
+assert(/touchPointersRef/.test(builder) && /pinchRef/.test(builder) && /touchPanRef/.test(builder), 'mobile canvas restores pinch zoom and one-finger empty-canvas panning');
+assert(/gb-more-tools/.test(builder + builderCss) && /gb-sheet-toggle/.test(builder + builderCss), 'mobile tools and sheet controls collapse to reduce clutter');
 assert(/function undo/.test(builder) && /function redo/.test(builder) && /duplicateSelected/.test(builder) && /flipSelected/.test(builder), 'builder keeps configurator quality-of-life editing actions');
 assert(!/linear-gradient|radial-gradient|filter:\s*drop-shadow|box-shadow:/.test(builderCss), 'builder avoids decorative gradients, glows and shadows');
 assert(!/No configurator needed|Each product keeps|Drag the design|Design ready/.test(builder + builderCss), 'builder avoids retired AI-artifact copy');
