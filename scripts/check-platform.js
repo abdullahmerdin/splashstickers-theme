@@ -23,7 +23,7 @@ const required = [
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-studio.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css',
-  'apps/splash-stickers-app/prisma/migrations/20260812130000_gangsheet_builder/migration.sql',
+  'apps/splash-stickers-app/prisma/migrations/20260812150000_postgresql_baseline/migration.sql',
   'packages/design-contract/schema/design-manifest.schema.json',
   'docs/workbench-interface-standard.md',
 ];
@@ -36,7 +36,11 @@ assert(!rootPackage.scripts['build:configurator'] && !rootPackage.scripts['check
 
 const appConfig = read('apps/splash-stickers-app/shopify.app.toml');
 const viteConfig = read('apps/splash-stickers-app/vite.config.ts');
+const prismaSchema = read('apps/splash-stickers-app/prisma/schema.prisma');
+const envExample = read('apps/splash-stickers-app/.env.example');
 assert(/api_version\s*=\s*"2026-07"/.test(appConfig), 'app targets Shopify API 2026-07');
+assert(/provider\s*=\s*"postgresql"/.test(prismaSchema) && /directUrl\s*=\s*env\("DIRECT_URL"\)/.test(prismaSchema), 'Prisma uses Supabase PostgreSQL with a direct migration URL');
+assert(/DATABASE_URL=postgresql:/.test(envExample) && /DIRECT_URL=postgresql:/.test(envExample), 'environment example documents pooled and direct PostgreSQL URLs');
 ['read_files', 'read_orders', 'read_products', 'write_app_proxy', 'write_files'].forEach((scope) => assert(appConfig.includes(scope), `app requests ${scope}`));
 assert(/orders\/paid/.test(appConfig), 'paid-order webhook is configured');
 assert(/subpath\s*=\s*"splash-stickers"/.test(appConfig), 'storefront app-proxy path is stable');
