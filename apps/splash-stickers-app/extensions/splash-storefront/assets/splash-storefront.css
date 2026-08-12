@@ -44,7 +44,7 @@
   display: block;
   width: 100%;
   max-width: none;
-  margin-inline: auto;
+  margin: clamp(1.25rem, 3vw, 2.5rem) auto clamp(1rem, 2.5vw, 2rem);
   padding: 0;
   overflow: visible;
   background: transparent;
@@ -57,7 +57,7 @@
   display: block;
   width: 100%;
   min-width: 0;
-  height: clamp(42rem, calc(100svh - var(--header-group-height, 5rem)), 58rem);
+  height: clamp(42rem, calc(100svh - var(--header-group-height, 5rem) - clamp(2.25rem, 5.5vw, 4.5rem)), 58rem);
   background: transparent;
   border: 0;
 }

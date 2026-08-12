@@ -24,29 +24,29 @@
 }
 
 html[data-theme="dark"] {
-  --wb-bg: #111217;
-  --wb-surface: #191a20;
-  --wb-surface-subtle: #202128;
-  --wb-canvas-surround: #14151a;
-  --wb-edit-sheet: #25262e;
-  --wb-text: #f4f2fa;
-  --wb-muted: #b7b3c0;
-  --wb-border: #34313e;
-  --wb-border-strong: #4a4557;
-  --wb-accent: #a99cf2;
-  --wb-accent-soft: #2c2745;
-  --wb-accent-text: #171321;
-  --wb-danger: #ffaaa4;
+  --wb-bg: #0f1115;
+  --wb-surface: #191c23;
+  --wb-surface-subtle: #20232b;
+  --wb-canvas-surround: #0f1115;
+  --wb-edit-sheet: #242832;
+  --wb-text: #f5f7fa;
+  --wb-muted: #aeb4c0;
+  --wb-border: #3a3f4b;
+  --wb-border-strong: #525968;
+  --wb-accent: #6c5ce7;
+  --wb-accent-soft: #28263c;
+  --wb-accent-text: #ffffff;
+  --wb-danger: #ff8a80;
   --wb-danger-surface: #351d1d;
-  --wb-success: #83d7aa;
+  --wb-success: #6ee7a8;
   --wb-success-surface: #173025;
-  --wb-focus: #c8c0ff;
+  --wb-focus: #a99fff;
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
 html, body { min-height: 100%; margin: 0; }
-body { color: var(--wb-text); background: var(--wb-bg); font: 400 0.9rem/1.45 Inter, system-ui, sans-serif; }
+body { color: var(--wb-text); background: var(--wb-bg); font: 400 0.9rem/1.45 var(--wb-font-body, Inter, system-ui, sans-serif); }
 button, input, select, textarea { color: inherit; font: inherit; }
 button, select, input[type="number"] { min-height: var(--wb-control-height); }
 button { cursor: pointer; }

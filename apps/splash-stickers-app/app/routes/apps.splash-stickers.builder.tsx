@@ -190,15 +190,19 @@ export function GangsheetBuilder({
     if (embedded && window.parent !== window) {
       try { hostRoot = window.parent.document.documentElement; } catch { /* Fall back to this document. */ }
     }
-    const syncMode = () => setMode(readThemeModeFromRoot(hostRoot));
-    const observer = new MutationObserver(syncMode);
+    const syncTheme = () => {
+      const nextMode = readThemeModeFromRoot(hostRoot);
+      setMode(nextMode);
+      syncEmbeddedThemeTokens(hostRoot, document.documentElement, nextMode);
+    };
+    const observer = new MutationObserver(syncTheme);
     observer.observe(hostRoot, { attributes: true, attributeFilter: ["class", "data-theme", "data-color-scheme"] });
     const hostDocument = hostRoot.ownerDocument;
-    hostDocument.addEventListener("theme:change", syncMode);
-    syncMode();
+    hostDocument.addEventListener("theme:change", syncTheme);
+    syncTheme();
     return () => {
       observer.disconnect();
-      hostDocument.removeEventListener("theme:change", syncMode);
+      hostDocument.removeEventListener("theme:change", syncTheme);
     };
   }, [embedded]);
   useEffect(() => {
@@ -1248,6 +1252,35 @@ function readThemeModeFromRoot(root: HTMLElement): "light" | "dark" {
   if (root.dataset.theme === "dark" || root.dataset.colorScheme === "dark" || root.classList.contains("dark")) return "dark";
   if (root.dataset.theme === "light" || root.dataset.colorScheme === "light") return "light";
   return typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function syncEmbeddedThemeTokens(hostRoot: HTMLElement, builderRoot: HTMLElement, mode: "light" | "dark") {
+  if (hostRoot === builderRoot) return;
+  const hostStyles = getComputedStyle(hostRoot);
+  const token = (...names: string[]) => names.map((name) => hostStyles.getPropertyValue(name).trim()).find(Boolean) || "";
+  const surface = token("--splash-color-surface", "--color-background") || (mode === "dark" ? "#191c23" : "#ffffff");
+  const background = token("--color-background", "--splash-color-surface") || (mode === "dark" ? "#0f1115" : "#ffffff");
+  const text = token("--splash-color-ink", "--color-foreground") || (mode === "dark" ? "#f5f7fa" : "#2d3436");
+  const accent = token("--splash-color-purple", "--color-primary-button-background") || "#6c5ce7";
+  const assignments = {
+    "--wb-bg": background,
+    "--wb-surface": surface,
+    "--wb-surface-subtle": token("--splash-surface-soft") || `color-mix(in srgb, ${surface} 94%, ${text})`,
+    "--wb-canvas-surround": background,
+    "--wb-edit-sheet": mode === "dark" ? token("--splash-surface-soft") || `color-mix(in srgb, ${surface} 88%, ${text})` : surface,
+    "--wb-text": text,
+    "--wb-muted": token("--splash-color-muted", "--color-foreground-muted") || text,
+    "--wb-border": token("--splash-color-line", "--color-border") || `color-mix(in srgb, ${text} 18%, transparent)`,
+    "--wb-border-strong": `color-mix(in srgb, ${text} 28%, transparent)`,
+    "--wb-accent": accent,
+    "--wb-accent-soft": `color-mix(in srgb, ${surface} 86%, ${accent})`,
+    "--wb-accent-text": token("--splash-color-on-accent", "--color-primary-button-text") || "#ffffff",
+    "--wb-danger": token("--color-error") || (mode === "dark" ? "#ff8a80" : "#b42318"),
+    "--wb-success": token("--color-success") || (mode === "dark" ? "#6ee7a8" : "#176b45"),
+    "--wb-focus": token("--splash-color-focus", "--color-primary-button-focus-outline") || accent,
+    "--wb-font-body": token("--font-body--family") || "Inter, system-ui, sans-serif",
+  };
+  Object.entries(assignments).forEach(([name, value]) => builderRoot.style.setProperty(name, value));
 }
 
 function readImageDimensions(file: File) {
