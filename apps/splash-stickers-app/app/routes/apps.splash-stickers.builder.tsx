@@ -1113,13 +1113,24 @@ function GuidedTour({ step, steps, onStart, onNext, onSkip }: {
       if (!target) return setTargetRect(null);
       const bounds = target.getBoundingClientRect();
       const padding = 7;
+      const viewportInset = 2;
+      const targetTop = clamp(bounds.top, viewportInset, innerHeight - viewportInset);
+      const targetRight = clamp(bounds.right, viewportInset, innerWidth - viewportInset);
+      const targetBottom = clamp(bounds.bottom, viewportInset, innerHeight - viewportInset);
+      const targetLeft = clamp(bounds.left, viewportInset, innerWidth - viewportInset);
+      const horizontalPadding = Math.max(0, Math.min(padding, targetLeft - viewportInset, innerWidth - viewportInset - targetRight));
+      const verticalPadding = Math.max(0, Math.min(padding, targetTop - viewportInset, innerHeight - viewportInset - targetBottom));
+      const top = targetTop - verticalPadding;
+      const right = targetRight + horizontalPadding;
+      const bottom = targetBottom + verticalPadding;
+      const left = targetLeft - horizontalPadding;
       setTargetRect({
-        top: Math.max(6, bounds.top - padding),
-        right: Math.min(innerWidth - 6, bounds.right + padding),
-        bottom: Math.min(innerHeight - 6, bounds.bottom + padding),
-        left: Math.max(6, bounds.left - padding),
-        width: Math.min(innerWidth - 12, bounds.width + padding * 2),
-        height: Math.min(innerHeight - 12, bounds.height + padding * 2),
+        top,
+        right,
+        bottom,
+        left,
+        width: Math.max(1, right - left),
+        height: Math.max(1, bottom - top),
       });
     };
     update();
