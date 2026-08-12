@@ -17,14 +17,7 @@ function assertNotContains(relativePath, pattern) {
   );
 }
 
-['sections/sticker-configurator.liquid', 'assets/sticker-configurator.css', 'scripts/check-phase4.js']
-  .forEach((relativePath) => assertNotContains(relativePath, 'splash-studio'));
-
-const configuratorStyles = read('assets/sticker-configurator.css');
-assert.ok(
-  !configuratorStyles.includes('!important'),
-  'assets/sticker-configurator.css should not require !important after the padding token refactor'
-);
+assertNotContains('assets/splash-theme.css', 'sticker-configurator');
 
 const splashThemeStyles = read('assets/splash-theme.css');
 const importantDeclarations = splashThemeStyles

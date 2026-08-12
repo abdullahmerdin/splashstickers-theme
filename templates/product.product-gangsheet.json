@@ -9,38 +9,40 @@
  */
 {
   "sections": {
-    "sticker_configurator": {
-      "type": "sticker-configurator",
-      "name": "Design editor",
+    "gangsheet_builder_app": {
+      "type": "_blocks",
+      "blocks": {
+        "splash_gangsheet_builder": {
+          "type": "shopify://apps/splash-stickers/blocks/gangsheet-builder/019febda-63b2-7e16-abe4-1caf4f3d8a9f",
+          "settings": {
+            "product": "",
+            "heading": "Build your gangsheet",
+            "body": "Arrange your artwork, review the sheet and add the saved design to Shopify cart.",
+            "option_label": "Sheet option",
+            "button_text": "Open Splash Gangsheet Builder",
+            "missing_product_text": "Select a gangsheet product in this app block."
+          }
+        }
+      },
+      "block_order": ["splash_gangsheet_builder"],
       "settings": {
-        "heading": "Add designs",
-        "bg_color": "#f8f9fa",
-        "base_price": 2.5,
-        "grid_size": 20,
-        "snap_enabled": true,
-        "gap_mm": 3,
-        "padding_top": 32,
-        "padding_bottom": 32,
-        "show_quick_start": true,
-        "quick_start_heading": "Three steps",
-        "quick_start_step_1": "Upload a clear PNG, JPG or WebP design.",
-        "quick_start_step_2": "Choose its print size and number of copies.",
-        "quick_start_step_3": "Arrange the sheet, review it and add it to cart.",
-        "quick_start_dismiss": "Got it",
-        "resolution_low_text": "Low-resolution artwork at this print size. Use a larger file or reduce the size.",
-        "resolution_success_text": "Resolution looks suitable at this print size.",
-        "enable_clipboard": true,
-        "enable_export": true,
-        "export_dpi": 300,
-        "max_file_mb": 20,
-        "redirect_to_cart": true,
-        "enable_auto_arrange": true,
-        "enable_undo_redo": true,
-        "enable_analytics": false
+        "content_direction": "column",
+        "vertical_on_mobile": true,
+        "horizontal_alignment": "flex-start",
+        "vertical_alignment": "center",
+        "gap": 12,
+        "section_width": "page-width",
+        "background_media": "none",
+        "background_color": "",
+        "border": "none",
+        "border_width": 1,
+        "border_opacity": 100,
+        "border_color": "",
+        "border_radius": 0,
+        "padding-block-start": 24,
+        "padding-block-end": 24
       }
     }
   },
-  "order": [
-    "sticker_configurator"
-  ]
+  "order": ["gangsheet_builder_app"]
 }

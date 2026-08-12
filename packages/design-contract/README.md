@@ -1,7 +1,7 @@
 # Splash Stickers DesignManifest contract
 
-This dependency-free ESM package is the versioned handoff between the Shopify
-theme configurator and the backend app. It accepts the current theme manifest,
+This dependency-free ESM package is the versioned handoff between Splash
+Gangsheet Builder and the backend app. It accepts the builder manifest,
 normalizes it to schema `1.0`, validates untrusted input, creates deterministic
 SHA-256 IDs/digests and projects compact cart line properties.
 
@@ -25,3 +25,5 @@ const manifest = normalizeDesignManifest(themeManifest, {
 Identity, shop, price and timestamps are excluded from digest input. A public
 design ID is a lookup reference, never an authorization secret. The backend must
 scope every lookup to the authenticated Shopify shop and recalculate price.
+Shopify line quantity remains outside the design projection and is captured
+from the paid order line.

@@ -36,6 +36,10 @@ if (host === "localhost") {
 }
 
 export default defineConfig({
+  // The same bundle serves the embedded admin and the storefront app proxy.
+  // Keeping assets below the proxy prefix prevents storefront browsers from
+  // resolving them as theme `/assets/*` requests.
+  base: "/apps/splash-stickers/",
   server: {
     allowedHosts: [host],
     cors: {

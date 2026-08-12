@@ -1,7 +1,8 @@
-# Splash Stickers Shopify app
+# Splash Gangsheet Builder Shopify app
 
-Embedded React Router app for durable configurator designs, mockup jobs, review
-moderation and paid-order production handoff.
+React Router Shopify app for the app-proxy Gangsheet Builder, durable artwork
+and design state, signed cart handoff, mockup jobs, review moderation and
+paid-order production snapshots.
 
 ## Local development
 
@@ -21,7 +22,12 @@ environment values; never commit API secrets.
 
 ## Storefront endpoints
 
-All endpoints are behind the signed `/apps/splash-stickers/` Shopify App Proxy:
+All endpoints are behind the signed `/apps/splash-stickers/` Shopify App Proxy.
+The customer builder is `GET /builder?variant=...`; its durable purchase flow
+uses `/uploads/stage`, `/uploads/complete`, `/uploads/status`, `/designs` and
+`/purchase-intents` before it changes Shopify cart.
+
+Other endpoints:
 
 - `GET /` — health and contract version.
 - `POST /designs` — validate and upsert a design manifest.
@@ -32,8 +38,9 @@ All endpoints are behind the signed `/apps/splash-stickers/` Shopify App Proxy:
 - `GET /mockups/:id/render` — render the current sheet as a shop-scoped SVG.
 - `GET/POST /reviews` — list approved reviews or submit a pending review.
 
-The `orders/paid` webhook links cart `Design ID` properties to production
-records without persisting customer addresses or artwork bytes.
+The `orders/paid` webhook verifies the signed handoff and snapshots the paid
+line's manifest, digest, product, variant, price and quantity without storing
+customer addresses or artwork bytes.
 Shopify privacy compliance topics share a signed webhook endpoint; `shop/redact`
 removes all tenant records.
 

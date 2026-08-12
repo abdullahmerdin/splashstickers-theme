@@ -22,11 +22,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Dashboard() {
   const data = useLoaderData<typeof loader>();
   return (
-    <s-page heading="Splash Stickers">
-      <s-section heading="Platform status">
-        <s-paragraph>
-          Theme storefront, standalone mockups and review moderation are connected for {data.shop}.
-        </s-paragraph>
+    <s-page heading="Splash Gangsheet Builder">
+      <s-section heading={data.shop}>
         <s-stack direction="inline" gap="base">
           <Metric label="Designs" value={data.designs} href="/app/designs" />
           <Metric label="Ready" value={data.readyDesigns} href="/app/designs" />
@@ -36,7 +33,7 @@ export default function Dashboard() {
         </s-stack>
       </s-section>
 
-      <s-section heading="Activation checklist">
+      <s-section heading="Deployment gates">
         <s-unordered-list>
           <s-list-item>Set the hosted app URL and app proxy URL before production deploy.</s-list-item>
           <s-list-item>Add the Reviews app block to the product template.</s-list-item>

@@ -142,8 +142,8 @@
             {% for item in cart.items %}
               {%- liquid
                 assign is_gangsheet_line = false
-                if item.product.template_suffix == 'product-gangsheet'
-                  if item.properties['Design ID'] != blank and item.properties['Artwork count'] != blank and item.properties['Sheet size'] != blank
+                if item.properties['_splash_gangsheet'] == '1'
+                  if item.properties['_splash_handoff'] != blank and item.properties['Design ID'] != blank
                     assign is_gangsheet_line = true
                   endif
                 endif

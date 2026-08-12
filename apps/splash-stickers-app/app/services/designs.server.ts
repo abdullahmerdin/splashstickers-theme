@@ -22,9 +22,9 @@ export async function saveDesign(input: unknown, context: SaveContext) {
     ...(context.variantId ? { variantId: context.variantId } : {}),
   };
   if (!Object.keys(normalized.source).length) delete normalized.source;
-  if (!normalized.id) {
-    normalized.id = await createPublicId(normalized);
-  }
+  // Public IDs are content-addressed. A storefront client cannot select a
+  // known ID and overwrite another saved design in the same shop.
+  normalized.id = await createPublicId(normalized);
   const manifest = normalizeDesignManifest(normalized);
   const digest = await digestDesignManifest(manifest);
   const ready = manifest.items.every((item) => (

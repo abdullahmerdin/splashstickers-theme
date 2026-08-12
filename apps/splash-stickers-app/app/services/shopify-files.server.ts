@@ -86,3 +86,20 @@ export async function completeImageUpload(
   }
   return result.files[0];
 }
+
+export async function getImageFileStatuses(admin: AdminGraphql, ids: string[]) {
+  const response = await admin.graphql(
+    `#graphql
+      query SplashFileStatuses($ids: [ID!]!) {
+        nodes(ids: $ids) {
+          ... on MediaImage { id status: fileStatus image { width height } }
+        }
+      }
+    `,
+    { variables: { ids } },
+  );
+  const payload = await response.json() as {
+    data?: { nodes?: Array<{ id?: string; status?: string; image?: { width?: number; height?: number } | null } | null> };
+  };
+  return (payload.data?.nodes || []).filter((node): node is NonNullable<typeof node> => Boolean(node?.id));
+}

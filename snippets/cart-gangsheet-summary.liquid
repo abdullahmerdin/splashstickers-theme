@@ -2,6 +2,7 @@
   assign design_id = item.properties['Design ID']
   assign artwork_count = item.properties['Artwork count']
   assign sheet_size = item.properties['Sheet size']
+  assign sheet_quantity = item.quantity
 %}
 
 <aside class="splash-gangsheet-summary" aria-label="Cart item details">
@@ -17,6 +18,10 @@
     <div class="splash-gangsheet-summary__field">
       <dt>Sheet size</dt>
       <dd>{{ sheet_size | escape }}</dd>
+    </div>
+    <div class="splash-gangsheet-summary__field">
+      <dt>Copies</dt>
+      <dd>{{ sheet_quantity }}</dd>
     </div>
   </dl>
 </aside>

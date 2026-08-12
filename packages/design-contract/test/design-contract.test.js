@@ -54,6 +54,22 @@ test('digest and public ID are deterministic and ignore volatile identity', asyn
 test('cart projection contains compact references only', async () => {
   const properties = await projectCartLineProperties(legacy);
   assert.equal(properties['Design ID'], 'project-123');
+  assert.equal(properties['Sheet copies'], undefined);
   assert.equal(properties._design_manifest_version, '1.0');
   assert.equal(JSON.stringify(properties).includes('Splash'), false);
+});
+
+test('rejects artwork whose rotated bounds leave the sheet', () => {
+  const manifest = normalizeDesignManifest(legacy);
+  manifest.items[0].placement = {
+    ...manifest.items[0].placement,
+    xMm: 590,
+    yMm: 390,
+    widthMm: 40,
+    heightMm: 40,
+    rotation: 45,
+  };
+  const result = validateDesignManifest(manifest);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === 'outside_sheet'));
 });

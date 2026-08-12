@@ -214,6 +214,24 @@ export function validateDesignManifest(input) {
   if (!Array.isArray(input.items)) addError(errors, '$.items', 'invalid_type', 'items must be an array.');
   if (!(manifest.items.length >= 1 && manifest.items.length <= LIMITS.items)) addError(errors, '$.items', 'limit_exceeded', `items must contain between 1 and ${LIMITS.items} entries.`);
   if (new Set(manifest.items.map((item) => item.id)).size !== manifest.items.length) addError(errors, '$.items', 'duplicate', 'item IDs must be unique.');
+  manifest.items.forEach((item, index) => {
+    const path = `$.items[${index}].placement`;
+    const placement = item.placement;
+    if (placement.xMm < 0) addError(errors, `${path}.xMm`, 'out_of_range', 'xMm cannot be negative.');
+    if (placement.yMm < 0) addError(errors, `${path}.yMm`, 'out_of_range', 'yMm cannot be negative.');
+    if (placement.rotation < -360 || placement.rotation > 360) addError(errors, `${path}.rotation`, 'out_of_range', 'rotation must be between -360 and 360 degrees.');
+    const radians = placement.rotation * Math.PI / 180;
+    const boundsWidth = Math.abs(placement.widthMm * Math.cos(radians)) + Math.abs(placement.heightMm * Math.sin(radians));
+    const boundsHeight = Math.abs(placement.widthMm * Math.sin(radians)) + Math.abs(placement.heightMm * Math.cos(radians));
+    const boundsX = placement.xMm + (placement.widthMm - boundsWidth) / 2;
+    const boundsY = placement.yMm + (placement.heightMm - boundsHeight) / 2;
+    if (boundsX < -0.01 || boundsX + boundsWidth > manifest.sheet.widthMm + 0.01) {
+      addError(errors, path, 'outside_sheet', 'Rotated artwork must stay within the sheet width.');
+    }
+    if (boundsY < -0.01 || boundsY + boundsHeight > manifest.sheet.heightMm + 0.01) {
+      addError(errors, path, 'outside_sheet', 'Rotated artwork must stay within the sheet height.');
+    }
+  });
 
   const id = optionalString(input.id, 128);
   if (id) manifest.id = id;
@@ -327,7 +345,6 @@ export async function projectCartLineProperties(input, options = {}) {
   return {
     'Design ID': designId,
     'Artwork count': String(manifest.items.length),
-    'Sheet copies': String(manifest.quantity),
     'Sheet size': `${manifest.sheet.widthMm} × ${manifest.sheet.heightMm} mm`,
     [`${prefix}design_manifest_version`]: manifest.schemaVersion,
     [`${prefix}design_digest`]: digest.slice(0, 24),

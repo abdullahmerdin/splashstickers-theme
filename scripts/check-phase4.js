@@ -1,121 +1,36 @@
+'use strict';
+
+const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
+const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const themeJson = (relativePath) => JSON.parse(read(relativePath).replace(/^[\s\S]*?\*\/\s*/, ''));
 
-function read(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), 'utf8');
-}
-
-function assertContains(relativePath, pattern) {
-  const source = read(relativePath);
-  if (!source.includes(pattern)) {
-    throw new Error(`${relativePath} is missing ${JSON.stringify(pattern)}`);
-  }
-}
-
-function listTextFiles(relativeDirectory) {
-  const directory = path.join(root, relativeDirectory);
-  if (!fs.existsSync(directory)) return [];
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const relativePath = path.join(relativeDirectory, entry.name);
-    if (entry.isDirectory()) return listTextFiles(relativePath);
-    if (!/\.(css|js|json|liquid)$/.test(entry.name)) return [];
-    return [relativePath];
-  });
-}
-
-function assertRetiredSectionIsAbsent() {
-  const retiredSectionType = ['collision', 'test'].join('-');
-  const retiredSectionPath = path.join(root, 'sections', `${retiredSectionType}.liquid`);
-  if (fs.existsSync(retiredSectionPath)) {
-    throw new Error(`Retired ${retiredSectionType} section must not be present.`);
-  }
-
-  const sourceRoots = ['assets', 'blocks', 'config', 'layout', 'scripts', 'sections', 'snippets', 'templates'];
-  const references = sourceRoots
-    .flatMap((relativeDirectory) => listTextFiles(relativeDirectory))
-    .filter((relativePath) => read(relativePath).includes(retiredSectionType));
-  if (references.length) {
-    throw new Error(`Retired ${retiredSectionType} references remain in: ${references.join(', ')}`);
-  }
-}
-
-function readThemeJson(relativePath) {
-  const source = read(relativePath).replace(/^[\s\S]*?\*\/\s*/, '');
-  return JSON.parse(source);
-}
-
-const checks = [
+[
   ['snippets/stylesheets.liquid', "'splash-theme.css' | asset_url | stylesheet_tag"],
   ['snippets/product-information-content.liquid', 'splash-product-information'],
   ['sections/product-information.liquid', "render 'sticky-add-to-cart'"],
   ['snippets/sticky-add-to-cart.liquid', 'splash-sticky-add-to-cart'],
-  ['snippets/sticky-add-to-cart.liquid', '{% stylesheet %}'],
-  ['sections/sticker-configurator.liquid', 'data-clipboard-enabled'],
-  ['sections/sticker-configurator.liquid', 'role="region"'],
-  ['sections/sticker-configurator.liquid', 'aria-modal="true"'],
-  ['sections/sticker-configurator.liquid', 'class="cfg-toolbar-more"'],
-  ['sections/sticker-configurator.liquid', 'data-action="export-pdf"'],
-  ['sections/sticker-configurator.liquid', '"id": "enable_analytics"'],
-  ['sections/sticker-configurator.liquid', '"default": false'],
-  ['sections/sticker-configurator.liquid', 'data-configurator-copy'],
-  ['sections/sticker-configurator.liquid', 'sections.sticker-configurator.add_design_error'],
-  ['assets/splash-theme.css', '.splash-product-information .product-details .add-to-cart-button.button'],
-  ['assets/sticker-configurator.css', '.sticker-configurator > sticker-configurator.splash-configurator'],
-  ['assets/sticker-configurator.css', '.cfg-toolbar-more[open] .cfg-toolbar-more-controls'],
-  ['assets/sticker-configurator.js', 'features.undoEnabled'],
-  ['assets/sticker-configurator.js', 'features.clipboardEnabled'],
-  ['assets/sticker-configurator.js', "features.exportEnabled !== 'false'"],
-  ['assets/sticker-configurator.js', 'function configuratorText'],
-];
+  ['apps/splash-stickers-app/extensions/splash-storefront/blocks/gangsheet-builder.liquid', 'apps/splash-stickers/builder'],
+  ['apps/splash-stickers-app/extensions/splash-storefront/blocks/gangsheet-builder.liquid', 'name="variant"'],
+  ['templates/product.product-gangsheet.json', 'blocks/gangsheet-builder'],
+].forEach(([relativePath, pattern]) => assert.ok(read(relativePath).includes(pattern), `${relativePath} is missing ${pattern}`));
 
-checks.forEach(([relativePath, pattern]) => assertContains(relativePath, pattern));
-assertRetiredSectionIsAbsent();
+[
+  'sections/sticker-configurator.liquid',
+  'assets/sticker-configurator.css',
+  'assets/sticker-configurator.js',
+  'assets/sticker-configurator-experience.js',
+].forEach((relativePath) => assert.ok(!fs.existsSync(path.join(root, relativePath)), `${relativePath} must stay retired from the theme`));
 
-const configuratorSource = read('sections/sticker-configurator.liquid');
-const configuratorSchema = JSON.parse(
-  configuratorSource.match(/{% schema %}([\s\S]*?){% endschema %}/)[1]
-);
-const localeReferences = [...configuratorSource.matchAll(/sections\.sticker-configurator\.([a-z0-9_]+)/g)]
-  .map((match) => match[1]);
-const missingLocaleKeys = [...new Set(localeReferences)]
-  .filter((key) => !(key in configuratorSchema.locales.en));
-if (missingLocaleKeys.length) {
-  throw new Error(`Configurator section locale is missing: ${missingLocaleKeys.join(', ')}`);
-}
+const defaultTemplate = themeJson('templates/product.json');
+const gangsheetTemplate = themeJson('templates/product.product-gangsheet.json');
+assert.equal(defaultTemplate.sections.main?.type, 'product-information', 'default product keeps its native product surface');
+assert.ok(!JSON.stringify(defaultTemplate).includes('blocks/gangsheet-builder'), 'default products do not expose the gangsheet-only launcher');
+assert.ok(JSON.stringify(gangsheetTemplate).includes('blocks/gangsheet-builder'), 'gangsheet template exposes the app-owned builder launcher');
+assert.ok(!JSON.stringify(defaultTemplate).includes('sticker-configurator'), 'default product does not embed the retired theme configurator');
+assert.ok(!JSON.stringify(gangsheetTemplate).includes('sticker-configurator'), 'gangsheet template does not embed the retired theme configurator');
 
-const gangsheetTemplate = readThemeJson('templates/product.product-gangsheet.json');
-const configurator = gangsheetTemplate.sections?.sticker_configurator;
-if (!configurator || configurator.type !== 'sticker-configurator') {
-  throw new Error('Gangsheet product template does not contain the configurator section.');
-}
-
-const settings = configurator.settings || {};
-['show_quick_start', 'resolution_low_text', 'resolution_success_text', 'enable_analytics'].forEach((key) => {
-  if (!(key in settings)) throw new Error(`Gangsheet template is missing ${key}.`);
-});
-
-if (settings.enable_analytics !== false) {
-  throw new Error('Configurator analytics must remain opt-in in the gangsheet template.');
-}
-
-const defaultProductTemplate = readThemeJson('templates/product.json');
-const defaultMainSection = defaultProductTemplate.sections?.main;
-if (defaultMainSection?.type !== 'product-information') {
-  throw new Error('Default product template must render product-information as its main section.');
-}
-
-const defaultConfiguratorSections = Object.values(defaultProductTemplate.sections || {}).filter(
-  (section) => section.type === 'sticker-configurator'
-);
-if (defaultConfiguratorSections.length > 1) {
-  throw new Error('Default product template must not render multiple sticker-configurator sections.');
-}
-if (defaultMainSection.disabled === true && defaultConfiguratorSections.length === 0) {
-  throw new Error('Default product template must keep an active product surface.');
-}
-// A product template may intentionally combine product-information with one configurator section;
-// the invalid case is duplicate configurator rendering or a template with no active product surface.
-
-console.log(`Phase 4 wiring checks passed (${checks.length + 3} groups).`);
+console.log('Phase 4 product and app-builder wiring checks passed.');

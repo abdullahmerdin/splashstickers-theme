@@ -8,9 +8,10 @@ Splash Stickers is one source repository with two independently deployable
 surfaces:
 
 1. The Shopify theme stays at the repository root and owns storefront layout,
-   interaction and the immediate configurator experience.
-2. The Shopify app lives in `apps/splash-stickers-app` and owns durable data,
-   asynchronous work, merchant administration and storefront APIs.
+   native cart/checkout presentation and app-block placement.
+2. The Shopify app lives in `apps/splash-stickers-app` and owns Splash
+   Gangsheet Builder, durable data, asynchronous work, merchant administration
+   and storefront APIs.
 
 The app must not modify installed theme files through the Asset API. Storefront
 integration is delivered through the `splash-storefront` theme app extension.
@@ -19,12 +20,12 @@ integration is delivered through the `splash-storefront` theme app extension.
 
 | Capability | Theme | App |
 | --- | --- | --- |
-| Configurator canvas and direct manipulation | Owns | Receives versioned state |
-| Immediate review step and live preview | Renders | Persists/restores state |
+| Gangsheet canvas and direct manipulation | Launches app block | Owns |
+| Immediate review step and live preview | Does not own | Renders and persists |
 | Generated production mockup | Displays | Queues, stores and publishes status |
 | Customer review display/form | Hosts app block | Stores and moderates submissions |
 | Cart line metadata | Writes compact public references | Resolves references for production |
-| Raw artwork | Holds in the active browser session | Stages directly into Shopify Files |
+| Raw artwork | Never owns | Stages directly into Shopify Files |
 | Order/production handoff | Shows customer status | Associates order lines with designs |
 
 Artwork bytes are intentionally excluded from `DesignManifest`. The contract
@@ -33,13 +34,13 @@ contains only references, dimensions, placements and non-secret metadata.
 ## Storefront data flow
 
 ```text
-Configurator
-  -> normalize + validate DesignManifest
-  -> save through /apps/splash-stickers/
-  -> receive public design ID
-  -> request mockup / poll status
-  -> add public design ID + compact summary to cart properties
-  -> app associates the design with an order/production record
+Theme app block
+  -> signed app-proxy Splash Gangsheet Builder
+  -> stage artwork directly into Shopify Files and wait for READY
+  -> normalize + validate and persist DesignManifest
+  -> create signed, unique PurchaseIntent snapshot
+  -> add compact handoff + summary to native Shopify cart
+  -> orders/paid verifies handoff and stores the paid line snapshot
 ```
 
 All storefront API requests pass through Shopify App Proxy authentication. Every

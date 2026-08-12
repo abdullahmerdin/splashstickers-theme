@@ -12,6 +12,7 @@ export async function action({ request }: ActionFunctionArgs) {
   if (normalizedTopic === "shop/redact") {
     await db.$transaction([
       db.orderDesign.deleteMany({ where: { shop } }),
+      db.purchaseIntent.deleteMany({ where: { shop } }),
       db.mockup.deleteMany({ where: { shop } }),
       db.designAsset.deleteMany({ where: { shop } }),
       db.design.deleteMany({ where: { shop } }),

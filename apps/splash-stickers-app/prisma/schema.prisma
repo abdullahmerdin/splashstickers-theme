@@ -10,25 +10,25 @@ generator client {
 // See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
   provider = "sqlite"
-  url      = "file:dev.sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
@@ -59,21 +59,29 @@ enum ProductionStatus {
   CANCELLED
 }
 
+enum PurchaseIntentStatus {
+  OPEN
+  ORDERED
+  EXPIRED
+  REJECTED
+}
+
 model Design {
-  id            String       @id @default(cuid())
-  publicId      String
-  shop          String
-  schemaVersion String       @default("1.0")
-  status        DesignStatus @default(DRAFT)
-  productId     String?
-  variantId     String?
-  manifest      Json
-  digest        String
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  assets        DesignAsset[]
-  mockups       Mockup[]
-  orders        OrderDesign[]
+  id              String           @id @default(cuid())
+  publicId        String
+  shop            String
+  schemaVersion   String           @default("1.0")
+  status          DesignStatus     @default(DRAFT)
+  productId       String?
+  variantId       String?
+  manifest        Json
+  digest          String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  assets          DesignAsset[]
+  mockups         Mockup[]
+  orders          OrderDesign[]
+  purchaseIntents PurchaseIntent[]
 
   @@unique([shop, publicId])
   @@index([shop, status, updatedAt])
@@ -98,23 +106,46 @@ model DesignAsset {
 }
 
 model Mockup {
-  id         String       @id @default(cuid())
-  publicId   String
-  shop       String
-  designId   String
-  scene      String       @default("phone")
-  options    Json?
-  status     MockupStatus @default(QUEUED)
-  outputUrl  String?
-  errorCode  String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  design     Design       @relation(fields: [designId], references: [id], onDelete: Cascade)
+  id        String       @id @default(cuid())
+  publicId  String
+  shop      String
+  designId  String
+  scene     String       @default("phone")
+  options   Json?
+  status    MockupStatus @default(QUEUED)
+  outputUrl String?
+  errorCode String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  design    Design       @relation(fields: [designId], references: [id], onDelete: Cascade)
 
   @@unique([shop, publicId])
   @@index([shop, status, createdAt])
   @@index([designId])
   @@index([designId, scene, createdAt])
+}
+
+model PurchaseIntent {
+  id             String               @id @default(cuid())
+  publicId       String
+  shop           String
+  designId       String
+  designDigest   String
+  manifest       Json
+  productId      String
+  variantId      String
+  unitPriceCents Int
+  currency       String
+  status         PurchaseIntentStatus @default(OPEN)
+  expiresAt      DateTime
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  design         Design               @relation(fields: [designId], references: [id], onDelete: Restrict)
+  orders         OrderDesign[]
+
+  @@unique([shop, publicId])
+  @@index([shop, status, expiresAt])
+  @@index([designId])
 }
 
 model Review {
@@ -136,17 +167,27 @@ model Review {
 }
 
 model OrderDesign {
-  id         String           @id @default(cuid())
-  shop       String
-  designId   String
-  orderId    String
-  lineItemId String
-  status     ProductionStatus @default(PENDING)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  design     Design           @relation(fields: [designId], references: [id], onDelete: Restrict)
+  id               String           @id @default(cuid())
+  shop             String
+  designId         String
+  purchaseIntentId String?
+  orderId          String
+  lineItemId       String
+  designDigest     String?
+  manifest         Json?
+  productId        String?
+  variantId        String?
+  quantity         Int              @default(1)
+  unitPriceCents   Int?
+  currency         String?
+  status           ProductionStatus @default(PENDING)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  design           Design           @relation(fields: [designId], references: [id], onDelete: Restrict)
+  purchaseIntent   PurchaseIntent?  @relation(fields: [purchaseIntentId], references: [id], onDelete: SetNull)
 
   @@unique([shop, orderId, lineItemId])
   @@index([designId])
+  @@index([purchaseIntentId])
   @@index([shop, status, createdAt])
 }

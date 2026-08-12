@@ -31,9 +31,6 @@ AssetSizeJavaScript:
   # Theme Check configuration disables this performance-only check for themes.
   enabled: false
   threshold_in_bytes: 16384
-  ignore:
-    - assets/jspdf.umd.min.js
-    - assets/sticker-configurator.js
 ContentForHeaderModification:
   enabled: true
 RemoteAsset:
