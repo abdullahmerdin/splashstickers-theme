@@ -44,6 +44,7 @@ assert(/api_version\s*=\s*"2026-07"/.test(appConfig), 'app targets Shopify API 2
 assert(/provider\s*=\s*"postgresql"/.test(prismaSchema) && /directUrl\s*=\s*env\("DIRECT_URL"\)/.test(prismaSchema), 'Prisma uses Supabase PostgreSQL with a direct migration URL');
 assert(/DATABASE_URL=postgresql:/.test(envExample) && /DIRECT_URL=postgresql:/.test(envExample), 'environment example documents pooled and direct PostgreSQL URLs');
 assert(/EXPOSE\s+10000/.test(dockerfile) && /ENV HOST=0\.0\.0\.0/.test(dockerfile), 'Render container exposes and binds the public web port');
+assert(/npm ci --include=dev/.test(dockerfile) && dockerfile.indexOf('npm run build:app') < dockerfile.indexOf('npm prune --omit=dev'), 'Docker installs build tooling before pruning development dependencies');
 ['read_files', 'read_orders', 'read_products', 'write_app_proxy', 'write_files'].forEach((scope) => assert(appConfig.includes(scope), `app requests ${scope}`));
 assert(/orders\/paid/.test(appConfig), 'paid-order webhook is configured');
 assert(/subpath\s*=\s*"splash-stickers"/.test(appConfig), 'storefront app-proxy path is stable');
