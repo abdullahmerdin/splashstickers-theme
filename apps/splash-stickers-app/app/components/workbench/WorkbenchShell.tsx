@@ -1,8 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
-export function WorkbenchShell({ title, subtitle, children, preview }: {
+export function WorkbenchShell({ title, children, preview }: {
   title: string;
-  subtitle?: string;
   children: ReactNode;
   preview: ReactNode;
 }) {
@@ -28,9 +27,10 @@ export function WorkbenchShell({ title, subtitle, children, preview }: {
   return (
     <main className="wb-shell">
       <header className="wb-appbar">
-        <div className="wb-appbar__title"><strong>{title}</strong>{subtitle ? <span>{subtitle}</span> : null}</div>
+        <div className="wb-appbar__title"><strong>{title}</strong></div>
         <div className="wb-appbar__actions">
           <button ref={previewButton} className="wb-icon-button wb-mobile-only" type="button"
+            data-tour="preview-mobile"
             aria-label="Open preview and order" aria-expanded={previewOpen}
             onClick={() => setPreviewOpen(true)}><span aria-hidden="true">▣</span></button>
         </div>
@@ -38,7 +38,7 @@ export function WorkbenchShell({ title, subtitle, children, preview }: {
 
       <div className="wb-layout">
         <section className="wb-stage" aria-label="Builder workspace">{children}</section>
-        <aside className="wb-panel wb-panel--preview" data-drawer-open={previewOpen || undefined} aria-label="Preview and order">
+        <aside className="wb-panel wb-panel--preview" data-tour="preview-panel" data-drawer-open={previewOpen || undefined} aria-label="Preview and order">
           <DrawerHeader title="Preview" onClose={closeDrawer} />{preview}
         </aside>
       </div>

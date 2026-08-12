@@ -69,6 +69,12 @@ assert(/grid-template-columns:\s*minmax\(29rem, 1fr\)\s+minmax\(15rem, 17\.5rem\
 assert(/data-drawer-open/.test(shell) && /max-width:\s*59\.99rem/.test(builderCss), 'preview and order become a mobile drawer');
 assert(!/Describe a builder change|gb-composer|ChangeReview/.test(builder + builderCss), 'builder omits the removed change composer and proposal panel');
 assert(/<Preview/.test(builder) && /<PurchasePanel/.test(builder), 'live preview and controlled purchase actions remain available');
+assert(/<WorkbenchShell title=\{product\.title\} preview=\{previewPanel\}>/.test(builder) && !/subtitle:/.test(shell), 'builder header shows only the product name');
+assert(/GUIDE_STORAGE_KEY/.test(builder) && /localStorage\.getItem\(GUIDE_STORAGE_KEY\)/.test(builder) && /localStorage\.setItem\(GUIDE_STORAGE_KEY, "complete"\)/.test(builder), 'first-run guide is remembered after completion or skip');
+assert(/function GuidedTour/.test(builder) && /showModal\(\)/.test(builder) && /Start guide/.test(builder) && /Skip guide/.test(builder) && /Finish/.test(builder), 'builder provides a blocking summary and step-by-step guided tour');
+['add-design', 'auto-arrange', 'history-controls', 'editing-tools', 'sheet-settings', 'canvas', 'preview-panel'].forEach((target) => assert((builder + shell).includes(`data-tour="${target}"`) || builder.includes(`dataTour="${target}"`), `guided tour targets ${target}`));
+assert(/mobileTarget:\s*"editing-tools-mobile"/.test(builder) && /mobileTarget:\s*"preview-mobile"/.test(builder), 'guided tour uses visible mobile controls for collapsed areas');
+assert(/gb-tour-mask/.test(builder + builderCss) && /mask="url\(#gb-tour-cutout\)"/.test(builder), 'guided tour spotlights each active control through the page overlay');
 assert(/data-theme="dark"/.test(builderCss), 'standalone builder has semantic dark-mode values');
 assert(/MutationObserver/.test(builder) && /theme:change/.test(builder) && !/toggleMode/.test(builder), 'embedded builder follows the storefront theme dynamically without a separate toggle');
 assert(/--wb-edit-sheet/.test(builderCss) && /data-dark-surface/.test(builder), 'dark mode uses a dark editing sheet without recoloring output previews');

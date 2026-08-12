@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData } from "react-router";
 
@@ -80,6 +80,24 @@ const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const ACCEPTED_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const MAX_HISTORY = 50;
 const MAX_ITEMS = 500;
+const GUIDE_STORAGE_KEY = "splash-gangsheet-guide-v1";
+
+type GuideStep = {
+  title: string;
+  body: string;
+  target: string;
+  mobileTarget?: string;
+};
+
+const GUIDE_STEPS: GuideStep[] = [
+  { title: "Add a design", body: "Choose PNG, JPG or WebP artwork, then set its physical size and copy count before placing it.", target: "add-design" },
+  { title: "Pack the sheet", body: "Auto-arrange fills open spaces without overlapping designs and grows the sheet downward when needed.", target: "auto-arrange" },
+  { title: "Undo and redo", body: "Step backward or forward through your editing changes at any time.", target: "history-controls" },
+  { title: "Edit your selection", body: "Duplicate, flip, lock, add text, download, and control zoom from these tools.", target: "editing-tools", mobileTarget: "editing-tools-mobile" },
+  { title: "Set up the sheet", body: "Adjust sheet width, height, spacing, and the final printed background color here.", target: "sheet-settings" },
+  { title: "Work on the canvas", body: "Drag designs to move them. Ctrl-scroll or pinch to zoom, and drag empty space to pan.", target: "canvas" },
+  { title: "Review and order", body: "Check the live output, fine-tune the selected design, then choose quantity and add the finished sheet to cart.", target: "preview-panel", mobileTarget: "preview-mobile" },
+];
 
 export default function GangsheetBuilderRoute() {
   const { product, embedded, error } = useLoaderData<typeof loader>();
@@ -122,6 +140,8 @@ export function GangsheetBuilder({
   const [designDialogOpen, setDesignDialogOpen] = useState(false);
   const [designDraft, setDesignDraft] = useState<DesignDraft | null>(null);
   const [limitDialogOpen, setLimitDialogOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(previewMode);
+  const [guideStep, setGuideStep] = useState(-1);
   const [moreToolsOpen, setMoreToolsOpen] = useState(false);
   const [sheetSettingsOpen, setSheetSettingsOpen] = useState(false);
   const [historyState, setHistoryState] = useState({ undo: 0, redo: 0 });
@@ -193,6 +213,14 @@ export function GangsheetBuilder({
     viewport.addEventListener("wheel", onWheel, { passive: false });
     return () => viewport.removeEventListener("wheel", onWheel);
   }, []);
+  useEffect(() => {
+    if (previewMode) return;
+    let completed = false;
+    try { completed = localStorage.getItem(GUIDE_STORAGE_KEY) === "complete"; } catch { /* Storage may be unavailable. */ }
+    if (completed) return;
+    const frame = requestAnimationFrame(() => setGuideOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, [previewMode]);
   useEffect(() => {
     const viewport = canvasViewportRef.current;
     if (!viewport) return;
@@ -274,6 +302,11 @@ export function GangsheetBuilder({
     if (itemsRef.current.length + additions <= MAX_ITEMS) return false;
     setLimitDialogOpen(true);
     return true;
+  }
+
+  function closeGuide() {
+    try { localStorage.setItem(GUIDE_STORAGE_KEY, "complete"); } catch { /* The guide still closes for this visit. */ }
+    setGuideOpen(false);
   }
 
   function openDesignDialog() {
@@ -906,14 +939,16 @@ export function GangsheetBuilder({
       total={formatMoney(totalCents, product.currency)} disabled={previewMode || !allUploadsReady || busy || !variant?.available || !isLayoutValid(items, sheet)} busy={busy} onBuy={addToCart} />
   </>;
 
-  return <WorkbenchShell title={product.title} subtitle="Gang sheet builder" preview={previewPanel}>
+  return <WorkbenchShell title={product.title} preview={previewPanel}>
     <div className="gb-stage-toolbar" role="toolbar" aria-label="Design tools">
-      <button className="gb-add-design" type="button" onClick={openDesignDialog}><span aria-hidden="true">+</span> Add design</button>
-      <ToolbarButton label="Auto-arrange" symbol="▦" onClick={arrange} disabled={!items.length} />
-      <ToolbarButton label="Undo" symbol="↶" onClick={undo} disabled={!canUndo} />
-      <ToolbarButton label="Redo" symbol="↷" onClick={redo} disabled={!canRedo} />
-      <button className="gb-more-toggle" type="button" aria-expanded={moreToolsOpen} aria-controls="gb-more-tools" onClick={() => setMoreToolsOpen((open) => !open)}>More</button>
-      <div id="gb-more-tools" className="gb-more-tools" data-open={moreToolsOpen || undefined}>
+      <button className="gb-add-design" data-tour="add-design" type="button" onClick={openDesignDialog}><span aria-hidden="true">+</span> Add design</button>
+      <ToolbarButton dataTour="auto-arrange" label="Auto-arrange" symbol="▦" onClick={arrange} disabled={!items.length} />
+      <span className="gb-tool-pair" data-tour="history-controls">
+        <ToolbarButton label="Undo" symbol="↶" onClick={undo} disabled={!canUndo} />
+        <ToolbarButton label="Redo" symbol="↷" onClick={redo} disabled={!canRedo} />
+      </span>
+      <button className="gb-more-toggle" data-tour="editing-tools-mobile" type="button" aria-expanded={moreToolsOpen} aria-controls="gb-more-tools" onClick={() => setMoreToolsOpen((open) => !open)}>More</button>
+      <div id="gb-more-tools" className="gb-more-tools" data-tour="editing-tools" data-open={moreToolsOpen || undefined}>
         <span className="gb-toolbar-divider" />
         <ToolbarButton label="Delete selected" symbol="⌫" onClick={removeSelected} disabled={!selectedIds.length} />
         <ToolbarButton label="Duplicate selected" symbol="⧉" onClick={duplicateSelected} disabled={!selectedIds.length} />
@@ -929,7 +964,7 @@ export function GangsheetBuilder({
       </div>
     </div>
     <div className="gb-info-bar"><span>{items.length} item{items.length === 1 ? "" : "s"}{selectedIds.length ? ` · ${selectedIds.length} selected` : ""}</span><span>Ctrl-scroll to zoom · Space or middle-drag to pan</span></div>
-    <div className="gb-sheet-settings">
+    <div className="gb-sheet-settings" data-tour="sheet-settings">
       <button className="gb-sheet-toggle" type="button" aria-expanded={sheetSettingsOpen} aria-controls="gb-sheet-controls" onClick={() => setSheetSettingsOpen((open) => !open)}>Sheet · {sheet.widthMm} × {sheet.heightMm} mm</button>
       <div id="gb-sheet-controls" className="gb-sheet-controls" data-open={sheetSettingsOpen || undefined}>
         <label>W <input type="number" min="100" max="2000" value={sheet.widthMm} onChange={(event) => updateSheetGeometry({ widthMm: clamp(Number(event.target.value), 100, 2000) })} /> mm</label>
@@ -938,7 +973,7 @@ export function GangsheetBuilder({
         <label>Sheet <input type="color" value={sheet.background} aria-label="Sheet background" onChange={(event) => updateSheetGeometry({ background: event.target.value })} /></label>
       </div>
     </div>
-    <div ref={canvasViewportRef} className="gb-canvas-wrap" data-space-pressed={spacePressed || undefined} onPointerDownCapture={onViewportPointerDown} onPointerMoveCapture={onViewportPointerMove} onPointerUpCapture={onViewportPointerEnd} onPointerCancelCapture={onViewportPointerEnd}
+    <div ref={canvasViewportRef} className="gb-canvas-wrap" data-tour="canvas" data-space-pressed={spacePressed || undefined} onPointerDownCapture={onViewportPointerDown} onPointerMoveCapture={onViewportPointerMove} onPointerUpCapture={onViewportPointerEnd} onPointerCancelCapture={onViewportPointerEnd}
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); void chooseDesign(event.dataTransfer.files); }}>
       <div className="gb-canvas-stage" style={{ width: canvasBase.width * zoom, height: canvasBase.height * zoom }}>
         <div ref={canvasRef} className="gb-canvas" data-dark-surface={useDarkCanvasSurface || undefined} style={{ width: canvasBase.width, height: canvasBase.height, backgroundColor: useDarkCanvasSurface ? "var(--wb-edit-sheet)" : sheet.background, transform: `scale(${zoom})` }}
@@ -954,11 +989,12 @@ export function GangsheetBuilder({
     {textDialogOpen ? <TextDialog onAdd={addText} onClose={() => setTextDialogOpen(false)} /> : null}
     {designDialogOpen ? <DesignDialog draft={designDraft} onChoose={chooseDesign} onDraftChange={(patch) => setDesignDraft((current) => current ? { ...current, ...patch } : current)} onAdd={addDraftDesign} onClose={closeDesignDialog} /> : null}
     {limitDialogOpen ? <LimitDialog currentCount={items.length} onClose={() => setLimitDialogOpen(false)} /> : null}
+    {guideOpen ? <GuidedTour step={guideStep} steps={GUIDE_STEPS} onStart={() => setGuideStep(0)} onNext={() => guideStep >= GUIDE_STEPS.length - 1 ? closeGuide() : setGuideStep((current) => current + 1)} onSkip={closeGuide} /> : null}
   </WorkbenchShell>;
 }
 
-function ToolbarButton({ label, symbol, onClick, disabled = false, pressed }: { label: string; symbol: string; onClick: () => void; disabled?: boolean; pressed?: boolean }) {
-  return <button className="gb-tool" type="button" title={label} aria-label={label} aria-pressed={pressed} onClick={onClick} disabled={disabled}><span aria-hidden="true">{symbol}</span></button>;
+function ToolbarButton({ label, symbol, onClick, disabled = false, pressed, dataTour }: { label: string; symbol: string; onClick: () => void; disabled?: boolean; pressed?: boolean; dataTour?: string }) {
+  return <button className="gb-tool" data-tour={dataTour} type="button" title={label} aria-label={label} aria-pressed={pressed} onClick={onClick} disabled={disabled}><span aria-hidden="true">{symbol}</span></button>;
 }
 
 function CanvasItem({ item, sheet, selected, invalid, onSelect, onPointerDown }: {
@@ -1035,6 +1071,88 @@ function Preview({ sheet, items }: { sheet: SheetState; items: BuilderItem[] }) 
         : item.previewUrl ? <image key={item.id} href={item.previewUrl} x={item.xMm} y={item.yMm} width={item.widthMm} height={item.heightMm} preserveAspectRatio="xMidYMid meet" transform={transform} /> : null;
     })}
   </svg>;
+}
+
+function GuidedTour({ step, steps, onStart, onNext, onSkip }: {
+  step: number;
+  steps: GuideStep[];
+  onStart: () => void;
+  onNext: () => void;
+  onSkip: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const primaryButtonRef = useRef<HTMLButtonElement>(null);
+  const [targetRect, setTargetRect] = useState<{ top: number; right: number; bottom: number; left: number; width: number; height: number } | null>(null);
+  const activeStep = step >= 0 ? steps[step] : null;
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    primaryButtonRef.current?.focus();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, []);
+
+  useEffect(() => {
+    if (!activeStep) {
+      primaryButtonRef.current?.focus();
+      return;
+    }
+    const update = () => {
+      const mobile = matchMedia("(max-width: 59.99rem)").matches;
+      const targetName = mobile && activeStep.mobileTarget ? activeStep.mobileTarget : activeStep.target;
+      const target = document.querySelector<HTMLElement>(`[data-tour="${targetName}"]`);
+      if (!target) return setTargetRect(null);
+      const bounds = target.getBoundingClientRect();
+      const padding = 7;
+      setTargetRect({
+        top: Math.max(6, bounds.top - padding),
+        right: Math.min(innerWidth - 6, bounds.right + padding),
+        bottom: Math.min(innerHeight - 6, bounds.bottom + padding),
+        left: Math.max(6, bounds.left - padding),
+        width: Math.min(innerWidth - 12, bounds.width + padding * 2),
+        height: Math.min(innerHeight - 12, bounds.height + padding * 2),
+      });
+    };
+    update();
+    primaryButtonRef.current?.focus();
+    window.addEventListener("resize", update);
+    document.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      document.removeEventListener("scroll", update, true);
+    };
+  }, [activeStep]);
+
+  const cardStyle: CSSProperties & Record<"--gb-tour-arrow-x", string> = (() => {
+    if (!targetRect) return { "--gb-tour-arrow-x": "50%" };
+    const width = Math.min(360, innerWidth - 24);
+    const estimatedHeight = 190;
+    const below = targetRect.bottom + estimatedHeight + 18 <= innerHeight;
+    const top = below ? targetRect.bottom + 16 : Math.max(12, targetRect.top - estimatedHeight - 16);
+    const left = clamp(targetRect.left + targetRect.width / 2 - width / 2, 12, innerWidth - width - 12);
+    const arrowX = clamp(targetRect.left + targetRect.width / 2 - left, 24, width - 24);
+    return { top, left, width, "--gb-tour-arrow-x": `${arrowX}px` };
+  })();
+
+  return <dialog ref={dialogRef} className="gb-tour-dialog" data-intro={!activeStep || undefined} data-placement={targetRect && cardStyle.top === targetRect.bottom + 16 ? "below" : "above"}
+    aria-labelledby={activeStep ? "gb-tour-step-title" : "gb-tour-intro-title"} onCancel={(event) => { event.preventDefault(); onSkip(); }}>
+    {targetRect ? <svg className="gb-tour-mask" aria-hidden="true" viewBox={`0 0 ${innerWidth} ${innerHeight}`} preserveAspectRatio="none">
+      <defs><mask id="gb-tour-cutout"><rect width="100%" height="100%" fill="white" /><rect x={targetRect.left} y={targetRect.top} width={targetRect.width} height={targetRect.height} rx="9" fill="black" /></mask></defs>
+      <rect width="100%" height="100%" fill="rgb(6 7 10 / 0.74)" mask="url(#gb-tour-cutout)" />
+      <rect x={targetRect.left} y={targetRect.top} width={targetRect.width} height={targetRect.height} rx="9" fill="none" stroke="var(--wb-focus)" strokeWidth="2" />
+    </svg> : null}
+    {!activeStep ? <section className="gb-tour-card gb-tour-card--intro">
+      <span className="gb-tour-kicker">Quick guide</span>
+      <h2 id="gb-tour-intro-title">Build your gang sheet</h2>
+      <p>Add artwork, choose its size and copies, then let Auto-arrange pack the sheet. You can fine-tune placement and review the order before adding it to cart.</p>
+      <div className="gb-tour-actions"><button type="button" onClick={onSkip}>Skip guide</button><button ref={primaryButtonRef} type="button" onClick={onStart}>Start guide</button></div>
+    </section> : <section className="gb-tour-card" style={cardStyle}>
+      <div className="gb-tour-progress"><span>Step {step + 1} of {steps.length}</span><span aria-hidden="true">{steps.map((_, index) => <i key={index} data-active={index === step || undefined} />)}</span></div>
+      <h2 id="gb-tour-step-title">{activeStep.title}</h2>
+      <p>{activeStep.body}</p>
+      <div className="gb-tour-actions"><button type="button" onClick={onSkip}>Skip guide</button><button ref={primaryButtonRef} type="button" onClick={onNext}>{step === steps.length - 1 ? "Finish" : "Next"}</button></div>
+    </section>}
+  </dialog>;
 }
 
 function TextDialog({ onAdd, onClose }: { onAdd: (text: string, style: TextStyle) => void; onClose: () => void }) {
