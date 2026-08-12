@@ -6,12 +6,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // Replace the HOST env var with SHOPIFY_APP_URL so that it doesn't break the Vite server.
 // The CLI will eventually stop passing in HOST,
 // so we can remove this workaround after the next major release.
+const shopifyCliHost = process.env.HOST;
 if (
-  process.env.HOST &&
+  shopifyCliHost &&
+  /^https?:\/\//i.test(shopifyCliHost) &&
   (!process.env.SHOPIFY_APP_URL ||
-    process.env.SHOPIFY_APP_URL === process.env.HOST)
+    process.env.SHOPIFY_APP_URL === shopifyCliHost)
 ) {
-  process.env.SHOPIFY_APP_URL = process.env.HOST;
+  process.env.SHOPIFY_APP_URL = shopifyCliHost;
   delete process.env.HOST;
 }
 
