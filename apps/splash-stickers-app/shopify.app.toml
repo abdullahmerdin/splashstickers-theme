@@ -2,7 +2,7 @@
 # development URLs when this source tree runs through `shopify app dev`.
 name = "Splash Gangsheet Builder"
 client_id = "72e5218f676eb676f1492300ebe47d76"
-application_url = "https://splash-stickers.invalid"
+application_url = "https://splash-gangsheet-builder.onrender.com"
 embedded = true
 handle = "splash-stickers"
 
@@ -35,11 +35,11 @@ api_version = "2026-07"
   uri = "/webhooks/compliance"
 
 [app_proxy]
-url = "https://splash-stickers.invalid/apps/splash-stickers/"
+url = "https://splash-gangsheet-builder.onrender.com/apps/splash-stickers/"
 subpath = "splash-stickers"
 prefix = "apps"
 
 [auth]
 redirect_urls = [
-  "https://splash-stickers.invalid/auth/callback"
+  "https://splash-gangsheet-builder.onrender.com/auth/callback"
 ]
