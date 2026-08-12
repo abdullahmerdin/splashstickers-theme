@@ -43,12 +43,12 @@
 .splash-builder-embed {
   display: block;
   width: 100%;
-  max-width: var(--page-width, 90rem);
+  max-width: none;
   margin-inline: auto;
   padding: 0;
-  overflow: hidden;
-  background: var(--splash-app-bg);
-  border: 1px solid var(--splash-app-border);
+  overflow: visible;
+  background: transparent;
+  border: 0;
   border-radius: 0;
   box-shadow: none;
 }
@@ -58,7 +58,7 @@
   width: 100%;
   min-width: 0;
   height: clamp(42rem, calc(100svh - var(--header-group-height, 5rem)), 58rem);
-  background: var(--splash-app-bg);
+  background: transparent;
   border: 0;
 }
 

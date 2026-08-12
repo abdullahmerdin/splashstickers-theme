@@ -64,16 +64,19 @@ assert(/quantity:\s*1,/.test(builder), 'manifest geometry does not duplicate Sho
 
 const shell = read('apps/splash-stickers-app/app/components/workbench/WorkbenchShell.tsx');
 const builderCss = read('apps/splash-stickers-app/app/styles/gangsheet-builder.css');
-assert(/wb-panel--context/.test(shell) && /wb-stage/.test(shell) && /wb-panel--preview/.test(shell), 'workbench has context, primary stage and preview regions');
-assert(/grid-template-columns:[^;]+[^;]+[^;]+;/.test(builderCss), 'desktop workbench uses three columns');
-assert(/data-drawer-open/.test(shell) && /max-width:\s*59\.99rem/.test(builderCss), 'side panels become mobile drawers');
+assert(!/wb-panel--context/.test(shell) && /wb-stage/.test(shell) && /wb-panel--preview/.test(shell), 'builder keeps the primary stage and preview without a redundant context column');
+assert(/grid-template-columns:\s*minmax\(29rem, 1fr\)\s+minmax\(15rem, 17\.5rem\)/.test(builderCss), 'desktop builder uses a focused two-column layout');
+assert(/data-drawer-open/.test(shell) && /max-width:\s*59\.99rem/.test(builderCss), 'preview and order become a mobile drawer');
 assert(!/Describe a builder change|gb-composer|ChangeReview/.test(builder + builderCss), 'builder omits the removed change composer and proposal panel');
 assert(/<Preview/.test(builder) && /<PurchasePanel/.test(builder), 'live preview and controlled purchase actions remain available');
 assert(/data-theme="dark"/.test(builderCss), 'standalone builder has semantic dark-mode values');
+assert(/MutationObserver/.test(builder) && /theme:change/.test(builder) && !/toggleMode/.test(builder), 'embedded builder follows the storefront theme dynamically without a separate toggle');
 assert(/--wb-edit-sheet/.test(builderCss) && /data-dark-surface/.test(builder), 'dark mode uses a dark editing sheet without recoloring output previews');
-assert(/setCanvasZoom/.test(builder) && /onCanvasWheel/.test(builder) && /gb-canvas-wrap/.test(builderCss), 'canvas zoom and pan stay isolated from fixed builder controls');
+assert(/setCanvasZoom/.test(builder) && /passive:\s*false/.test(builder) && /preventDefault\(\)/.test(builder) && /gb-canvas-wrap/.test(builderCss), 'canvas zoom captures modified wheel gestures without zooming the storefront');
 assert(/isLayoutValid/.test(builder) && /autoArrange/.test(builder) && /data-invalid/.test(builder), 'direct manipulation and arrangement prevent overlapping artwork');
 assert(/DesignDialog/.test(builder) && /copies:\s*3/.test(builder) && /Add to sheet/.test(builder), 'add design dialog captures physical size and copy count before placement');
+assert(/MAX_ITEMS\s*=\s*500/.test(builder) && /LimitDialog/.test(builder) && /Maximum 500 designs/.test(builder), 'builder enforces the 500-design limit with a controlled popup');
+assert(!/Select artwork to edit its placement|Add print-ready artwork to begin|Builder context|Changes appear here/.test(builder), 'builder omits redundant empty, context and history copy');
 assert(/touchPointersRef/.test(builder) && /pinchRef/.test(builder) && /touchPanRef/.test(builder), 'mobile canvas restores pinch zoom and one-finger empty-canvas panning');
 assert(/gb-more-tools/.test(builder + builderCss) && /gb-sheet-toggle/.test(builder + builderCss), 'mobile tools and sheet controls collapse to reduce clutter');
 assert(/function undo/.test(builder) && /function redo/.test(builder) && /duplicateSelected/.test(builder) && /flipSelected/.test(builder), 'builder keeps configurator quality-of-life editing actions');
@@ -91,6 +94,7 @@ const launcher = read('apps/splash-stickers-app/extensions/splash-storefront/blo
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');
 assert(/<iframe/.test(launcher) && /embedded=1/.test(launcher) && /name="variant"/.test(launcher) === false, 'product app block embeds the builder instead of navigating away');
 assert(/\.shopify-block:has\(> \.splash-builder-embed\)/.test(extensionCss) && /align-self:\s*stretch/.test(extensionCss), 'builder app block expands beyond the iframe intrinsic width');
+assert(/\.splash-builder-embed[\s\S]*border:\s*0/.test(extensionCss) && /html\[data-embedded="true"\] \.wb-appbar/.test(builderCss), 'embedded builder removes the boxed outer treatment and duplicate desktop app bar');
 assert(/html\[data-theme="dark"\]/.test(extensionCss), 'app extension follows the theme persisted color mode');
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'app extension honors system dark preference before a choice');
 

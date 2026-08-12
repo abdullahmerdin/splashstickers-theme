@@ -1,68 +1,48 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
-type Drawer = "context" | "preview" | null;
-
-export function WorkbenchShell({ title, subtitle, context, children, preview, actions }: {
+export function WorkbenchShell({ title, subtitle, children, preview }: {
   title: string;
   subtitle?: string;
-  context: ReactNode;
   children: ReactNode;
   preview: ReactNode;
-  actions?: ReactNode;
 }) {
-  const [drawer, setDrawer] = useState<Drawer>(null);
-  const contextButton = useRef<HTMLButtonElement>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const previewButton = useRef<HTMLButtonElement>(null);
 
   function closeDrawer() {
-    const previous = drawer;
-    setDrawer(null);
-    requestAnimationFrame(() => {
-      if (previous === "context") contextButton.current?.focus();
-      if (previous === "preview") previewButton.current?.focus();
-    });
+    setPreviewOpen(false);
+    requestAnimationFrame(() => previewButton.current?.focus());
   }
 
   useEffect(() => {
-    if (!drawer) return;
+    if (!previewOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      const previous = drawer;
-      setDrawer(null);
-      requestAnimationFrame(() => {
-        if (previous === "context") contextButton.current?.focus();
-        if (previous === "preview") previewButton.current?.focus();
-      });
+      setPreviewOpen(false);
+      requestAnimationFrame(() => previewButton.current?.focus());
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [drawer]);
+  }, [previewOpen]);
 
   return (
     <main className="wb-shell">
       <header className="wb-appbar">
-        <button ref={contextButton} className="wb-icon-button wb-mobile-only" type="button"
-          aria-label="Open project context" aria-expanded={drawer === "context"}
-          onClick={() => setDrawer("context")}><span aria-hidden="true">☰</span></button>
         <div className="wb-appbar__title"><strong>{title}</strong>{subtitle ? <span>{subtitle}</span> : null}</div>
         <div className="wb-appbar__actions">
-          {actions}
           <button ref={previewButton} className="wb-icon-button wb-mobile-only" type="button"
-            aria-label="Open preview and order" aria-expanded={drawer === "preview"}
-            onClick={() => setDrawer("preview")}><span aria-hidden="true">▣</span></button>
+            aria-label="Open preview and order" aria-expanded={previewOpen}
+            onClick={() => setPreviewOpen(true)}><span aria-hidden="true">▣</span></button>
         </div>
       </header>
 
       <div className="wb-layout">
-        <aside className="wb-panel wb-panel--context" data-drawer-open={drawer === "context" || undefined} aria-label="Project context">
-          <DrawerHeader title="Project" onClose={closeDrawer} />{context}
-        </aside>
         <section className="wb-stage" aria-label="Builder workspace">{children}</section>
-        <aside className="wb-panel wb-panel--preview" data-drawer-open={drawer === "preview" || undefined} aria-label="Preview and order">
+        <aside className="wb-panel wb-panel--preview" data-drawer-open={previewOpen || undefined} aria-label="Preview and order">
           <DrawerHeader title="Preview" onClose={closeDrawer} />{preview}
         </aside>
       </div>
-      {drawer ? <button className="wb-backdrop" type="button" aria-label="Close panel" onClick={closeDrawer} /> : null}
+      {previewOpen ? <button className="wb-backdrop" type="button" aria-label="Close panel" onClick={closeDrawer} /> : null}
     </main>
   );
 }

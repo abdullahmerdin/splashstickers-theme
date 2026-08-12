@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData } from "react-router";
 
@@ -79,6 +79,7 @@ const PROXY_BASE = "/apps/splash-stickers/";
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const ACCEPTED_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const MAX_HISTORY = 50;
+const MAX_ITEMS = 500;
 
 export default function GangsheetBuilderRoute() {
   const { product, embedded, error } = useLoaderData<typeof loader>();
@@ -105,15 +106,13 @@ export function GangsheetBuilder({
   const initialSheet = { widthMm: 600, heightMm: 400, gapMm: 3, background: "#ffffff" };
   const [items, setItems] = useState<BuilderItem[]>(initialItems);
   const [selectedIds, setSelectedIds] = useState<string[]>(initialItems[0] ? [initialItems[0].id] : []);
-  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [sheet, setSheet] = useState<SheetState>(initialSheet);
   const [quantity, setQuantity] = useState(1);
   const [variantId, setVariantId] = useState(product.selectedVariantId);
   const [status, setStatus] = useState("");
   const [statusKind, setStatusKind] = useState<"" | "error" | "success">("");
   const [busy, setBusy] = useState(false);
-  const [activity, setActivity] = useState<string[]>([]);
-  const [mode, setMode] = useState<"light" | "dark">(() => typeof document !== "undefined" && document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+  const [mode, setMode] = useState<"light" | "dark">(() => readThemeMode(embedded));
   const [zoom, setZoom] = useState(1);
   const [canvasBase, setCanvasBase] = useState({ width: 900, height: 600 });
   const [invalidIds, setInvalidIds] = useState<string[]>([]);
@@ -122,6 +121,7 @@ export function GangsheetBuilder({
   const [textDialogOpen, setTextDialogOpen] = useState(false);
   const [designDialogOpen, setDesignDialogOpen] = useState(false);
   const [designDraft, setDesignDraft] = useState<DesignDraft | null>(null);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const [moreToolsOpen, setMoreToolsOpen] = useState(false);
   const [sheetSettingsOpen, setSheetSettingsOpen] = useState(false);
   const [historyState, setHistoryState] = useState({ undo: 0, redo: 0 });
@@ -146,7 +146,6 @@ export function GangsheetBuilder({
   const selected = selectedItems.length === 1 ? selectedItems[0] : null;
   const variant = product.variants.find((entry) => entry.legacyResourceId === variantId) || product.variants[0];
   const totalCents = (variant?.priceCents || 0) * quantity;
-  const contextUsage = Math.min(100, Math.round((items.length / 500) * 100));
   const allUploadsReady = items.length > 0 && items.every((item) => item.kind === "text" || (item.uploadState === "ready" && item.assetRef));
   const canUndo = historyState.undo > 0;
   const canRedo = historyState.redo > 0;
@@ -166,6 +165,34 @@ export function GangsheetBuilder({
     document.documentElement.dataset.embedded = embedded ? "true" : "false";
     document.documentElement.style.colorScheme = mode;
   }, [embedded, mode]);
+  useEffect(() => {
+    let hostRoot = document.documentElement;
+    if (embedded && window.parent !== window) {
+      try { hostRoot = window.parent.document.documentElement; } catch { /* Fall back to this document. */ }
+    }
+    const syncMode = () => setMode(readThemeModeFromRoot(hostRoot));
+    const observer = new MutationObserver(syncMode);
+    observer.observe(hostRoot, { attributes: true, attributeFilter: ["class", "data-theme", "data-color-scheme"] });
+    const hostDocument = hostRoot.ownerDocument;
+    hostDocument.addEventListener("theme:change", syncMode);
+    syncMode();
+    return () => {
+      observer.disconnect();
+      hostDocument.removeEventListener("theme:change", syncMode);
+    };
+  }, [embedded]);
+  useEffect(() => {
+    const viewport = canvasViewportRef.current;
+    if (!viewport) return;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setCanvasZoom(zoomRef.current * Math.exp(-event.deltaY * 0.002), { x: event.clientX, y: event.clientY });
+    };
+    viewport.addEventListener("wheel", onWheel, { passive: false });
+    return () => viewport.removeEventListener("wheel", onWheel);
+  }, []);
   useEffect(() => {
     const viewport = canvasViewportRef.current;
     if (!viewport) return;
@@ -202,16 +229,11 @@ export function GangsheetBuilder({
     return { items: snapshotItems.map((item) => ({ ...item, style: item.style ? { ...item.style } : undefined })), sheet: { ...snapshotSheet } };
   }
 
-  function addActivity(entry: string) {
-    setActivity((current) => [entry, ...current].slice(0, 12));
-  }
-
-  function recordUndo(before: EditorSnapshot, entry: string) {
+  function recordUndo(before: EditorSnapshot) {
     undoStackRef.current.push(before);
     if (undoStackRef.current.length > MAX_HISTORY) undoStackRef.current.shift();
     redoStackRef.current = [];
     setHistoryState({ undo: undoStackRef.current.length, redo: 0 });
-    addActivity(entry);
   }
 
   function restoreSnapshot(value: EditorSnapshot) {
@@ -228,7 +250,6 @@ export function GangsheetBuilder({
     redoStackRef.current.push(snapshot());
     restoreSnapshot(previous);
     setHistoryState({ undo: undoStackRef.current.length, redo: redoStackRef.current.length });
-    addActivity("Undid last change");
   }
 
   function redo() {
@@ -237,7 +258,6 @@ export function GangsheetBuilder({
     undoStackRef.current.push(snapshot());
     restoreSnapshot(next);
     setHistoryState({ undo: undoStackRef.current.length, redo: redoStackRef.current.length });
-    addActivity("Redid change");
   }
 
   function setInvalid(ids: string[]) {
@@ -250,10 +270,10 @@ export function GangsheetBuilder({
     setStatusKind(kind);
   }
 
-  function toggleMode() {
-    const next = mode === "dark" ? "light" : "dark";
-    setMode(next);
-    try { localStorage.setItem("splash-color-mode", next); } catch { /* The current document still updates. */ }
+  function exceedsItemLimit(additions: number) {
+    if (itemsRef.current.length + additions <= MAX_ITEMS) return false;
+    setLimitDialogOpen(true);
+    return true;
   }
 
   function openDesignDialog() {
@@ -302,6 +322,7 @@ export function GangsheetBuilder({
     const draft = designDraftRef.current;
     if (!draft) return;
     const copies = clamp(Math.round(draft.copies), 1, 50);
+    if (exceedsItemLimit(copies)) return;
     const widthMm = clamp(draft.widthMm, 10, sheetRef.current.widthMm);
     const heightMm = clamp(draft.heightMm, 10, 2000);
     const additions: BuilderItem[] = Array.from({ length: copies }, (_, index) => ({
@@ -329,7 +350,7 @@ export function GangsheetBuilder({
     replaceSheet(nextSheet);
     replaceItems(result.items);
     setSelectedIds(additions.map((item) => item.id));
-    recordUndo(before, `Added ${copies} design cop${copies === 1 ? "y" : "ies"}`);
+    recordUndo(before);
     setDesignDraft(null);
     setDesignDialogOpen(false);
     void uploadArtwork(additions.map((item) => item.id), draft.file);
@@ -387,13 +408,13 @@ export function GangsheetBuilder({
     if (!selectedIds.length) return;
     const before = snapshot();
     replaceItems(itemsRef.current.filter((item) => !selectedIds.includes(item.id)));
-    setPinnedIds((current) => current.filter((id) => !selectedIds.includes(id)));
-    recordUndo(before, `Removed ${selectedIds.length} design${selectedIds.length === 1 ? "" : "s"}`);
+    recordUndo(before);
     setSelectedIds([]);
   }
 
   function duplicateSelected() {
     if (!selectedIds.length) return;
+    if (exceedsItemLimit(selectedIds.length)) return;
     const before = snapshot();
     const copies = itemsRef.current.filter((item) => selectedIds.includes(item.id)).map((source) => ({
       ...source,
@@ -408,7 +429,7 @@ export function GangsheetBuilder({
     replaceSheet({ ...sheetRef.current, heightMm: result.requiredHeightMm });
     replaceItems(result.items);
     setSelectedIds(copies.map((item) => item.id));
-    recordUndo(before, `Duplicated ${copies.length} design${copies.length === 1 ? "" : "s"}`);
+    recordUndo(before);
   }
 
   function flipSelected(axis: "x" | "y") {
@@ -417,7 +438,7 @@ export function GangsheetBuilder({
     replaceItems(itemsRef.current.map((item) => selectedIds.includes(item.id)
       ? { ...item, [axis === "x" ? "flipX" : "flipY"]: !item[axis === "x" ? "flipX" : "flipY"] }
       : item));
-    recordUndo(before, axis === "x" ? "Flipped selection horizontally" : "Flipped selection vertically");
+    recordUndo(before);
   }
 
   function toggleLock() {
@@ -425,7 +446,7 @@ export function GangsheetBuilder({
     const before = snapshot();
     const shouldLock = selectedItems.some((item) => !item.locked);
     replaceItems(itemsRef.current.map((item) => selectedIds.includes(item.id) ? { ...item, locked: shouldLock } : item));
-    recordUndo(before, shouldLock ? "Locked selection" : "Unlocked selection");
+    recordUndo(before);
   }
 
   function updateSelected(patch: Partial<BuilderItem>) {
@@ -437,7 +458,7 @@ export function GangsheetBuilder({
       return;
     }
     replaceItems(itemsRef.current.map((item) => item.id === selected.id ? candidate : item));
-    recordUndo(before, `Updated ${selected.name}`);
+    recordUndo(before);
   }
 
   function arrange() {
@@ -450,11 +471,11 @@ export function GangsheetBuilder({
     }
     replaceSheet({ ...sheetRef.current, heightMm: result.requiredHeightMm });
     replaceItems(result.items);
-    recordUndo(before, "Auto-arranged artwork");
+    recordUndo(before);
     announce("Artwork arranged with the current gap.", "success");
   }
 
-  function updateSheetGeometry(patch: Partial<SheetState>, label: string) {
+  function updateSheetGeometry(patch: Partial<SheetState>) {
     const before = snapshot();
     const nextSheet = { ...sheetRef.current, ...patch };
     const constrained = itemsRef.current.map((item) => constrainItemToSheet(item, nextSheet));
@@ -470,12 +491,13 @@ export function GangsheetBuilder({
     }
     replaceSheet(nextSheet);
     replaceItems(nextItems);
-    recordUndo(before, label);
+    recordUndo(before);
   }
 
   function addText(text: string, style: TextStyle) {
     const value = text.trim();
     if (!value) return;
+    if (exceedsItemLimit(1)) return;
     const candidate: BuilderItem = {
       id: crypto.randomUUID(),
       kind: "text",
@@ -497,7 +519,7 @@ export function GangsheetBuilder({
     replaceSheet({ ...sheetRef.current, heightMm: result.requiredHeightMm });
     replaceItems(result.items);
     setSelectedIds([candidate.id]);
-    recordUndo(before, "Added text");
+    recordUndo(before);
     setTextDialogOpen(false);
   }
 
@@ -568,7 +590,7 @@ export function GangsheetBuilder({
         announce("Designs cannot overlap or leave the sheet. The last valid layout was restored.", "error");
         return;
       }
-      recordUndo(before, kind === "move" ? `Moved ${activeIds.length} design${activeIds.length === 1 ? "" : "s"}` : kind === "resize" ? `Resized ${item.name}` : `Rotated ${item.name}`);
+      recordUndo(before);
       setInvalid([]);
     };
     const onUp = (up: PointerEvent) => { if (up.pointerId === pointerId) finish(); };
@@ -710,12 +732,6 @@ export function GangsheetBuilder({
       viewport.scrollLeft = contentX * ratio - pointX;
       viewport.scrollTop = contentY * ratio - pointY;
     });
-  }
-
-  function onCanvasWheel(event: ReactWheelEvent<HTMLDivElement>) {
-    if (!event.ctrlKey && !event.metaKey) return;
-    event.preventDefault();
-    setCanvasZoom(zoomRef.current * Math.exp(-event.deltaY * 0.002), { x: event.clientX, y: event.clientY });
   }
 
   function fitCanvas() {
@@ -884,27 +900,13 @@ export function GangsheetBuilder({
     }
   }
 
-  const contextPanel = <>
-    <section className="wb-section"><div className="wb-section__heading"><h2>Artwork</h2><button className="gb-upload" type="button" onClick={openDesignDialog}>Add design</button></div>
-      {items.length ? <ul className="gb-file-tree">{items.map((item) => <li key={item.id} data-selected={selectedIds.includes(item.id) || undefined}>
-        <button className="gb-file" type="button" onClick={(event) => selectItem(item.id, event.shiftKey || event.ctrlKey || event.metaKey)}><span aria-hidden="true">{item.kind === "text" ? "T" : "▧"}</span><span><strong>{item.name}</strong><small data-state={item.uploadState}>{uploadLabel(item)}</small></span></button>
-        <button className="wb-icon-button" type="button" aria-label={`${pinnedIds.includes(item.id) ? "Unpin" : "Pin"} ${item.name}`} aria-pressed={pinnedIds.includes(item.id)} onClick={() => setPinnedIds((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}>⌖</button>
-      </li>)}</ul> : <p className="wb-empty">Add print-ready artwork to begin.</p>}
-    </section>
-    <section className="wb-section"><h2>Context</h2><div className="gb-context-meter"><span>Builder context</span><strong>{items.length}/500</strong><progress max="100" value={contextUsage}>{contextUsage}%</progress></div>
-      {pinnedIds.length ? <p className="wb-meta">{pinnedIds.length} pinned asset{pinnedIds.length === 1 ? "" : "s"}</p> : null}
-    </section>
-    <section className="wb-section"><h2>History</h2>{activity.length ? <ol className="gb-history">{activity.map((entry, index) => <li key={`${entry}-${index}`}><span>{entry}</span></li>)}</ol> : <p className="wb-empty">Changes appear here.</p>}</section>
-  </>;
-
   const previewPanel = <>
     <section className="wb-section"><h2>Live preview</h2><Preview sheet={sheet} items={items} /><Inspector selected={selected} selectedCount={selectedItems.length} sheet={sheet} onChange={updateSelected} onRemove={removeSelected} /></section>
     <PurchasePanel product={product} variantId={variantId} setVariantId={setVariantId} quantity={quantity} setQuantity={setQuantity}
       total={formatMoney(totalCents, product.currency)} disabled={previewMode || !allUploadsReady || busy || !variant?.available || !isLayoutValid(items, sheet)} busy={busy} onBuy={addToCart} />
   </>;
 
-  return <WorkbenchShell title={product.title} subtitle="Gang sheet builder" context={contextPanel} preview={previewPanel}
-    actions={<button suppressHydrationWarning className="wb-mode" type="button" onClick={toggleMode} aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`} aria-pressed={mode === "dark"}>{mode === "dark" ? "Light" : "Dark"}</button>}>
+  return <WorkbenchShell title={product.title} subtitle="Gang sheet builder" preview={previewPanel}>
     <div className="gb-stage-toolbar" role="toolbar" aria-label="Design tools">
       <button className="gb-add-design" type="button" onClick={openDesignDialog}><span aria-hidden="true">+</span> Add design</button>
       <ToolbarButton label="Auto-arrange" symbol="▦" onClick={arrange} disabled={!items.length} />
@@ -930,13 +932,13 @@ export function GangsheetBuilder({
     <div className="gb-sheet-settings">
       <button className="gb-sheet-toggle" type="button" aria-expanded={sheetSettingsOpen} aria-controls="gb-sheet-controls" onClick={() => setSheetSettingsOpen((open) => !open)}>Sheet · {sheet.widthMm} × {sheet.heightMm} mm</button>
       <div id="gb-sheet-controls" className="gb-sheet-controls" data-open={sheetSettingsOpen || undefined}>
-        <label>W <input type="number" min="100" max="2000" value={sheet.widthMm} onChange={(event) => updateSheetGeometry({ widthMm: clamp(Number(event.target.value), 100, 2000) }, "Changed sheet width")} /> mm</label>
-        <label>H <input type="number" min="100" max="2000" value={sheet.heightMm} onChange={(event) => updateSheetGeometry({ heightMm: clamp(Number(event.target.value), 100, 2000) }, "Changed sheet height")} /> mm</label>
-        <label>Gap <input type="number" min="0" max="50" value={sheet.gapMm} onChange={(event) => updateSheetGeometry({ gapMm: clamp(Number(event.target.value), 0, 50) }, "Changed artwork gap")} /> mm</label>
-        <label>Sheet <input type="color" value={sheet.background} aria-label="Sheet background" onChange={(event) => updateSheetGeometry({ background: event.target.value }, "Changed sheet background")} /></label>
+        <label>W <input type="number" min="100" max="2000" value={sheet.widthMm} onChange={(event) => updateSheetGeometry({ widthMm: clamp(Number(event.target.value), 100, 2000) })} /> mm</label>
+        <label>H <input type="number" min="100" max="2000" value={sheet.heightMm} onChange={(event) => updateSheetGeometry({ heightMm: clamp(Number(event.target.value), 100, 2000) })} /> mm</label>
+        <label>Gap <input type="number" min="0" max="50" value={sheet.gapMm} onChange={(event) => updateSheetGeometry({ gapMm: clamp(Number(event.target.value), 0, 50) })} /> mm</label>
+        <label>Sheet <input type="color" value={sheet.background} aria-label="Sheet background" onChange={(event) => updateSheetGeometry({ background: event.target.value })} /></label>
       </div>
     </div>
-    <div ref={canvasViewportRef} className="gb-canvas-wrap" data-space-pressed={spacePressed || undefined} onPointerDownCapture={onViewportPointerDown} onPointerMoveCapture={onViewportPointerMove} onPointerUpCapture={onViewportPointerEnd} onPointerCancelCapture={onViewportPointerEnd} onWheel={onCanvasWheel}
+    <div ref={canvasViewportRef} className="gb-canvas-wrap" data-space-pressed={spacePressed || undefined} onPointerDownCapture={onViewportPointerDown} onPointerMoveCapture={onViewportPointerMove} onPointerUpCapture={onViewportPointerEnd} onPointerCancelCapture={onViewportPointerEnd}
       onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); void chooseDesign(event.dataTransfer.files); }}>
       <div className="gb-canvas-stage" style={{ width: canvasBase.width * zoom, height: canvasBase.height * zoom }}>
         <div ref={canvasRef} className="gb-canvas" data-dark-surface={useDarkCanvasSurface || undefined} style={{ width: canvasBase.width, height: canvasBase.height, backgroundColor: useDarkCanvasSurface ? "var(--wb-edit-sheet)" : sheet.background, transform: `scale(${zoom})` }}
@@ -951,6 +953,7 @@ export function GangsheetBuilder({
     <div className="gb-mobile-buy wb-mobile-only"><span>{formatMoney(totalCents, product.currency)}</span><button type="button" disabled={previewMode || !allUploadsReady || busy || !variant?.available} onClick={addToCart}>{busy ? "Adding…" : "Add to cart"}</button></div>
     {textDialogOpen ? <TextDialog onAdd={addText} onClose={() => setTextDialogOpen(false)} /> : null}
     {designDialogOpen ? <DesignDialog draft={designDraft} onChoose={chooseDesign} onDraftChange={(patch) => setDesignDraft((current) => current ? { ...current, ...patch } : current)} onAdd={addDraftDesign} onClose={closeDesignDialog} /> : null}
+    {limitDialogOpen ? <LimitDialog currentCount={items.length} onClose={() => setLimitDialogOpen(false)} /> : null}
   </WorkbenchShell>;
 }
 
@@ -988,7 +991,7 @@ function CanvasItem({ item, sheet, selected, invalid, onSelect, onPointerDown }:
 
 function Inspector({ selected, selectedCount, sheet, onChange, onRemove }: { selected: BuilderItem | null; selectedCount: number; sheet: SheetState; onChange: (patch: Partial<BuilderItem>) => void; onRemove: () => void }) {
   if (selectedCount > 1) return <div className="gb-inspector"><div className="wb-section__heading"><h2>Selection</h2><button className="wb-danger-link" type="button" onClick={onRemove}>Remove</button></div><p className="wb-meta">{selectedCount} designs selected</p></div>;
-  if (!selected) return <p className="wb-empty">Select artwork to edit its placement.</p>;
+  if (!selected) return null;
   return <div className="gb-inspector"><div className="wb-section__heading"><h2>Selection</h2><button className="wb-danger-link" type="button" onClick={onRemove}>Remove</button></div>
     <p className="wb-meta">{selected.name}</p><div className="gb-field-grid">
       <NumberField label="X" value={selected.xMm} max={sheet.widthMm} onChange={(value) => onChange({ xMm: value })} />
@@ -1000,7 +1003,7 @@ function Inspector({ selected, selectedCount, sheet, onChange, onRemove }: { sel
 }
 
 function NumberField({ label, value, max, min = 0, onChange, unit = "mm" }: { label: string; value: number; max: number; min?: number; onChange: (value: number) => void; unit?: string }) {
-  return <label><span>{label}</span><span><input type="number" min={min} max={max} step="1" value={round(value)} onChange={(event) => onChange(clamp(Number(event.target.value), min, max))} /> {unit}</span></label>;
+  return <label><span>{label}</span><span><input type="number" min={min} max={max} step="0.01" value={round(value)} onChange={(event) => onChange(clamp(Number(event.target.value), min, max))} /> {unit}</span></label>;
 }
 
 function PurchasePanel({ product, variantId, setVariantId, quantity, setQuantity, total, disabled, busy, onBuy }: {
@@ -1073,16 +1076,34 @@ function DesignDialog({ draft, onChoose, onDraftChange, onAdd, onClose }: {
     <form method="dialog" onSubmit={(event) => { event.preventDefault(); onAdd(); }}>
       <div className="wb-section__heading"><h2 id="gb-design-title">Add design</h2><button className="wb-icon-button" type="button" aria-label="Close design dialog" onClick={onClose}>×</button></div>
       <label className="gb-design-picker" onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); void onChoose(event.dataTransfer.files); }}>
-        {draft ? <><img src={draft.previewUrl} alt="Selected design preview" /><span><strong>{draft.file.name}</strong><small>{draft.naturalWidth} × {draft.naturalHeight} px</small></span></> : <><strong>Choose artwork</strong><span>or drop a PNG, JPG or WebP here</span></>}
+        {draft ? <><img src={draft.previewUrl} alt="Selected design preview" /><span className="gb-design-picker__copy"><strong>{draft.file.name}</strong><small>{draft.naturalWidth} × {draft.naturalHeight} px</small></span></> : <span className="gb-design-picker__copy"><strong>Choose artwork</strong><small>or drop a PNG, JPG or WebP here</small></span>}
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void onChoose(event.target.files); event.target.value = ""; }} />
       </label>
       {draft ? <div className="gb-dialog__fields gb-design-fields">
-        <label><span>Width</span><span><input type="number" min="10" max="2000" step="1" value={round(draft.widthMm)} onChange={(event) => onDraftChange({ widthMm: clamp(Number(event.target.value), 10, 2000) })} /> mm</span></label>
-        <label><span>Height</span><span><input type="number" min="10" max="2000" step="1" value={round(draft.heightMm)} onChange={(event) => onDraftChange({ heightMm: clamp(Number(event.target.value), 10, 2000) })} /> mm</span></label>
+        <label><span>Width</span><span><input type="number" min="10" max="2000" step="0.01" value={round(draft.widthMm)} onChange={(event) => onDraftChange({ widthMm: clamp(Number(event.target.value), 10, 2000) })} /> mm</span></label>
+        <label><span>Height</span><span><input type="number" min="10" max="2000" step="0.01" value={round(draft.heightMm)} onChange={(event) => onDraftChange({ heightMm: clamp(Number(event.target.value), 10, 2000) })} /> mm</span></label>
         <label><span>Copies</span><input type="number" min="1" max="50" step="1" value={draft.copies} onChange={(event) => onDraftChange({ copies: clamp(Math.round(Number(event.target.value)), 1, 50) })} /></label>
       </div> : null}
       <div className="gb-dialog__actions"><button type="button" onClick={onClose}>Cancel</button><button type="submit" disabled={!draft}>Add to sheet</button></div>
     </form>
+  </dialog>;
+}
+
+function LimitDialog({ currentCount, onClose }: { currentCount: number; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    buttonRef.current?.focus();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, []);
+  return <dialog ref={dialogRef} className="gb-dialog gb-limit-dialog" aria-labelledby="gb-limit-title" onCancel={(event) => { event.preventDefault(); onClose(); }}>
+    <div className="gb-limit-dialog__body">
+      <h2 id="gb-limit-title">Maximum 500 designs</h2>
+      <p>This sheet currently has {currentCount} design{currentCount === 1 ? "" : "s"}. Remove designs or lower the copy count to continue.</p>
+      <div className="gb-dialog__actions"><button ref={buttonRef} type="button" onClick={onClose}>Got it</button></div>
+    </div>
   </dialog>;
 }
 
@@ -1093,13 +1114,22 @@ async function postJson(path: string, body: Record<string, unknown>) {
   return payload;
 }
 
-function uploadLabel(item: BuilderItem) {
-  if (item.kind === "text") return "Text";
-  return item.uploadState === "uploading" ? "Uploading…" : item.uploadState === "ready" ? "Ready" : item.uploadError || "Upload failed";
-}
-
 function formatMoney(cents: number, currency: string) {
   return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(cents / 100);
+}
+
+function readThemeMode(embedded: boolean): "light" | "dark" {
+  if (typeof document === "undefined") return "light";
+  if (embedded && typeof window !== "undefined" && window.parent !== window) {
+    try { return readThemeModeFromRoot(window.parent.document.documentElement); } catch { /* Fall through. */ }
+  }
+  return readThemeModeFromRoot(document.documentElement);
+}
+
+function readThemeModeFromRoot(root: HTMLElement): "light" | "dark" {
+  if (root.dataset.theme === "dark" || root.dataset.colorScheme === "dark" || root.classList.contains("dark")) return "dark";
+  if (root.dataset.theme === "light" || root.dataset.colorScheme === "light") return "light";
+  return typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function readImageDimensions(file: File) {
