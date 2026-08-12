@@ -31,6 +31,7 @@ const gangsheetTemplate = themeJson('templates/product.product-gangsheet.json');
 assert.equal(defaultTemplate.sections.main?.type, 'product-information', 'default product keeps its native product surface');
 assert.ok(!JSON.stringify(defaultTemplate).includes('blocks/gangsheet-builder'), 'default products do not expose the gangsheet-only builder');
 assert.ok(JSON.stringify(gangsheetTemplate).includes('blocks/gangsheet-builder'), 'gangsheet template embeds the app-owned builder');
+assert.equal(Object.keys(gangsheetTemplate.sections).length, 1, 'gangsheet template has no empty spacer section');
 assert.ok(!JSON.stringify(defaultTemplate).includes('sticker-configurator'), 'default product does not embed the retired theme configurator');
 assert.ok(!JSON.stringify(gangsheetTemplate).includes('sticker-configurator'), 'gangsheet template does not embed the retired theme configurator');
 

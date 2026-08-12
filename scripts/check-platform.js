@@ -86,12 +86,14 @@ assert(/line\.quantity/.test(handoffService), 'production quantity comes from th
 const launcher = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/gangsheet-builder.liquid');
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');
 assert(/<iframe/.test(launcher) && /embedded=1/.test(launcher) && /name="variant"/.test(launcher) === false, 'product app block embeds the builder instead of navigating away');
+assert(/\.shopify-block:has\(> \.splash-builder-embed\)/.test(extensionCss) && /align-self:\s*stretch/.test(extensionCss), 'builder app block expands beyond the iframe intrinsic width');
 assert(/html\[data-theme="dark"\]/.test(extensionCss), 'app extension follows the theme persisted color mode');
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'app extension honors system dark preference before a choice');
 
 const productTemplate = read('templates/product.json');
 const gangsheetTemplate = read('templates/product.product-gangsheet.json');
 assert(!/blocks\/gangsheet-builder/.test(productTemplate) && /blocks\/gangsheet-builder/.test(gangsheetTemplate), 'only the gangsheet product template embeds the builder app block');
+assert(Object.keys(JSON.parse(gangsheetTemplate.replace(/^[\s\S]*?\*\/\s*/, '')).sections).length === 1, 'gangsheet template contains no empty spacer section');
 assert(!/sticker-configurator/.test(productTemplate + gangsheetTemplate), 'theme templates do not embed the retired configurator');
 assert(/_splash_gangsheet/.test(read('snippets/cart-products.liquid')), 'cart recognizes app-owned gangsheet lines by contract marker');
 assert(/item\.quantity/.test(read('snippets/cart-gangsheet-summary.liquid')), 'cart summary renders Shopify quantity authority');
