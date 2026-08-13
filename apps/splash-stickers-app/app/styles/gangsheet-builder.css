@@ -2,7 +2,7 @@
   --wb-bg: #ffffff;
   --wb-surface: #ffffff;
   --wb-control-surface: #ffffff;
-  --wb-surface-subtle: #f8f7fc;
+  --wb-surface-subtle: #f7f7f8;
   --wb-canvas-surround: #ffffff;
   --wb-edit-sheet: #ffffff;
   --wb-text: #2d3436;
@@ -55,15 +55,15 @@ button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: 0.42; }
 :is(button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--wb-focus); outline-offset: 2px; }
 
-.wb-shell { height: 100svh; min-height: 36rem; overflow: hidden; background: var(--wb-bg); }
-.wb-appbar { position: relative; z-index: 30; display: flex; height: 3.5rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 0.8rem; background: var(--wb-bg); border-bottom: 1px solid var(--wb-border); }
+.wb-shell { height: 100svh; min-height: 36rem; overflow: hidden; background: transparent; }
+.wb-appbar { position: relative; z-index: 30; display: flex; min-height: 3.35rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 0.8rem 0.35rem; background: transparent; border: 0; }
 .wb-appbar__title { display: flex; min-width: 0; align-items: baseline; gap: 0.7rem; }
-.wb-appbar__title strong { overflow: hidden; font-size: 0.95rem; text-overflow: ellipsis; white-space: nowrap; }
+.wb-appbar__title strong { overflow: hidden; font-size: 1.05rem; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .wb-appbar__actions { display: flex; align-items: center; gap: 0.45rem; }
-.wb-layout { display: grid; height: calc(100svh - 3.5rem); grid-template-columns: minmax(29rem, 1fr) minmax(15rem, 17.5rem); column-gap: clamp(0.75rem, 1.5vw, 1rem); }
-.wb-panel { min-width: 0; overflow: auto; background: transparent; }
-.wb-panel--preview { border: 0; }
-.wb-stage { display: grid; min-width: 0; min-height: 0; grid-template-rows: auto auto auto minmax(0, 1fr) auto; gap: 0.12rem; overflow: hidden; background: transparent; }
+.wb-layout { display: grid; height: 100svh; grid-template-columns: minmax(29rem, 1fr) minmax(15rem, 17.5rem); gap: clamp(0.75rem, 1.5vw, 1rem); padding: 0.2rem; }
+.wb-panel { min-width: 0; overflow: auto; background: var(--wb-surface-subtle); }
+.wb-panel--preview { border: 1px solid var(--wb-border); border-radius: var(--wb-radius-lg); }
+.wb-stage { display: grid; min-width: 0; min-height: 0; grid-template-rows: auto auto auto auto minmax(0, 1fr) auto; overflow: hidden; background: var(--wb-surface-subtle); border: 1px solid var(--wb-border); border-radius: var(--wb-radius-lg); }
 .wb-section { padding: 0.9rem; border: 0; }
 .wb-section h2, .gb-purchase h2 { margin: 0 0 0.7rem; font-size: 0.72rem; letter-spacing: 0.075em; text-transform: uppercase; }
 .wb-section__heading { display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; }
@@ -76,7 +76,7 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
 .wb-mobile-only { display: none; }
 .wb-danger-link { min-height: auto; padding: 0; color: var(--wb-danger); background: none; border: 0; text-decoration: underline; text-underline-offset: 0.2em; }
 
-.gb-stage-toolbar { position: relative; z-index: 10; display: flex; min-height: 3.2rem; align-items: center; gap: 0.3rem; padding: 0.4rem 0.65rem; overflow-x: auto; background: transparent; border: 0; scrollbar-width: thin; }
+.gb-stage-toolbar { position: relative; z-index: 10; display: flex; min-height: 3.2rem; align-items: center; gap: 0.3rem; padding: 0.35rem 0.65rem; overflow-x: auto; background: transparent; border: 0; scrollbar-width: thin; }
 .gb-tool, .gb-zoom-value { display: inline-grid; flex: 0 0 auto; min-width: 2.2rem; min-height: 2.2rem; place-items: center; padding: 0 0.55rem; color: var(--wb-text); background: var(--wb-control-surface); border: 1px solid var(--wb-border); border-radius: var(--wb-radius-sm); font-weight: 400; }
 .gb-tool > span { font-family: "Segoe UI Symbol", system-ui, sans-serif; font-size: 0.92rem; font-weight: 400; line-height: 1; }
 .gb-tool:hover:not(:disabled), .gb-zoom-value:hover, .gb-tool[aria-pressed="true"] { color: var(--wb-accent); background: var(--wb-accent-soft); border-color: var(--wb-accent); }
@@ -87,14 +87,14 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
 .gb-more-tools { display: flex; align-items: center; gap: 0.3rem; }
 .gb-toolbar-divider { display: none; }
 .gb-zoom-value { min-width: 3.6rem; color: var(--wb-muted); font-size: 0.72rem; }
-.gb-info-bar { display: flex; min-height: 1.8rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.2rem 0.7rem; color: var(--wb-muted); background: transparent; border: 0; font-size: 0.69rem; }
+.gb-info-bar { display: flex; min-height: 1.65rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.1rem 0.7rem; color: var(--wb-muted); background: transparent; border: 0; font-size: 0.69rem; }
 .gb-sheet-settings { min-width: 0; background: transparent; border: 0; }
 .gb-sheet-controls { display: flex; min-height: 2.65rem; align-items: center; gap: 0.65rem; padding: 0.35rem 0.7rem; overflow-x: auto; background: transparent; }
 .gb-sheet-controls label { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 0.22rem; color: var(--wb-muted); font-size: 0.71rem; }
 .gb-sheet-controls input[type="number"] { width: 4.2rem; min-height: 1.9rem; padding: 0.2rem 0.35rem; color: var(--wb-text); background: var(--wb-control-surface); border: 1px solid var(--wb-border); border-radius: var(--wb-radius-sm); }
 .gb-sheet-controls input[type="color"] { width: 2.1rem; height: 1.9rem; padding: 0.15rem; background: var(--wb-control-surface); border: 1px solid var(--wb-border); border-radius: var(--wb-radius-sm); }
 
-.gb-canvas-wrap { display: flex; min-width: 0; min-height: 0; overflow: auto; padding: clamp(0.65rem, 1.5vw, 1.15rem); background: var(--wb-canvas-surround); overscroll-behavior: contain; touch-action: none; }
+.gb-canvas-wrap { display: flex; min-width: 0; min-height: 0; margin: 0.35rem 0.65rem 0.65rem; overflow: auto; padding: clamp(0.65rem, 1.5vw, 1.15rem); background: var(--wb-bg); border-radius: var(--wb-radius-md); overscroll-behavior: contain; touch-action: none; }
 .gb-canvas-wrap[data-space-pressed="true"], .gb-canvas-wrap[data-panning="true"] { cursor: grab; }
 .gb-canvas-wrap[data-panning="true"] { cursor: grabbing; user-select: none; }
 .gb-canvas-stage { position: relative; flex: 0 0 auto; margin: auto; }
@@ -221,13 +221,12 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
 }
 
 html[data-embedded="true"] .wb-shell { min-height: 0; background: transparent; }
-html[data-embedded="true"] .wb-appbar { display: none; }
 html[data-embedded="true"] .wb-layout { height: 100svh; }
 
 @media (max-width: 59.99rem) {
-  html[data-embedded="true"] .wb-appbar { display: flex; height: 3rem; justify-content: flex-end; padding-inline: 0.45rem; background: var(--wb-bg); border: 0; }
+  html[data-embedded="true"] .wb-appbar { min-height: 3rem; justify-content: flex-end; padding: 0.35rem 0.45rem 0; background: transparent; border: 0; }
   html[data-embedded="true"] .wb-appbar__title { display: none; }
-  html[data-embedded="true"] .wb-layout { height: calc(100svh - 3rem); }
+  html[data-embedded="true"] .wb-layout { height: 100svh; }
 }
 
 @media (max-width: 34rem) {
