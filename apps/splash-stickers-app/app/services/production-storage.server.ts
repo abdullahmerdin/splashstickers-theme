@@ -6,6 +6,7 @@ type UserError = { field?: string[] | null; message: string; code?: string | nul
 
 export type ShopifyProductionFile = {
   id: string;
+  alt?: string | null;
   fileStatus: string;
   url: string | null;
   mimeType: string | null;
@@ -28,14 +29,14 @@ function filenameQuery(filename: string) {
   return `filename:"${escaped}" media_type:GENERIC_FILE`;
 }
 
-export async function findProductionFileByFilename(admin: AdminGraphql, filename: string) {
+export async function findProductionFileByFilename(admin: AdminGraphql, filename: string, alt: string) {
   const response = await admin.graphql(
     `#graphql
       query SplashFindProductionFile($query: String!) {
         files(first: 10, query: $query, sortKey: CREATED_AT, reverse: true) {
           nodes {
-            filename
             id
+            alt
             fileStatus
             fileErrors { code message }
             ... on GenericFile { url mimeType originalFileSize }
@@ -47,19 +48,19 @@ export async function findProductionFileByFilename(admin: AdminGraphql, filename
   );
   const payload = await response.json() as {
     errors?: Array<{ message?: string }>;
-    data?: { files?: { nodes?: Array<ShopifyProductionFile & { filename: string }> } };
+    data?: { files?: { nodes?: ShopifyProductionFile[] } };
   };
   if (!response.ok || payload.errors?.length) {
     throw new Error(graphQlError(payload, "Shopify production file lookup failed."));
   }
-  return payload.data?.files?.nodes?.find((file) => file.filename === filename && file.fileStatus !== "FAILED") || null;
+  return payload.data?.files?.nodes?.find((file) => file.alt === alt && file.fileStatus !== "FAILED") || null;
 }
 
 export async function uploadProductionPdf(
   admin: AdminGraphql,
   input: { filename: string; bytes: Uint8Array; alt: string },
 ) {
-  const existing = await findProductionFileByFilename(admin, input.filename);
+  const existing = await findProductionFileByFilename(admin, input.filename, input.alt);
   if (existing) return existing;
 
   const stagedResponse = await admin.graphql(

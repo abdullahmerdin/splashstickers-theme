@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { data, Form, useActionData, useLoaderData, useNavigation } from "react-router";
+import { data, Form, useActionData, useLoaderData, useNavigation, useRevalidator } from "react-router";
 
 import db from "../db.server";
+import { groupProductionOrdersByDay, hasActiveProductionFiles, PRODUCTION_POLL_INTERVAL_MS, PRODUCTION_TIME_ZONE } from "../lib/production-queue";
 import { safeProductionError } from "../services/production-file-identity";
 import { queueProductionWork } from "../services/production-worker.server";
 import { authenticate } from "../shopify.server";
@@ -118,7 +120,19 @@ export default function ProductionQueue() {
   const { shop, counts, orders } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { revalidate, state: revalidationState } = useRevalidator();
   const busy = navigation.state !== "idle";
+  const activeActionId = String(navigation.formData?.get("id") || "");
+  const hasActiveFiles = hasActiveProductionFiles(orders);
+  const orderGroups = groupProductionOrdersByDay(orders);
+
+  useEffect(() => {
+    if (!hasActiveFiles) return undefined;
+    const intervalId = window.setInterval(() => {
+      if (navigation.state === "idle" && revalidationState === "idle") void revalidate();
+    }, PRODUCTION_POLL_INTERVAL_MS);
+    return () => window.clearInterval(intervalId);
+  }, [hasActiveFiles, navigation.state, revalidate, revalidationState]);
 
   return (
     <s-page heading="Production queue">
@@ -144,66 +158,74 @@ export default function ProductionQueue() {
 
       <s-section>
         {!orders.length ? <s-paragraph>No paid configurator orders are waiting for production.</s-paragraph> : (
-          <s-table variant="auto">
-            <s-table-header-row>
-              <s-table-header listSlot="primary">Order</s-table-header>
-              <s-table-header listSlot="secondary">Sheet</s-table-header>
-              <s-table-header listSlot="labeled">File</s-table-header>
-              <s-table-header listSlot="labeled">Production</s-table-header>
-              <s-table-header>Actions</s-table-header>
-            </s-table-header-row>
-            <s-table-body>
-              {orders.map((order) => {
-                const orderNumber = resourceId(order.orderId);
-                const lineNumber = resourceId(order.lineItemId);
-                const dimensions = order.sheetWidthMm && order.sheetHeightMm
-                  ? `${formatMm(order.sheetWidthMm)} × ${formatMm(order.sheetHeightMm)} mm`
-                  : "Not recorded";
-                return (
-                  <s-table-row key={order.id}>
-                    <s-table-cell>
-                      <s-stack direction="block" gap="small-200">
-                        <s-link href={`https://${shop}/admin/orders/${orderNumber}`} target="_top">Order {orderNumber}</s-link>
-                        <s-text color="subdued">Line {lineNumber} · {order.quantity} copies · {order.design.publicId}</s-text>
-                      </s-stack>
-                    </s-table-cell>
-                    <s-table-cell>
-                      <s-stack direction="block" gap="small-200">
-                        <s-text>{dimensions}</s-text>
-                        <s-text color="subdued">{order.artworkCount ?? 0} artworks</s-text>
-                      </s-stack>
-                    </s-table-cell>
-                    <s-table-cell>
-                      <s-stack direction="block" gap="small-200">
-                        <s-badge tone={FILE_STATUS_TONES[order.productionFileStatus]}>{FILE_STATUS_LABELS[order.productionFileStatus]}</s-badge>
-                        {order.productionFileUrl && <s-link href={order.productionFileUrl} target="_blank">Open PDF</s-link>}
-                        {order.productionFileMinDpi && (
-                          <s-text tone={order.productionFileMinDpi < 300 ? "caution" : "neutral"}>
-                            Minimum {order.productionFileMinDpi} DPI
-                          </s-text>
-                        )}
-                        {order.productionFileError && <s-text tone="critical">{order.productionFileError}</s-text>}
-                        <s-text color="subdued">{order.productionFileAttempts} attempt{order.productionFileAttempts === 1 ? "" : "s"}</s-text>
-                      </s-stack>
-                    </s-table-cell>
-                    <s-table-cell>
-                      <s-badge tone={order.status === "FULFILLED" ? "success" : order.status === "IN_PRODUCTION" ? "info" : "neutral"}>
-                        {PRODUCTION_STATUS_LABELS[order.status]}
-                      </s-badge>
-                    </s-table-cell>
-                    <s-table-cell>
-                      <s-stack direction="inline" gap="small-200">
-                        {order.productionFileStatus === "FAILED" && <QueueAction id={order.id} intent="retry" label="Retry" busy={busy} />}
-                        {order.productionFileStatus === "PENDING" && <QueueAction id={order.id} intent="retry" label="Generate" busy={busy} />}
-                        {order.productionFileStatus === "READY" && order.status === "PENDING" && <QueueAction id={order.id} intent="start" label="Start" busy={busy} />}
-                        {order.productionFileStatus === "READY" && order.status === "IN_PRODUCTION" && <QueueAction id={order.id} intent="complete" label="Complete" busy={busy} />}
-                      </s-stack>
-                    </s-table-cell>
-                  </s-table-row>
-                );
-              })}
-            </s-table-body>
-          </s-table>
+          <s-stack direction="block" gap="base">
+            {orderGroups.map((group) => (
+              <s-stack key={group.key} direction="block" gap="small-300">
+                <s-heading>{formatOrderDay(group.date)}</s-heading>
+                <s-table variant="auto">
+                  <s-table-header-row>
+                    <s-table-header listSlot="primary">Order</s-table-header>
+                    <s-table-header listSlot="secondary">Sheet</s-table-header>
+                    <s-table-header listSlot="labeled">File</s-table-header>
+                    <s-table-header listSlot="labeled">Production</s-table-header>
+                    <s-table-header>Actions</s-table-header>
+                  </s-table-header-row>
+                  <s-table-body>
+                    {group.orders.map((order) => {
+                      const orderNumber = resourceId(order.orderId);
+                      const lineNumber = resourceId(order.lineItemId);
+                      const dimensions = order.sheetWidthMm && order.sheetHeightMm
+                        ? `${formatMm(order.sheetWidthMm)} × ${formatMm(order.sheetHeightMm)} mm`
+                        : "Not recorded";
+                      const fileBusy = order.productionFileStatus === "PENDING" || order.productionFileStatus === "PROCESSING";
+                      return (
+                        <s-table-row key={order.id}>
+                          <s-table-cell>
+                            <s-stack direction="block" gap="small-200">
+                              <s-link href={`https://${shop}/admin/orders/${orderNumber}`} target="_top">Order {orderNumber}</s-link>
+                              <s-text color="subdued">{formatOrderTime(order.createdAt)} · Line {lineNumber} · {order.quantity} copies · {order.design.publicId}</s-text>
+                            </s-stack>
+                          </s-table-cell>
+                          <s-table-cell>
+                            <s-stack direction="block" gap="small-200">
+                              <s-text>{dimensions}</s-text>
+                              <s-text color="subdued">{order.artworkCount ?? 0} artworks</s-text>
+                            </s-stack>
+                          </s-table-cell>
+                          <s-table-cell>
+                            <s-stack direction="block" gap="small-200">
+                              <s-badge tone={FILE_STATUS_TONES[order.productionFileStatus]}>{FILE_STATUS_LABELS[order.productionFileStatus]}</s-badge>
+                              {order.productionFileUrl && <s-link href={order.productionFileUrl} target="_blank">Open PDF</s-link>}
+                              {order.productionFileMinDpi && (
+                                <s-text tone={order.productionFileMinDpi < 300 ? "caution" : "neutral"}>
+                                  Minimum {order.productionFileMinDpi} DPI
+                                </s-text>
+                              )}
+                              {order.productionFileError && <s-text tone="critical">{order.productionFileError}</s-text>}
+                              <s-text color="subdued">{order.productionFileAttempts} attempt{order.productionFileAttempts === 1 ? "" : "s"}</s-text>
+                            </s-stack>
+                          </s-table-cell>
+                          <s-table-cell>
+                            <s-badge tone={order.status === "FULFILLED" ? "success" : order.status === "IN_PRODUCTION" ? "info" : "neutral"}>
+                              {PRODUCTION_STATUS_LABELS[order.status]}
+                            </s-badge>
+                          </s-table-cell>
+                          <s-table-cell>
+                            <s-stack direction="inline" gap="small-200">
+                              {order.productionFileStatus === "FAILED" && <QueueAction id={order.id} intent="retry" label="Retry" disabled={busy} loading={activeActionId === order.id} />}
+                              {fileBusy && <QueueAction id={order.id} intent="retry" label={FILE_STATUS_LABELS[order.productionFileStatus]} loading />}
+                              {order.productionFileStatus === "READY" && order.status === "PENDING" && <QueueAction id={order.id} intent="start" label="Start" disabled={busy} loading={activeActionId === order.id} />}
+                              {order.productionFileStatus === "READY" && order.status === "IN_PRODUCTION" && <QueueAction id={order.id} intent="complete" label="Complete" disabled={busy} loading={activeActionId === order.id} />}
+                            </s-stack>
+                          </s-table-cell>
+                        </s-table-row>
+                      );
+                    })}
+                  </s-table-body>
+                </s-table>
+              </s-stack>
+            ))}
+          </s-stack>
         )}
       </s-section>
     </s-page>
@@ -218,6 +240,24 @@ function formatMm(value: number) {
   return value.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
 }
 
+function formatOrderDay(value: string | Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: PRODUCTION_TIME_ZONE,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
+function formatOrderTime(value: string | Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: PRODUCTION_TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 function QueueCount({ label, value }: { label: string; value: number }) {
   return (
     <s-box padding="base" borderWidth="base" borderRadius="base">
@@ -227,12 +267,24 @@ function QueueCount({ label, value }: { label: string; value: number }) {
   );
 }
 
-function QueueAction({ id, intent, label, busy }: { id: string; intent: string; label: string; busy: boolean }) {
+function QueueAction({
+  id,
+  intent,
+  label,
+  disabled = false,
+  loading = false,
+}: {
+  id: string;
+  intent: string;
+  label: string;
+  disabled?: boolean;
+  loading?: boolean;
+}) {
   return (
     <Form method="post">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="intent" value={intent} />
-      <s-button type="submit" variant="secondary" disabled={busy}>{label}</s-button>
+      <s-button type="submit" variant="secondary" disabled={disabled} loading={loading}>{label}</s-button>
     </Form>
   );
 }

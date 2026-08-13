@@ -116,12 +116,15 @@ const productionPdfService = read('apps/splash-stickers-app/app/services/product
 const productionStorage = read('apps/splash-stickers-app/app/services/production-storage.server.ts');
 const productionWorker = read('apps/splash-stickers-app/app/services/production-worker.server.ts');
 const productionRoute = read('apps/splash-stickers-app/app/routes/app.production.tsx');
+const productionQueue = read('apps/splash-stickers-app/app/lib/production-queue.ts');
 const productionMigration = read('apps/splash-stickers-app/prisma/migrations/20260813130000_production_files/migration.sql');
 assert(/generateAndPersistProductionFile/.test(productionFileService) && /productionFileLockedAt/.test(productionFileService), 'production files use an atomic retry claim with a recoverable lease');
 assert(/PDFDocument\.create/.test(productionPdfService) && /mmToPoints/.test(productionPdfService) && /PDFDocument\.load/.test(productionPdfService), 'production PDF generation preserves and verifies physical sheet dimensions');
 assert(/findProductionFileByFilename/.test(productionStorage) && /duplicateResolutionMode:\s*"APPEND_UUID"/.test(productionStorage) && /waitForProductionFile/.test(productionStorage), 'Shopify Files upload reuses deterministic generic files, uses a supported duplicate mode and waits for a ready asset');
+assert(!/nodes\s*\{\s*filename/.test(productionStorage) && /alt === alt/.test(productionStorage), 'production file recovery avoids unavailable File.filename selections and verifies the deterministic alt text');
 assert(/productionFileStatus:\s*"PENDING"/.test(productionWorker) && /productionFileLockedAt/.test(productionWorker) && /setTimeout/.test(productionWorker), 'paid-order webhook work is drained asynchronously from the persistent queue');
 assert(/productionFileError/.test(productionRoute) && /intent="retry"/.test(productionRoute) && /Open PDF/.test(productionRoute), 'admin production queue exposes files, failures and explicit retries');
+assert(/useRevalidator/.test(productionRoute) && /setInterval/.test(productionRoute) && /loading/.test(productionRoute) && /groupProductionOrdersByDay/.test(productionRoute + productionQueue), 'production queue polls active files, shows disabled loading actions and groups orders by day');
 assert(/UNIQUE INDEX "OrderDesign_productionFileKey_key"/.test(productionMigration) && /shop_productionFileStatus_createdAt/.test(productionMigration), 'database enforces production file identity and indexes queue reads');
 
 const launcher = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/gangsheet-builder.liquid');

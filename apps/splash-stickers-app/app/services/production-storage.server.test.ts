@@ -5,8 +5,8 @@ import { uploadProductionPdf } from "./production-storage.server";
 
 const filename = "splash-production-123-456-abcdef123456.pdf";
 const readyFile = {
-  filename,
   id: "gid://shopify/GenericFile/1",
+  alt: "Production PDF",
   fileStatus: "READY",
   fileErrors: [],
   url: "https://cdn.shopify.com/files/production.pdf",
@@ -26,7 +26,7 @@ test("production upload reuses the deterministic generic file", async () => {
   const admin = {
     graphql: async (query: string, options?: { variables?: Record<string, unknown> }) => {
       calls.push({ query, variables: options?.variables });
-      return jsonResponse({ data: { files: { nodes: [readyFile] } } });
+      return jsonResponse({ data: { files: { nodes: [{ ...readyFile, id: "gid://shopify/GenericFile/other", alt: "Other file" }, readyFile] } } });
     },
   };
 
@@ -39,6 +39,7 @@ test("production upload reuses the deterministic generic file", async () => {
   assert.equal(result.id, readyFile.id);
   assert.equal(calls.length, 1);
   assert.match(calls[0].query, /SplashFindProductionFile/);
+  assert.doesNotMatch(calls[0].query, /\n\s+filename\s*\n/);
   assert.deepEqual(calls[0].variables, { query: `filename:"${filename}" media_type:GENERIC_FILE` });
 });
 
