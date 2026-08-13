@@ -40,7 +40,10 @@ Other endpoints:
 
 The `orders/paid` webhook verifies the signed handoff and snapshots the paid
 line's manifest, digest, product, variant, price and quantity without storing
-customer addresses or artwork bytes.
+customer addresses or artwork bytes. It renders an exact-size PDF, stores it in
+Shopify Files with a deterministic filename, and records its checksum, size,
+resolution and retry state on `OrderDesign`. Operators use `/app/production` to
+open the file, retry failures and advance ready work.
 Shopify privacy compliance topics share a signed webhook endpoint; `shop/redact`
 removes all tenant records.
 
@@ -53,10 +56,10 @@ npm.cmd run check:platform
 shopify app build --path apps/splash-stickers-app
 ```
 
-SQLite is for local development. Select a hosted production database and a
-high-resolution renderer for production output before deployment. Storefront
-mockups are rendered as SVG and artwork storage uses Shopify Files. Run
-`prisma migrate deploy` in the host release step.
+The app uses PostgreSQL in development and production. Configure the Supabase
+session-pooler URLs, and run `prisma migrate deploy` in the host release step.
+Storefront mockups are rendered as SVG; artwork and production PDFs use Shopify
+Files.
 
 Build the container from the repository root so npm can resolve the shared
 workspace package:

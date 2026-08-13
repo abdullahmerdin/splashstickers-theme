@@ -29,7 +29,7 @@ export default function Dashboard() {
           <Metric label="Ready" value={data.readyDesigns} href="/app/designs" />
           <Metric label="Mockup queue" value={data.queuedMockups} href="/app/mockups" />
           <Metric label="Reviews pending" value={data.pendingReviews} href="/app/reviews" />
-          <Metric label="Production queue" value={data.production} />
+          <Metric label="Production queue" value={data.production} href="/app/production" />
         </s-stack>
       </s-section>
 
@@ -38,7 +38,7 @@ export default function Dashboard() {
           <s-list-item>Set the hosted app URL and app proxy URL before production deploy.</s-list-item>
           <s-list-item>Add the Reviews app block to the product template.</s-list-item>
           <s-list-item>Add the Mockup Studio app block to its dedicated page template.</s-list-item>
-          <s-list-item>Connect the hosted database and high-resolution production renderer.</s-list-item>
+          <s-list-item>Apply database migrations before deploying this release.</s-list-item>
         </s-unordered-list>
       </s-section>
     </s-page>

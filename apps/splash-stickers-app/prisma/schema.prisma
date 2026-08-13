@@ -60,6 +60,13 @@ enum ProductionStatus {
   CANCELLED
 }
 
+enum ProductionFileStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
 enum PurchaseIntentStatus {
   OPEN
   ORDERED
@@ -168,27 +175,47 @@ model Review {
 }
 
 model OrderDesign {
-  id               String           @id @default(cuid())
-  shop             String
-  designId         String
-  purchaseIntentId String?
-  orderId          String
-  lineItemId       String
-  designDigest     String?
-  manifest         Json?
-  productId        String?
-  variantId        String?
-  quantity         Int              @default(1)
-  unitPriceCents   Int?
-  currency         String?
-  status           ProductionStatus @default(PENDING)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  design           Design           @relation(fields: [designId], references: [id], onDelete: Restrict)
-  purchaseIntent   PurchaseIntent?  @relation(fields: [purchaseIntentId], references: [id], onDelete: SetNull)
+  id                          String               @id @default(cuid())
+  shop                        String
+  designId                    String
+  purchaseIntentId            String?
+  orderId                     String
+  lineItemId                  String
+  sourceWebhookId             String?
+  designDigest                String?
+  manifest                    Json?
+  productId                   String?
+  variantId                   String?
+  quantity                    Int                  @default(1)
+  unitPriceCents              Int?
+  currency                    String?
+  sheetWidthMm                Decimal?             @db.Decimal(8, 2)
+  sheetHeightMm               Decimal?             @db.Decimal(8, 2)
+  artworkCount                Int?
+  productionFileStatus        ProductionFileStatus @default(PENDING)
+  productionFileKey           String?              @unique
+  productionFileId            String?
+  productionFileUrl           String?
+  productionFileName          String?
+  productionFileMimeType      String?
+  productionFileByteSize      Int?
+  productionFileSha256        String?
+  productionFileMinDpi        Int?
+  productionFileRenderer      String?
+  productionFileAttempts      Int                  @default(0)
+  productionFileError         String?
+  productionFileLockedAt      DateTime?            @db.Timestamptz(3)
+  productionFileLastAttemptAt DateTime?            @db.Timestamptz(3)
+  productionFileReadyAt       DateTime?            @db.Timestamptz(3)
+  status                      ProductionStatus     @default(PENDING)
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  design                      Design               @relation(fields: [designId], references: [id], onDelete: Restrict)
+  purchaseIntent              PurchaseIntent?      @relation(fields: [purchaseIntentId], references: [id], onDelete: SetNull)
 
   @@unique([shop, orderId, lineItemId])
   @@index([designId])
   @@index([purchaseIntentId])
   @@index([shop, status, createdAt])
+  @@index([shop, productionFileStatus, createdAt])
 }

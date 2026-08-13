@@ -18,15 +18,21 @@ const required = [
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.complete.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.status.ts',
   'apps/splash-stickers-app/app/routes/healthz.ts',
+  'apps/splash-stickers-app/app/routes/app.production.tsx',
   'apps/splash-stickers-app/app/services/products.server.ts',
   'apps/splash-stickers-app/app/services/purchase-intents.server.ts',
   'apps/splash-stickers-app/app/services/order-handoff.server.ts',
+  'apps/splash-stickers-app/app/services/production-file.server.ts',
+  'apps/splash-stickers-app/app/services/production-pdf.server.ts',
+  'apps/splash-stickers-app/app/services/production-storage.server.ts',
+  'apps/splash-stickers-app/app/services/production-worker.server.ts',
   'apps/splash-stickers-app/app/styles/gangsheet-builder.css',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/gangsheet-builder.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/mockup-studio.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/blocks/product-reviews.liquid',
   'apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css',
   'apps/splash-stickers-app/prisma/migrations/20260812150000_postgresql_baseline/migration.sql',
+  'apps/splash-stickers-app/prisma/migrations/20260813130000_production_files/migration.sql',
   'packages/design-contract/schema/design-manifest.schema.json',
   'docs/workbench-interface-standard.md',
 ];
@@ -103,6 +109,20 @@ assert(/createHmac/.test(intentService) && /timingSafeEqual/.test(intentService)
 assert(/getImageFileStatuses/.test(intentService) && /file\.status !== "READY"/.test(intentService), 'purchase handoff verifies Shopify-owned ready artwork');
 assert(/purchaseIntent/.test(handoffService) && /designDigest/.test(handoffService) && /manifest/.test(handoffService), 'paid order stores an immutable design snapshot');
 assert(/line\.quantity/.test(handoffService), 'production quantity comes from the paid Shopify line');
+assert((handoffService.match(/update:\s*\{\}/g) || []).length >= 2, 'duplicate paid-order deliveries preserve the first immutable snapshot');
+
+const productionFileService = read('apps/splash-stickers-app/app/services/production-file.server.ts');
+const productionPdfService = read('apps/splash-stickers-app/app/services/production-pdf.server.ts');
+const productionStorage = read('apps/splash-stickers-app/app/services/production-storage.server.ts');
+const productionWorker = read('apps/splash-stickers-app/app/services/production-worker.server.ts');
+const productionRoute = read('apps/splash-stickers-app/app/routes/app.production.tsx');
+const productionMigration = read('apps/splash-stickers-app/prisma/migrations/20260813130000_production_files/migration.sql');
+assert(/generateAndPersistProductionFile/.test(productionFileService) && /productionFileLockedAt/.test(productionFileService), 'production files use an atomic retry claim with a recoverable lease');
+assert(/PDFDocument\.create/.test(productionPdfService) && /mmToPoints/.test(productionPdfService) && /PDFDocument\.load/.test(productionPdfService), 'production PDF generation preserves and verifies physical sheet dimensions');
+assert(/duplicateResolutionMode:\s*"REPLACE"/.test(productionStorage) && /waitForProductionFile/.test(productionStorage), 'Shopify Files upload replaces deterministic duplicates and waits for a ready asset');
+assert(/productionFileStatus:\s*"PENDING"/.test(productionWorker) && /productionFileLockedAt/.test(productionWorker) && /setTimeout/.test(productionWorker), 'paid-order webhook work is drained asynchronously from the persistent queue');
+assert(/productionFileError/.test(productionRoute) && /intent="retry"/.test(productionRoute) && /Open PDF/.test(productionRoute), 'admin production queue exposes files, failures and explicit retries');
+assert(/UNIQUE INDEX "OrderDesign_productionFileKey_key"/.test(productionMigration) && /shop_productionFileStatus_createdAt/.test(productionMigration), 'database enforces production file identity and indexes queue reads');
 
 const launcher = read('apps/splash-stickers-app/extensions/splash-storefront/blocks/gangsheet-builder.liquid');
 const extensionCss = read('apps/splash-stickers-app/extensions/splash-storefront/assets/splash-storefront.css');

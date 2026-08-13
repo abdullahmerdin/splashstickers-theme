@@ -33,6 +33,7 @@ const checks = [
   ['config/settings_schema.json', '"theme_name": "Splash Stickers"'],
   ['config/settings_schema.json', '"theme_version": "6.0.0"'],
   ['README.md', '## Release readiness'],
+  ['docs/phase-6/acceptance-checklist.md', '[x] Paid configurator lines generate one print-ready PDF'],
 ];
 
 checks.forEach(([relativePath, pattern]) => assertContains(relativePath, pattern));

@@ -9,6 +9,9 @@ import {
   type MockupOptions,
   type MockupScene,
 } from "./mockup-options.server";
+import { artworkRefs, resolveArtworkUrls } from "./shopify-files.server";
+
+export { artworkRefs, resolveArtworkUrls } from "./shopify-files.server";
 
 type AdminGraphql = {
   graphql: (query: string, options?: { variables?: Record<string, unknown> }) => Promise<Response>;
@@ -67,40 +70,6 @@ function artworkBounds(manifest: DesignManifest) {
     width: Math.max(1, right - left),
     height: Math.max(1, bottom - top),
   };
-}
-
-export async function resolveArtworkUrls(admin: AdminGraphql, assetRefs: string[]) {
-  const ids = Array.from(new Set(assetRefs.filter((value) => value.startsWith("gid://shopify/"))));
-  if (!ids.length) return new Map<string, string>();
-  const response = await admin.graphql(
-    `#graphql
-      query SplashMockupArtwork($ids: [ID!]!) {
-        nodes(ids: $ids) {
-          id
-          ... on MediaImage { image { url } }
-        }
-      }
-    `,
-    { variables: { ids } },
-  );
-  const payload = await response.json() as {
-    data?: { nodes?: Array<{ id?: string; image?: { url?: string } | null } | null> };
-  };
-  const urls = new Map<string, string>();
-  payload.data?.nodes?.forEach((node) => {
-    if (node?.id && node.image?.url) urls.set(node.id, node.image.url);
-  });
-  return urls;
-}
-
-export function artworkRefs(input: unknown) {
-  const manifest: DesignManifest = normalizeDesignManifest(input);
-  return Array.from(new Set(
-    manifest.items
-      .filter((item) => item.kind === "image")
-      .map((item) => item.assetRef || "")
-      .filter(Boolean),
-  ));
 }
 
 export async function artworkIsReady(admin: AdminGraphql, input: unknown) {

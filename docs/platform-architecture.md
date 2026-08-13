@@ -82,8 +82,8 @@ production app release.
 
 1. Link the local source to the correct Shopify app and development store.
 2. Replace placeholder production URLs and choose the hosted database.
-3. Apply Prisma migrations and connect the high-resolution production renderer
-   in the hosted environment.
+3. Apply Prisma migrations and verify Shopify Files read/write access for the
+   production renderer.
 4. Enable the storefront bridge app embed and add the review/mockup app blocks.
 5. Complete Shopify Preview visual regression in light/dark and mobile/desktop.
 6. Exercise design save/restore, mockup status, cart metadata and order handoff

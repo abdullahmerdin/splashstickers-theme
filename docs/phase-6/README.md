@@ -1,6 +1,6 @@
 # Phase 6 — Horizon cleanup and release readiness
 
-Updated: 2026-07-30
+Updated: 2026-08-13
 
 This package closes the visible-theme cleanup after the Splash shell, catalog,
 product studio and cart/content work.
@@ -16,6 +16,9 @@ product studio and cart/content work.
 - Theme metadata points to Splash Stickers documentation/support and is versioned
   as `6.0.0`.
 - README and local release checks document the required preview QA.
+- Paid configurator orders now render exact-size production PDFs, persist them
+  in Shopify Files and expose retryable handoff state in the admin production
+  queue.
 
 ## Validation
 
@@ -23,7 +26,8 @@ product studio and cart/content work.
 npm.cmd run check:phase4
 npm.cmd run check:phase5
 npm.cmd run check:phase6
-npm.cmd run check:configurator
+npm.cmd run check:production
+npm.cmd run check:platform
 git diff --check
 ```
 
@@ -40,5 +44,5 @@ final platform validation. This workspace may not have the CLI installed.
 - [ ] Check console errors, broken links, variant pricing and cart payloads.
 - [ ] Run Shopify Theme Check and record any platform-only findings.
 
-The print-ready PDF/order production handoff remains an integration follow-up;
-the configurator export action itself is still available.
+Apply the Prisma migration before deploying the app release, then verify one
+paid development order from webhook receipt through the admin PDF link.

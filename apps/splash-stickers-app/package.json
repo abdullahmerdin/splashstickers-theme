@@ -12,6 +12,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "docker-start": "npm run setup && exec npm run start",
     "setup": "prisma generate && prisma migrate deploy",
+    "test:production": "tsx --test app/services/production-file-identity.test.ts app/services/production-pdf.server.test.ts",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "shopify": "shopify",
     "prisma": "prisma",
@@ -24,7 +25,6 @@
     "node": ">=20.19 <22 || >=22.12"
   },
   "dependencies": {
-    "@splash-stickers/design-contract": "1.0.0",
     "@prisma/client": "^6.16.3",
     "@react-router/dev": "^7.12.0",
     "@react-router/fs-routes": "^7.12.0",
@@ -33,11 +33,14 @@
     "@shopify/app-bridge-react": "^4.2.4",
     "@shopify/shopify-app-react-router": "^1.2.1",
     "@shopify/shopify-app-session-storage-prisma": "^9.0.0",
+    "@splash-stickers/design-contract": "1.0.0",
     "isbot": "^5.1.31",
+    "pdf-lib": "1.17.1",
     "prisma": "^6.16.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.12.0",
+    "sharp": "0.35.3",
     "vite-tsconfig-paths": "^6.0.4"
   },
   "devDependencies": {
@@ -57,6 +60,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "graphql-config": "^5.1.1",
     "prettier": "^3.6.2",
+    "tsx": "4.23.12",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   },

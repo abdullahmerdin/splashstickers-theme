@@ -102,5 +102,6 @@ tablet and mobile widths. Confirm keyboard focus, reduced motion, empty/error
 states, variant pricing and cart payload behavior. Shopify Theme Check should be
 run from an environment with the Shopify CLI installed.
 
-Paid order lines are linked to an immutable app snapshot. Automating a
-high-resolution production artifact remains a deployment follow-up.
+Paid configurator lines are linked to an immutable app snapshot and rendered
+as exact-size PDFs in Shopify Files. The app production queue exposes the file,
+generation failures, retry attempts and explicit production status actions.

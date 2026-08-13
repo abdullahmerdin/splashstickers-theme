@@ -9,4 +9,7 @@
 - [x] Local Phase 4, Phase 5, Phase 6 and configurator checks pass.
 - [ ] Shopify Preview route matrix completed at 1440, 768 and 375 px.
 - [ ] Shopify Theme Check completed in an environment with the CLI installed.
-- [ ] Print-ready PDF reaches the order/production handoff.
+- [x] Paid configurator lines generate one print-ready PDF in Shopify Files.
+- [x] `OrderDesign` stores sheet, artwork, file, checksum, attempt and error metadata.
+- [x] Duplicate webhook delivery is idempotent and failed generation is retryable.
+- [x] Shopify admin exposes the production queue, PDF, failure and workflow actions.
