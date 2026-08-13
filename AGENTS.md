@@ -14,6 +14,18 @@
 - Add the final result and relevant evidence, commit, release, or output link to the task before closing it.
 - Pure questions, explanations, status requests, and read-only reviews do not require a task unless they produce an actionable follow-up.
 
+## AI clutter and output restraint
+
+- Apply this standard to every generated artifact, including storefronts, workbenches, admin UI, Notion pages, documentation, and customer-facing copy.
+- Prefer calm, compact, functional output with one clear hierarchy. The primary task or information must be obvious without scanning decorative layers.
+- Remove copy that does not enable an action, communicate real state or data, prevent an error, establish necessary trust, or support accessibility. Do not repeat the heading, confirmation, or surrounding UI in helper text.
+- Do not invent feature names, section nicknames, sub-brands, slogans, eyebrow text, or branded process labels. Use the established `Splash Stickers` name, plain product terms, and direct functional labels.
+- Do not add decorative gradients, glows, colored shadows, neon treatments, illuminated transitions, or a busy multi-color palette. Prefer flat semantic surfaces, restrained color, borders, spacing, and typography.
+- Avoid unnecessary cards, pills, badges, callouts, icons, nested panels, headings, dividers, oversized empty states, and competing emphasis. Every container or accent must have a clear information-architecture purpose.
+- Avoid verbose, promotional, self-congratulatory, or generic AI-sounding language. State concrete facts, actions, errors, and outcomes in the shortest clear form.
+- Preserve visual or textual elements required for content fidelity, status, hierarchy, validation, trust, and accessibility; restraint must not hide useful information or controls.
+- Before finalizing, run a clutter pass: if removing an element does not reduce clarity, trust, accessibility, or task completion, remove it.
+
 ## Theme implementation rules
 
 - Every new or changed storefront UI must support both light and dark modes in the same change, including all states, cards, forms, popovers, drawers, dialogs, and responsive layouts.
