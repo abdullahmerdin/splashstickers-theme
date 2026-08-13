@@ -4,6 +4,16 @@
 - Preserve unrelated working-tree changes and stage only files belonging to the requested change.
 - Run the relevant validation before pushing and report the commit and push result.
 
+## Codex and Notion work tracking
+
+- Use the Splash Stickers Notion workspace as the operational system of record for Codex work.
+- At the start of every actionable Splash Stickers request, create or update its record in the Notion `Görevler` database before implementation. Do not create duplicate records for the same scope.
+- If the request has multiple deliverables, phases, or independently trackable workstreams, create a record in the Notion `Projeler` database and link its implementation tasks to that project.
+- Keep the Notion task status aligned with reality while working: use `Yapılıyor`, `Beklemede`, `Bloke`, or `Review` as appropriate.
+- Mark a task `Tamamlandı` only after the requested outcome is complete and the relevant validation has succeeded. Planning, partial implementation, or a commit alone is not completion.
+- Add the final result and relevant evidence, commit, release, or output link to the task before closing it.
+- Pure questions, explanations, status requests, and read-only reviews do not require a task unless they produce an actionable follow-up.
+
 ## Theme implementation rules
 
 - Every new or changed storefront UI must support both light and dark modes in the same change, including all states, cards, forms, popovers, drawers, dialogs, and responsive layouts.
