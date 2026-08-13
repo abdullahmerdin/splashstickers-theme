@@ -91,6 +91,9 @@ assert(!/Select artwork to edit its placement|Add print-ready artwork to begin|B
 assert(/touchPointersRef/.test(builder) && /pinchRef/.test(builder) && /touchPanRef/.test(builder), 'mobile canvas restores pinch zoom and one-finger empty-canvas panning');
 assert(/gb-more-tools/.test(builder + builderCss) && /gb-sheet-toggle/.test(builder + builderCss), 'mobile tools and sheet controls collapse to reduce clutter');
 assert(/function undo/.test(builder) && /function redo/.test(builder) && /duplicateSelected/.test(builder) && /flipSelected/.test(builder), 'builder keeps configurator quality-of-life editing actions');
+assert(!/label="Flip horizontally"|label="Flip vertically"/.test(builder) && /function flipSelected/.test(builder), 'builder hides flip controls without removing the existing transform logic');
+assert(/className="gb-zoom-tools"/.test(builder) && /\.gb-zoom-tools\s*\{[^}]*margin-left:\s*auto/.test(builderCss), 'desktop toolbar aligns zoom controls to its right edge');
+assert(/\.gb-zoom-tools\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/.test(builderCss), 'mobile more-tools menu keeps zoom controls in a dedicated full-width row');
 assert(!/linear-gradient|radial-gradient|filter:\s*drop-shadow|box-shadow:/.test(builderCss), 'builder avoids decorative gradients, glows and shadows');
 assert(!/No configurator needed|Each product keeps|Drag the design|Design ready/.test(builder + builderCss), 'builder avoids retired AI-artifact copy');
 

@@ -93,7 +93,7 @@ const GUIDE_STEPS: GuideStep[] = [
   { title: "Add a design", body: "Choose PNG, JPG or WebP artwork, then set its physical size and copy count before placing it.", target: "add-design" },
   { title: "Pack the sheet", body: "Auto-arrange fills open spaces without overlapping designs and grows the sheet downward when needed.", target: "auto-arrange" },
   { title: "Undo and redo", body: "Step backward or forward through your editing changes at any time.", target: "history-controls" },
-  { title: "Edit your selection", body: "Duplicate, flip, lock, add text, download, and control zoom from these tools.", target: "editing-tools", mobileTarget: "editing-tools-mobile" },
+  { title: "Edit your selection", body: "Duplicate, lock, add text, and download your selection from these tools. Zoom controls stay on the right.", target: "editing-tools", mobileTarget: "editing-tools-mobile" },
   { title: "Set up the sheet", body: "Adjust sheet width, height, spacing, and the final printed background color here.", target: "sheet-settings" },
   { title: "Work on the canvas", body: "Drag designs to move them. Ctrl-scroll or pinch to zoom, and drag empty space to pan.", target: "canvas" },
   { title: "Review and order", body: "Check the live output, fine-tune the selected design, then choose quantity and add the finished sheet to cart.", target: "preview-panel", mobileTarget: "preview-mobile" },
@@ -474,6 +474,8 @@ export function GangsheetBuilder({
     recordUndo(before);
   }
 
+  // The toolbar controls are intentionally hidden, but keep this reversible edit command available for future command surfaces.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function flipSelected(axis: "x" | "y") {
     if (!selectedIds.length) return;
     const before = snapshot();
@@ -961,15 +963,14 @@ export function GangsheetBuilder({
         <span className="gb-toolbar-divider" />
         <ToolbarButton label="Delete selected" symbol="⌫" onClick={removeSelected} disabled={!selectedIds.length} />
         <ToolbarButton label="Duplicate selected" symbol="⧉" onClick={duplicateSelected} disabled={!selectedIds.length} />
-        <ToolbarButton label="Flip horizontally" symbol="↔" onClick={() => flipSelected("x")} disabled={!selectedIds.length} />
-        <ToolbarButton label="Flip vertically" symbol="↕" onClick={() => flipSelected("y")} disabled={!selectedIds.length} />
         <ToolbarButton label={selectedItems.some((item) => !item.locked) ? "Lock selected" : "Unlock selected"} symbol="▣" onClick={toggleLock} disabled={!selectedIds.length} pressed={selectedItems.length > 0 && selectedItems.every((item) => item.locked)} />
         <ToolbarButton label="Add text" symbol="T" onClick={() => setTextDialogOpen(true)} />
         <ToolbarButton label="Download preview" symbol="↓" onClick={() => { void downloadPreview(); }} disabled={!items.length || exporting} />
-        <span className="gb-toolbar-divider" />
-        <ToolbarButton label="Zoom out" symbol="−" onClick={() => setCanvasZoom(zoomRef.current - 0.1)} disabled={zoom <= 0.5} />
-        <button className="gb-zoom-value" type="button" onClick={fitCanvas} title="Zoom to fit">{Math.round(zoom * 100)}%</button>
-        <ToolbarButton label="Zoom in" symbol="+" onClick={() => setCanvasZoom(zoomRef.current + 0.1)} disabled={zoom >= 4} />
+        <span className="gb-zoom-tools" data-tour="zoom-controls">
+          <ToolbarButton label="Zoom out" symbol="−" onClick={() => setCanvasZoom(zoomRef.current - 0.1)} disabled={zoom <= 0.5} />
+          <button className="gb-zoom-value" type="button" onClick={fitCanvas} title="Zoom to fit">{Math.round(zoom * 100)}%</button>
+          <ToolbarButton label="Zoom in" symbol="+" onClick={() => setCanvasZoom(zoomRef.current + 0.1)} disabled={zoom >= 4} />
+        </span>
       </div>
     </div>
     <div className="gb-info-bar"><span>{items.length} item{items.length === 1 ? "" : "s"}{selectedIds.length ? ` · ${selectedIds.length} selected` : ""}</span><span>Ctrl-scroll to zoom · Space or middle-drag to pan</span></div>

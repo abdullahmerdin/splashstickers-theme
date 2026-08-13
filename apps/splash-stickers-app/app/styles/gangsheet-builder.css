@@ -84,8 +84,9 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
 .gb-add-design span { font-size: 1.1rem; line-height: 1; }
 .gb-more-toggle, .gb-sheet-toggle { display: none; color: var(--wb-text); background: var(--wb-control-surface); border: 1px solid var(--wb-border); border-radius: var(--wb-radius-sm); }
 .gb-tool-pair { display: inline-flex; flex: 0 0 auto; gap: 0.3rem; }
-.gb-more-tools { display: flex; align-items: center; gap: 0.3rem; }
+.gb-more-tools { display: flex; flex: 1 1 auto; min-width: 0; align-items: center; gap: 0.3rem; }
 .gb-toolbar-divider { display: none; }
+.gb-zoom-tools { display: flex; flex: 0 0 auto; align-items: center; gap: 0.3rem; margin-left: auto; padding-left: 0.45rem; }
 .gb-zoom-value { min-width: 3.6rem; color: var(--wb-muted); font-size: 0.72rem; }
 .gb-info-bar { display: flex; min-height: 1.65rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.1rem 0.7rem; color: var(--wb-muted); background: transparent; border: 0; font-size: 0.69rem; }
 .gb-sheet-settings { min-width: 0; background: transparent; border: 0; }
@@ -204,6 +205,7 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
   .gb-more-tools[data-open="true"] { display: grid; }
   .gb-more-tools .gb-tool, .gb-more-tools .gb-zoom-value { width: 100%; }
   .gb-more-tools .gb-toolbar-divider { display: none; }
+  .gb-zoom-tools { display: grid; grid-column: 1 / -1; grid-template-columns: 1fr minmax(3.6rem, 1.35fr) 1fr; gap: 0.4rem; margin-left: 0; padding-left: 0; }
   .gb-sheet-toggle { display: flex; min-height: 2.5rem; align-items: center; justify-content: space-between; padding: 0.35rem 0.65rem; border: 0; border-radius: 0; font-size: 0.72rem; font-weight: 700; }
   .gb-sheet-toggle::after { content: "+"; color: var(--wb-muted); font-size: 1rem; }
   .gb-sheet-toggle[aria-expanded="true"]::after { content: "−"; }
