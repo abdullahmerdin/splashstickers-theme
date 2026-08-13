@@ -23,10 +23,45 @@ function graphQlError(payload: { errors?: Array<{ message?: string }> }, fallbac
   return payload.errors?.map((error) => error.message).filter(Boolean).join(" ") || fallback;
 }
 
+function filenameQuery(filename: string) {
+  const escaped = filename.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+  return `filename:"${escaped}" media_type:GENERIC_FILE`;
+}
+
+export async function findProductionFileByFilename(admin: AdminGraphql, filename: string) {
+  const response = await admin.graphql(
+    `#graphql
+      query SplashFindProductionFile($query: String!) {
+        files(first: 10, query: $query, sortKey: CREATED_AT, reverse: true) {
+          nodes {
+            filename
+            id
+            fileStatus
+            fileErrors { code message }
+            ... on GenericFile { url mimeType originalFileSize }
+          }
+        }
+      }
+    `,
+    { variables: { query: filenameQuery(filename) } },
+  );
+  const payload = await response.json() as {
+    errors?: Array<{ message?: string }>;
+    data?: { files?: { nodes?: Array<ShopifyProductionFile & { filename: string }> } };
+  };
+  if (!response.ok || payload.errors?.length) {
+    throw new Error(graphQlError(payload, "Shopify production file lookup failed."));
+  }
+  return payload.data?.files?.nodes?.find((file) => file.filename === filename && file.fileStatus !== "FAILED") || null;
+}
+
 export async function uploadProductionPdf(
   admin: AdminGraphql,
   input: { filename: string; bytes: Uint8Array; alt: string },
 ) {
+  const existing = await findProductionFileByFilename(admin, input.filename);
+  if (existing) return existing;
+
   const stagedResponse = await admin.graphql(
     `#graphql
       mutation SplashStageProductionFile($input: [StagedUploadInput!]!) {
@@ -91,7 +126,7 @@ export async function uploadProductionPdf(
           filename: input.filename,
           alt: input.alt,
           contentType: "FILE",
-          duplicateResolutionMode: "REPLACE",
+          duplicateResolutionMode: "APPEND_UUID",
         }],
       },
     },

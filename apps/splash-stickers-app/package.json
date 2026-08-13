@@ -12,7 +12,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "docker-start": "npm run setup && exec npm run start",
     "setup": "prisma generate && prisma migrate deploy",
-    "test:production": "tsx --test app/services/production-file-identity.test.ts app/services/production-pdf.server.test.ts",
+    "test:production": "tsx --test app/services/production-file-identity.test.ts app/services/production-pdf.server.test.ts app/services/production-storage.server.test.ts",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "shopify": "shopify",
     "prisma": "prisma",
