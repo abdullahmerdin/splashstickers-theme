@@ -1,6 +1,9 @@
+{% render 'contrast-override', background_color: section.settings.background_color, section_id: section.id %}
+
 {% style %}
   .sticker-categories-section {
-    background-color: {{ section.settings.background_color }};
+    background-color: var(--color-background);
+    color: var(--color-foreground);
     padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;
   }
 
@@ -90,7 +93,7 @@
   }
 {% endstyle %}
 
-<div class="sticker-categories-section">
+<div class="sticker-categories-section color-custom-{{ section.id }}">
   {% # theme-check-disable-next-line ValidScopedCSSClass %}
   <div class="page-width">
     {% if section.settings.heading != blank %}

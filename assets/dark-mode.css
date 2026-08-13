@@ -6,20 +6,53 @@
  * interaction states dark-mode compatible without selector-by-selector fixes.
  */
 
+:root {
+  --color-text-primary: var(--color-foreground);
+  --color-text-primary-rgb: var(--color-foreground-rgb);
+  --color-surface-page: var(--color-background);
+  --color-surface-page-rgb: var(--color-background-rgb);
+  --color-surface-raised: var(--color-background);
+  --color-surface-raised-rgb: var(--color-background-rgb);
+  --color-surface-soft: rgb(var(--color-foreground-rgb) / var(--opacity-5));
+  --color-surface-hover: rgb(var(--color-foreground-rgb) / var(--opacity-8));
+  --color-border-subtle: rgb(var(--color-border-rgb) / var(--opacity-20));
+  --color-border-strong: rgb(var(--color-border-rgb) / var(--opacity-40));
+  --color-focus-ring: var(--splash-color-focus, var(--color-foreground));
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
 html[data-theme='dark'] {
   color-scheme: dark;
 
-  --color-background: #0f1115;
-  --color-background-rgb: 15 17 21;
-  --color-foreground: #f5f7fa;
-  --color-foreground-rgb: 245 247 250;
-  --color: #f5f7fa;
-  --color-rgb: 245 247 250;
-  --color-border: #3a3f4b;
+  --color-text-primary: #f5f7fa;
+  --color-text-primary-rgb: 245 247 250;
+  --color-surface-page: #0f1115;
+  --color-surface-page-rgb: 15 17 21;
+  --color-surface-raised: #191c23;
+  --color-surface-raised-rgb: 25 28 35;
+  --color-surface-soft: #20232b;
+  --color-surface-hover: #242832;
+  --color-border-subtle: #3a3f4b;
+  --color-border-strong: #5c6372;
+  --color-focus-ring: #a99fff;
+
+  --color-background: var(--color-surface-page);
+  --color-background-rgb: var(--color-surface-page-rgb);
+  --color-foreground: var(--color-text-primary);
+  --color-foreground-rgb: var(--color-text-primary-rgb);
+  --color: var(--color-text-primary);
+  --color-rgb: var(--color-text-primary-rgb);
+  --color-border: var(--color-border-subtle);
   --color-border-rgb: 58 63 75;
   --color-foreground-muted: rgb(245 247 250 / 0.72);
   --color-foreground-subdued: rgb(245 247 250 / 0.62);
   --color-shadow-rgb: 0 0 0;
+  --color-drawer-shadow-rgb: 0 0 0;
+  --color-popover-shadow-rgb: 0 0 0;
+  --backdrop-color-rgb: 0 0 0;
   --palette-lightest: #ffffff;
   --palette-lightest-rgb: 255 255 255;
   --palette-darkest: #0f1115;
@@ -39,15 +72,15 @@ html[data-theme='dark'] {
   --color-secondary-button-hover-background: #5b4ac8;
   --color-secondary-button-hover-border: #5b4ac8;
 
-  --color-input-background: #191c23;
-  --color-input-text: #f5f7fa;
-  --color-input-text-rgb: 245 247 250;
-  --color-input-border: #3a3f4b;
-  --color-variant-background: #191c23;
-  --color-variant-text: #f5f7fa;
-  --color-variant-text-rgb: 245 247 250;
-  --color-variant-border: #3a3f4b;
-  --color-variant-hover-background: #242832;
+  --color-input-background: var(--color-surface-raised);
+  --color-input-text: var(--color-text-primary);
+  --color-input-text-rgb: var(--color-text-primary-rgb);
+  --color-input-border: var(--color-border-subtle);
+  --color-variant-background: var(--color-surface-raised);
+  --color-variant-text: var(--color-text-primary);
+  --color-variant-text-rgb: var(--color-text-primary-rgb);
+  --color-variant-border: var(--color-border-subtle);
+  --color-variant-hover-background: var(--color-surface-hover);
   --color-variant-hover-text: #ffffff;
   --color-variant-hover-border: #6257c9;
   --color-selected-variant-background: #6c5ce7;
@@ -62,15 +95,22 @@ html[data-theme='dark'] {
   --checkbox-border: 1px solid rgb(245 247 250 / 0.45);
   --color-error: #ff8a80;
   --color-success: #6ee7a8;
+  --color-instock: #6ee7a8;
+  --color-lowstock: #ffd166;
+  --color-outofstock: #aeb4c0;
+  --style-border-popover: var(--style-border-popover-width) solid var(--color-border-subtle);
+  --style-border-drawer: 1px solid var(--color-border-subtle);
+  --shadow-drawer: 0 4px 24px rgb(0 0 0 / 0.4);
+  --shadow-popover: 0 4px 24px rgb(0 0 0 / 0.38);
 
-  --splash-color-ink: #f5f7fa;
-  --splash-color-ink-rgb: 245 247 250;
+  --splash-color-ink: var(--color-text-primary);
+  --splash-color-ink-rgb: var(--color-text-primary-rgb);
   --splash-color-purple: #6c5ce7;
   --splash-color-purple-rgb: 108 92 231;
   --splash-color-pink: #b83f73;
   --splash-color-pink-rgb: 184 63 115;
-  --splash-color-surface: #191c23;
-  --splash-color-surface-rgb: 25 28 35;
+  --splash-color-surface: var(--color-surface-raised);
+  --splash-color-surface-rgb: var(--color-surface-raised-rgb);
   --splash-color-on-accent: #ffffff;
   --splash-color-on-accent-rgb: 255 255 255;
   --splash-color-on-light-accent: #17191f;
@@ -79,13 +119,13 @@ html[data-theme='dark'] {
   --splash-color-inverse-surface-rgb: 9 11 15;
   --splash-color-muted: #aeb4c0;
   --splash-color-muted-rgb: 174 180 192;
-  --splash-color-line: #3a3f4b;
+  --splash-color-line: var(--color-border-subtle);
   --splash-color-line-rgb: 58 63 75;
-  --splash-color-focus: #a99fff;
+  --splash-color-focus: var(--color-focus-ring);
   --splash-color-yellow-ink: var(--splash-color-on-light-accent);
   --splash-shadow-card: 0 12px 36px rgb(0 0 0 / 0.34);
   --splash-shadow-lift: 0 12px 30px rgb(0 0 0 / 0.45);
-  --splash-surface-soft: #20232b;
+  --splash-surface-soft: var(--color-surface-soft);
   --collection-product-title-color: #e4e7ed;
   --collection-product-title-hover: #a99fff;
 }
@@ -98,24 +138,48 @@ html[data-theme='dark'] body {
 /* Theme-editor custom colors are light-mode inputs. Normalize their semantic
    surface tokens in dark mode so every generic section/block participates. */
 html[data-theme='dark']
-  :where([class*='color-custom-']):not([data-large-logo-color-target], [data-large-logo-color-surface]) {
-  --color-background: #15181e !important;
-  --color-background-rgb: 21 24 30 !important;
-  --color: #f5f7fa !important;
-  --color-rgb: 245 247 250 !important;
-  --color-foreground: #f5f7fa !important;
-  --color-foreground-rgb: 245 247 250 !important;
+  :where([class*='color-custom-']):not(
+    [data-theme-color-policy='preserve'],
+    [data-large-logo-color-target],
+    [data-large-logo-color-surface]
+  ) {
+  --color-background: var(--color-surface-raised) !important;
+  --color-background-rgb: var(--color-surface-raised-rgb) !important;
+  --color: var(--color-text-primary) !important;
+  --color-rgb: var(--color-text-primary-rgb) !important;
+  --color-foreground: var(--color-text-primary) !important;
+  --color-foreground-rgb: var(--color-text-primary-rgb) !important;
   --color-foreground-muted: rgb(245 247 250 / 0.72) !important;
   --color-foreground-subdued: rgb(245 247 250 / 0.62) !important;
-  --color-border: #3a3f4b !important;
+  --color-border: var(--color-border-subtle) !important;
   --color-border-rgb: 58 63 75 !important;
   --input-disabled-background-color: rgb(245 247 250 / 0.08) !important;
   --input-disabled-border-color: rgb(245 247 250 / 0.12) !important;
   --input-disabled-text-color: rgb(245 247 250 / 0.42) !important;
+  --checkbox-border: 1px solid rgb(245 247 250 / 0.45) !important;
+}
+
+/* contrast-override also writes directly to nested text blocks. Reassert the
+   active semantic foreground there so late section/block styles cannot bring
+   light-only text back into a dark custom surface. */
+html[data-theme='dark']
+  :where([class*='color-custom-']):not(
+    [data-theme-color-policy='preserve'],
+    [data-large-logo-color-target],
+    [data-large-logo-color-surface]
+  )
+  :where(.text-block, [style*='--color:']) {
+  --color: var(--color-text-primary) !important;
+  --color-rgb: var(--color-text-primary-rgb) !important;
+  --color-foreground: var(--color-text-primary) !important;
+  --color-foreground-rgb: var(--color-text-primary-rgb) !important;
+  --color-foreground-muted: rgb(245 247 250 / 0.72) !important;
+  --color-foreground-subdued: rgb(245 247 250 / 0.62) !important;
 }
 
 html[data-theme='dark']
   :where(.section-background[class*='color-custom-'], .section[class*='color-custom-']):not(
+    [data-theme-color-policy='preserve'],
     [data-large-logo-color-target],
     [data-large-logo-color-surface]
   ) {
@@ -141,17 +205,8 @@ html[data-theme='dark'] .splash-collection-results .splash-product-card [ref='pr
   color: var(--collection-product-title-hover) !important;
 }
 
-html[data-theme='dark'] :where(.sticker-categories-section, .sticker-process-section, .trust-badges-section) {
-  background-color: var(--color-background) !important;
-  color: var(--color-foreground);
-}
-
-html[data-theme='dark'] .sticker-collection-hero {
-  --collection-bg: var(--color-background) !important;
-}
-
-html[data-theme='dark'] .shopify-section.splash-hero > [class^='splash-hero-'] {
-  background: var(--color-background) !important;
+html[data-theme='light'] :where(input, textarea, select) {
+  color-scheme: light;
 }
 
 html[data-theme='dark'] :where(input, textarea, select) {
@@ -169,10 +224,10 @@ html[data-theme='dark']
     .email-signup__input-group,
     [style*='--color-input-background']
   ) {
-  --color-input-background: #191c23 !important;
-  --color-input-text: #f5f7fa !important;
-  --color-input-text-rgb: 245 247 250 !important;
-  --color-input-border: #3a3f4b !important;
+  --color-input-background: var(--color-surface-raised) !important;
+  --color-input-text: var(--color-text-primary) !important;
+  --color-input-text-rgb: var(--color-text-primary-rgb) !important;
+  --color-input-border: var(--color-border-subtle) !important;
   background-color: var(--color-input-background) !important;
   color: var(--color-input-text) !important;
   border-color: var(--color-input-border) !important;
@@ -187,17 +242,49 @@ html[data-theme='dark']
   color: rgb(245 247 250 / 0.55) !important;
 }
 
-html[data-theme='dark'] .text-block--background {
-  --text-background-color: #20232b !important;
+html[data-theme='dark'] :where(.text-block--background, [style*='--text-background-color']) {
+  --text-background-color: var(--color-surface-soft) !important;
 }
 
 html[data-theme='dark'] :where(dialog, [role='dialog'], .drawer, .popover, .quick-add-modal) {
-  --color-background: #191c23;
-  --color-background-rgb: 25 28 35;
-  --color-foreground: #f5f7fa;
-  --color-foreground-rgb: 245 247 250;
-  --color-border: #3a3f4b;
+  --color-background: var(--color-surface-raised);
+  --color-background-rgb: var(--color-surface-raised-rgb);
+  --color-foreground: var(--color-text-primary);
+  --color-foreground-rgb: var(--color-text-primary-rgb);
+  --color-border: var(--color-border-subtle);
   --color-border-rgb: 58 63 75;
+}
+
+/* Theme-editor values for dividers and utility metadata are UI chrome, so they
+   follow the active surface instead of retaining a light-only custom value. */
+html[data-theme='dark'] :where([style*='--divider-color']) {
+  --divider-color: var(--color-border-subtle) !important;
+}
+
+html[data-theme='dark'] :where([style*='--color-border']) {
+  --color-border: var(--color-border-subtle) !important;
+  --color-border-rgb: 58 63 75 !important;
+}
+
+html[data-theme='dark'] :where([style*='--color-utilities']) {
+  --color-utilities: var(--color-text-primary) !important;
+}
+
+html[data-theme='dark'] :where([style*='--color-details']) {
+  --color-details: var(--color-foreground-muted) !important;
+}
+
+/* Unselected custom variant controls are neutral interface surfaces. Selected
+   custom colors remain merchant-controlled accents. */
+html[data-theme='dark']
+  :where([class*='variant-picker--custom-'], [data-recipient-fields][style*='--color-variant-background']) {
+  --color-variant-background: var(--color-surface-raised) !important;
+  --color-variant-text: var(--color-text-primary) !important;
+  --color-variant-text-rgb: var(--color-text-primary-rgb) !important;
+  --color-variant-border: var(--color-border-subtle) !important;
+  --color-variant-hover-background: var(--color-surface-hover) !important;
+  --color-variant-hover-text: var(--color-text-primary) !important;
+  --color-variant-hover-border: var(--color-border-strong) !important;
 }
 
 /* Accessible global toggle. Header placement inherits Horizon action sizing;

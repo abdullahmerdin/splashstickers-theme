@@ -13,9 +13,11 @@
   assign art_meta_text = section.settings.art_meta_text | default: 'SPLASH STICKERS EST. 2026'
 %}
 
+{% render 'contrast-override', background_color: section.settings.background_color, section_id: section.id %}
+
 <section
-  class="sticker-collection-hero sticker-collection-hero--{{ section.settings.layout }}"
-  style="--collection-bg: {{ section.settings.background_color }}; --collection-primary: {{ section.settings.primary_color }}; --collection-secondary: {{ section.settings.secondary_color }}; --collection-art-bg: {{ section.settings.art_background_color }}; --collection-art-accent: {{ section.settings.art_accent_color }}; --collection-pattern: {{ section.settings.pattern_color }}; --collection-pad-top: {{ section.settings.padding_top }}px; --collection-pad-bottom: {{ section.settings.padding_bottom }}px;"
+  class="sticker-collection-hero sticker-collection-hero--{{ section.settings.layout }} color-custom-{{ section.id }}"
+  style="--collection-bg: var(--color-background); --collection-primary: {{ section.settings.primary_color }}; --collection-secondary: {{ section.settings.secondary_color }}; --collection-art-bg: {{ section.settings.art_background_color }}; --collection-art-accent: {{ section.settings.art_accent_color }}; --collection-pattern: {{ section.settings.pattern_color }}; --collection-pad-top: {{ section.settings.padding_top }}px; --collection-pad-bottom: {{ section.settings.padding_bottom }}px;"
 >
   <div class="sticker-collection-hero__inner">
     <div class="sticker-collection-hero__content">

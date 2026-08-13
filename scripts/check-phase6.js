@@ -23,12 +23,23 @@ function assertNotContains(relativePath, pattern) {
 
 const checks = [
   ['snippets/stylesheets.liquid', "'splash-theme.css' | asset_url | stylesheet_tag"],
+  ['snippets/stylesheets.liquid', "'dark-mode.css' | asset_url | stylesheet_tag"],
+  ['assets/dark-mode.css', '--color-surface-raised'],
+  ['assets/dark-mode.css', ":where(.text-block, [style*='--color:'])"],
+  ['assets/dark-mode.css', "[style*='--text-background-color']"],
+  ['assets/dark-mode.css', "[class*='variant-picker--custom-']"],
   ['assets/splash-theme.css', '.sticker-process-grid'],
   ['assets/splash-theme.css', '.trust-badge'],
   ['assets/splash-theme.css', '.splash-cta-button--outline'],
   ['assets/splash-theme.css', 'var(--splash-font-display)'],
   ['sections/sticker-categories.liquid', 'var(--splash-color-purple)'],
+  ['sections/sticker-categories.liquid', "render 'contrast-override'"],
+  ['sections/sticker-process.liquid', 'color-custom-{{ section.id }}'],
+  ['sections/trust-badges.liquid', 'color-custom-{{ section.id }}'],
   ['sections/splash-hero.liquid', 'var(--splash-color-ink)'],
+  ['sections/splash-hero.liquid', 'background: var(--color-background)'],
+  ['sections/sticker-collection-hero.liquid', '--collection-bg: var(--color-background)'],
+  ['sections/splash-cta.liquid', 'data-theme-color-policy="preserve"'],
   ['snippets/header-actions.liquid', 'var(--splash-color-surface-rgb)'],
   ['config/settings_schema.json', '"theme_name": "Splash Stickers"'],
   ['config/settings_schema.json', '"theme_version": "6.0.0"'],
@@ -38,11 +49,19 @@ const checks = [
 
 checks.forEach(([relativePath, pattern]) => assertContains(relativePath, pattern));
 
+const stylesheetSource = read('snippets/stylesheets.liquid');
+if (stylesheetSource.indexOf("'dark-mode.css'") < stylesheetSource.indexOf("'splash-theme.css'")) {
+  throw new Error('dark-mode.css must load after splash-theme.css so semantic mode tokens win');
+}
+
 if (fs.existsSync(path.join(root, 'assets', 'custom.css'))) {
   throw new Error('assets/custom.css should be retired after the Splash stylesheet consolidation');
 }
 
 assertNotContains('snippets/stylesheets.liquid', 'custom.css');
+assertNotContains('sections/sticker-categories.liquid', 'background-color: {{ section.settings.background_color }}');
+assertNotContains('sections/sticker-process.liquid', 'background-color: {{ section.settings.background_color }}');
+assertNotContains('sections/trust-badges.liquid', 'background-color: {{ section.settings.background_color }}');
 [
   ['sections/sticker-categories.liquid', '#6c5ce7'],
   ['sections/sticker-categories.liquid', '#fd79a8'],
@@ -57,4 +76,4 @@ if (splashThemeBytes >= 102400) {
   throw new Error(`assets/splash-theme.css is ${splashThemeBytes} bytes; keep it below the Theme Check budget`);
 }
 
-console.log(`Phase 6 release checks passed (${checks.length + 8} assertions).`);
+console.log(`Phase 6 release checks passed (${checks.length + 12} assertions).`);

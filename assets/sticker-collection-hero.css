@@ -2,7 +2,7 @@
   position: relative;
   overflow: hidden;
   background: var(--collection-bg);
-  color: var(--splash-color-ink);
+  color: var(--color-foreground);
   padding-block: var(--collection-pad-top) var(--collection-pad-bottom);
 }
 
@@ -46,7 +46,7 @@
 .sticker-collection-hero h1 {
   max-width: 8ch;
   margin: 1.25rem 0 0;
-  color: var(--splash-color-ink);
+  color: var(--color-foreground);
   font-size: clamp(3.8rem, 9vw, 9rem);
   font-weight: 900;
   letter-spacing: -0.09em;

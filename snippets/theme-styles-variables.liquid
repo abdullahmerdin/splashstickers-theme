@@ -463,7 +463,8 @@
     --style-border-width-secondary: {{ settings.secondary_button_border_width }}px;
     --style-border-width-inputs: {{ settings.input_border_width }}px;
     --style-border-radius-popover: {{ settings.popover_border_radius }}px;
-    --style-border-popover: {{ settings.popover_border_width }}px solid {{ settings.popover_border_color }};
+    --style-border-popover-width: {{ settings.popover_border_width }}px;
+    --style-border-popover: var(--style-border-popover-width) solid {{ settings.popover_border_color }};
     --style-border-drawer: 1px solid {{ settings.drawer_border_color }};
     --style-border-swatch-opacity: {{ settings.variant_swatch_border_opacity }}%;
     --style-border-swatch-width: {{ settings.variant_swatch_border_width }}px;

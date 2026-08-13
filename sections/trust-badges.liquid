@@ -1,6 +1,8 @@
+{% render 'contrast-override', background_color: section.settings.background_color, section_id: section.id %}
+
 <div
-  class="trust-badges-section"
-  style="background-color: {{ section.settings.background_color }}; padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+  class="trust-badges-section color-custom-{{ section.id }}"
+  style="background-color: var(--color-background); color: var(--color-foreground); padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
   {% # theme-check-disable-next-line ValidScopedCSSClass %}
   <div class="page-width">

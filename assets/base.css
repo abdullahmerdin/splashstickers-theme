@@ -3456,7 +3456,7 @@ fly-to-cart.fly-to-cart--sticky {
   }
 
   50% {
-    box-shadow: 0 0 0 2px #000;
+    box-shadow: 0 0 0 2px var(--color-focus-ring, var(--color-foreground));
     scale: 1;
   }
 }
