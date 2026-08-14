@@ -74,6 +74,11 @@ enum PurchaseIntentStatus {
   REJECTED
 }
 
+enum PricingMethod {
+  LENGTH
+  UNIT
+}
+
 model Design {
   id              String           @id @default(cuid())
   publicId        String
@@ -172,6 +177,30 @@ model Review {
 
   @@unique([shop, publicId])
   @@index([shop, productId, status, createdAt])
+}
+
+model ProductPricingPolicy {
+  id           String        @id @default(cuid())
+  shop         String
+  productId    String
+  method       PricingMethod
+  currency     String        @default("USD")
+  fixedWidthMm Int           @default(600)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
+  tiers        PricingTier[]
+
+  @@unique([shop, productId])
+}
+
+model PricingTier {
+  id         String               @id @default(cuid())
+  policyId   String
+  threshold  Int
+  priceCents Int
+  policy     ProductPricingPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@unique([policyId, threshold])
 }
 
 model OrderDesign {

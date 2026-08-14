@@ -11,6 +11,7 @@ export async function action({ request }: ActionFunctionArgs) {
   // A shop redaction removes all tenant data, including order/design links.
   if (normalizedTopic === "shop/redact") {
     await db.$transaction([
+      db.productPricingPolicy.deleteMany({ where: { shop } }),
       db.orderDesign.deleteMany({ where: { shop } }),
       db.purchaseIntent.deleteMany({ where: { shop } }),
       db.mockup.deleteMany({ where: { shop } }),
