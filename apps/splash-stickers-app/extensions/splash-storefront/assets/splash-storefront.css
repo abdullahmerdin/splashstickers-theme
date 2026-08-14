@@ -44,9 +44,9 @@
   display: block;
   width: 100%;
   max-width: none;
-  margin: clamp(1.25rem, 3vw, 2.5rem) auto clamp(1rem, 2.5vw, 2rem);
+  margin: 0;
   padding: 0;
-  overflow: visible;
+  overflow: clip;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -57,7 +57,7 @@
   display: block;
   width: 100%;
   min-width: 0;
-  height: clamp(42rem, calc(100svh - var(--header-group-height, 5rem) - clamp(2.25rem, 5.5vw, 4.5rem)), 58rem);
+  height: max(42rem, calc(100svh - var(--header-group-height, 0px)));
   background: transparent;
   border: 0;
 }
@@ -692,7 +692,7 @@
   }
 
   .splash-builder-frame {
-    height: max(44rem, calc(100svh - 1rem));
+    height: max(44rem, calc(100svh - var(--header-group-height, 0px)));
   }
 
   .splash-studio {

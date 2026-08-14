@@ -133,14 +133,16 @@ assert(/<iframe/.test(launcher) && /embedded=1/.test(launcher) && /name="variant
 assert(/\.shopify-block:has\(> \.splash-builder-embed\)/.test(extensionCss) && /align-self:\s*stretch/.test(extensionCss), 'builder app block expands beyond the iframe intrinsic width');
 assert(/\.splash-builder-embed[\s\S]*border:\s*0/.test(extensionCss) && /\.wb-stage[\s\S]*border:\s*1px solid var\(--wb-border\)[\s\S]*border-radius:\s*var\(--wb-radius-lg\)/.test(builderCss), 'embedded builder uses one cohesive themed workspace card without an outer app-block box');
 assert(/<section className="wb-stage"[\s\S]*<header className="wb-appbar"/.test(shell) && !/html\[data-embedded="true"\] \.wb-appbar\s*\{\s*display:\s*none/.test(builderCss), 'product title anchors the embedded desktop workspace');
-assert(/\.splash-builder-embed[\s\S]*margin:\s*clamp\(1\.25rem, 3vw, 2\.5rem\)/.test(extensionCss), 'embedded builder keeps measured breathing room below the storefront header');
+assert(/\.splash-builder-embed[\s\S]*margin:\s*0/.test(extensionCss) && /\.splash-builder-frame[\s\S]*height:\s*max\(42rem, calc\(100svh - var\(--header-group-height, 0px\)\)\)/.test(extensionCss), 'embedded builder fills the storefront width and remaining viewport height');
 assert(/html\[data-theme="dark"\]/.test(extensionCss), 'app extension follows the theme persisted color mode');
 assert(/prefers-color-scheme:\s*dark/.test(extensionCss), 'app extension honors system dark preference before a choice');
 
 const productTemplate = read('templates/product.json');
 const gangsheetTemplate = read('templates/product.product-gangsheet.json');
+const gangsheetTemplateConfig = JSON.parse(gangsheetTemplate.replace(/^[\s\S]*?\*\/\s*/, ''));
 assert(!/blocks\/gangsheet-builder/.test(productTemplate) && /blocks\/gangsheet-builder/.test(gangsheetTemplate), 'only the gangsheet product template embeds the builder app block');
-assert(Object.keys(JSON.parse(gangsheetTemplate.replace(/^[\s\S]*?\*\/\s*/, '')).sections).length === 1, 'gangsheet template contains no empty spacer section');
+assert(Object.keys(gangsheetTemplateConfig.sections).length === 1, 'gangsheet template contains only the builder section');
+assert(Object.values(gangsheetTemplateConfig.sections).some((section) => section.type === '_blocks' && section.settings?.section_width === 'full-width'), 'gangsheet builder section spans the full storefront width');
 assert(!/sticker-configurator/.test(productTemplate + gangsheetTemplate), 'theme templates do not embed the retired configurator');
 assert(/_splash_gangsheet/.test(read('snippets/cart-products.liquid')), 'cart recognizes app-owned gangsheet lines by contract marker');
 assert(/item\.quantity/.test(read('snippets/cart-gangsheet-summary.liquid')), 'cart summary renders Shopify quantity authority');
