@@ -75,7 +75,7 @@ enum PurchaseIntentStatus {
 }
 
 enum PricingMethod {
-  LENGTH
+  AREA
   UNIT
 }
 
@@ -180,15 +180,17 @@ model Review {
 }
 
 model ProductPricingPolicy {
-  id           String        @id @default(cuid())
-  shop         String
-  productId    String
-  method       PricingMethod
-  currency     String        @default("USD")
-  fixedWidthMm Int           @default(600)
-  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
-  tiers        PricingTier[]
+  id             String        @id @default(cuid())
+  shop           String
+  productId      String
+  method         PricingMethod
+  currency       String        @default("USD")
+  baseWidthMm    Int           @default(600)
+  baseLengthMm   Int           @default(1000)
+  basePriceCents Int?
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  tiers          PricingTier[]
 
   @@unique([shop, productId])
 }

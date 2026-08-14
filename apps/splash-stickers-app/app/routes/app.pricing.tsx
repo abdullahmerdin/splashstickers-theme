@@ -3,7 +3,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { data, Form, useActionData, useLoaderData, useNavigation } from "react-router";
 
 import { AdminEmptyState, formatAdminDateTime } from "../components/admin/AdminUi";
-import { parsePricingTiers, type PricingMethodValue } from "../lib/pricing-policy";
+import { parseBasePriceCents, parseUnitPricingTiers, type PricingMethodValue } from "../lib/pricing-policy";
 import { listPricingPolicies, savePricingPolicy } from "../services/pricing-policies.server";
 import { listAdminProducts, resolveAdminProduct, type AdminProduct } from "../services/products.server";
 import { authenticate } from "../shopify.server";
@@ -14,6 +14,7 @@ type PolicyDraft = {
   productTitle: string;
   method: PricingMethodValue;
   currency: string;
+  basePrice: string;
   tiers: TierDraft[];
 };
 
@@ -33,7 +34,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
         policy: policy ? {
           method: policy.method,
           currency: policy.currency,
-          fixedWidthMm: policy.fixedWidthMm,
+          baseWidthMm: policy.baseWidthMm,
+          baseLengthMm: policy.baseLengthMm,
+          basePriceCents: policy.basePriceCents,
           updatedAt: policy.updatedAt,
           tiers: policy.tiers.map((tier) => ({ threshold: tier.threshold, priceCents: tier.priceCents })),
         } : null,
@@ -47,19 +50,21 @@ export async function action({ request }: ActionFunctionArgs) {
   const form = await request.formData();
   const productId = String(form.get("productId") || "").slice(0, 128);
   const method = String(form.get("method") || "") as PricingMethodValue;
-  if (method !== "LENGTH" && method !== "UNIT") {
-    return data({ ok: false, productId, message: "Choose length or quantity pricing." }, { status: 422 });
+  if (method !== "AREA" && method !== "UNIT") {
+    return data({ ok: false, productId, message: "Choose area or quantity pricing." }, { status: 422 });
   }
 
   try {
     const product = await resolveAdminProduct(admin, productId);
+    const basePriceCents = method === "AREA" ? parseBasePriceCents(form.get("basePrice")) : null;
     const rawTiers = JSON.parse(String(form.get("tiers") || "[]")) as unknown;
-    const tiers = parsePricingTiers(rawTiers, method);
+    const tiers = method === "UNIT" ? parseUnitPricingTiers(rawTiers) : [];
     await savePricingPolicy({
       shop: session.shop,
       productId: product.id,
       method,
       currency: product.currency,
+      basePriceCents,
       tiers,
     });
     return { ok: true, productId, message: "Pricing policy saved." };
@@ -97,14 +102,12 @@ export default function Pricing() {
     setDraft({
       productId: product.id,
       productTitle: product.title,
-      method: policy?.method || "LENGTH",
+      method: policy?.method || "AREA",
       currency: policy?.currency || currency,
-      tiers: policy?.tiers.length
+      basePrice: policy?.basePriceCents ? centsToInput(policy.basePriceCents) : "2.00",
+      tiers: policy?.method === "UNIT" && policy.tiers.length
         ? policy.tiers.map((tier) => ({ key: tierKey(), threshold: String(tier.threshold), price: centsToInput(tier.priceCents) }))
-        : [
-          { key: tierKey(), threshold: "100", price: "2.00" },
-          { key: tierKey(), threshold: "110", price: "2.20" },
-        ],
+        : [{ key: tierKey(), threshold: "1", price: "" }],
     });
   }
 
@@ -140,7 +143,7 @@ export default function Pricing() {
                   <s-table-cell>
                     {product.policy ? (
                       <s-stack direction="block" gap="small-100">
-                        <s-text>{product.policy.method === "LENGTH" ? "By length / 60 cm width" : "By quantity"}</s-text>
+                        <s-text>{product.policy.method === "AREA" ? "By area / 60 x 100 cm base" : "By quantity"}</s-text>
                         <s-text color="subdued">Updated {formatAdminDateTime(product.policy.updatedAt)}</s-text>
                       </s-stack>
                     ) : <s-text color="subdued">Not configured</s-text>}
@@ -162,6 +165,7 @@ export default function Pricing() {
         <Form method="post">
           <input type="hidden" name="productId" value={draft.productId} />
           <input type="hidden" name="method" value={draft.method} />
+          <input type="hidden" name="basePrice" value={draft.basePrice} />
           <input type="hidden" name="tiers" value={JSON.stringify(draft.tiers.map((tier) => ({ threshold: tier.threshold, price: tier.price })))} />
           <s-modal
             ref={modalRef}
@@ -180,46 +184,59 @@ export default function Pricing() {
                 disabled={busy}
                 onChange={(event) => changeMethod(event.currentTarget.value as PricingMethodValue)}
               >
-                <s-option value="LENGTH">By length</s-option>
+                <s-option value="AREA">By area</s-option>
                 <s-option value="UNIT">By quantity</s-option>
               </s-select>
-              {draft.method === "LENGTH" && <s-text color="subdued">Width is fixed at 60 cm. Length prices use the next matching maximum length.</s-text>}
-              <s-stack direction="block" gap="small-300">
-                {draft.tiers.map((tier, index) => (
-                  <s-box key={tier.key} padding="base" borderWidth="base" borderRadius="base">
-                    <s-stack direction="inline" gap="base">
-                      <s-number-field
-                        label={draft.method === "LENGTH" ? "Maximum length" : "Minimum quantity"}
-                        value={tier.threshold}
-                        min={1}
-                        step={1}
-                        inputMode="numeric"
-                        suffix={draft.method === "LENGTH" ? "cm" : undefined}
-                        disabled={busy}
-                        onInput={(event) => updateTier(index, { threshold: event.currentTarget.value })}
-                      />
-                      <s-money-field
-                        label={draft.method === "LENGTH" ? `Total price (${draft.currency})` : `Unit price (${draft.currency})`}
-                        value={tier.price}
-                        min={0.01}
-                        disabled={busy}
-                        onInput={(event) => updateTier(index, { price: event.currentTarget.value })}
-                      />
-                      <s-button
-                        variant="secondary"
-                        tone="critical"
-                        type="button"
-                        disabled={busy || draft.tiers.length === 1}
-                        accessibilityLabel={`Remove tier ${index + 1}`}
-                        onClick={() => removeTier(index)}
-                      >
-                        Remove
-                      </s-button>
-                    </s-stack>
-                  </s-box>
-                ))}
-              </s-stack>
-              <s-button type="button" variant="secondary" disabled={busy || draft.tiers.length >= 100} onClick={addTier}>Add tier</s-button>
+              {draft.method === "AREA" ? (
+                <s-stack direction="block" gap="small-200">
+                  <s-money-field
+                    label={`Price for 60 x 100 cm (${draft.currency})`}
+                    value={draft.basePrice}
+                    min={0.01}
+                    disabled={busy}
+                    onInput={(event) => setDraft((current) => current ? { ...current, basePrice: event.currentTarget.value } : current)}
+                  />
+                  <s-text color="subdued">Smaller sheets keep this minimum price. Larger sheets scale proportionally by area.</s-text>
+                </s-stack>
+              ) : (
+                <>
+                  <s-stack direction="block" gap="small-300">
+                    {draft.tiers.map((tier, index) => (
+                      <s-box key={tier.key} padding="base" borderWidth="base" borderRadius="base">
+                        <s-stack direction="inline" gap="base">
+                          <s-number-field
+                            label="Minimum quantity"
+                            value={tier.threshold}
+                            min={1}
+                            step={1}
+                            inputMode="numeric"
+                            disabled={busy}
+                            onInput={(event) => updateTier(index, { threshold: event.currentTarget.value })}
+                          />
+                          <s-money-field
+                            label={`Unit price (${draft.currency})`}
+                            value={tier.price}
+                            min={0.01}
+                            disabled={busy}
+                            onInput={(event) => updateTier(index, { price: event.currentTarget.value })}
+                          />
+                          <s-button
+                            variant="secondary"
+                            tone="critical"
+                            type="button"
+                            disabled={busy || draft.tiers.length === 1}
+                            accessibilityLabel={`Remove tier ${index + 1}`}
+                            onClick={() => removeTier(index)}
+                          >
+                            Remove
+                          </s-button>
+                        </s-stack>
+                      </s-box>
+                    ))}
+                  </s-stack>
+                  <s-button type="button" variant="secondary" disabled={busy || draft.tiers.length >= 100} onClick={addTier}>Add tier</s-button>
+                </>
+              )}
             </s-stack>
             <s-button slot="secondary-actions" type="button" variant="secondary" disabled={busy} onClick={() => modalRef.current?.hideOverlay()}>Cancel</s-button>
             <s-button slot="primary-action" variant="primary" type="submit" loading={busy}>Save</s-button>
@@ -233,7 +250,10 @@ export default function Pricing() {
     setDraft((current) => current ? {
       ...current,
       method,
-      tiers: [{ key: tierKey(), threshold: method === "LENGTH" ? "100" : "1", price: "" }],
+      basePrice: method === "AREA" && !current.basePrice ? "2.00" : current.basePrice,
+      tiers: method === "UNIT" && !current.tiers.length
+        ? [{ key: tierKey(), threshold: "1", price: "" }]
+        : current.tiers,
     } : current);
   }
 
