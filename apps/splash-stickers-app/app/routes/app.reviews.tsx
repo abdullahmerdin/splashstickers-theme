@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { Form, useLoaderData } from "react-router";
+import { Form, useLoaderData, useNavigation } from "react-router";
 
+import { AdminEmptyState, AdminStatusBadge, formatAdminDateTime, resourceId } from "../components/admin/AdminUi";
 import db from "../db.server";
 import { authenticate } from "../shopify.server";
 
@@ -30,36 +31,96 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Reviews() {
   const { reviews } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
+  const busy = navigation.state !== "idle";
+  const activeReviewId = String(navigation.formData?.get("id") || "");
+  const activeIntent = String(navigation.formData?.get("intent") || "");
+
   return (
     <s-page heading="Reviews">
       <s-section>
-        {!reviews.length ? <s-paragraph>No customer review has been submitted yet.</s-paragraph> : (
-          <s-stack direction="block" gap="base">
-            {reviews.map((review) => (
-              <s-box key={review.publicId} padding="base" borderWidth="base" borderRadius="base">
-                <s-heading>{review.rating}/5 {review.title || "Review"}</s-heading>
-                <s-paragraph>{review.body}</s-paragraph>
-                <s-paragraph>Status: {review.status} · Product: {review.productId}</s-paragraph>
-                {review.status === "PENDING" && (
-                  <s-stack direction="inline" gap="base">
-                    <ModerationForm id={review.publicId} intent="approve" label="Approve" />
-                    <ModerationForm id={review.publicId} intent="reject" label="Reject" />
-                  </s-stack>
-                )}
-              </s-box>
-            ))}
-          </s-stack>
+        {!reviews.length ? (
+          <AdminEmptyState>No customer review has been submitted yet.</AdminEmptyState>
+        ) : (
+          <s-table variant="auto">
+            <s-table-header-row>
+              <s-table-header listSlot="primary">Review</s-table-header>
+              <s-table-header listSlot="secondary" format="numeric">Rating</s-table-header>
+              <s-table-header listSlot="labeled">Status</s-table-header>
+              <s-table-header listSlot="labeled">Product</s-table-header>
+              <s-table-header listSlot="labeled">Submitted</s-table-header>
+              <s-table-header>Actions</s-table-header>
+            </s-table-header-row>
+            <s-table-body>
+              {reviews.map((review) => (
+                <s-table-row key={review.publicId}>
+                  <s-table-cell>
+                    <s-stack direction="block" gap="small-100">
+                      <s-text type="strong">{review.title || "Untitled review"}</s-text>
+                      <s-paragraph color="subdued" lineClamp={2}>{review.body}</s-paragraph>
+                      {review.authorName && <s-text color="subdued">{review.authorName}</s-text>}
+                    </s-stack>
+                  </s-table-cell>
+                  <s-table-cell><s-text fontVariantNumeric="tabular-nums">{review.rating} / 5</s-text></s-table-cell>
+                  <s-table-cell><AdminStatusBadge kind="review" status={review.status} /></s-table-cell>
+                  <s-table-cell>{resourceId(review.productId)}</s-table-cell>
+                  <s-table-cell>{formatAdminDateTime(review.createdAt)}</s-table-cell>
+                  <s-table-cell>
+                    {review.status === "PENDING" ? (
+                      <s-stack direction="inline" gap="small-200">
+                        <ModerationForm
+                          id={review.publicId}
+                          intent="approve"
+                          label="Approve"
+                          variant="primary"
+                          disabled={busy}
+                          loading={activeReviewId === review.publicId && activeIntent === "approve"}
+                        />
+                        <ModerationForm
+                          id={review.publicId}
+                          intent="reject"
+                          label="Reject"
+                          tone="critical"
+                          disabled={busy}
+                          loading={activeReviewId === review.publicId && activeIntent === "reject"}
+                        />
+                      </s-stack>
+                    ) : (
+                      <s-text color="subdued">Moderated</s-text>
+                    )}
+                  </s-table-cell>
+                </s-table-row>
+              ))}
+            </s-table-body>
+          </s-table>
         )}
       </s-section>
     </s-page>
   );
 }
 
-function ModerationForm({ id, intent, label }: { id: string; intent: string; label: string }) {
+function ModerationForm({
+  id,
+  intent,
+  label,
+  variant = "secondary",
+  tone = "neutral",
+  disabled = false,
+  loading = false,
+}: {
+  id: string;
+  intent: "approve" | "reject";
+  label: string;
+  variant?: "primary" | "secondary";
+  tone?: "neutral" | "critical";
+  disabled?: boolean;
+  loading?: boolean;
+}) {
   return (
     <Form method="post">
       <input type="hidden" name="id" value={id} />
-      <button type="submit" name="intent" value={intent}>{label}</button>
+      <input type="hidden" name="intent" value={intent} />
+      <s-button type="submit" variant={variant} tone={tone} disabled={disabled} loading={loading}>{label}</s-button>
     </Form>
   );
 }

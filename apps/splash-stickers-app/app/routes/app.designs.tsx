@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 
+import { AdminEmptyState, AdminStatusBadge, formatAdminDateTime } from "../components/admin/AdminUi";
 import db from "../db.server";
 import { authenticate } from "../shopify.server";
 
@@ -13,8 +14,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     select: {
       publicId: true,
       status: true,
-      productId: true,
-      variantId: true,
       schemaVersion: true,
       updatedAt: true,
       _count: { select: { assets: true, mockups: true, orders: true } },
@@ -28,31 +27,38 @@ export default function Designs() {
   return (
     <s-page heading="Designs">
       <s-section>
-        <RecordTable
-          empty="No storefront design has been saved yet."
-          headings={["Design", "Status", "Assets", "Mockups", "Orders", "Updated"]}
-          rows={designs.map((design) => [
-            design.publicId,
-            design.status,
-            String(design._count.assets),
-            String(design._count.mockups),
-            String(design._count.orders),
-            new Date(design.updatedAt).toLocaleString(),
-          ])}
-        />
+        {!designs.length ? (
+          <AdminEmptyState>No storefront design has been saved yet.</AdminEmptyState>
+        ) : (
+          <s-table variant="auto">
+            <s-table-header-row>
+              <s-table-header listSlot="primary">Design</s-table-header>
+              <s-table-header listSlot="secondary">Status</s-table-header>
+              <s-table-header listSlot="inline" format="numeric">Assets</s-table-header>
+              <s-table-header listSlot="inline" format="numeric">Mockups</s-table-header>
+              <s-table-header listSlot="inline" format="numeric">Orders</s-table-header>
+              <s-table-header listSlot="labeled">Updated</s-table-header>
+            </s-table-header-row>
+            <s-table-body>
+              {designs.map((design) => (
+                <s-table-row key={design.publicId}>
+                  <s-table-cell>
+                    <s-stack direction="block" gap="small-100">
+                      <s-text type="strong">{design.publicId}</s-text>
+                      <s-text color="subdued">Schema {design.schemaVersion}</s-text>
+                    </s-stack>
+                  </s-table-cell>
+                  <s-table-cell><AdminStatusBadge kind="design" status={design.status} /></s-table-cell>
+                  <s-table-cell><s-text fontVariantNumeric="tabular-nums">{design._count.assets}</s-text></s-table-cell>
+                  <s-table-cell><s-text fontVariantNumeric="tabular-nums">{design._count.mockups}</s-text></s-table-cell>
+                  <s-table-cell><s-text fontVariantNumeric="tabular-nums">{design._count.orders}</s-text></s-table-cell>
+                  <s-table-cell>{formatAdminDateTime(design.updatedAt)}</s-table-cell>
+                </s-table-row>
+              ))}
+            </s-table-body>
+          </s-table>
+        )}
       </s-section>
     </s-page>
-  );
-}
-
-function RecordTable({ headings, rows, empty }: { headings: string[]; rows: string[][]; empty: string }) {
-  if (!rows.length) return <s-paragraph>{empty}</s-paragraph>;
-  return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-        <thead><tr>{headings.map((heading) => <th key={heading} style={{ padding: 10 }}>{heading}</th>)}</tr></thead>
-        <tbody>{rows.map((row) => <tr key={row[0]}>{row.map((value, index) => <td key={`${row[0]}-${headings[index]}`} style={{ borderTop: "1px solid #ddd", padding: 10 }}>{value}</td>)}</tr>)}</tbody>
-      </table>
-    </div>
   );
 }

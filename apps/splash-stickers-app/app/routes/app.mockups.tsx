@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 
+import { AdminEmptyState, AdminStatusBadge, formatAdminDateTime, formatAdminLabel } from "../components/admin/AdminUi";
 import db from "../db.server";
 import { authenticate } from "../shopify.server";
 
@@ -16,7 +17,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       outputUrl: true,
       errorCode: true,
       scene: true,
-      options: true,
       createdAt: true,
       design: { select: { publicId: true } },
     },
@@ -29,17 +29,42 @@ export default function Mockups() {
   return (
     <s-page heading="Mockups">
       <s-section>
-        {!mockups.length ? <s-paragraph>No mockup has been requested yet.</s-paragraph> : (
-          <s-stack direction="block" gap="base">
-            {mockups.map((mockup) => (
-              <s-box key={mockup.publicId} padding="base" borderWidth="base" borderRadius="base">
-                <s-heading>{mockup.publicId}</s-heading>
-                <s-paragraph>Design: {mockup.design.publicId} · Product: {mockup.scene} · Status: {mockup.status}</s-paragraph>
-                {mockup.outputUrl && <s-link href={mockup.outputUrl} target="_blank">Open generated mockup</s-link>}
-                {mockup.errorCode && <s-paragraph>Error: {mockup.errorCode}</s-paragraph>}
-              </s-box>
-            ))}
-          </s-stack>
+        {!mockups.length ? (
+          <AdminEmptyState>No mockup has been requested yet.</AdminEmptyState>
+        ) : (
+          <s-table variant="auto">
+            <s-table-header-row>
+              <s-table-header listSlot="primary">Mockup</s-table-header>
+              <s-table-header listSlot="secondary">Scene</s-table-header>
+              <s-table-header listSlot="labeled">Status</s-table-header>
+              <s-table-header listSlot="labeled">Created</s-table-header>
+              <s-table-header>Output</s-table-header>
+            </s-table-header-row>
+            <s-table-body>
+              {mockups.map((mockup) => (
+                <s-table-row key={mockup.publicId}>
+                  <s-table-cell>
+                    <s-stack direction="block" gap="small-100">
+                      <s-text type="strong">{mockup.publicId}</s-text>
+                      <s-text color="subdued">Design {mockup.design.publicId}</s-text>
+                    </s-stack>
+                  </s-table-cell>
+                  <s-table-cell>{formatAdminLabel(mockup.scene)}</s-table-cell>
+                  <s-table-cell><AdminStatusBadge kind="mockup" status={mockup.status} /></s-table-cell>
+                  <s-table-cell>{formatAdminDateTime(mockup.createdAt)}</s-table-cell>
+                  <s-table-cell>
+                    {mockup.outputUrl ? (
+                      <s-link href={mockup.outputUrl} target="_blank">Open output</s-link>
+                    ) : mockup.errorCode ? (
+                      <s-text tone="critical">{mockup.errorCode}</s-text>
+                    ) : (
+                      <s-text color="subdued">Not ready</s-text>
+                    )}
+                  </s-table-cell>
+                </s-table-row>
+              ))}
+            </s-table-body>
+          </s-table>
         )}
       </s-section>
     </s-page>

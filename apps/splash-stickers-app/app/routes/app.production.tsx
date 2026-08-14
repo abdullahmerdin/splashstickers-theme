@@ -2,32 +2,12 @@ import { useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { data, Form, useActionData, useLoaderData, useNavigation, useRevalidator } from "react-router";
 
+import { AdminEmptyState, AdminMetricStrip, AdminStatusBadge, getAdminStatusPresentation, resourceId } from "../components/admin/AdminUi";
 import db from "../db.server";
 import { groupProductionOrdersByDay, hasActiveProductionFiles, PRODUCTION_POLL_INTERVAL_MS, PRODUCTION_TIME_ZONE } from "../lib/production-queue";
 import { safeProductionError } from "../services/production-file-identity";
 import { queueProductionWork } from "../services/production-worker.server";
 import { authenticate } from "../shopify.server";
-
-const FILE_STATUS_LABELS = {
-  PENDING: "Pending",
-  PROCESSING: "Processing",
-  READY: "Ready",
-  FAILED: "Failed",
-} as const;
-
-const FILE_STATUS_TONES = {
-  PENDING: "neutral",
-  PROCESSING: "info",
-  READY: "success",
-  FAILED: "critical",
-} as const;
-
-const PRODUCTION_STATUS_LABELS = {
-  PENDING: "Queued",
-  IN_PRODUCTION: "In production",
-  FULFILLED: "Complete",
-  CANCELLED: "Cancelled",
-} as const;
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { session } = await authenticate.admin(request);
@@ -148,16 +128,18 @@ export default function ProductionQueue() {
       )}
 
       <s-section>
-        <s-stack direction="inline" gap="base">
-          <QueueCount label="Ready" value={counts.ready} />
-          <QueueCount label="Pending" value={counts.pending} />
-          <QueueCount label="Processing" value={counts.processing} />
-          <QueueCount label="Failed" value={counts.failed} />
-        </s-stack>
+        <AdminMetricStrip
+          metrics={[
+            { label: "Ready", value: counts.ready },
+            { label: "Pending", value: counts.pending },
+            { label: "Processing", value: counts.processing },
+            { label: "Failed", value: counts.failed },
+          ]}
+        />
       </s-section>
 
       <s-section>
-        {!orders.length ? <s-paragraph>No paid configurator orders are waiting for production.</s-paragraph> : (
+        {!orders.length ? <AdminEmptyState>No paid configurator orders are waiting for production.</AdminEmptyState> : (
           <s-stack direction="block" gap="base">
             {orderGroups.map((group) => (
               <s-stack key={group.key} direction="block" gap="small-300">
@@ -178,6 +160,7 @@ export default function ProductionQueue() {
                         ? `${formatMm(order.sheetWidthMm)} × ${formatMm(order.sheetHeightMm)} mm`
                         : "Not recorded";
                       const fileBusy = order.productionFileStatus === "PENDING" || order.productionFileStatus === "PROCESSING";
+                      const fileStatus = getAdminStatusPresentation("productionFile", order.productionFileStatus);
                       return (
                         <s-table-row key={order.id}>
                           <s-table-cell>
@@ -194,7 +177,7 @@ export default function ProductionQueue() {
                           </s-table-cell>
                           <s-table-cell>
                             <s-stack direction="block" gap="small-200">
-                              <s-badge tone={FILE_STATUS_TONES[order.productionFileStatus]}>{FILE_STATUS_LABELS[order.productionFileStatus]}</s-badge>
+                              <AdminStatusBadge kind="productionFile" status={order.productionFileStatus} />
                               {order.productionFileUrl && <s-link href={order.productionFileUrl} target="_blank">Open PDF</s-link>}
                               {order.productionFileMinDpi && (
                                 <s-text tone={order.productionFileMinDpi < 300 ? "caution" : "neutral"}>
@@ -206,14 +189,12 @@ export default function ProductionQueue() {
                             </s-stack>
                           </s-table-cell>
                           <s-table-cell>
-                            <s-badge tone={order.status === "FULFILLED" ? "success" : order.status === "IN_PRODUCTION" ? "info" : "neutral"}>
-                              {PRODUCTION_STATUS_LABELS[order.status]}
-                            </s-badge>
+                            <AdminStatusBadge kind="production" status={order.status} />
                           </s-table-cell>
                           <s-table-cell>
                             <s-stack direction="inline" gap="small-200">
                               {order.productionFileStatus === "FAILED" && <QueueAction id={order.id} intent="retry" label="Retry" disabled={busy} loading={activeActionId === order.id} />}
-                              {fileBusy && <QueueAction id={order.id} intent="retry" label={FILE_STATUS_LABELS[order.productionFileStatus]} loading />}
+                              {fileBusy && <QueueAction id={order.id} intent="retry" label={fileStatus.label} loading />}
                               {order.productionFileStatus === "READY" && order.status === "PENDING" && <QueueAction id={order.id} intent="start" label="Start" disabled={busy} loading={activeActionId === order.id} />}
                               {order.productionFileStatus === "READY" && order.status === "IN_PRODUCTION" && <QueueAction id={order.id} intent="complete" label="Complete" disabled={busy} loading={activeActionId === order.id} />}
                             </s-stack>
@@ -230,10 +211,6 @@ export default function ProductionQueue() {
       </s-section>
     </s-page>
   );
-}
-
-function resourceId(value: string) {
-  return value.split("/").pop() || value;
 }
 
 function formatMm(value: number) {
@@ -256,15 +233,6 @@ function formatOrderTime(value: string | Date) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
-}
-
-function QueueCount({ label, value }: { label: string; value: number }) {
-  return (
-    <s-box padding="base" borderWidth="base" borderRadius="base">
-      <s-heading>{value.toLocaleString()}</s-heading>
-      <s-text color="subdued">{label}</s-text>
-    </s-box>
-  );
 }
 
 function QueueAction({
