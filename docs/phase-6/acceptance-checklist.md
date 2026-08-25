@@ -13,3 +13,12 @@
 - [x] `OrderDesign` stores sheet, artwork, file, checksum, attempt and error metadata.
 - [x] Duplicate webhook delivery is idempotent and failed generation is retryable.
 - [x] Shopify admin exposes the production queue, PDF, failure and workflow actions.
+
+## 2026-08-25 release pass evidence
+
+- [ ] Preview content route sign-off remains open: the documented matrix was exercised at 1440 × 900, 768 × 1024 and 375 × 812 on `a4511a6704c012553d651bc1b926faeec7695689` using `https://splash-stickers-d8nmeoak.myshopify.com`.
+- [x] All 30 documented route/viewport attempts completed navigation. `/password` rendered the Splash Stickers password screen at all three sizes; the other 27 attempts (home, collection, search, standard product, gangsheet product, cart, about, contact and invalid route) returned Shopify’s generic “Bu web sitesi yüklenirken sorun oluştu” error page while the storefront was locked/unavailable.
+- [x] Browser evidence for the reachable/blocked states: `scrollWidth === clientWidth` at 1440, 768 and 375 px for every attempt; 0 captured console error/warning entries; no theme `data-theme` state was available because the theme shell did not render.
+- [ ] Layout, dark-mode, keyboard/reduced-motion, cart payload, checkout handoff and builder interaction sign-off is blocked by the preview state above; no source-code regression was changed without rendered storefront evidence.
+- [x] Local validation passed: `npm.cmd run check:phase4`, `npm.cmd run check:phase5`, `npm.cmd run check:phase6`, `npm.cmd run check:storefront`, `npm.cmd run check:builder`, and `npm.cmd run check:platform` (including contract tests, production tests, typecheck, lint and app build).
+- [ ] Shopify Theme Check could not be completed: `shopify theme check` timed out after 64 seconds in this environment without returning a result.
