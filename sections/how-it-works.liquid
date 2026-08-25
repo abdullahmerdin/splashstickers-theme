@@ -117,21 +117,21 @@
   <div class="how-it-works__inner page-width">
     {% case layout %}
       {% when 'hub' %}
-        <header class="how-it-works__hero">
+        <header class="how-it-works__hero how-it-works__hero--hub" aria-labelledby="how-it-works-hub-title">
           <p class="how-it-works__eyebrow">{{ hub_eyebrow | escape }}</p>
-          <h1>{{ hub_title | escape }}</h1>
+          <h1 id="how-it-works-hub-title">{{ hub_title | escape }}</h1>
           <p class="how-it-works__intro">{{ hub_intro | escape }}</p>
         </header>
 
-        <div class="how-it-works__hub-grid">
-          <a class="how-it-works__hub-card" href="{{ hub_products_url | escape }}">
+        <div class="how-it-works__hub-grid" role="list" aria-label="{{ hub_title | escape }}">
+          <a class="how-it-works__hub-card" href="{{ hub_products_url | escape }}" role="listitem">
             <span class="how-it-works__hub-card-label">{{ hub_products_label | escape }}</span>
             <h2>{{ hub_products_title | escape }}</h2>
             <p>{{ hub_products_text | escape }}</p>
             <span class="how-it-works__card-link">{{ hub_card_link_label | escape }} <span aria-hidden="true">&rarr;</span></span>
           </a>
 
-          <a class="how-it-works__hub-card how-it-works__hub-card--site" href="{{ hub_site_url | escape }}">
+          <a class="how-it-works__hub-card how-it-works__hub-card--site" href="{{ hub_site_url | escape }}" role="listitem">
             <span class="how-it-works__hub-card-label">{{ hub_site_label | escape }}</span>
             <h2>{{ hub_site_title | escape }}</h2>
             <p>{{ hub_site_text | escape }}</p>
@@ -146,9 +146,9 @@
             <p>{{ quick_text | escape }}</p>
           </div>
           <ol class="how-it-works__quick-list">
-            <li>{{ quick_step_one | escape }}</li>
-            <li>{{ quick_step_two | escape }}</li>
-            <li>{{ quick_step_three | escape }}</li>
+            <li><span class="how-it-works__quick-index" aria-hidden="true">01</span><span>{{ quick_step_one | escape }}</span></li>
+            <li><span class="how-it-works__quick-index" aria-hidden="true">02</span><span>{{ quick_step_two | escape }}</span></li>
+            <li><span class="how-it-works__quick-index" aria-hidden="true">03</span><span>{{ quick_step_three | escape }}</span></li>
           </ol>
         </div>
 

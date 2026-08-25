@@ -215,6 +215,86 @@ html[data-theme='dark'] .how-it-works {
   font-weight: 700;
 }
 
+/* The hub is the entry point: keep its hierarchy open, flat, and easy to scan. */
+.how-it-works--hub .how-it-works__inner {
+  padding-block: clamp(3.5rem, 8vw, 7rem);
+}
+
+.how-it-works--hub .how-it-works__hero--hub {
+  max-width: 58rem;
+  margin-inline: 0;
+  text-align: start;
+}
+
+.how-it-works--hub .how-it-works__hero--hub h1 {
+  max-width: 13ch;
+}
+
+.how-it-works--hub .how-it-works__hero--hub .how-it-works__intro {
+  margin-inline: 0;
+  max-width: 42rem;
+}
+
+.how-it-works--hub .how-it-works__hub-grid {
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.how-it-works--hub .how-it-works__hub-card {
+  min-height: 22rem;
+  border-color: var(--how-it-works-border);
+  border-block-start: 4px solid var(--how-it-works-accent);
+  border-radius: var(--splash-radius-card);
+  box-shadow: none;
+}
+
+.how-it-works--hub .how-it-works__hub-card:hover {
+  transform: none;
+  border-color: var(--how-it-works-accent);
+  box-shadow: none;
+}
+
+.how-it-works--hub .how-it-works__hub-card:focus-visible {
+  border-color: var(--how-it-works-accent);
+}
+
+.how-it-works--hub .how-it-works__hub-card h2 {
+  max-width: 12ch;
+}
+
+.how-it-works--hub .how-it-works__quick-path {
+  border: 0;
+  border-block: var(--splash-border-width) solid var(--how-it-works-border);
+  border-radius: 0;
+  background: var(--how-it-works-card);
+  box-shadow: none;
+}
+
+.how-it-works--hub .how-it-works__quick-list {
+  gap: 0;
+}
+
+.how-it-works--hub .how-it-works__quick-list li {
+  min-height: 4.25rem;
+  padding-inline: 0;
+  border: 0;
+  border-block-end: var(--splash-border-width) solid var(--how-it-works-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.how-it-works--hub .how-it-works__quick-list li:last-child {
+  border-block-end: 0;
+}
+
+.how-it-works__quick-index {
+  flex: 0 0 2.5rem;
+  color: var(--how-it-works-accent);
+  font-family: var(--splash-font-display);
+  font-size: var(--splash-font-meta-size);
+  font-weight: 800;
+  letter-spacing: var(--splash-font-meta-tracking);
+}
+
 .how-it-works__back-link,
 .how-it-works__text-link,
 .how-it-works__breadcrumbs a {
@@ -485,6 +565,14 @@ html[data-theme='dark'] .how-it-works {
   .how-it-works__hub-card,
   .how-it-works__directory-card {
     min-height: 250px;
+  }
+
+  .how-it-works--hub .how-it-works__hero--hub {
+    text-align: start;
+  }
+
+  .how-it-works--hub .how-it-works__hub-card {
+    min-height: auto;
   }
 
   .how-it-works__directory-card-art {
