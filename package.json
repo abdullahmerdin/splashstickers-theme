@@ -10,6 +10,8 @@
     "build:storefront-extension": "esbuild apps/splash-stickers-app/storefront-extension-src/product-reviews.js apps/splash-stickers-app/storefront-extension-src/mockup-studio-v2.js --minify --charset=utf8 --outdir=apps/splash-stickers-app/extensions/splash-storefront/assets && terser apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js --ecma 2020 --compress passes=3,booleans_as_integers=true --mangle --mangle-props regex=/^_/ --output apps/splash-stickers-app/extensions/splash-storefront/assets/mockup-studio-v2.js",
     "build:app": "npm run build --workspace=@splash-stickers/app",
     "build:platform": "npm run build:storefront-extension && npm run build:app",
+    "test:secrets": "node --test scripts/check-secrets.test.js",
+    "check:secrets": "npm run test:secrets && node scripts/check-secrets.js",
     "check:how-it-works": "node scripts/check-how-it-works.js",
     "check:storefront": "node scripts/check-storefront.js",
     "check:phase4": "node scripts/check-phase4.js",
@@ -19,10 +21,10 @@
     "check:contract": "npm test --workspace=@splash-stickers/design-contract",
     "check:builder": "node --test apps/splash-stickers-app/app/lib/gangsheet-editor.test.mjs",
     "check:production": "npm run test:production --workspace=@splash-stickers/app",
-    "check:app": "npm run check:builder && npm run check:production && npm run typecheck --workspace=@splash-stickers/app && npm run lint --workspace=@splash-stickers/app && npm run build --workspace=@splash-stickers/app",
+    "check:app": "npm run check:builder && npm run check:production && npm run typecheck --workspace=@splash-stickers/app && npm run lint --workspace=@splash-stickers/app && npm run build --workspace=@splash-stickers/app && npm run check:secrets",
     "check:platform": "node scripts/check-platform.js && npm run check:contract && npm run check:app",
     "check:theme": "npm run check:phase4 && npm run check:phase5 && npm run check:phase6 && npm run check:how-it-works && npm run check:storefront",
-    "check:all": "npm run check:theme && npm run check:platform"
+    "check:all": "npm run check:secrets && npm run check:theme && npm run check:platform"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

@@ -1,4 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { assertProductionEnvironment } from "./env-validation.js";
+
+assertProductionEnvironment();
 
 declare global {
   // eslint-disable-next-line no-var

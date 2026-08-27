@@ -29,5 +29,5 @@ yarn-error.log
 
 # Config secrets
 .env
-.env.local
+.env.*
 !.env.example

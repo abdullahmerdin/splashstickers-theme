@@ -18,6 +18,8 @@ const required = [
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.complete.ts',
   'apps/splash-stickers-app/app/routes/apps.splash-stickers.uploads.status.ts',
   'apps/splash-stickers-app/app/routes/healthz.ts',
+  'apps/splash-stickers-app/app/env-validation.js',
+  'apps/splash-stickers-app/app/validate-production-env.mjs',
   'apps/splash-stickers-app/app/routes/app.production.tsx',
   'apps/splash-stickers-app/app/services/products.server.ts',
   'apps/splash-stickers-app/app/services/purchase-intents.server.ts',
@@ -35,13 +37,16 @@ const required = [
   'apps/splash-stickers-app/prisma/migrations/20260813130000_production_files/migration.sql',
   'packages/design-contract/schema/design-manifest.schema.json',
   'docs/workbench-interface-standard.md',
+  'scripts/check-secrets.js',
 ];
 required.forEach((relativePath) => assert(fs.existsSync(path.join(root, relativePath)), `required platform file exists: ${relativePath}`));
 
 const rootPackage = JSON.parse(read('package.json'));
+const appPackage = JSON.parse(read('apps/splash-stickers-app/package.json'));
 assert(rootPackage.private === true, 'workspace root is private');
 assert(rootPackage.workspaces.includes('apps/splash-stickers-app'), 'root owns the Shopify app workspace');
 assert(!rootPackage.scripts['build:configurator'] && !rootPackage.scripts['check:configurator'], 'retired theme configurator scripts stay absent');
+assert(rootPackage.scripts['check:secrets'].includes('node scripts/check-secrets.js') && rootPackage.scripts['test:secrets'].includes('check-secrets.test.js') && rootPackage.scripts['check:all'].includes('check:secrets'), 'secret scan is available locally and runs in the CI check chain');
 
 const appConfig = read('apps/splash-stickers-app/shopify.app.toml');
 const viteConfig = read('apps/splash-stickers-app/vite.config.ts');
@@ -50,7 +55,10 @@ const envExample = read('apps/splash-stickers-app/.env.example');
 const dockerfile = read('apps/splash-stickers-app/Dockerfile');
 assert(/api_version\s*=\s*"2026-07"/.test(appConfig), 'app targets Shopify API 2026-07');
 assert(/provider\s*=\s*"postgresql"/.test(prismaSchema) && /directUrl\s*=\s*env\("DIRECT_URL"\)/.test(prismaSchema), 'Prisma uses Supabase PostgreSQL with a direct migration URL');
-assert(/DATABASE_URL=postgresql:/.test(envExample) && /DIRECT_URL=postgresql:/.test(envExample), 'environment example documents pooled and direct PostgreSQL URLs');
+const envLine = (name) => name + '=';
+const envLines = envExample.split(/\r?\n/);
+assert(envLines.includes(envLine('DATABASE_URL')) && envLines.includes(envLine('DIRECT_URL')), 'environment example leaves PostgreSQL URLs empty for secret-manager injection');
+assert(/validate-production-env\.mjs --production/.test(appPackage.scripts.start) && /validate-production-env\.mjs --production/.test(appPackage.scripts.setup), 'production start and migration setup validate the environment before running');
 assert(/EXPOSE\s+10000/.test(dockerfile) && /ENV HOST=0\.0\.0\.0/.test(dockerfile) && dockerfile.indexOf('npm run build:app') < dockerfile.indexOf('ENV HOST=0.0.0.0'), 'Render container binds the public web port after the build step');
 assert(/npm ci --include=dev/.test(dockerfile) && dockerfile.indexOf('npm run build:app') < dockerfile.indexOf('npm prune --omit=dev'), 'Docker installs build tooling before pruning development dependencies');
 assert(/\^https\?:\\\/\\\//.test(viteConfig), 'Vite only treats URL-shaped Shopify CLI hosts as app URLs');

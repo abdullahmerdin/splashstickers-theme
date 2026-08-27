@@ -60,6 +60,15 @@ Run the complete platform validation:
 npm.cmd run check:all
 ```
 
+The tracked-file credential scan can also be run on its own:
+
+`powershell
+npm.cmd run check:secrets
+`
+
+For provider rotation, repository cleanup and redacted verification steps, see
+`[docs/security/credential-exposure-remediation.md](docs/security/credential-exposure-remediation.md)`.
+
 The existing theme checks remain independently available:
 
 ```powershell

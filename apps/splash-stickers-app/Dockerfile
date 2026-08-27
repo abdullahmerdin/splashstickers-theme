@@ -17,8 +17,11 @@ RUN npm ci --include=dev
 COPY apps/splash-stickers-app apps/splash-stickers-app
 COPY packages/design-contract packages/design-contract
 
-RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \
-    DIRECT_URL=postgresql://build:build@127.0.0.1:5432/build \
+# Prisma client generation does not connect to the database. Keep build-time
+# placeholders free of URLs and credentials; runtime validation requires the
+# real values before migrations or the server can start.
+RUN DATABASE_URL=build-placeholder \
+    DIRECT_URL=build-placeholder \
     npx prisma generate --schema=apps/splash-stickers-app/prisma/schema.prisma \
     && npm run build:app \
     && npm prune --omit=dev \
